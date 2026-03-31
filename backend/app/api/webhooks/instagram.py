@@ -75,16 +75,16 @@ async def receive_webhook(
 
 def _verify_signature(body: bytes, signature_header: str | None) -> None:
     """Validates X-Hub-Signature-256 to confirm the request is from Meta."""
-    if not settings.META_APP_SECRET:
+    if not settings.META_WEBHOOK_SECRET:
         # Skip in dev if secret not set
-        logger.warning("META_APP_SECRET not set — skipping signature verification")
+        logger.warning("META_WEBHOOK_SECRET not set — skipping signature verification")
         return
 
     if not signature_header or not signature_header.startswith("sha256="):
         raise HTTPException(status_code=400, detail="Missing signature header")
 
     expected = hmac.new(
-        settings.META_APP_SECRET.encode(),
+        settings.META_WEBHOOK_SECRET.encode(),
         body,
         hashlib.sha256,
     ).hexdigest()
@@ -173,20 +173,14 @@ async def _handle_text_message(
     text: str,
     db: AsyncSession,
 ) -> None:
-    from app.integrations.instagram import InstagramClient
+    from app.bot.conversation import advance_conversation
 
     logger.info(
         "Text message in conversation %s (state=%s): %r",
         conversation.id, conversation.state, text,
     )
 
-    # Static reply — AI layer wired in once this is confirmed working
-    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-    await client.send_message(
-        conversation.customer_instagram_id,
-        "Namaste! 👋 Aapka message mil gaya. Hum jaldi reply karenge.",
-    )
-    logger.info("Static reply sent to %s", conversation.customer_instagram_id)
+    await advance_conversation(conversation, seller, text, db)
     await db.commit()
 
 
@@ -196,20 +190,28 @@ async def _handle_attachment(
     attachments: list,
     db: AsyncSession,
 ) -> None:
-    from app.bot.conversation import handle_payment_screenshot
+    from app.bot.conversation import handle_payment_screenshot, handle_product_image
 
     for attachment in attachments:
         if attachment.get("type") == "image":
             image_url: str = attachment.get("payload", {}).get("url", "")
-            if image_url and conversation.state == "awaiting_payment":
-                logger.info(
-                    "Payment screenshot received in conversation %s", conversation.id
-                )
+            if not image_url:
+                continue
+
+            if conversation.state == "awaiting_payment":
+                logger.info("Payment screenshot received in conversation %s", conversation.id)
                 await handle_payment_screenshot(conversation, seller, image_url, db)
+
+            elif conversation.state in ("greeting", "product_inquiry", "negotiating"):
+                logger.info(
+                    "Product image received in conversation %s (state=%s)",
+                    conversation.id, conversation.state,
+                )
+                await handle_product_image(conversation, seller, image_url, db)
+
             else:
                 logger.debug(
-                    "Image received but conversation state is %s — ignoring",
-                    conversation.state,
+                    "Image received in unexpected state %s — ignoring", conversation.state
                 )
 
 

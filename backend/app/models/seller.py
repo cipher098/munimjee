@@ -15,6 +15,7 @@ class Seller(Base):
     instagram_token = Column(String, nullable=False)
     instagram_page_id = Column(String, nullable=False)  # IG user ID used to call the messages API
     fb_page_id = Column(String, nullable=True)  # Facebook page ID sent in webhook recipient.id
+    instagram_token_expires_at = Column(DateTime(timezone=True), nullable=True)
     whatsapp_number = Column(String, nullable=True)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)

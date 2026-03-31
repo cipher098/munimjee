@@ -8,6 +8,25 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+async def exchange_for_long_lived_token(short_lived_token: str) -> str:
+    """Exchange a short-lived token for a long-lived token (valid ~60 days)."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(
+            "https://graph.facebook.com/oauth/access_token",
+            params={
+                "grant_type": "fb_exchange_token",
+                "client_id": settings.META_APP_ID,
+                "client_secret": settings.META_APP_SECRET,
+                "fb_exchange_token": short_lived_token,
+            },
+        )
+        if response.status_code != 200:
+            logger.error("Token exchange failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        data = response.json()
+        return data["access_token"]
+
+
 class InstagramClient:
     def __init__(self, ig_user_token: str, fb_page_id: str) -> None:
         self._token = ig_user_token

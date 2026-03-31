@@ -10,6 +10,7 @@ celery_app = Celery(
         "app.workers.notify_dispatch",
         "app.workers.conversation",
         "app.workers.process_statement",
+        "app.workers.refresh_tokens",
     ],
 )
 
@@ -35,5 +36,9 @@ celery_app.conf.beat_schedule = {
     "statement-upload-reminder": {
         "task": "app.workers.process_statement.send_reminder",
         "schedule": crontab(hour=9, minute=0),  # 9am IST daily
+    },
+    "refresh-instagram-tokens": {
+        "task": "app.workers.refresh_tokens.refresh_expiring_instagram_tokens",
+        "schedule": crontab(hour=10, minute=0),  # daily at 10am IST
     },
 }

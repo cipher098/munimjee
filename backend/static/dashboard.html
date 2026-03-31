@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Add Product</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+    .container { max-width: 520px; margin: 40px auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    h1 { font-size: 20px; margin-bottom: 24px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; margin-top: 16px; color: #444; }
+    input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+    input:focus, textarea:focus { border-color: #6366f1; }
+    textarea { resize: vertical; min-height: 72px; }
+    .hint { font-size: 12px; color: #888; margin-top: 3px; }
+    .preview { margin-top: 12px; display: none; }
+    .preview img { max-width: 100%; border-radius: 8px; border: 1px solid #eee; }
+    button { margin-top: 24px; width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .result { margin-top: 20px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; }
+    .result.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .result.error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Add Product</h1>
+    <form id="form">
+      <label>Seller ID *</label>
+      <input type="text" name="seller_id" placeholder="UUID of the seller" required>
+
+      <label>Product Name *</label>
+      <input type="text" name="name" placeholder="e.g. Wooden Wall Clock" required>
+
+      <div class="price-row">
+        <div>
+          <label>Listed Price (₹) *</label>
+          <input type="number" name="listed_price" placeholder="599" min="1" required>
+        </div>
+        <div>
+          <label>Floor Price (₹) *</label>
+          <input type="number" name="floor_price" placeholder="399" min="1" required>
+          <div class="hint">Minimum you'll accept</div>
+        </div>
+      </div>
+
+      <label>Description</label>
+      <textarea name="description" placeholder="Leave empty to auto-generate from image using AI"></textarea>
+      <div class="hint">Optional — AI will describe the product from the image if left blank</div>
+
+      <label>Product Image *</label>
+      <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
+      <div class="preview" id="preview"><img id="previewImg" src="" alt="preview"></div>
+
+      <button type="submit" id="btn">Add Product</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    document.querySelector('input[name="image"]').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      const result = document.getElementById('result');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      result.style.display = 'none';
+
+      const formData = new FormData(this);
+      try {
+        const res = await fetch('/products', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          result.className = 'result success';
+          result.innerHTML = `
+            <strong>Product added!</strong><br>
+            ID: ${data.id}<br>
+            Name: ${data.name}<br>
+            Listed: ₹${data.listed_price_rupees} &nbsp;|&nbsp; Floor: ₹${data.floor_price_rupees}<br>
+            ${data.description ? `<br><em>${data.description}</em>` : ''}
+          `;
+          this.reset();
+          document.getElementById('preview').style.display = 'none';
+        } else {
+          result.className = 'result error';
+          result.textContent = data.detail || 'Something went wrong';
+        }
+      } catch (err) {
+        result.className = 'result error';
+        result.textContent = 'Network error — is the server running?';
+      }
+      result.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Add Product';
+    });
+  </script>
+</body>
+</html>

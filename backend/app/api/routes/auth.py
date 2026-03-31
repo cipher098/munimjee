@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
+from app.integrations.instagram import exchange_for_long_lived_token
 from app.models.delivery_member import DeliveryMember
 from app.models.seller import Seller
 
@@ -57,6 +58,31 @@ async def seller_login(body: SellerLoginRequest, db: AsyncSession = Depends(get_
 
     token = _create_token({"sub": str(seller.id), "role": "seller"})
     return TokenResponse(access_token=token, role="seller")
+
+
+class ConnectInstagramRequest(BaseModel):
+    seller_id: str
+    short_lived_token: str
+
+
+@router.post("/seller/connect-instagram")
+async def connect_instagram(body: ConnectInstagramRequest, db: AsyncSession = Depends(get_db)):
+    """Exchange a short-lived Instagram token for a long-lived one and save it to the seller."""
+    result = await db.execute(select(Seller).where(Seller.id == body.seller_id))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    try:
+        long_lived_token = await exchange_for_long_lived_token(body.short_lived_token)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Token exchange failed: {exc}")
+
+    seller.instagram_token = long_lived_token
+    seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
+    await db.commit()
+
+    return {"detail": "Instagram token updated", "expires_at": seller.instagram_token_expires_at}
 
 
 @router.post("/delivery/login", response_model=TokenResponse)

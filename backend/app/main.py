@@ -1,11 +1,15 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.api.webhooks.instagram import router as instagram_webhook_router
 from app.api.routes.auth import router as auth_router
+from app.api.routes.products import router as products_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,11 +28,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static files — uploaded product images + dashboard
+upload_dir = Path("/app/uploads")
+upload_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+app.mount("/static", StaticFiles(directory="/app/static"), name="static")
+
 # Phase 1 routes
 app.include_router(instagram_webhook_router)
 app.include_router(auth_router)
+app.include_router(products_router)
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/dashboard")
+async def dashboard():
+    return FileResponse("/app/static/dashboard.html")

@@ -17,12 +17,25 @@ SELLER STYLE:
 {persona_json}
 
 PRODUCT: {product_name}
+LISTED PRICE: ₹{listed_price_rupees}
 CURRENT PRICE CONTEXT: {negotiation_context}
+
+CRITICAL — Price transparency rule:
+If the customer asks for price ("kya price", "kitne ka", "price batao", "kitna"),
+ALWAYS state ₹{listed_price_rupees} clearly. Never dodge a direct price question.
+CUSTOMER INTENT: {customer_intent}
+
+Tone guidance based on customer intent:
+- hot: confident, brief, close the deal — don't over-explain
+- warm: friendly but firm, highlight value to justify price
+- cold: empathetic but don't cave — acknowledge their concern, stand your ground
 
 Rules:
 - Write in the seller's natural Hinglish style
 - Keep messages short like real Instagram DMs (1-3 lines max)
-- Use emojis only if seller's style includes them
+- Emojis: use sparingly, only when relevant, never repeat the same emoji. Many messages
+  should have no emoji — that feels more natural. Pick contextually: 💰🤝 for price,
+  ✨👌 for quality, 🙏 for walk-away, 🚀📦 for dispatch
 - Never mention floor price or internal pricing
 - Return ONLY the message text, nothing else
 """
@@ -45,7 +58,9 @@ class SarvamClient:
         system = SYSTEM_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
+            listed_price_rupees=context.get("listed_price_rupees", "N/A"),
             negotiation_context=negotiation_context,
+            customer_intent=decision.get("customer_intent", "warm"),
         )
 
         history = context.get("message_history", [])

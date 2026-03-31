@@ -16,6 +16,24 @@ from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PERSONA = {
+    "greeting_style": "Haan ji, kya chahiye?",
+    "negotiation_firmness": "medium",
+    "closing_phrases": ["Done ho gaya", "Pakka"],
+    "common_expressions": ["bhai", "yaar", "theek hai"],
+    "hindi_english_ratio": "60% Hindi 40% English",
+    "emoji_usage": "light",
+    "response_length": "short",
+    "tone": "casual",
+    "sample_responses": {
+        "greeting": "Haan ji! Kya chahiye aapko? 😊",
+        "price_rejection": "Bhai itna kam nahi hoga, last price hai ye",
+        "deal_accepted": "Done! Payment kar do jaldi",
+        "payment_request": "Bhai payment kar do, UPI hai — details bhej raha hoon",
+        "dispatched": "Dispatch ho gaya aapka order, tracking bhejta hoon"
+    }
+}
+
 
 async def generate_bot_reply(
     conversation: Conversation,
@@ -32,6 +50,18 @@ async def generate_bot_reply(
         result = await db.execute(select(Product).where(Product.id == conversation.product_id))
         product = result.scalar_one_or_none()
 
+    # At greeting state, load all seller products so Claude can identify what the customer wants
+    products_list: list[dict] = []
+    if not product:
+        result = await db.execute(
+            select(Product).where(Product.seller_id == seller.id, Product.active == True)
+        )
+        all_products = result.scalars().all()
+        products_list = [
+            {"id": str(p.id), "name": p.name, "listed_price_paise": p.listed_price}
+            for p in all_products
+        ]
+
     from app.integrations.claude import ClaudeClient
     from app.integrations.sarvam import SarvamClient
 
@@ -46,24 +76,31 @@ async def generate_bot_reply(
         "listed_price": product.listed_price if product else None,
         "floor_price": product.floor_price if product else None,   # never forwarded to customer
         "message_history": (conversation.messages or [])[-10:],
+        "available_products": products_list,
     })
 
     new_state, extra = _derive_state_from_decision(decision, conversation, product)
+
+    persona = seller.persona or DEFAULT_PERSONA
 
     # Step 2: Sarvam generates the actual message text
     try:
         reply = await sarvam.generate_reply({
             "decision": decision,
-            "persona": seller.persona or {},
+            "persona": persona,
             "product_name": product.name if product else "the product",
+            "listed_price_rupees": product.listed_price // 100 if product else None,
+            "bulk_quantity": decision.get("bulk_quantity"),
             "message_history": (conversation.messages or [])[-10:],
         })
     except Exception as exc:
         logger.warning("Sarvam failed (%s), falling back to Claude for reply", exc)
         reply = await claude.generate_reply({
             "decision": decision,
-            "persona": seller.persona or {},
+            "persona": persona,
             "product_name": product.name if product else "the product",
+            "listed_price_rupees": product.listed_price // 100 if product else None,
+            "bulk_quantity": decision.get("bulk_quantity"),
             "message_history": (conversation.messages or [])[-10:],
         })
 
@@ -77,14 +114,32 @@ def _derive_state_from_decision(
 ) -> tuple[str | None, dict]:
     """Maps Claude's action to a state transition and extra data."""
     action = decision.get("action", "")
+    floor_price = product.floor_price if product else None
     extra: dict[str, Any] = {}
 
     if action == "accept":
         price = decision.get("price")
-        extra["agreed_price"] = price
-        return "awaiting_payment", extra
+        # Hard clamp — never accept below floor price
+        if floor_price and price and price < floor_price:
+            logger.warning(
+                "Claude tried to accept at %d below floor %d — overriding to hold_firm",
+                price, floor_price,
+            )
+            action = "hold_firm"
+            decision["action"] = "hold_firm"
+        else:
+            extra["agreed_price"] = price
+            return "awaiting_payment", extra
 
     if action == "counter":
+        price = decision.get("price")
+        # Hard clamp — counter price can never go below floor
+        if floor_price and price and price < floor_price:
+            logger.warning(
+                "Claude countered at %d below floor %d — clamping to floor",
+                price, floor_price,
+            )
+            decision["price"] = floor_price
         extra["negotiation_round"] = conversation.negotiation_round + 1
         return "negotiating", extra
 
@@ -92,14 +147,26 @@ def _derive_state_from_decision(
         extra["negotiation_round"] = conversation.negotiation_round + 1
         return "negotiating", extra
 
+    if action == "bulk_discount":
+        price = decision.get("price")
+        if floor_price and price and price < floor_price:
+            decision["price"] = floor_price
+        extra["agreed_price"] = decision.get("price")
+        extra["bulk_quantity"] = decision.get("bulk_quantity")
+        return "awaiting_payment", extra
+
     if action == "request_payment":
         return "awaiting_payment", extra
 
     if action == "escalate":
         return "manual_review", extra
 
-    if action == "show_product" and product:
-        extra["product_id"] = product.id
+    if action == "show_product":
+        product_id = decision.get("product_id")
+        if product_id:
+            extra["product_id"] = product_id
+        elif product:
+            extra["product_id"] = product.id
         return "product_inquiry", extra
 
     return None, extra
@@ -115,7 +182,7 @@ async def send_manual_verification_ping(
     from app.integrations.instagram import InstagramClient
 
     # Notify customer we're verifying
-    client = InstagramClient(seller.instagram_token)
+    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
     await client.send_message(
         conversation.customer_instagram_id,
         "Ek second — payment verify kar rahe hain 🔍",

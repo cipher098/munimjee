@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     META_APP_ID: str = ""
-    META_APP_SECRET: str = ""
+    META_APP_SECRET: str = ""         # used for token exchange
+    META_WEBHOOK_SECRET: str = ""     # used for webhook signature verification
     META_VERIFY_TOKEN: str
     META_API_VERSION: str = "v19.0"
 
