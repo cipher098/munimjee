@@ -1,0 +1,853 @@
+# Instagram Seller Bot — Full Build Plan for Claude Code
+
+> AI-powered Hinglish negotiation + UPI screenshot verification + delivery team dashboard for Instagram sellers
+
+---
+
+## What We're Building
+
+A full-stack platform for Instagram sellers in India that:
+1. Handles customer DMs automatically in the seller's exact Hinglish style
+2. Negotiates price within a floor the seller sets privately
+3. Asks customer for UPI payment screenshot after deal closes
+4. Verifies screenshot via OCR + UTR validation + cross-platform duplicate detection
+5. Optionally confirms via seller forwarding UPI SMS or uploading PhonePe/GPay statement
+6. Pushes confirmed orders to a Delivery Team Dashboard
+7. Delivery team marks dispatch, adds tracking ID / parcel photo / custom message
+8. Bot automatically sends that info to the customer via Instagram DM
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend API | Python 3.11 + FastAPI |
+| Async workers | Celery + Redis |
+| Database | PostgreSQL 15 |
+| Cache + Queue broker | Redis 7 |
+| ORM | SQLAlchemy 2.0 (async) + Alembic migrations |
+| Instagram DMs | Meta Messenger API (Instagram) via REST |
+| Hinglish AI | Sarvam AI API (sarvam-python SDK) |
+| Business logic AI | Anthropic Claude API (anthropic Python SDK) — model: claude-sonnet-4-20250514 |
+| Screenshot OCR | Google Cloud Vision API (google-cloud-vision) |
+| PDF parsing | pdfplumber (PhonePe/GPay statement uploads) |
+| File storage | AWS S3 via boto3 |
+| Seller Dashboard | React 18 + TypeScript + TailwindCSS + Vite |
+| Delivery Dashboard | React 18 + TypeScript + TailwindCSS + Vite |
+| Real-time updates | FastAPI WebSockets (delivery dashboard live order feed) |
+| Auth | JWT (python-jose) — separate roles: seller, delivery |
+| Containerisation | Docker + docker-compose |
+| Hosting | AWS ECS Fargate + RDS PostgreSQL + ElastiCache Redis + S3 |
+
+---
+
+## Project Structure
+
+```
+instagram-seller-bot/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # FastAPI app entry point
+│   │   ├── config.py                # Settings from env vars (pydantic-settings)
+│   │   ├── database.py              # Async SQLAlchemy engine + session
+│   │   ├── dependencies.py          # FastAPI dependency injection (auth, db)
+│   │   ├── api/
+│   │   │   ├── webhooks/
+│   │   │   │   ├── instagram.py     # Instagram DM webhook (GET verify + POST events)
+│   │   │   │   └── whatsapp.py      # WhatsApp webhook (seller SMS forwards + owner pings)
+│   │   │   └── routes/
+│   │   │       ├── auth.py          # Login endpoints (seller + delivery team)
+│   │   │       ├── sellers.py       # Seller CRUD + onboarding
+│   │   │       ├── products.py      # Product management
+│   │   │       ├── orders.py        # Order feed + status (seller view)
+│   │   │       ├── delivery.py      # Delivery team actions
+│   │   │       ├── verification.py  # Manual verification queue
+│   │   │       └── uploads.py       # S3 pre-signed URL generation
+│   │   ├── bot/
+│   │   │   ├── conversation.py      # Conversation state machine
+│   │   │   ├── negotiation.py       # Price negotiation decision logic
+│   │   │   ├── persona.py           # Seller style profile extraction + storage
+│   │   │   └── responder.py         # Hybrid Sarvam + Claude response generation
+│   │   ├── verification/
+│   │   │   ├── ocr.py               # Google Vision OCR on screenshots
+│   │   │   ├── utr.py               # UTR extraction, format validation, duplicate check
+│   │   │   ├── sms.py               # UPI SMS text parser
+│   │   │   └── statement.py         # PhonePe/GPay PDF statement parser
+│   │   ├── integrations/
+│   │   │   ├── instagram.py         # Instagram Graph API client
+│   │   │   ├── sarvam.py            # Sarvam AI API client
+│   │   │   ├── claude.py            # Anthropic Claude API client
+│   │   │   ├── google_vision.py     # Google Cloud Vision client
+│   │   │   └── s3.py                # AWS S3 client
+│   │   ├── models/
+│   │   │   ├── seller.py
+│   │   │   ├── product.py
+│   │   │   ├── conversation.py
+│   │   │   ├── order.py
+│   │   │   ├── delivery_update.py
+│   │   │   ├── delivery_member.py
+│   │   │   └── transaction.py
+│   │   ├── schemas/                 # Pydantic request/response schemas
+│   │   │   ├── seller.py
+│   │   │   ├── product.py
+│   │   │   ├── order.py
+│   │   │   ├── delivery.py
+│   │   │   └── verification.py
+│   │   └── workers/
+│   │       ├── celery_app.py        # Celery app init
+│   │       ├── notify_dispatch.py   # Send Instagram DM when order dispatched
+│   │       ├── process_statement.py # Parse uploaded bank statement PDF
+│   │       └── build_persona.py     # Extract seller persona from DM history
+│   ├── alembic/
+│   │   ├── env.py
+│   │   └── versions/                # Migration files (generated by alembic)
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .env.example
+├── seller-dashboard/                # React + TypeScript (Vite)
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Onboarding.tsx
+│   │   │   ├── Orders.tsx
+│   │   │   ├── Verification.tsx
+│   │   │   ├── Products.tsx
+│   │   │   ├── Analytics.tsx
+│   │   │   └── Settings.tsx
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   │   └── useOrders.ts         # WebSocket hook for live updates
+│   │   └── api/
+│   ├── package.json
+│   └── vite.config.ts
+├── delivery-dashboard/              # React + TypeScript (Vite) — separate app
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Login.tsx
+│   │   │   ├── Queue.tsx            # New orders ready to pack/dispatch
+│   │   │   ├── Dispatch.tsx         # Mark dispatched + tracking + photo + message
+│   │   │   └── History.tsx
+│   │   ├── components/
+│   │   │   ├── OrderCard.tsx
+│   │   │   ├── DispatchForm.tsx
+│   │   │   └── StatusBadge.tsx
+│   │   └── api/
+│   ├── package.json
+│   └── vite.config.ts
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Database Schema (SQLAlchemy models)
+
+### sellers
+```python
+class Seller(Base):
+    __tablename__ = "sellers"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    instagram_id = Column(String, unique=True, nullable=False)
+    instagram_token = Column(String, nullable=False)       # long-lived page token
+    instagram_page_id = Column(String, nullable=False)
+    whatsapp_number = Column(String, nullable=True)        # for SMS forwarding + owner pings
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    persona = Column(JSONB, nullable=True)                 # Hinglish style profile
+    negotiation_style = Column(String, default="medium")   # soft | medium | firm
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+```
+
+### products
+```python
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    seller_id = Column(UUID, ForeignKey("sellers.id"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    listed_price = Column(Integer, nullable=False)         # in paise
+    floor_price = Column(Integer, nullable=False)          # private minimum — never exposed to customer
+    photo_url = Column(String, nullable=True)              # S3 URL
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+```
+
+### conversations
+```python
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    seller_id = Column(UUID, ForeignKey("sellers.id"), nullable=False)
+    customer_instagram_id = Column(String, nullable=False)
+    customer_name = Column(String, nullable=True)
+    state = Column(String, nullable=False)
+    # States: greeting | product_inquiry | negotiating | awaiting_payment
+    #         verifying | payment_confirmed | failed | manual_review | dispatched_notified
+    product_id = Column(UUID, ForeignKey("products.id"), nullable=True)
+    agreed_price = Column(Integer, nullable=True)          # in paise
+    negotiation_round = Column(Integer, default=0)
+    messages = Column(JSONB, default=list)                 # array of {role, content, timestamp}
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+```
+
+### orders
+```python
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    seller_id = Column(UUID, ForeignKey("sellers.id"), nullable=False)
+    conversation_id = Column(UUID, ForeignKey("conversations.id"), nullable=False)
+    customer_name = Column(String, nullable=False)
+    customer_instagram_id = Column(String, nullable=False)
+    customer_address = Column(Text, nullable=True)
+    product_id = Column(UUID, ForeignKey("products.id"), nullable=False)
+    amount = Column(Integer, nullable=False)               # in paise
+    status = Column(String, nullable=False, default="payment_confirmed")
+    # Statuses: payment_confirmed | delivery_queue | packed | dispatched | delivered
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    delivery_updates = relationship("DeliveryUpdate", back_populates="order")
+```
+
+### delivery_updates
+```python
+class DeliveryUpdate(Base):
+    __tablename__ = "delivery_updates"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    order_id = Column(UUID, ForeignKey("orders.id"), nullable=False)
+    courier_name = Column(String, nullable=True)           # Delhivery | DTDC | India Post | BlueDart | Other
+    tracking_id = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)              # S3 URL of parcel photo
+    message = Column(Text, nullable=True)                  # custom message to send to customer
+    dispatched_at = Column(DateTime, default=func.now())
+    notified_at = Column(DateTime, nullable=True)          # set when bot sends customer DM
+    created_by = Column(UUID, ForeignKey("delivery_members.id"), nullable=False)
+
+    order = relationship("Order", back_populates="delivery_updates")
+```
+
+### transactions
+```python
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    seller_id = Column(UUID, ForeignKey("sellers.id"), nullable=False)
+    order_id = Column(UUID, ForeignKey("orders.id"), nullable=True)
+    utr_number = Column(String, unique=True, nullable=False)  # UNIQUE INDEX — fraud prevention
+    amount = Column(Integer, nullable=False)               # in paise
+    sender_name = Column(String, nullable=True)
+    timestamp = Column(DateTime, nullable=False)
+    verified_by = Column(String, nullable=False)           # ocr | sms | statement | manual
+    screenshot_url = Column(String, nullable=True)         # S3 URL of original screenshot
+    created_at = Column(DateTime, default=func.now())
+
+# CRITICAL: Add this in Alembic migration
+# op.create_index("idx_transactions_utr", "transactions", ["utr_number"], unique=True)
+```
+
+### delivery_members
+```python
+class DeliveryMember(Base):
+    __tablename__ = "delivery_members"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    seller_id = Column(UUID, ForeignKey("sellers.id"), nullable=False)
+    name = Column(String, nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+```
+
+---
+
+## Core Logic
+
+### Conversation State Machine (`app/bot/conversation.py`)
+
+```
+GREETING
+    ↓ customer asks about product
+PRODUCT_INQUIRY
+    ↓ customer wants to buy
+NEGOTIATING  ←─────────────────┐
+    ↓ price agreed              │ customer counters again
+AWAITING_PAYMENT               │
+    ↓ customer sends screenshot
+VERIFYING
+    ↓                   ↓              ↓
+PAYMENT_CONFIRMED    FAILED        MANUAL_REVIEW
+                  (fake/duplicate) (inconclusive)
+    ↓
+[order status → delivery_queue]
+[WebSocket broadcast to delivery dashboard]
+    ↓
+[delivery team marks packed]
+    ↓
+[delivery team fills DispatchForm → clicks Dispatch]
+    ↓
+[Celery task: notify_dispatch fires]
+    ↓
+[Instagram DM sent to customer with tracking/photo/message]
+    ↓
+DISPATCHED_NOTIFIED
+```
+
+### Negotiation Logic (`app/bot/negotiation.py`)
+
+```python
+def decide_negotiation_move(
+    offered_price: int,    # customer's offer in paise
+    listed_price: int,
+    floor_price: int,
+    round_number: int
+) -> dict:
+    margin = listed_price - floor_price
+
+    if offered_price >= floor_price:
+        return {"accept": True, "final_price": offered_price}
+
+    if round_number == 1:
+        counter = listed_price - int(margin * 0.3)
+        return {"accept": False, "counter_price": counter}
+
+    if round_number == 2:
+        counter = floor_price + 5000  # floor + ₹50 buffer
+        return {"accept": False, "counter_price": counter}
+
+    # Round 3+ — hold firm
+    return {"accept": False, "hold_firm": True, "counter_price": floor_price}
+```
+
+### Seller Persona Extraction (`app/bot/persona.py`)
+
+On onboarding, seller uploads Instagram DM export JSON.
+Send last 1000-2000 messages to Claude with this prompt:
+
+```
+Analyze these Instagram DM conversations from an Indian seller.
+Return ONLY valid JSON, no other text:
+{
+  "greeting_style": "exact phrase they use e.g. 'Haan bolo' or 'Ji kya chahiye'",
+  "negotiation_firmness": "soft | medium | firm",
+  "closing_phrases": ["phrases used when deal closes"],
+  "common_expressions": ["frequent words/phrases they use"],
+  "hindi_english_ratio": "e.g. 70% Hindi 30% English",
+  "emoji_usage": "none | light | moderate | heavy",
+  "response_length": "short | medium | long",
+  "tone": "formal | casual | very_casual",
+  "sample_responses": {
+    "greeting": "in their exact style",
+    "price_rejection": "how they say no to low offers",
+    "deal_accepted": "how they confirm a deal",
+    "payment_request": "how they ask for payment",
+    "dispatched": "how they say order is shipped"
+  }
+}
+Conversation history: {conversation_history}
+```
+
+Store JSON in `sellers.persona` (JSONB). Inject into every Sarvam prompt.
+
+### Hybrid AI Response (`app/bot/responder.py`)
+
+```python
+async def generate_bot_reply(conversation, customer_message, seller, product):
+    # Step 1: Claude decides WHAT to do
+    decision = await claude_client.decide({
+        "state": conversation.state,
+        "customer_message": customer_message,
+        "negotiation_round": conversation.negotiation_round,
+        "listed_price": product.listed_price,
+        "floor_price": product.floor_price,   # server-side only, never sent to customer
+        "message_history": conversation.messages[-10:]
+    })
+    # Returns: {"action": "counter|accept|hold_firm|request_payment|greet|clarify", "price": int|None}
+
+    # Step 2: Sarvam generates reply in seller's exact Hinglish style
+    reply = await sarvam_client.generate_reply({
+        "decision": decision,
+        "persona": seller.persona,
+        "product_name": product.name,
+        "message_history": conversation.messages[-10:]
+    })
+    return reply
+```
+
+### Payment Verification Pipeline (`app/verification/`)
+
+**Level 1 — OCR (instant, automatic)**
+- Send screenshot to Google Vision API
+- Extract: amount `r'₹\s*(\d+(?:,\d+)*)'`, UTR `r'\b(\d{12})\b'`, timestamp
+- Validate amount matches agreed_price (±100 paise tolerance)
+- Pass UTR to Level 2
+
+**Level 2 — UTR Duplicate Detection (instant)**
+- `SELECT id FROM transactions WHERE utr_number = :utr`
+- UNIQUE index makes this <1ms at any scale
+- If found → FRAUD, reject. Works cross-seller — network effect.
+- If not found → PASS
+
+**Level 3 — SMS Verification (near real-time)**
+- Seller forwards UPI SMS to WhatsApp bot
+- Parse all formats: PhonePe, GPay, Paytm, bank SMS
+- Extract UTR → match pending order → auto-confirm
+
+**Level 4 — Statement Upload (daily)**
+- Seller uploads PhonePe/GPay PDF
+- pdfplumber extracts table rows
+- Auto-reconcile against all pending orders
+- Flag non-matches as suspicious
+
+**Level 5 — Manual Owner Ping (fallback only)**
+- WhatsApp to seller: `"₹850 from Rahul — reply 1 confirm, 0 reject"`
+- Only fires when L1-L4 inconclusive
+
+### Delivery Team Flow (`app/api/routes/delivery.py`)
+
+```
+Endpoints:
+GET  /delivery/orders?status=delivery_queue,packed   # fetch queue
+POST /delivery/orders/{id}/pack                      # mark packed
+POST /delivery/orders/{id}/dispatch                  # triggers customer DM
+     Body: {
+       courier_name: str | None,
+       tracking_id: str | None,
+       image_url: str | None,     # S3 URL (uploaded via pre-signed URL before this call)
+       message: str | None        # default: "Aapka order dispatch ho gaya! 🎉"
+     }
+GET  /delivery/orders/history                        # past orders
+WS   /delivery/ws/{seller_id}                        # real-time new order notifications
+```
+
+**Celery task on dispatch (`app/workers/notify_dispatch.py`):**
+```python
+@celery_app.task
+def notify_customer_dispatch(delivery_update_id: str):
+    # IDEMPOTENT: check notified_at is None before sending
+    update = get_delivery_update(delivery_update_id)
+    if update.notified_at:
+        return  # already sent, skip
+
+    order = get_order(update.order_id)
+    conversation = get_conversation(order.conversation_id)
+
+    message = update.message or "Aapka order dispatch ho gaya! 🎉"
+    if update.tracking_id:
+        message += f"\nTracking ID: {update.tracking_id}"
+        if update.courier_name:
+            message += f" ({update.courier_name})"
+    message += "\nKoi sawaal ho toh yahan message karo 😊"
+
+    if update.image_url:
+        instagram_client.send_image(conversation.customer_instagram_id, update.image_url)
+
+    instagram_client.send_message(conversation.customer_instagram_id, message)
+    mark_notified(update.id)
+    update_order_status(order.id, "dispatched")
+```
+
+---
+
+## AI Prompts
+
+### Claude Decision Prompt (`app/integrations/claude.py`)
+
+```python
+DECISION_PROMPT = """
+You are the business logic engine for an Instagram seller bot.
+Return ONLY valid JSON, no other text:
+{
+  "action": "greet|show_product|counter|accept|hold_firm|request_payment|clarify|escalate",
+  "price": <int in paise, only for counter/accept>,
+  "reason": "<brief>"
+}
+
+State: {state}
+Customer message: {customer_message}
+Listed price: {listed_price} paise
+Floor price: {floor_price} paise
+Negotiation round: {round_number}
+Last messages: {message_history}
+"""
+# Model: claude-sonnet-4-20250514
+# max_tokens: 200 for decisions, 4000 for persona extraction
+```
+
+### Sarvam System Prompt (`app/integrations/sarvam.py`)
+
+```python
+SYSTEM_PROMPT = """
+You are a sales assistant for an Indian Instagram seller.
+Reply EXACTLY in the seller's personal style below. Never break character. Never reveal you are AI.
+
+SELLER STYLE:
+{persona_json}
+
+PRODUCT: {product_name}
+CURRENT PRICE CONTEXT: {negotiation_context}
+
+Rules:
+- Write in the seller's natural Hinglish style
+- Keep messages short like real Instagram DMs (1-3 lines max)
+- Use emojis only if seller's style includes them
+- Never mention floor price or internal pricing
+"""
+```
+
+---
+
+## Auth (`app/api/routes/auth.py`)
+
+Two separate JWT token flows:
+
+```python
+# Seller login
+POST /auth/seller/login
+Body: { email, password }
+Returns: { access_token, token_type: "bearer", role: "seller" }
+
+# Delivery team login
+POST /auth/delivery/login
+Body: { username, password }
+Returns: { access_token, token_type: "bearer", role: "delivery", seller_id }
+```
+
+JWT payload: `{ sub: user_id, role: seller|delivery, seller_id, exp }`
+
+Use `role` in dependency injection to gate routes:
+- `/delivery/*` routes require `role == "delivery"`
+- `/sellers/*` routes require `role == "seller"`
+
+---
+
+## Delivery Dashboard — UI Spec
+
+**Separate React app. Delivery team never sees:** seller financials, floor prices, bot settings, verification details.
+
+**Queue Page**
+WebSocket connection to `ws://api/delivery/ws/{seller_id}`.
+Play sound on new order. Each card:
+```
+🟡 NEW   Order #1042                     [2 mins ago]
+Customer: Rahul Sharma
+Product:  Blue Kurta (Size M)
+Amount:   ₹850  ✅ PAID
+─────────────────────────────────────────
+[Mark Packed]              [Dispatch →]
+```
+
+**Dispatch Modal**
+```
+Courier:       [Delhivery ▾]
+Tracking ID:   [______________]  optional
+Parcel Photo:  [📷 Upload]  → shows preview after upload
+Message:       [Aapka order dispatch ho gaya! 🎉     ]
+               [Tracking ID appended automatically    ]
+
+[Cancel]                    [✓ Mark Dispatched]
+```
+Photo uploads directly to S3 via pre-signed URL — backend never handles file bytes.
+On submit → POST /delivery/orders/{id}/dispatch → order moves to History → toast "Customer notified ✅"
+
+**History Page**
+All dispatched orders. Columns: Order ID, Customer, Product, Amount, Dispatched At, Notified ✅/❌.
+Search by customer name, tracking ID, date.
+
+---
+
+## Seller Dashboard — Page Specs
+
+**Orders** — Live feed, filter by status. Click to see full DM transcript.
+
+**Verification Queue** — Screenshots needing manual review. Shows screenshot image + [Approve] [Reject].
+
+**Products** — Add/edit/deactivate. Floor price field: "🔒 Private — customers never see this."
+
+**Analytics**
+- Orders this month
+- Revenue collected
+- Bot close rate (% closed by bot vs escalated)
+- Fake screenshots caught
+- Avg negotiation rounds
+
+**Settings**
+- Persona sliders: Negotiation firmness, Emoji usage, Response length
+- Re-run persona extraction button
+- WhatsApp number
+- Delivery team management (add/remove/reset password)
+
+---
+
+## Requirements (`backend/requirements.txt`)
+
+```
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0
+alembic==1.13.1
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+celery==5.3.6
+redis==5.0.4
+httpx==0.27.0
+anthropic==0.25.0
+google-cloud-vision==3.7.2
+pdfplumber==0.11.1
+boto3==1.34.100
+python-multipart==0.0.9
+websockets==12.0
+```
+
+Note: Add `sarvam-python` once stable SDK version confirmed on PyPI, else use `httpx` to call Sarvam REST API directly.
+
+---
+
+## Environment Variables (`backend/.env.example`)
+
+```env
+# App
+APP_ENV=development
+SECRET_KEY=your-jwt-secret-min-32-chars
+BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# Database
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/sellerbot
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# Meta / Instagram
+META_APP_ID=
+META_APP_SECRET=
+META_VERIFY_TOKEN=any-random-string-you-choose
+META_API_VERSION=v19.0
+
+# AI
+SARVAM_API_KEY=
+ANTHROPIC_API_KEY=
+
+# Google Cloud Vision
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+
+# AWS S3
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=sellerbot-uploads
+
+# WhatsApp (owner pings + SMS forwarding)
+WHATSAPP_API_URL=
+WHATSAPP_API_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+```
+
+---
+
+## Docker Compose
+
+```yaml
+version: "3.9"
+
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file: ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sellerbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  seller-dashboard:
+    build: ./seller-dashboard
+    ports:
+      - "3000:3000"
+
+  delivery-dashboard:
+    build: ./delivery-dashboard
+    ports:
+      - "3001:3001"
+
+volumes:
+  postgres_data:
+```
+
+---
+
+## Build Phases
+
+### Phase 1 — Core Bot (Weeks 1–2)
+**Goal: Full end-to-end flow for one test seller, demo-ready**
+- [ ] FastAPI scaffold: main.py, config.py, database.py, dependencies.py
+- [ ] All SQLAlchemy models + Alembic initial migration
+- [ ] CRITICAL: UTR unique index in migration
+- [ ] Instagram webhook: GET verify + POST receive DM events
+- [ ] Conversation state machine
+- [ ] Claude + Sarvam hybrid integration (basic, no persona yet)
+- [ ] Negotiation logic
+- [ ] Level 5 manual verification (owner WhatsApp ping)
+- [ ] Celery worker: notify_dispatch task
+- [ ] Instagram send message + send image APIs
+- [ ] docker-compose working locally
+- [ ] Basic JWT auth (seller login only)
+
+### Phase 2 — Payment Verification (Week 3)
+**Goal: 80% of orders auto-verified**
+- [ ] S3 integration + pre-signed URL endpoint
+- [ ] Google Vision OCR
+- [ ] UTR extraction + format validation
+- [ ] Duplicate UTR detection
+- [ ] WhatsApp webhook for SMS forwarding
+- [ ] SMS parser (PhonePe, GPay, Paytm formats)
+- [ ] Verification pipeline wired into state machine
+- [ ] Screenshots stored to S3 on receipt
+
+### Phase 3 — Personalization (Week 4)
+**Goal: Bot sounds exactly like the seller**
+- [ ] DM history upload endpoint (Instagram JSON export format)
+- [ ] build_persona Celery task (Claude extraction)
+- [ ] Persona stored in sellers.persona JSONB
+- [ ] Persona injected into every Sarvam prompt
+- [ ] Basic persona tuning via API (firmness, emoji, length)
+
+### Phase 4 — Dashboards (Weeks 5–6)
+**Goal: Seller and delivery team fully self-sufficient**
+- [ ] Delivery member auth (separate JWT role)
+- [ ] Seller dashboard React app — all pages
+- [ ] Delivery dashboard React app — Queue, Dispatch, History
+- [ ] WebSocket: new orders broadcast to delivery dashboard
+- [ ] DispatchForm with S3 pre-signed photo upload
+- [ ] notify_dispatch wired to dispatch endpoint
+- [ ] Seller manages delivery team members in Settings
+
+### Phase 5 — Polish + Scale (Month 2)
+**Goal: 10 paying sellers onboarded**
+- [ ] PhonePe/GPay PDF statement upload + pdfplumber parser
+- [ ] Analytics page
+- [ ] Multi-product catalog support
+- [ ] Self-serve onboarding (no manual setup)
+- [ ] Rate limiting
+- [ ] Retry logic with exponential backoff for all external APIs
+- [ ] Apply for Sarvam Startup Program
+
+---
+
+## Critical Implementation Notes
+
+1. **Use async everywhere** — all SQLAlchemy queries use `await`, all HTTP calls use `httpx.AsyncClient`, never use `requests` in async context
+
+2. **UTR unique index must be in Alembic migration** — not just the model:
+   ```python
+   op.create_index("idx_transactions_utr", "transactions", ["utr_number"], unique=True)
+   ```
+
+3. **Instagram webhook GET handler** — Meta verifies endpoint before sending events:
+   ```python
+   @router.get("/webhooks/instagram")
+   async def verify(hub_mode: str, hub_challenge: str, hub_verify_token: str):
+       if hub_verify_token == settings.META_VERIFY_TOKEN:
+           return Response(content=hub_challenge, media_type="text/plain")
+       raise HTTPException(403)
+   ```
+
+4. **Floor price is sacred** — never include `floor_price` in any API response, any frontend payload, or any message sent to customer. Only pass to Claude decision prompt server-side.
+
+5. **notify_dispatch task must be idempotent** — always check `notified_at is None` before sending DM. Celery retries on failure — without this check customer gets duplicate messages.
+
+6. **WebSocket manager** — maintain a dict of `{seller_id: [WebSocket]}` connections. Broadcast on order status change to `delivery_queue`.
+
+7. **S3 photo upload pattern** — delivery team gets pre-signed PUT URL, uploads directly, then sends S3 key in dispatch POST. Backend never handles file bytes.
+
+8. **Sarvam fallback** — wrap all Sarvam calls in try/except. If Sarvam fails, fall back to Claude for response generation with same persona prompt.
+
+9. **Messages JSONB format**:
+   ```json
+   {"role": "customer|bot", "content": "...", "timestamp": "2026-03-30T10:00:00Z"}
+   ```
+
+10. **Build Phase 1 first, deploy early** — get a real Instagram test account, point the webhook at ngrok locally, and run a real DM conversation before building any more features.
+
+---
+
+## Demo Script (End of Week 2)
+
+Record split screen: Instagram DMs on left, Delivery Dashboard on right.
+
+1. Customer: *"Bhai yeh blue kurta kitne ka hai?"*
+2. Bot (instantly): *"Haan ji! Yeh 999 mein hai, ekdum premium quality 🔥"*
+3. Customer: *"800 mein doge?"*
+4. Bot: *"Arre bhai 800 toh nahi hoga, aapke liye 899 final"*
+5. Customer: *"Theek hai 899 pakka"*
+6. Bot: *"Pakka! Yeh lo UPI details, screenshot bhejdo 🙏"*
+7. Customer sends fake screenshot
+8. Bot: *"Bhai screenshot sahi nahi lag raha, dobara bhejo"*
+9. Customer sends real screenshot
+10. Bot: *"Payment mil gaya! ✅ Order confirm ho gaya bhai"*
+11. **Right side: Order card appears in Delivery Dashboard instantly**
+12. Team fills tracking ID, uploads parcel photo, clicks Dispatch
+13. **Customer gets Instagram DM within 5 seconds:** photo + tracking message
+
+Share this video in Instagram seller WhatsApp groups. This is your entire sales pitch.
+
+---
+
+## AWS Infrastructure (Production)
+
+| Service | Config | Monthly Cost |
+|---|---|---|
+| ECS Fargate | 2 tasks: API + worker, 1vCPU/2GB | ~₹8,000 |
+| RDS PostgreSQL | db.t3.micro, single-AZ | ~₹6,000 |
+| ElastiCache Redis | cache.t3.micro | ~₹4,000 |
+| S3 | Screenshots + parcel photos ~50GB | ~₹500 |
+| ALB | Load balancer | ~₹2,000 |
+| CloudWatch | Logs | ~₹1,000 |
+| **Total** | | **~₹21,500/mo** |
+
+Upgrade RDS to db.t3.small (~₹12,000/mo) when you cross 50 active sellers.
+
+---
+
+## Sarvam Startup Program
+
+Apply at: https://www.sarvam.ai
+Benefits: 6-12 months free API credits + priority engineering support
+Apply once Phase 1 demo is working. Your use case is exactly what they want to showcase.
