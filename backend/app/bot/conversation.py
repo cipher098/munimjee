@@ -70,6 +70,9 @@ async def advance_conversation(
     if extra.get("negotiation_round") is not None:
         conversation.negotiation_round = extra["negotiation_round"]
 
+    if extra.get("last_counter_price") is not None:
+        conversation.last_counter_price = extra["last_counter_price"]
+
     if extra.get("product_id"):
         conversation.product_id = extra["product_id"]
 
@@ -151,27 +154,30 @@ async def handle_product_image(
 
     # Stage 1 — Vision: describe what the customer is holding/showing
     description = await claude.describe_product_image(image_b64, media_type)
-    logger.info("Product image described as: %r", description)
 
     # Stage 2 — Text: match description against catalog
     match = await claude.match_product_by_description(description, products_for_vision)
-    logger.info("Catalog match result: %s", match)
 
     product_id = match.get("product_id")
     confidence = match.get("confidence", "low")
 
-    if product_id and confidence != "low":
-        matched = next((p for p in products if str(p.id) == product_id), None)
-        if matched:
-            logger.info(
-                "Product match — id=%s name=%r listed=₹%d floor=₹%d confidence=%s reason=%r",
-                matched.id,
-                matched.name,
-                matched.listed_price // 100,
-                matched.floor_price // 100,
-                confidence,
-                match.get("reason", ""),
-            )
+    matched = next((p for p in products if str(p.id) == product_id), None) if product_id else None
+    logger.info(
+        "\n"
+        "┌─────────────────────────────────────────\n"
+        "│ IMAGE MATCH\n"
+        "│ DESCRIPTION : %s\n"
+        "│ MATCHED     : %s  (confidence: %s)\n"
+        "│ LISTED      : %s  |  FLOOR: %s\n"
+        "│ REASON      : %s\n"
+        "└─────────────────────────────────────────",
+        description,
+        matched.name if matched else "NO MATCH",
+        confidence,
+        f"₹{matched.listed_price // 100}" if matched else "—",
+        f"₹{matched.floor_price // 100}" if matched else "—",
+        match.get("reason", ""),
+    )
 
     if not product_id or confidence == "low":
         # Could not identify — ask customer to clarify

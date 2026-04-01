@@ -57,3 +57,8 @@ async def favicon():
 @app.get("/dashboard")
 async def dashboard(phone: str = Depends(verify_dashboard_cookie)):
     return FileResponse("/app/static/dashboard.html")
+
+
+@app.get("/dashboard/products")
+async def products_dashboard(phone: str = Depends(verify_dashboard_cookie)):
+    return FileResponse("/app/static/products.html")

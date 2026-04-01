@@ -125,6 +125,7 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
 
     if attachments:
         await _handle_attachment(conversation, seller, attachments, db)
+        await db.commit()
     elif text:
         await _handle_text_message(conversation, seller, text, db)
 

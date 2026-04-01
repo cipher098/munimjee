@@ -20,6 +20,7 @@ class Seller(Base):
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     persona = Column(JSONB, nullable=True)
+    policies = Column(JSONB, nullable=True)  # {cod: bool, return_days: int|null, delivery_days: str|null}
     negotiation_style = Column(String, default="medium")  # soft | medium | firm
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -17,6 +17,8 @@ class Product(Base):
     listed_price = Column(Integer, nullable=False)   # in paise
     floor_price = Column(Integer, nullable=False)    # private minimum — never exposed to customer
     photo_url = Column(String, nullable=True)        # S3 URL
+    warranty_months = Column(Integer, nullable=True)  # None = no warranty
+    stock_quantity = Column(Integer, nullable=True)    # None = untracked
     active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

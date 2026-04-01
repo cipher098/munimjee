@@ -75,34 +75,61 @@ async def generate_bot_reply(
         "negotiation_round": conversation.negotiation_round,
         "listed_price": product.listed_price if product else None,
         "floor_price": product.floor_price if product else None,   # never forwarded to customer
+        "last_counter_price": conversation.last_counter_price if product else None,
         "message_history": (conversation.messages or [])[-10:],
         "available_products": products_list,
     })
+
+    # Safety override — if product is known, clarify is never appropriate
+    if decision.get("action") == "clarify" and product:
+        logger.warning(
+            "Claude chose 'clarify' with known product %r — overriding to engage", product.name
+        )
+        decision["action"] = "engage"
 
     new_state, extra = _derive_state_from_decision(decision, conversation, product)
 
     persona = seller.persona or DEFAULT_PERSONA
 
+    reply_context = {
+        "decision": decision,
+        "persona": persona,
+        "product_name": product.name if product else "the product",
+        "listed_price_rupees": product.listed_price // 100 if product else None,
+        "warranty_months": product.warranty_months if product else None,
+        "stock_quantity": product.stock_quantity if product else None,
+        "bulk_quantity": decision.get("bulk_quantity"),
+        "customer_message": customer_message,
+        "policies": seller.policies or {},
+        "message_history": (conversation.messages or [])[-10:],
+    }
+
     # Step 2: Sarvam generates the actual message text
     try:
-        reply = await sarvam.generate_reply({
-            "decision": decision,
-            "persona": persona,
-            "product_name": product.name if product else "the product",
-            "listed_price_rupees": product.listed_price // 100 if product else None,
-            "bulk_quantity": decision.get("bulk_quantity"),
-            "message_history": (conversation.messages or [])[-10:],
-        })
+        reply = await sarvam.generate_reply(reply_context)
     except Exception as exc:
         logger.warning("Sarvam failed (%s), falling back to Claude for reply", exc)
-        reply = await claude.generate_reply({
-            "decision": decision,
-            "persona": persona,
-            "product_name": product.name if product else "the product",
-            "listed_price_rupees": product.listed_price // 100 if product else None,
-            "bulk_quantity": decision.get("bulk_quantity"),
-            "message_history": (conversation.messages or [])[-10:],
-        })
+        reply = await claude.generate_reply(reply_context)
+
+    price_paise = decision.get("price")
+    price_str = f"₹{price_paise // 100}" if price_paise else "—"
+    logger.info(
+        "\n"
+        "┌─────────────────────────────────────────\n"
+        "│ CUSTOMER  : %s\n"
+        "│ STATE     : %s  →  %s\n"
+        "│ PRODUCT   : %s\n"
+        "│ ACTION    : %s  |  PRICE: %s  |  INTENT: %s  |  ROUND: %s\n"
+        "│ REASON    : %s\n"
+        "│ BOT REPLY : %s\n"
+        "└─────────────────────────────────────────",
+        customer_message,
+        conversation.state, new_state or "(no change)",
+        product.name if product else "none",
+        decision.get("action"), price_str, decision.get("customer_intent"), conversation.negotiation_round,
+        decision.get("reason", ""),
+        reply,
+    )
 
     return reply, new_state, extra
 
@@ -139,7 +166,18 @@ def _derive_state_from_decision(
                 "Claude countered at %d below floor %d — clamping to floor",
                 price, floor_price,
             )
+            price = floor_price
             decision["price"] = floor_price
+        # Hard clamp — counter price can never go HIGHER than last counter
+        if price and conversation.last_counter_price and price > conversation.last_counter_price:
+            logger.warning(
+                "Claude tried to counter at %d higher than previous offer %d — clamping down",
+                price, conversation.last_counter_price,
+            )
+            price = conversation.last_counter_price
+            decision["price"] = price
+        if price:
+            extra["last_counter_price"] = price
         extra["negotiation_round"] = conversation.negotiation_round + 1
         return "negotiating", extra
 

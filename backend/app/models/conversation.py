@@ -18,7 +18,8 @@ class Conversation(Base):
     # States: greeting | product_inquiry | negotiating | awaiting_payment
     #         verifying | payment_confirmed | failed | manual_review | dispatched_notified
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
-    agreed_price = Column(Integer, nullable=True)     # in paise
+    agreed_price = Column(Integer, nullable=True)      # in paise
+    last_counter_price = Column(Integer, nullable=True) # lowest price bot has offered so far (paise)
     negotiation_round = Column(Integer, default=0)
     messages = Column(JSONB, default=list)            # [{role, content, timestamp}]
     created_at = Column(DateTime(timezone=True), server_default=func.now())

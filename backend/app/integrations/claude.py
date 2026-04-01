@@ -31,11 +31,15 @@ class ClaudeClient:
         self._client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     async def decide(self, context: dict) -> dict:
+        last_counter = context.get("last_counter_price")
+        last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
+
         prompt = DECISION_PROMPT.format(
             state=context.get("state", ""),
             customer_message=context.get("customer_message", ""),
             listed_price=context.get("listed_price", "unknown"),
             floor_price=context.get("floor_price", "unknown"),
+            last_counter_price=last_counter_str,
             round_number=context.get("negotiation_round", 0),
             message_history=json.dumps(context.get("message_history", []), ensure_ascii=False),
             available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
@@ -57,15 +61,49 @@ class ClaudeClient:
     async def generate_reply(self, context: dict) -> str:
         decision = context.get("decision", {})
         price = decision.get("price")
-        price_context = f"Counter price: ₹{price // 100}" if price else "No price change"
+        price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
+
+        warranty = context.get("warranty_months")
+        warranty_str = f"{warranty} months" if warranty else "No warranty"
+
+        stock = context.get("stock_quantity")
+        if stock is None:
+            stock_str = "Not tracked"
+        elif stock == 0:
+            stock_str = "Out of stock"
+        elif stock <= 3:
+            stock_str = f"Only {stock} left"
+        else:
+            stock_str = f"{stock} in stock"
+
+        policies = context.get("policies") or {}
+        cod = policies.get("cod")
+        return_days = policies.get("return_days")
+        delivery_days = policies.get("delivery_days")
+        policy_lines = []
+        if cod is True:
+            policy_lines.append("COD available")
+        elif cod is False:
+            policy_lines.append("No COD — prepaid only")
+        if return_days:
+            policy_lines.append(f"{return_days}-day returns accepted")
+        elif return_days == 0:
+            policy_lines.append("No returns")
+        if delivery_days:
+            policy_lines.append(f"Delivery in {delivery_days}")
+        policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy"
 
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
+            warranty_info=warranty_str,
+            stock_info=stock_str,
+            policy_info=policy_str,
             action=decision.get("action", "clarify"),
             price_context=price_context,
             customer_intent=decision.get("customer_intent", "warm"),
+            customer_message=context.get("customer_message", ""),
         )
 
         response = await self._client.messages.create(
