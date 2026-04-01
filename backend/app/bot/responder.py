@@ -80,6 +80,13 @@ async def generate_bot_reply(
         "available_products": products_list,
     })
 
+    logger.info(
+        "Decision context — last_counter=₹%s floor=₹%s round=%s",
+        conversation.last_counter_price // 100 if conversation.last_counter_price else "none",
+        product.floor_price // 100 if product else "none",
+        conversation.negotiation_round,
+    )
+
     # Safety override — if product is known, clarify is never appropriate
     if decision.get("action") == "clarify" and product:
         logger.warning(
@@ -98,6 +105,7 @@ async def generate_bot_reply(
         "listed_price_rupees": product.listed_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,
+        "last_counter_price": conversation.last_counter_price,
         "bulk_quantity": decision.get("bulk_quantity"),
         "customer_message": customer_message,
         "policies": seller.policies or {},
@@ -156,6 +164,7 @@ def _derive_state_from_decision(
             decision["action"] = "hold_firm"
         else:
             extra["agreed_price"] = price
+            extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
             return "awaiting_payment", extra
 
     if action == "counter":
@@ -188,8 +197,10 @@ def _derive_state_from_decision(
     if action == "bulk_discount":
         price = decision.get("price")
         if floor_price and price and price < floor_price:
+            price = floor_price
             decision["price"] = floor_price
-        extra["agreed_price"] = decision.get("price")
+        extra["agreed_price"] = price
+        extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
         extra["bulk_quantity"] = decision.get("bulk_quantity")
         return "awaiting_payment", extra
 

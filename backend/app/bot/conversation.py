@@ -66,6 +66,8 @@ async def advance_conversation(
 
     if extra.get("agreed_price"):
         conversation.agreed_price = extra["agreed_price"]
+        # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
+        conversation.last_counter_price = extra["agreed_price"]
 
     if extra.get("negotiation_round") is not None:
         conversation.negotiation_round = extra["negotiation_round"]
@@ -205,6 +207,7 @@ async def handle_product_image(
         conversation.state = new_state
     if extra.get("agreed_price"):
         conversation.agreed_price = extra["agreed_price"]
+        conversation.last_counter_price = extra["agreed_price"]
     if extra.get("negotiation_round") is not None:
         conversation.negotiation_round = extra["negotiation_round"]
 

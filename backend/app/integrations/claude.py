@@ -62,6 +62,8 @@ class ClaudeClient:
         decision = context.get("decision", {})
         price = decision.get("price")
         price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
+        last_counter = context.get("last_counter_price")
+        last_counter_reply_str = f"₹{last_counter // 100}" if last_counter else "none"
 
         warranty = context.get("warranty_months")
         warranty_str = f"{warranty} months" if warranty else "No warranty"
@@ -102,6 +104,7 @@ class ClaudeClient:
             policy_info=policy_str,
             action=decision.get("action", "clarify"),
             price_context=price_context,
+            last_counter_price=last_counter_reply_str,
             customer_intent=decision.get("customer_intent", "warm"),
             customer_message=context.get("customer_message", ""),
         )
