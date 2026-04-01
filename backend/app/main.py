@@ -10,6 +10,7 @@ from app.config import settings
 from app.api.webhooks.instagram import router as instagram_webhook_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.products import router as products_router
+from app.api.routes.training import router as training_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ app.mount("/static", StaticFiles(directory="/app/static"), name="static")
 app.include_router(instagram_webhook_router)
 app.include_router(auth_router)
 app.include_router(products_router)
+app.include_router(training_router)
 
 
 @app.get("/health")

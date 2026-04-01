@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Training</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+    .container { max-width: 560px; margin: 40px auto; }
+    h1 { font-size: 20px; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 28px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 18px; color: #444; }
+    label:first-of-type { margin-top: 0; }
+    textarea, input[type="file"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+    textarea { resize: vertical; min-height: 80px; }
+    textarea:focus { border-color: #6366f1; }
+
+    .toggle { display: flex; gap: 10px; margin-bottom: 4px; }
+    .toggle-btn { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; background: #fff;
+                  font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .toggle-btn.bad.active  { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+    .toggle-btn.good.active { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+
+    .preview { margin-top: 12px; display: none; }
+    .preview img { max-width: 100%; border-radius: 8px; border: 1px solid #eee; }
+
+    button[type="submit"] { margin-top: 22px; width: 100%; padding: 12px; background: #6366f1;
+      color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button[type="submit"]:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .revert-btn { width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd;
+      border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; }
+    .revert-btn:hover { border-color: #f87171; color: #dc2626; }
+
+    .result { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; }
+    .result.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .result.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+    .loader { display: none; text-align: center; padding: 20px; color: #6366f1; font-size: 14px; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #c7d2fe;
+               border-top-color: #6366f1; border-radius: 50%; animation: spin .7s linear infinite;
+               vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hint { font-size: 12px; color: #888; margin-top: 4px; }
+    a.nav { font-size: 13px; color: #6366f1; text-decoration: none; }
+    .nav-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav-row">
+      <div>
+        <h1>Bot Training</h1>
+        <div class="subtitle">Upload a conversation screenshot — Claude will fix the prompts automatically</div>
+      </div>
+      <a href="/dashboard" class="nav">Add Product →</a>
+    </div>
+
+    <div class="card">
+      <form id="form">
+        <label>Was this conversation good or bad?</label>
+        <div class="toggle">
+          <button type="button" class="toggle-btn bad" id="btn-bad" onclick="setType('bad')">❌ Bad — fix this</button>
+          <button type="button" class="toggle-btn good" id="btn-good" onclick="setType('good')">✅ Good — keep this</button>
+        </div>
+        <input type="hidden" name="feedback_type" id="feedback_type" value="bad">
+
+        <label>What went wrong (or right)?</label>
+        <textarea name="feedback_text" id="feedback_text"
+          placeholder="e.g. When customer said 'aur se le lunga', bot asked about features instead of holding firm on price"
+          required></textarea>
+
+        <label>What should the bot have said instead? <span style="font-weight:400;color:#888">(optional)</span></label>
+        <textarea name="correct_response"
+          placeholder='e.g. "Bhai try kar lo, itni quality itne mein nahi milegi. Last price hai ye."'></textarea>
+        <div class="hint">Leave blank if you just want Claude to figure out the fix</div>
+
+        <label>Conversation Screenshot *</label>
+        <input type="file" name="screenshot" accept="image/*" required>
+        <div class="preview" id="preview"><img id="previewImg" src="" alt="preview"></div>
+
+        <button type="submit" id="submitBtn">Train Bot</button>
+      </form>
+
+      <div class="loader" id="loader">
+        <span class="spinner"></span> Claude is analyzing the screenshot and rewriting prompts…
+      </div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Revert last update</div>
+      <div class="hint" style="margin-bottom:12px;">If the last training made things worse, restore the previous prompts.</div>
+      <button class="revert-btn" onclick="revert()">↩ Revert to previous prompts</button>
+      <div class="result" id="revert-result"></div>
+    </div>
+  </div>
+
+  <script>
+    // Default to bad
+    setType('bad');
+
+    function setType(type) {
+      document.getElementById('feedback_type').value = type;
+      document.getElementById('btn-bad').classList.toggle('active', type === 'bad');
+      document.getElementById('btn-good').classList.toggle('active', type === 'good');
+      const ta = document.getElementById('feedback_text');
+      ta.placeholder = type === 'bad'
+        ? "e.g. When customer said 'aur se le lunga', bot asked about features instead of holding firm on price"
+        : "e.g. Bot correctly held firm on price when customer tried to walk away";
+    }
+
+    document.querySelector('input[name="screenshot"]').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const loader = document.getElementById('loader');
+      const result = document.getElementById('result');
+
+      btn.style.display = 'none';
+      loader.style.display = 'block';
+      result.style.display = 'none';
+
+      try {
+        const res = await fetch('/training/feedback', { method: 'POST', body: new FormData(this) });
+        const data = await res.json();
+        result.className = res.ok ? 'result success' : 'result error';
+        result.textContent = res.ok
+          ? '✓ ' + data.message
+          : '✗ ' + (data.detail || 'Something went wrong');
+        if (res.ok) this.reset();
+      } catch (err) {
+        result.className = 'result error';
+        result.textContent = 'Network error — is the server running?';
+      }
+
+      loader.style.display = 'none';
+      btn.style.display = 'block';
+      result.style.display = 'block';
+      document.getElementById('preview').style.display = 'none';
+    });
+
+    async function revert() {
+      const result = document.getElementById('revert-result');
+      result.style.display = 'none';
+      try {
+        const res = await fetch('/training/revert', { method: 'POST' });
+        const data = await res.json();
+        result.className = res.ok ? 'result success' : 'result error';
+        result.textContent = res.ok ? '✓ ' + data.message : '✗ ' + (data.detail || 'Failed');
+      } catch {
+        result.className = 'result error';
+        result.textContent = 'Network error';
+      }
+      result.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
