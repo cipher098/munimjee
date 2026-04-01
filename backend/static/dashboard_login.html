@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5;
+           display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: #fff; border-radius: 14px; padding: 36px 32px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.1); width: 100%; max-width: 360px; }
+    h1 { font-size: 20px; margin-bottom: 6px; }
+    .sub { font-size: 13px; color: #888; margin-bottom: 28px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #444;
+            margin-bottom: 5px; margin-top: 16px; }
+    label:first-of-type { margin-top: 0; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 15px; outline: none; }
+    input:focus { border-color: #6366f1; }
+    button { margin-top: 22px; width: 100%; padding: 12px; background: #6366f1;
+             color: #fff; border: none; border-radius: 8px; font-size: 15px;
+             font-weight: 600; cursor: pointer; }
+    .error { margin-top: 14px; padding: 10px 12px; background: #fef2f2;
+             border: 1px solid #fca5a5; color: #991b1b; border-radius: 8px;
+             font-size: 13px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>munimjee.ai</h1>
+    <div class="sub">Dashboard login</div>
+    <form id="form" method="POST" action="/dashboard-auth/login">
+      <label>Phone Number</label>
+      <input type="tel" name="phone" placeholder="10-digit mobile number" required autofocus>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+      <button type="submit">Login</button>
+    </form>
+    <div class="error" id="err"></div>
+  </div>
+  <script>
+    // Show error from query param if redirected back
+    const p = new URLSearchParams(location.search);
+    if (p.get('error')) {
+      const el = document.getElementById('err');
+      el.textContent = p.get('error');
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

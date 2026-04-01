@@ -7,13 +7,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dashboard_auth import verify_dashboard_cookie
 from app.database import get_db
 from app.models.product import Product
 from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/products", tags=["products"], dependencies=[Depends(verify_dashboard_cookie)])
 
 UPLOAD_DIR = Path("/app/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

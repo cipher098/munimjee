@@ -5,15 +5,16 @@ import re
 from pathlib import Path
 
 import anthropic
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
+from app.api.dashboard_auth import verify_dashboard_cookie
 from app.config import settings
 from app.integrations.claude import MODEL
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/training", tags=["training"])
+router = APIRouter(prefix="/training", tags=["training"], dependencies=[Depends(verify_dashboard_cookie)])
 
 PROMPTS_FILE = Path("/app/app/prompts.py")
 
