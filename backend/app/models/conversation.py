@@ -28,3 +28,4 @@ class Conversation(Base):
     seller = relationship("Seller", back_populates="conversations")
     product = relationship("Product", back_populates="conversations")
     orders = relationship("Order", back_populates="conversation")
+    product_states = relationship("ConversationProduct", back_populates="conversation")

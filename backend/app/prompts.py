@@ -121,7 +121,10 @@ STEP 2 — Choose the correct action:
 
   counter = you are willing to reduce price slightly this round.
 
-  accept = customer has offered >= floor_price.
+  accept = customer agreed to buy (any positive signal — "le lunga", "dedo", "ok", "done", etc.).
+          Price to return: if last_counter_price is set → use last_counter_price (that is what you already offered them).
+          If no counter was made yet → use listed_price.
+          NEVER return listed_price when last_counter_price is set — customer already saw the lower price.
 
 STEP 3 — Round-based pricing strategy:
 
@@ -176,8 +179,10 @@ CUSTOMER'S LAST MESSAGE: {customer_message}
 CRITICAL — Price rule:
 - If ACTION is "counter" or "bulk_discount": you MUST quote the EXACT price from PRICE CONTEXT. Do NOT invent a different number.
 - If ACTION is "accept": confirm the exact price from PRICE CONTEXT as the final agreed price.
-- If ACTION is "show_product" or customer asked price: state ₹{listed_price_rupees} clearly.
-- If ACTION is "hold_firm": do NOT quote any number lower than ₹{listed_price_rupees}.
+- If ACTION is "show_product" AND LOWEST PRICE EVER OFFERED is not set: state ₹{listed_price_rupees} clearly.
+- If ACTION is "show_product" AND LOWEST PRICE EVER OFFERED IS set: state that lower price, never the listed price.
+- If ACTION is "hold_firm": do NOT quote any number lower than current counter, do NOT quote listed price if last_counter_price is set.
+- If ACTION is "engage": do NOT mention any price at all — just respond conversationally to what the customer said.
 - ABSOLUTE RULE: NEVER mention any price higher than LOWEST PRICE EVER OFFERED ({last_counter_price}) in your reply if it is set. The customer already saw that price — quoting higher makes you look dishonest.
 
 CRITICAL — Warranty action rule:

@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.conversation import Conversation
+from app.models.conversation_product import ConversationProduct
 from app.models.product import Product
 from app.models.seller import Seller
 
@@ -40,6 +41,7 @@ async def generate_bot_reply(
     customer_message: str,
     seller: Seller,
     db: AsyncSession,
+    conv_product: ConversationProduct | None = None,
 ) -> tuple[str, str | None, dict[str, Any]]:
     """
     Returns (reply_text, new_state, extra_dict).
@@ -68,23 +70,35 @@ async def generate_bot_reply(
     claude = ClaudeClient()
     sarvam = SarvamClient()
 
+    # Resolve price state: conv_product is the source of truth when available,
+    # otherwise fall back to conversation columns for backwards compat.
+    if conv_product is not None:
+        effective_negotiation_round = conv_product.negotiation_round
+        effective_last_counter_price = conv_product.last_counter_price
+        price_state_source = "conv_product"
+    else:
+        effective_negotiation_round = conversation.negotiation_round
+        effective_last_counter_price = conversation.last_counter_price if product else None
+        price_state_source = "conversation"
+
     # Step 1: Claude decides action
     decision = await claude.decide({
         "state": conversation.state,
         "customer_message": customer_message,
-        "negotiation_round": conversation.negotiation_round,
+        "negotiation_round": effective_negotiation_round,
         "listed_price": product.listed_price if product else None,
         "floor_price": product.floor_price if product else None,   # never forwarded to customer
-        "last_counter_price": conversation.last_counter_price if product else None,
+        "last_counter_price": effective_last_counter_price,
         "message_history": (conversation.messages or [])[-10:],
         "available_products": products_list,
     })
 
     logger.info(
-        "Decision context — last_counter=₹%s floor=₹%s round=%s",
-        conversation.last_counter_price // 100 if conversation.last_counter_price else "none",
+        "Decision context — last_counter=₹%s (src:%s) floor=₹%s round=%s",
+        effective_last_counter_price // 100 if effective_last_counter_price else "none",
+        price_state_source,
         product.floor_price // 100 if product else "none",
-        conversation.negotiation_round,
+        effective_negotiation_round,
     )
 
     # Safety override — if product is known, clarify is never appropriate
@@ -94,7 +108,11 @@ async def generate_bot_reply(
         )
         decision["action"] = "engage"
 
-    new_state, extra = _derive_state_from_decision(decision, conversation, product)
+    new_state, extra = _derive_state_from_decision(
+        decision, conversation, product,
+        effective_negotiation_round=effective_negotiation_round,
+        effective_last_counter_price=effective_last_counter_price,
+    )
 
     persona = seller.persona or DEFAULT_PERSONA
 
@@ -105,7 +123,7 @@ async def generate_bot_reply(
         "listed_price_rupees": product.listed_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,
-        "last_counter_price": conversation.last_counter_price,
+        "last_counter_price": effective_last_counter_price,
         "bulk_quantity": decision.get("bulk_quantity"),
         "customer_message": customer_message,
         "policies": seller.policies or {},
@@ -121,20 +139,27 @@ async def generate_bot_reply(
 
     price_paise = decision.get("price")
     price_str = f"₹{price_paise // 100}" if price_paise else "—"
+    counter_str = (
+        f"₹{effective_last_counter_price // 100} ({price_state_source})"
+        if effective_last_counter_price
+        else "none"
+    )
     logger.info(
         "\n"
         "┌─────────────────────────────────────────\n"
-        "│ CUSTOMER  : %s\n"
-        "│ STATE     : %s  →  %s\n"
-        "│ PRODUCT   : %s\n"
-        "│ ACTION    : %s  |  PRICE: %s  |  INTENT: %s  |  ROUND: %s\n"
-        "│ REASON    : %s\n"
-        "│ BOT REPLY : %s\n"
+        "│ CUSTOMER    : %s\n"
+        "│ STATE       : %s  →  %s\n"
+        "│ PRODUCT     : %s\n"
+        "│ ACTION      : %s  |  PRICE: %s  |  INTENT: %s  |  ROUND: %s\n"
+        "│ LAST COUNTER: %s\n"
+        "│ REASON      : %s\n"
+        "│ BOT REPLY   : %s\n"
         "└─────────────────────────────────────────",
         customer_message,
         conversation.state, new_state or "(no change)",
         product.name if product else "none",
-        decision.get("action"), price_str, decision.get("customer_intent"), conversation.negotiation_round,
+        decision.get("action"), price_str, decision.get("customer_intent"), effective_negotiation_round,
+        counter_str,
         decision.get("reason", ""),
         reply,
     )
@@ -146,8 +171,14 @@ def _derive_state_from_decision(
     decision: dict,
     conversation: Conversation,
     product: Product | None,
+    effective_negotiation_round: int = 0,
+    effective_last_counter_price: int | None = None,
 ) -> tuple[str | None, dict]:
-    """Maps Claude's action to a state transition and extra data."""
+    """Maps Claude's action to a state transition and extra data.
+
+    effective_negotiation_round and effective_last_counter_price are the source-of-truth
+    values (from conv_product when available, otherwise from conversation columns).
+    """
     action = decision.get("action", "")
     floor_price = product.floor_price if product else None
     extra: dict[str, Any] = {}
@@ -178,20 +209,20 @@ def _derive_state_from_decision(
             price = floor_price
             decision["price"] = floor_price
         # Hard clamp — counter price can never go HIGHER than last counter
-        if price and conversation.last_counter_price and price > conversation.last_counter_price:
+        if price and effective_last_counter_price and price > effective_last_counter_price:
             logger.warning(
                 "Claude tried to counter at %d higher than previous offer %d — clamping down",
-                price, conversation.last_counter_price,
+                price, effective_last_counter_price,
             )
-            price = conversation.last_counter_price
+            price = effective_last_counter_price
             decision["price"] = price
         if price:
             extra["last_counter_price"] = price
-        extra["negotiation_round"] = conversation.negotiation_round + 1
+        extra["negotiation_round"] = effective_negotiation_round + 1
         return "negotiating", extra
 
     if action == "hold_firm":
-        extra["negotiation_round"] = conversation.negotiation_round + 1
+        extra["negotiation_round"] = effective_negotiation_round + 1
         return "negotiating", extra
 
     if action == "bulk_discount":
