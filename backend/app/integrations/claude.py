@@ -80,20 +80,31 @@ class ClaudeClient:
 
         policies = context.get("policies") or {}
         cod = policies.get("cod")
+        cod_charges = policies.get("cod_charges", 0)
         return_days = policies.get("return_days")
         delivery_days = policies.get("delivery_days")
+        payment_modes = policies.get("payment_modes") or []
+
+        _mode_labels = {"upi": "UPI", "bank_transfer": "Bank Transfer/NEFT", "card": "Card"}
+        mode_str = " / ".join(_mode_labels.get(m, m) for m in payment_modes) if payment_modes else None
+
         policy_lines = []
+        if mode_str:
+            policy_lines.append(f"Accepted payment: {mode_str}")
         if cod is True:
-            policy_lines.append("COD available")
+            if cod_charges:
+                policy_lines.append(f"COD available with ₹{cod_charges} extra charge")
+            else:
+                policy_lines.append("COD available, no extra charge")
         elif cod is False:
             policy_lines.append("No COD — prepaid only")
         if return_days:
             policy_lines.append(f"{return_days}-day returns accepted")
-        elif return_days == 0:
+        elif return_days == 0 and "return_days" in policies:
             policy_lines.append("No returns")
         if delivery_days:
             policy_lines.append(f"Delivery in {delivery_days}")
-        policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy"
+        policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy; say you'll check and confirm"
 
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
