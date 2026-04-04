@@ -52,17 +52,15 @@ async def generate_bot_reply(
         result = await db.execute(select(Product).where(Product.id == conversation.product_id))
         product = result.scalar_one_or_none()
 
-    # At greeting state, load all seller products so Claude can identify what the customer wants
-    products_list: list[dict] = []
-    if not product:
-        result = await db.execute(
-            select(Product).where(Product.seller_id == seller.id, Product.active == True)
-        )
-        all_products = result.scalars().all()
-        products_list = [
-            {"id": str(p.id), "name": p.name, "listed_price_paise": p.listed_price}
-            for p in all_products
-        ]
+    # Always load full catalog so Claude can switch products mid-conversation
+    result = await db.execute(
+        select(Product).where(Product.seller_id == seller.id, Product.active == True)
+    )
+    all_products = result.scalars().all()
+    products_list = [
+        {"id": str(p.id), "name": p.name, "listed_price_paise": p.listed_price}
+        for p in all_products
+    ]
 
     from app.integrations.claude import ClaudeClient
     from app.integrations.sarvam import SarvamClient
@@ -114,7 +112,18 @@ async def generate_bot_reply(
         effective_last_counter_price=effective_last_counter_price,
     )
 
+    # If Claude switched to a different product, reload it so reply text uses the correct product
+    switched_product_id = decision.get("product_id")
+    if switched_product_id and str(switched_product_id) != str(conversation.product_id):
+        result = await db.execute(select(Product).where(Product.id == switched_product_id))
+        switched = result.scalar_one_or_none()
+        if switched:
+            product = switched
+            logger.info("Product switched to %r for reply generation", product.name)
+
     persona = seller.persona or DEFAULT_PERSONA
+
+    all_photo_count = (1 if product and product.photo_url else 0) + (len(product.photo_urls) if product and product.photo_urls else 0)
 
     reply_context = {
         "decision": decision,
@@ -127,7 +136,9 @@ async def generate_bot_reply(
         "bulk_quantity": decision.get("bulk_quantity"),
         "customer_message": customer_message,
         "policies": seller.policies or {},
+        "available_products": products_list,
         "message_history": (conversation.messages or [])[-10:],
+        "total_photos": all_photo_count,
     }
 
     # Step 2: Sarvam generates the actual message text
@@ -247,6 +258,7 @@ def _derive_state_from_decision(
             extra["product_id"] = product_id
         elif product:
             extra["product_id"] = product.id
+        extra["send_image"] = True  # always send product image for show_product
         return "product_inquiry", extra
 
     return None, extra

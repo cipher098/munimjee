@@ -153,6 +153,10 @@
     <input type="file" id="edit-image" accept="image/jpeg,image/png,image/webp">
     <div class="img-preview" id="edit-preview"><img id="edit-preview-img" src="" alt=""></div>
 
+    <label>Linked Reels</label>
+    <textarea id="edit-reels" placeholder="Paste Instagram reel CDN URLs — one per line&#10;e.g. https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=..." style="min-height:80px;font-size:12px;font-family:monospace;"></textarea>
+    <div class="hint">When a customer sends one of these reels in DM, bot will automatically identify the product.</div>
+
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" id="saveBtn" onclick="saveProduct()">Save Changes</button>
@@ -205,6 +209,7 @@
             ${p.stock_quantity === 0 ? '❌ Out of stock' : p.stock_quantity <= 3 ? `⚠️ Only ${p.stock_quantity} left` : `✅ ${p.stock_quantity} in stock`}
           </div>` : ''}
           ${p.description ? `<div class="card-desc">${esc(p.description)}</div>` : ''}
+          ${p.reel_urls && p.reel_urls.length ? `<div style="font-size:12px;color:#7c3aed;margin-top:4px;">🎬 ${p.reel_urls.length} reel${p.reel_urls.length > 1 ? 's' : ''} linked</div>` : ''}
           <div class="card-actions">
             <button class="btn btn-ghost" onclick="openEdit('${p.id}')">Edit</button>
             <button class="btn ${p.active ? 'btn-danger' : 'btn-ghost'}"
@@ -230,6 +235,7 @@
     document.getElementById('edit-active').value = String(p.active);
     document.getElementById('edit-image').value = '';
     document.getElementById('edit-preview').style.display = 'none';
+    document.getElementById('edit-reels').value = (p.reel_urls || []).join('\n');
 
     // Highlight image field if product has a photo_url but it may be missing
     const imgLabel = document.getElementById('edit-image-label');
@@ -266,6 +272,10 @@
 
     const img = document.getElementById('edit-image').files[0];
     if (img) fd.append('image', img);
+
+    const reelLines = document.getElementById('edit-reels').value
+      .split('\n').map(s => s.trim()).filter(Boolean);
+    fd.append('reel_urls', JSON.stringify(reelLines));
 
     const res = await fetch(`/products/${id}`, { method: 'PATCH', body: fd });
     const data = await res.json();

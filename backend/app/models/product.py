@@ -1,6 +1,6 @@
 from uuid import uuid4
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -17,6 +17,8 @@ class Product(Base):
     listed_price = Column(Integer, nullable=False)   # in paise
     floor_price = Column(Integer, nullable=False)    # private minimum — never exposed to customer
     photo_url = Column(String, nullable=True)        # S3 URL
+    photo_urls = Column(JSONB, nullable=True)        # list of additional photo URLs (beyond primary photo_url)
+    reel_urls = Column(JSONB, nullable=True)         # list of Instagram reel URLs linked to this product
     warranty_months = Column(Integer, nullable=True)  # None = no warranty
     stock_quantity = Column(Integer, nullable=True)    # None = untracked
     active = Column(Boolean, default=True)

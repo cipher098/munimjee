@@ -106,6 +106,9 @@ class ClaudeClient:
             policy_lines.append(f"Delivery in {delivery_days}")
         policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy; say you'll check and confirm"
 
+        total_photos = context.get("total_photos", 1)
+        has_more_photos = total_photos > 1
+
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
@@ -118,6 +121,7 @@ class ClaudeClient:
             last_counter_price=last_counter_reply_str,
             customer_intent=decision.get("customer_intent", "warm"),
             customer_message=context.get("customer_message", ""),
+            has_more_photos=has_more_photos,
         )
 
         response = await self._client.messages.create(

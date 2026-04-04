@@ -20,6 +20,7 @@ class ConversationProduct(Base):
     negotiation_round = Column(Integer, default=0)
     last_counter_price = Column(Integer, nullable=True)   # paise — lowest price bot offered
     agreed_price = Column(Integer, nullable=True)         # paise — price customer accepted
+    photos_sent_count = Column(Integer, default=0)        # how many photos have been sent to this customer for this product
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
