@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 
-from app.database import AsyncSessionLocal
+from app.database import worker_session as AsyncSessionLocal
 from app.integrations.instagram import exchange_for_long_lived_token
 from app.models.seller import Seller
 from app.workers.celery_app import celery_app

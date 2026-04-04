@@ -19,7 +19,7 @@ def send_reminder() -> None:
 
 
 async def _send_reminder() -> None:
-    from app.database import AsyncSessionLocal
+    from app.database import worker_session as AsyncSessionLocal
     from app.models.seller import Seller
     from app.models.transaction import Transaction
 

@@ -24,7 +24,7 @@ def notify_customer_dispatch(self, delivery_update_id: str) -> None:
 
 
 async def _notify(delivery_update_id: str) -> None:
-    from app.database import AsyncSessionLocal
+    from app.database import worker_session as AsyncSessionLocal
     from app.models.conversation import Conversation
     from app.models.delivery_update import DeliveryUpdate
     from app.models.order import Order

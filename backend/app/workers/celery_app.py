@@ -11,6 +11,7 @@ celery_app = Celery(
         "app.workers.conversation",
         "app.workers.process_statement",
         "app.workers.refresh_tokens",
+        "app.workers.message_batch",
     ],
 )
 

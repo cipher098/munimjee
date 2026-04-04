@@ -29,7 +29,7 @@ def expire_stale() -> None:
 
 
 async def _expire_stale() -> None:
-    from app.database import AsyncSessionLocal
+    from app.database import worker_session as AsyncSessionLocal
     from app.models.conversation import Conversation
 
     cutoff = datetime.now(timezone.utc) - timedelta(hours=STALE_AFTER_HOURS)
