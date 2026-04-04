@@ -26,12 +26,17 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-south-1"
     S3_BUCKET_NAME: str = "sellerbot-uploads"
 
+    PUBLIC_BASE_URL: str = ""  # e.g. https://abc123.ngrok.io — used to build public image URLs for Meta
+
     WHATSAPP_API_URL: str = ""
     WHATSAPP_API_TOKEN: str = ""
     WHATSAPP_PHONE_NUMBER_ID: str = ""
 
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
+    DASHBOARD_PASSWORD: str = "changeme"
+    DASHBOARD_ALLOWED_PHONES: List[str] = ["8233089333", "7023456161"]
 
     class Config:
         env_file = ".env"

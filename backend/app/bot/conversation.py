@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.conversation import Conversation
+from app.models.conversation_product import ConversationProduct
 from app.models.product import Product
 from app.models.seller import Seller
 
@@ -44,6 +45,91 @@ def _append_message(conversation: Conversation, role: str, content: str) -> None
     conversation.messages = messages
 
 
+async def _get_or_create_conv_product(
+    conversation_id,
+    product_id,
+    db: AsyncSession,
+) -> ConversationProduct:
+    """Return the ConversationProduct row for this (conversation, product) pair, creating it if absent."""
+    result = await db.execute(
+        select(ConversationProduct).where(
+            ConversationProduct.conversation_id == conversation_id,
+            ConversationProduct.product_id == product_id,
+        )
+    )
+    conv_product = result.scalar_one_or_none()
+    if conv_product is None:
+        conv_product = ConversationProduct(
+            conversation_id=conversation_id,
+            product_id=product_id,
+            negotiation_round=0,
+            last_counter_price=None,
+            agreed_price=None,
+        )
+        db.add(conv_product)
+        await db.flush()
+    return conv_product
+
+
+async def _send_next_product_photo(
+    conversation: Conversation,
+    seller: Seller,
+    product,
+    conv_product: "ConversationProduct | None",
+    db: AsyncSession,
+) -> bool:
+    """Send the next unsent product photo. Returns True if a photo was sent."""
+    if not product:
+        return False
+
+    from app.config import settings
+    from app.integrations.instagram import InstagramClient
+
+    # Build full photo list
+    all_photos = []
+    if product.photo_url:
+        all_photos.append(product.photo_url)
+    if product.photo_urls:
+        all_photos.extend(product.photo_urls)
+
+    if not all_photos:
+        return False
+
+    idx = conv_product.photos_sent_count if conv_product else 0
+    if idx >= len(all_photos):
+        return False  # no more photos
+
+    photo_url = all_photos[idx]
+    if photo_url.startswith("/") and settings.PUBLIC_BASE_URL:
+        photo_url = settings.PUBLIC_BASE_URL.rstrip("/") + photo_url
+    elif photo_url.startswith("/"):
+        logger.warning("Cannot send product image — PUBLIC_BASE_URL not set")
+        return False
+
+    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+    try:
+        await client.send_image(conversation.customer_instagram_id, photo_url)
+        logger.info("Sent product photo %d/%d for %r", idx + 1, len(all_photos), product.name)
+        if conv_product:
+            conv_product.photos_sent_count = idx + 1
+        return True
+    except Exception as exc:
+        logger.warning("Could not send product photo for %r: %s", product.name, exc)
+        return False
+
+
+async def _send_product_image_if_new(
+    conversation: Conversation,
+    seller: Seller,
+    product,
+    db: AsyncSession,
+) -> None:
+    """Send product photo to customer when a product is first identified in this conversation.
+    Backwards-compatible wrapper around _send_next_product_photo.
+    """
+    await _send_next_product_photo(conversation, seller, product, None, db)
+
+
 async def advance_conversation(
     conversation: Conversation,
     seller: Seller,
@@ -59,19 +145,56 @@ async def advance_conversation(
     from app.bot.responder import generate_bot_reply
     from app.integrations.instagram import InstagramClient
 
-    reply, new_state, extra = await generate_bot_reply(conversation, customer_message, seller, db)
+    # Look up the per-product state before calling the responder so it can use it
+    conv_product: ConversationProduct | None = None
+    if conversation.product_id:
+        conv_product = await _get_or_create_conv_product(
+            conversation.id, conversation.product_id, db
+        )
+
+    reply, new_state, extra = await generate_bot_reply(
+        conversation, customer_message, seller, db, conv_product=conv_product
+    )
 
     if new_state:
         conversation.state = new_state
 
     if extra.get("agreed_price"):
         conversation.agreed_price = extra["agreed_price"]
+        # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
+        conversation.last_counter_price = extra["agreed_price"]
+        if conv_product is not None:
+            conv_product.agreed_price = extra["agreed_price"]
+            conv_product.last_counter_price = extra["agreed_price"]
 
     if extra.get("negotiation_round") is not None:
         conversation.negotiation_round = extra["negotiation_round"]
+        if conv_product is not None:
+            conv_product.negotiation_round = extra["negotiation_round"]
 
-    if extra.get("product_id"):
-        conversation.product_id = extra["product_id"]
+    if extra.get("last_counter_price") is not None:
+        conversation.last_counter_price = extra["last_counter_price"]
+        if conv_product is not None:
+            conv_product.last_counter_price = extra["last_counter_price"]
+
+    new_product_id = extra.get("product_id")
+    if new_product_id:
+        from sqlalchemy import select as sa_select
+        from app.models.product import Product as ProductModel
+        is_new_product = str(new_product_id) != str(conversation.product_id)
+        conversation.product_id = new_product_id
+
+        result = await db.execute(sa_select(ProductModel).where(ProductModel.id == new_product_id))
+        img_product = result.scalar_one_or_none()
+
+        if is_new_product:
+            # Product switched — load/create conv_product for new product, send first photo
+            new_conv_product = await _get_or_create_conv_product(conversation.id, new_product_id, db)
+            new_conv_product.photos_sent_count = 0
+            await _send_next_product_photo(conversation, seller, img_product, new_conv_product, db)
+        elif extra.get("send_image"):
+            # Same product, customer asked for photo — send next unshown photo
+            await _send_next_product_photo(conversation, seller, img_product, conv_product, db)
 
     _append_message(conversation, "bot", reply)
     await db.flush()
@@ -151,27 +274,30 @@ async def handle_product_image(
 
     # Stage 1 — Vision: describe what the customer is holding/showing
     description = await claude.describe_product_image(image_b64, media_type)
-    logger.info("Product image described as: %r", description)
 
     # Stage 2 — Text: match description against catalog
     match = await claude.match_product_by_description(description, products_for_vision)
-    logger.info("Catalog match result: %s", match)
 
     product_id = match.get("product_id")
     confidence = match.get("confidence", "low")
 
-    if product_id and confidence != "low":
-        matched = next((p for p in products if str(p.id) == product_id), None)
-        if matched:
-            logger.info(
-                "Product match — id=%s name=%r listed=₹%d floor=₹%d confidence=%s reason=%r",
-                matched.id,
-                matched.name,
-                matched.listed_price // 100,
-                matched.floor_price // 100,
-                confidence,
-                match.get("reason", ""),
-            )
+    matched = next((p for p in products if str(p.id) == product_id), None) if product_id else None
+    logger.info(
+        "\n"
+        "┌─────────────────────────────────────────\n"
+        "│ IMAGE MATCH\n"
+        "│ DESCRIPTION : %s\n"
+        "│ MATCHED     : %s  (confidence: %s)\n"
+        "│ LISTED      : %s  |  FLOOR: %s\n"
+        "│ REASON      : %s\n"
+        "└─────────────────────────────────────────",
+        description,
+        matched.name if matched else "NO MATCH",
+        confidence,
+        f"₹{matched.listed_price // 100}" if matched else "—",
+        f"₹{matched.floor_price // 100}" if matched else "—",
+        match.get("reason", ""),
+    )
 
     if not product_id or confidence == "low":
         # Could not identify — ask customer to clarify
@@ -185,22 +311,273 @@ async def handle_product_image(
             logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
-    # Product identified — set it on conversation and generate opening price reply
+    # Product identified — set it on conversation and restore per-product price state
     conversation.product_id = product_id
-    conversation.state = "product_inquiry"
 
-    # Build a synthetic customer message for the responder
+    # Get or create the ConversationProduct row for this product
+    conv_product = await _get_or_create_conv_product(conversation.id, product_id, db)
+
+    # Restore conversation state from per-product state (source of truth)
+    if conv_product.agreed_price:
+        conversation.state = "awaiting_payment"
+    elif conv_product.last_counter_price:
+        conversation.state = "negotiating"
+    else:
+        conversation.state = "product_inquiry"
+
+    conversation.negotiation_round = conv_product.negotiation_round
+    conversation.last_counter_price = conv_product.last_counter_price
+
+    # If deal was already agreed for this product, skip generate_bot_reply —
+    # just send a payment reminder. Calling the responder with a product image
+    # message confuses Claude into restarting negotiation.
     matched_product = next((p for p in products if str(p.id) == product_id), None)
-    synthetic_message = f"[Customer sent image of: {matched_product.name if matched_product else 'product'}]"
+    if conv_product.agreed_price:
+        agreed_rupees = conv_product.agreed_price // 100
+        reply = (
+            f"Bhai deal toh already ho gayi thi — ₹{agreed_rupees} mein! "
+            f"Payment kar do, pack karke bhej deta hoon 🚀"
+        )
+        _append_message(conversation, "bot", reply)
+        await db.flush()
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        return
 
-    reply, new_state, extra = await generate_bot_reply(conversation, synthetic_message, seller, db)
+    # Send product image back to customer so they can confirm it's the right product —
+    # only on fresh inquiry (no prior counter), not when re-sharing during negotiation.
+    is_fresh_inquiry = not conv_product.last_counter_price and not conv_product.agreed_price
+    if is_fresh_inquiry:
+        conv_product.photos_sent_count = 0
+        await _send_next_product_photo(conversation, seller, matched_product, conv_product, db)
+
+    # Build a synthetic customer message for the responder.
+    # During active negotiation, signal that it's a re-share, not a fresh inquiry —
+    # so Claude doesn't restart the pitch at listed price.
+    product_name = matched_product.name if matched_product else "product"
+    if conversation.state == "negotiating":
+        synthetic_message = (
+            f"[Customer re-sent image of: {product_name} — negotiation is ongoing, continue from last counter price]"
+        )
+    else:
+        synthetic_message = f"[Customer sent image of: {product_name}]"
+
+    reply, new_state, extra = await generate_bot_reply(
+        conversation, synthetic_message, seller, db, conv_product=conv_product
+    )
 
     if new_state:
         conversation.state = new_state
     if extra.get("agreed_price"):
         conversation.agreed_price = extra["agreed_price"]
+        conversation.last_counter_price = extra["agreed_price"]
+        conv_product.agreed_price = extra["agreed_price"]
+        conv_product.last_counter_price = extra["agreed_price"]
     if extra.get("negotiation_round") is not None:
         conversation.negotiation_round = extra["negotiation_round"]
+        conv_product.negotiation_round = extra["negotiation_round"]
+    if extra.get("last_counter_price") is not None:
+        conversation.last_counter_price = extra["last_counter_price"]
+        conv_product.last_counter_price = extra["last_counter_price"]
+
+    _append_message(conversation, "bot", reply)
+    await db.flush()
+
+    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+    try:
+        await client.send_message(conversation.customer_instagram_id, reply)
+    except Exception as exc:
+        logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+
+
+def _extract_ig_shortcode(url: str) -> str | None:
+    """Extract shortcode from instagram.com/p/<code>/ or instagram.com/reel/<code>/."""
+    import re
+    m = re.search(r"instagram\.com/(?:p|reel|tv)/([A-Za-z0-9_-]+)", url)
+    return m.group(1) if m else None
+
+
+def _match_reel_url(incoming_url: str, stored_urls: list[str]) -> bool:
+    """Return True if incoming_url matches any stored reel URL.
+
+    Strategies tried in order:
+    1. Exact URL match.
+    2. asset_id match (both are CDN URLs).
+    3. Instagram shortcode match (stored URL is instagram.com/p|reel/<code>/).
+    """
+    from urllib.parse import urlparse, parse_qs
+
+    if not stored_urls:
+        return False
+
+    incoming_qs = parse_qs(urlparse(incoming_url).query)
+    incoming_asset_id = incoming_qs.get("asset_id", [None])[0]
+    incoming_shortcode = _extract_ig_shortcode(incoming_url)
+
+    for stored in stored_urls:
+        if stored == incoming_url:
+            return True
+        stored_qs = parse_qs(urlparse(stored).query)
+        stored_asset_id = stored_qs.get("asset_id", [None])[0]
+        if incoming_asset_id and stored_asset_id and incoming_asset_id == stored_asset_id:
+            return True
+        stored_shortcode = _extract_ig_shortcode(stored)
+        if incoming_shortcode and stored_shortcode and incoming_shortcode == stored_shortcode:
+            return True
+    return False
+
+
+async def handle_reel(
+    conversation: Conversation,
+    seller: Seller,
+    reel_url: str,
+    db: AsyncSession,
+    reel_video_id: str | None = None,
+    reel_title: str | None = None,
+) -> None:
+    """Customer shared an Instagram Reel — match against product reel_urls and start sales flow."""
+    from app.integrations.instagram import InstagramClient
+
+    _append_message(conversation, "customer", f"[reel: {reel_url}]")
+    await db.flush()
+
+    # If we have a reel_video_id (media ID), resolve it to a shortcode via Graph API.
+    # This lets us match CDN URLs against stored instagram.com/p/<shortcode>/ URLs.
+    resolved_shortcode: str | None = None
+    if reel_video_id:
+        try:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            resolved_shortcode = await client.get_media_shortcode(reel_video_id)
+            logger.info("Resolved reel_video_id %s → shortcode %s", reel_video_id, resolved_shortcode)
+        except Exception as exc:
+            logger.warning("Could not resolve reel_video_id %s: %s", reel_video_id, exc)
+
+    # Build a synthetic URL with the resolved shortcode so _match_reel_url can compare
+    effective_url = reel_url
+    if resolved_shortcode:
+        effective_url = f"https://www.instagram.com/reel/{resolved_shortcode}/"
+
+    # Load all active products with reel_urls set
+    result = await db.execute(
+        select(Product).where(
+            Product.seller_id == seller.id,
+            Product.active == True,
+            Product.reel_urls.isnot(None),
+        )
+    )
+    products = result.scalars().all()
+
+    matched_product = None
+    for p in products:
+        stored = p.reel_urls or []
+        # Direct numeric ID match (stored IDs from oEmbed resolution)
+        if reel_video_id and reel_video_id in stored:
+            matched_product = p
+            break
+        # URL-based matching (shortcode/asset_id/exact)
+        if _match_reel_url(effective_url, stored) or _match_reel_url(reel_url, stored):
+            matched_product = p
+            break
+
+    # Fallback: if URL matching failed but we have a title, use Claude catalog match
+    if not matched_product and reel_title:
+        logger.info("URL match failed — trying title-based catalog match with: %r", reel_title)
+        from app.integrations.claude import ClaudeClient
+        all_result = await db.execute(
+            select(Product).where(Product.seller_id == seller.id, Product.active == True)
+        )
+        all_products = all_result.scalars().all()
+        products_for_match = [
+            {"id": str(p.id), "name": p.name, "description": p.description or "", "listed_price_paise": p.listed_price}
+            for p in all_products
+        ]
+        claude = ClaudeClient()
+        match = await claude.match_product_by_description(reel_title, products_for_match)
+        if match.get("confidence") in ("high", "medium") and match.get("product_id"):
+            matched_product = next((p for p in all_products if str(p.id) == match["product_id"]), None)
+            logger.info("Title-based match: %s (confidence: %s)", matched_product.name if matched_product else "none", match.get("confidence"))
+
+    logger.info(
+        "\n┌─────────────────────────────────────────\n"
+        "│ REEL MATCH\n"
+        "│ reel_video_id : %s\n"
+        "│ SHORTCODE     : %s\n"
+        "│ MATCHED       : %s\n"
+        "└─────────────────────────────────────────",
+        reel_video_id or "(none)",
+        resolved_shortcode or "(not resolved)",
+        matched_product.name if matched_product else "NO MATCH",
+    )
+
+    if not matched_product:
+        reply = "Ye reel kaunse product ki hai? Product ka naam batao 😊"
+        _append_message(conversation, "bot", reply)
+        await db.flush()
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        return
+
+    # Product matched — set on conversation and restore per-product price state
+    conversation.product_id = str(matched_product.id)
+    conv_product = await _get_or_create_conv_product(conversation.id, str(matched_product.id), db)
+
+    if conv_product.agreed_price:
+        conversation.state = "awaiting_payment"
+    elif conv_product.last_counter_price:
+        conversation.state = "negotiating"
+    else:
+        conversation.state = "product_inquiry"
+
+    conversation.negotiation_round = conv_product.negotiation_round
+    conversation.last_counter_price = conv_product.last_counter_price
+
+    # If deal was already agreed, just send payment reminder
+    if conv_product.agreed_price:
+        agreed_rupees = conv_product.agreed_price // 100
+        reply = (
+            f"Bhai deal toh already ho gayi thi — ₹{agreed_rupees} mein! "
+            f"Payment kar do, pack karke bhej deta hoon 🚀"
+        )
+        _append_message(conversation, "bot", reply)
+        await db.flush()
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        return
+
+    # Fresh inquiry — send product photo first
+    is_fresh_inquiry = not conv_product.last_counter_price and not conv_product.agreed_price
+    if is_fresh_inquiry:
+        conv_product.photos_sent_count = 0
+        await _send_next_product_photo(conversation, seller, matched_product, conv_product, db)
+
+    from app.bot.responder import generate_bot_reply
+    synthetic_message = f"[Customer shared reel of: {matched_product.name}]"
+    reply, new_state, extra = await generate_bot_reply(
+        conversation, synthetic_message, seller, db, conv_product=conv_product
+    )
+
+    if new_state:
+        conversation.state = new_state
+    if extra.get("agreed_price"):
+        conversation.agreed_price = extra["agreed_price"]
+        conversation.last_counter_price = extra["agreed_price"]
+        conv_product.agreed_price = extra["agreed_price"]
+        conv_product.last_counter_price = extra["agreed_price"]
+    if extra.get("negotiation_round") is not None:
+        conversation.negotiation_round = extra["negotiation_round"]
+        conv_product.negotiation_round = extra["negotiation_round"]
+    if extra.get("last_counter_price") is not None:
+        conversation.last_counter_price = extra["last_counter_price"]
+        conv_product.last_counter_price = extra["last_counter_price"]
 
     _append_message(conversation, "bot", reply)
     await db.flush()

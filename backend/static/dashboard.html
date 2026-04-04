@@ -25,11 +25,20 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;display:flex;align-items:center;gap:16px;height:56px;margin-bottom:0;">
+    <span style="font-size:16px;font-weight:700;">munimjee.ai</span>
+    <nav style="display:flex;gap:4px;margin-left:auto;">
+      <a href="/dashboard" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;background:#ede9fe;color:#6366f1;font-weight:600;">Add Product</a>
+      <a href="/dashboard/products" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">All Products</a>
+      <a href="/training/dashboard" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Training</a>
+      <a href="/dashboard/settings" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Settings</a>
+      <a href="/dashboard-auth/logout" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Logout</a>
+    </nav>
+  </div>
+  <div class="container" style="margin-top:0;padding-top:24px;">
     <h1>Add Product</h1>
     <form id="form">
-      <label>Seller ID *</label>
-      <input type="text" name="seller_id" placeholder="UUID of the seller" required>
+      <input type="hidden" name="seller_id" value="ac2303e0-00f3-4470-98ca-36a8f4ae5866">
 
       <label>Product Name *</label>
       <input type="text" name="name" placeholder="e.g. Wooden Wall Clock" required>
@@ -49,6 +58,14 @@
       <label>Description</label>
       <textarea name="description" placeholder="Leave empty to auto-generate from image using AI"></textarea>
       <div class="hint">Optional — AI will describe the product from the image if left blank</div>
+
+      <label>Warranty (months)</label>
+      <input type="number" name="warranty_months" placeholder="e.g. 6" min="1">
+      <div class="hint">Optional — leave blank if no warranty</div>
+
+      <label>Stock Quantity</label>
+      <input type="number" name="stock_quantity" placeholder="e.g. 10" min="1">
+      <div class="hint">Optional — leave blank if not tracking stock</div>
 
       <label>Product Image *</label>
       <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
@@ -90,6 +107,7 @@
             ID: ${data.id}<br>
             Name: ${data.name}<br>
             Listed: ₹${data.listed_price_rupees} &nbsp;|&nbsp; Floor: ₹${data.floor_price_rupees}<br>
+            ${data.warranty_months ? `Warranty: ${data.warranty_months} month(s)<br>` : 'No warranty<br>'}
             ${data.description ? `<br><em>${data.description}</em>` : ''}
           `;
           this.reset();

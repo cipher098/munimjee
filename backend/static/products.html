@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Products</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+
+    .topbar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px;
+              display: flex; align-items: center; gap: 16px; height: 56px; }
+    .topbar h1 { font-size: 16px; font-weight: 700; }
+    .topbar nav { display: flex; gap: 4px; margin-left: auto; }
+    .topbar nav a { padding: 6px 12px; border-radius: 6px; font-size: 13px;
+                    text-decoration: none; color: #555; }
+    .topbar nav a:hover { background: #f3f4f6; }
+    .topbar nav a.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .toolbar h2 { font-size: 18px; font-weight: 700; flex: 1; }
+    .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+           cursor: pointer; border: none; }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-ghost { background: transparent; border: 1px solid #ddd; color: #555; }
+    .btn-ghost:hover { background: #f9fafb; }
+    .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .btn-danger:hover { background: #fecaca; }
+
+    .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+    .filter-row label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .card { background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07); position: relative; }
+    .card.inactive { opacity: 0.55; }
+    .card img { width: 100%; height: 180px; object-fit: cover; display: block; background: #f3f4f6; }
+    .card-body { padding: 14px; }
+    .card-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .card-prices { font-size: 13px; color: #555; margin-bottom: 4px; }
+    .card-prices .floor { color: #9ca3af; font-size: 12px; }
+    .card-desc { font-size: 12px; color: #6b7280; margin-top: 6px;
+                 overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2;
+                 -webkit-box-orient: vertical; }
+    .card-warranty { font-size: 12px; color: #2563eb; margin-top: 4px; }
+    .card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .card-actions .btn { flex: 1; padding: 7px 10px; font-size: 12px; }
+    .badge-inactive { position: absolute; top: 10px; right: 10px; background: #374151;
+                      color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+
+    .empty { text-align: center; padding: 60px 20px; color: #9ca3af; }
+    .empty p { margin-top: 8px; font-size: 14px; }
+
+    /* Modal */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+               z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 500px;
+             max-height: 90vh; overflow-y: auto; padding: 28px 24px; }
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+    .modal label { display: block; font-size: 13px; font-weight: 600; color: #444;
+                   margin-bottom: 4px; margin-top: 14px; }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; outline: none; }
+    .modal input:focus, .modal textarea:focus { border-color: #6366f1; }
+    .modal textarea { resize: vertical; min-height: 64px; }
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions .btn { flex: 1; padding: 10px; }
+    .hint { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+    .img-preview { margin-top: 10px; display: none; }
+    .img-preview img { max-width: 100%; border-radius: 8px; border: 1px solid #eee; max-height: 180px; object-fit: cover; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+             background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
+             font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>munimjee.ai</h1>
+  <nav>
+    <a href="/dashboard">Add Product</a>
+    <a href="/dashboard/products" class="active">All Products</a>
+    <a href="/training/dashboard">Training</a>
+    <a href="/dashboard/settings">Settings</a>
+    <a href="/dashboard-auth/logout">Logout</a>
+  </nav>
+</div>
+
+<div class="container">
+  <div class="toolbar">
+    <h2>Products</h2>
+    <a href="/dashboard" class="btn btn-primary">+ Add New</a>
+  </div>
+
+  <div class="filter-row">
+    <label>
+      <input type="checkbox" id="showInactive"> Show inactive products
+    </label>
+    <span id="countLabel" style="font-size:13px;color:#9ca3af;margin-left:auto;"></span>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="empty"><div style="font-size:32px">📦</div><p>Loading products…</p></div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Edit Product</h3>
+    <input type="hidden" id="edit-id">
+
+    <label>Product Name</label>
+    <input type="text" id="edit-name" placeholder="Product name">
+
+    <div class="price-row">
+      <div>
+        <label>Listed Price (₹)</label>
+        <input type="number" id="edit-listed" placeholder="599" min="1">
+      </div>
+      <div>
+        <label>Floor Price (₹)</label>
+        <input type="number" id="edit-floor" placeholder="399" min="1">
+        <div class="hint">Min you'll accept</div>
+      </div>
+    </div>
+
+    <label>Warranty (months)</label>
+    <input type="number" id="edit-warranty" placeholder="e.g. 6 — leave blank for no warranty" min="0">
+
+    <label>Stock Quantity</label>
+    <input type="number" id="edit-stock" placeholder="e.g. 10 — leave blank if not tracking" min="0">
+
+    <label>Description</label>
+    <textarea id="edit-desc" placeholder="Product description"></textarea>
+
+    <label>Status</label>
+    <select id="edit-active">
+      <option value="true">Active (visible to customers)</option>
+      <option value="false">Inactive (hidden)</option>
+    </select>
+
+    <label id="edit-image-label">Replace Image (optional)</label>
+    <input type="file" id="edit-image" accept="image/jpeg,image/png,image/webp">
+    <div class="img-preview" id="edit-preview"><img id="edit-preview-img" src="" alt=""></div>
+
+    <label>Linked Reels</label>
+    <textarea id="edit-reels" placeholder="Paste Instagram reel CDN URLs — one per line&#10;e.g. https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=..." style="min-height:80px;font-size:12px;font-family:monospace;"></textarea>
+    <div class="hint">When a customer sends one of these reels in DM, bot will automatically identify the product.</div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveProduct()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SELLER_ID = 'ac2303e0-00f3-4470-98ca-36a8f4ae5866';
+  let products = [];
+
+  async function loadProducts() {
+    const includeInactive = document.getElementById('showInactive').checked;
+    const res = await fetch(`/products?seller_id=${SELLER_ID}&include_inactive=${includeInactive}`);
+    if (!res.ok) { showToast('Failed to load products'); return; }
+    products = await res.json();
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('grid');
+    document.getElementById('countLabel').textContent = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+
+    if (!products.length) {
+      grid.innerHTML = '<div class="empty"><div style="font-size:32px">📦</div><p>No products yet. <a href="/dashboard">Add one</a>.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = products.map(p => `
+      <div class="card ${p.active ? '' : 'inactive'}" id="card-${p.id}">
+        ${p.photo_url
+          ? `<img src="${p.photo_url}" alt="${esc(p.name)}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+             <div style="height:180px;background:#fef9c3;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#92400e;font-size:13px;font-weight:600;">
+               <span style="font-size:28px">⚠️</span>Image missing — re-upload in Edit
+             </div>`
+          : `<div style="height:180px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#d1d5db;font-size:40px">📷</div>`
+        }
+        ${!p.active ? '<div class="badge-inactive">Inactive</div>' : ''}
+        <div class="card-body">
+          <div class="card-name">${esc(p.name)}</div>
+          <div class="card-prices">
+            ₹${p.listed_price_rupees}
+            <span class="floor"> · floor ₹${p.floor_price_rupees}</span>
+          </div>
+          ${p.warranty_months ? `<div class="card-warranty">🛡 ${p.warranty_months} month warranty</div>` : ''}
+          ${p.stock_quantity != null ? `<div style="font-size:12px;margin-top:4px;color:${p.stock_quantity <= 3 ? '#dc2626' : '#16a34a'};">
+            ${p.stock_quantity === 0 ? '❌ Out of stock' : p.stock_quantity <= 3 ? `⚠️ Only ${p.stock_quantity} left` : `✅ ${p.stock_quantity} in stock`}
+          </div>` : ''}
+          ${p.description ? `<div class="card-desc">${esc(p.description)}</div>` : ''}
+          ${p.reel_urls && p.reel_urls.length ? `<div style="font-size:12px;color:#7c3aed;margin-top:4px;">🎬 ${p.reel_urls.length} reel${p.reel_urls.length > 1 ? 's' : ''} linked</div>` : ''}
+          <div class="card-actions">
+            <button class="btn btn-ghost" onclick="openEdit('${p.id}')">Edit</button>
+            <button class="btn ${p.active ? 'btn-danger' : 'btn-ghost'}"
+              onclick="toggleActive('${p.id}', ${!p.active})">
+              ${p.active ? 'Deactivate' : 'Activate'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openEdit(id) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('edit-id').value = p.id;
+    document.getElementById('edit-name').value = p.name;
+    document.getElementById('edit-listed').value = p.listed_price_rupees;
+    document.getElementById('edit-floor').value = p.floor_price_rupees;
+    document.getElementById('edit-warranty').value = p.warranty_months ?? '';
+    document.getElementById('edit-stock').value = p.stock_quantity ?? '';
+    document.getElementById('edit-desc').value = p.description ?? '';
+    document.getElementById('edit-active').value = String(p.active);
+    document.getElementById('edit-image').value = '';
+    document.getElementById('edit-preview').style.display = 'none';
+    document.getElementById('edit-reels').value = (p.reel_urls || []).join('\n');
+
+    // Highlight image field if product has a photo_url but it may be missing
+    const imgLabel = document.getElementById('edit-image-label');
+    const imgCard = document.getElementById(`card-${p.id}`);
+    const warningDiv = imgCard ? imgCard.querySelector('[style*="fef9c3"]') : null;
+    const isMissing = warningDiv && warningDiv.style.display !== 'none';
+    imgLabel.textContent = isMissing ? '⚠️ Image missing — please re-upload' : 'Replace Image (optional)';
+    imgLabel.style.color = isMissing ? '#92400e' : '';
+
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  async function saveProduct() {
+    const id = document.getElementById('edit-id').value;
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    const fd = new FormData();
+    fd.append('name', document.getElementById('edit-name').value);
+    fd.append('listed_price', document.getElementById('edit-listed').value);
+    fd.append('floor_price', document.getElementById('edit-floor').value);
+    fd.append('description', document.getElementById('edit-desc').value);
+    fd.append('active', document.getElementById('edit-active').value);
+
+    const warranty = document.getElementById('edit-warranty').value;
+    fd.append('warranty_months', warranty === '' ? '0' : warranty);
+
+    const stock = document.getElementById('edit-stock').value;
+    fd.append('stock_quantity', stock === '' ? '0' : stock);
+
+    const img = document.getElementById('edit-image').files[0];
+    if (img) fd.append('image', img);
+
+    const reelLines = document.getElementById('edit-reels').value
+      .split('\n').map(s => s.trim()).filter(Boolean);
+    fd.append('reel_urls', JSON.stringify(reelLines));
+
+    const res = await fetch(`/products/${id}`, { method: 'PATCH', body: fd });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = 'Save Changes';
+
+    if (res.ok) {
+      showToast('Product updated');
+      closeModal();
+      loadProducts();
+    } else {
+      showToast(data.detail || 'Update failed');
+    }
+  }
+
+  async function toggleActive(id, newState) {
+    const fd = new FormData();
+    fd.append('active', String(newState));
+    const res = await fetch(`/products/${id}`, { method: 'PATCH', body: fd });
+    if (res.ok) {
+      showToast(newState ? 'Product activated' : 'Product deactivated');
+      loadProducts();
+    } else {
+      showToast('Failed to update');
+    }
+  }
+
+  // Image preview in modal
+  document.getElementById('edit-image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('edit-preview-img').src = e.target.result;
+      document.getElementById('edit-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Close modal on overlay click
+  document.getElementById('overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('showInactive').addEventListener('change', loadProducts);
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>

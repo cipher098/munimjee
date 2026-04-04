@@ -125,6 +125,7 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
 
     if attachments:
         await _handle_attachment(conversation, seller, attachments, db)
+        await db.commit()
     elif text:
         await _handle_text_message(conversation, seller, text, db)
 
@@ -167,18 +168,31 @@ async def _get_or_create_conversation(
     return conversation
 
 
+import re as _re
+
+_IG_URL_RE = _re.compile(r"https?://(?:www\.)?instagram\.com/(?:p|reel|tv)/[A-Za-z0-9_-]+")
+
+
 async def _handle_text_message(
     conversation: Conversation,
     seller: Seller,
     text: str,
     db: AsyncSession,
 ) -> None:
-    from app.bot.conversation import advance_conversation
+    from app.bot.conversation import advance_conversation, handle_reel
 
     logger.info(
         "Text message in conversation %s (state=%s): %r",
         conversation.id, conversation.state, text,
     )
+
+    # If the text is (or contains) an Instagram reel/post URL, try reel matching first
+    ig_match = _IG_URL_RE.search(text)
+    if ig_match and conversation.state not in ("payment_confirmed", "dispatched_notified", "failed"):
+        logger.info("Instagram URL detected in text — attempting reel match")
+        await handle_reel(conversation, seller, ig_match.group(0), db)
+        await db.commit()
+        return
 
     await advance_conversation(conversation, seller, text, db)
     await db.commit()
@@ -190,29 +204,35 @@ async def _handle_attachment(
     attachments: list,
     db: AsyncSession,
 ) -> None:
-    from app.bot.conversation import handle_payment_screenshot, handle_product_image
+    from app.bot.conversation import handle_payment_screenshot, handle_product_image, handle_reel
+
+    TERMINAL = ("payment_confirmed", "dispatched_notified", "failed")
 
     for attachment in attachments:
-        if attachment.get("type") == "image":
-            image_url: str = attachment.get("payload", {}).get("url", "")
+        atype = attachment.get("type")
+        payload = attachment.get("payload", {})
+
+        if atype == "image":
+            image_url: str = payload.get("url", "")
             if not image_url:
                 continue
-
             if conversation.state == "awaiting_payment":
                 logger.info("Payment screenshot received in conversation %s", conversation.id)
                 await handle_payment_screenshot(conversation, seller, image_url, db)
-
-            elif conversation.state in ("greeting", "product_inquiry", "negotiating"):
-                logger.info(
-                    "Product image received in conversation %s (state=%s)",
-                    conversation.id, conversation.state,
-                )
+            elif conversation.state not in TERMINAL:
+                logger.info("Product image received in conversation %s (state=%s)", conversation.id, conversation.state)
                 await handle_product_image(conversation, seller, image_url, db)
 
-            else:
-                logger.debug(
-                    "Image received in unexpected state %s — ignoring", conversation.state
-                )
+        elif atype in ("video", "ig_reel", "share"):
+            # video = raw CDN URL; ig_reel/share = shared post with permalink
+            reel_url: str = payload.get("url", "") or payload.get("link", "")
+            reel_video_id: str | None = payload.get("reel_video_id")
+            reel_title: str | None = payload.get("title")
+            if not reel_url:
+                continue
+            if conversation.state not in TERMINAL:
+                logger.info("Reel/share received in conversation %s (state=%s, type=%s)", conversation.id, conversation.state, atype)
+                await handle_reel(conversation, seller, reel_url, db, reel_video_id=reel_video_id, reel_title=reel_title)
 
 
 #  UPDATE sellers                                                                                                                                                                                                                                

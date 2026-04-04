@@ -7,13 +7,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dashboard_auth import verify_dashboard_cookie
 from app.database import get_db
 from app.models.product import Product
 from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/products", tags=["products"], dependencies=[Depends(verify_dashboard_cookie)])
 
 UPLOAD_DIR = Path("/app/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -28,6 +29,10 @@ async def create_product(
     listed_price: int = Form(..., description="Price in rupees"),
     floor_price: int = Form(..., description="Minimum acceptable price in rupees"),
     description: str = Form(default=""),
+    warranty_months: int | None = Form(default=None, description="Warranty in months, omit for no warranty"),
+    stock_quantity: int | None = Form(default=None, description="Stock count, omit if not tracking"),
+    photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs"),
+    reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs linked to this product"),
     image: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
@@ -74,6 +79,27 @@ async def create_product(
             logger.warning("Description auto-generation failed: %s — leaving blank", exc)
             description = ""
 
+    import json as _json
+    parsed_photo_urls = None
+    if photo_urls:
+        try:
+            parsed_photo_urls = _json.loads(photo_urls)
+            if not isinstance(parsed_photo_urls, list):
+                parsed_photo_urls = None
+        except Exception:
+            parsed_photo_urls = None
+
+    parsed_reel_urls = None
+    if reel_urls:
+        try:
+            parsed_reel_urls = _json.loads(reel_urls)
+            if not isinstance(parsed_reel_urls, list):
+                parsed_reel_urls = None
+        except Exception:
+            parsed_reel_urls = None
+    if parsed_reel_urls:
+        parsed_reel_urls = await _resolve_reel_urls_to_ids(parsed_reel_urls, seller)
+
     product = Product(
         seller_id=seller_id,
         name=name,
@@ -81,6 +107,10 @@ async def create_product(
         listed_price=listed_price * 100,   # rupees → paise
         floor_price=floor_price * 100,
         photo_url=photo_url,
+        photo_urls=parsed_photo_urls,
+        reel_urls=parsed_reel_urls,
+        warranty_months=warranty_months,
+        stock_quantity=stock_quantity,
         active=True,
     )
     db.add(product)
@@ -94,15 +124,21 @@ async def create_product(
         "listed_price_rupees": listed_price,
         "floor_price_rupees": floor_price,
         "photo_url": product.photo_url,
+        "photo_urls": product.photo_urls,
+        "reel_urls": product.reel_urls,
+        "warranty_months": product.warranty_months,
+        "stock_quantity": product.stock_quantity,
     }
 
 
 @router.get("")
-async def list_products(seller_id: str, db: AsyncSession = Depends(get_db)):
-    """List all active products for a seller."""
-    result = await db.execute(
-        select(Product).where(Product.seller_id == seller_id, Product.active == True)
-    )
+async def list_products(seller_id: str, include_inactive: bool = False, db: AsyncSession = Depends(get_db)):
+    """List products for a seller. Pass include_inactive=true to see all."""
+    query = select(Product).where(Product.seller_id == seller_id)
+    if not include_inactive:
+        query = query.where(Product.active == True)
+    query = query.order_by(Product.created_at.desc())
+    result = await db.execute(query)
     products = result.scalars().all()
     return [
         {
@@ -112,9 +148,140 @@ async def list_products(seller_id: str, db: AsyncSession = Depends(get_db)):
             "listed_price_rupees": p.listed_price // 100,
             "floor_price_rupees": p.floor_price // 100,
             "photo_url": p.photo_url,
+            "photo_urls": p.photo_urls,
+            "reel_urls": p.reel_urls,
+            "warranty_months": p.warranty_months,
+            "stock_quantity": p.stock_quantity,
+            "active": p.active,
         }
         for p in products
     ]
+
+
+@router.patch("/{product_id}")
+async def update_product(
+    product_id: str,
+    name: str = Form(default=None),
+    listed_price: int = Form(default=None, description="Price in rupees"),
+    floor_price: int = Form(default=None, description="Minimum acceptable price in rupees"),
+    description: str = Form(default=None),
+    warranty_months: int = Form(default=-1, description="Warranty in months; send 0 to clear"),
+    stock_quantity: int = Form(default=-1, description="Stock quantity; send 0 to clear"),
+    photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs; send '[]' to clear"),
+    reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs; send '[]' to clear"),
+    active: bool = Form(default=None),
+    image: UploadFile = File(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update any fields of a product. Only supplied fields are changed."""
+    result = await db.execute(select(Product).where(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    if name is not None:
+        product.name = name
+    if description is not None:
+        product.description = description or None
+    if active is not None:
+        product.active = active
+
+    if listed_price is not None:
+        product.listed_price = listed_price * 100
+    if floor_price is not None:
+        product.floor_price = floor_price * 100
+
+    # Validate prices after update
+    if product.floor_price > product.listed_price:
+        raise HTTPException(status_code=400, detail="Floor price cannot exceed listed price")
+
+    # warranty_months: -1 = not supplied, 0 = clear warranty, >0 = set warranty
+    if warranty_months != -1:
+        product.warranty_months = warranty_months if warranty_months > 0 else None
+
+    if stock_quantity != -1:
+        product.stock_quantity = stock_quantity if stock_quantity > 0 else None
+
+    if image and image.filename:
+        if image.content_type not in ALLOWED_TYPES:
+            raise HTTPException(status_code=400, detail="Image must be JPEG, PNG, or WebP")
+        ext = Path(image.filename).suffix or ".jpg"
+        filename = f"{uuid.uuid4().hex}{ext}"
+        dest = UPLOAD_DIR / filename
+        dest.write_bytes(await image.read())
+        product.photo_url = f"/uploads/{filename}"
+
+    if photo_urls is not None:
+        import json as _json
+        try:
+            parsed = _json.loads(photo_urls)
+            product.photo_urls = parsed if isinstance(parsed, list) else None
+        except Exception:
+            pass
+
+    if reel_urls is not None:
+        import json as _json
+        try:
+            parsed = _json.loads(reel_urls)
+            if isinstance(parsed, list):
+                # Reload seller to get token for oEmbed resolution
+                from app.models.seller import Seller as _Seller
+                seller_result = await db.execute(select(_Seller).where(_Seller.id == product.seller_id))
+                _seller = seller_result.scalar_one_or_none()
+                parsed = await _resolve_reel_urls_to_ids(parsed, _seller)
+                product.reel_urls = parsed
+            else:
+                product.reel_urls = None
+        except Exception:
+            pass
+
+    await db.commit()
+    await db.refresh(product)
+
+    return {
+        "id": str(product.id),
+        "name": product.name,
+        "description": product.description,
+        "listed_price_rupees": product.listed_price // 100,
+        "floor_price_rupees": product.floor_price // 100,
+        "photo_url": product.photo_url,
+        "photo_urls": product.photo_urls,
+        "reel_urls": product.reel_urls,
+        "warranty_months": product.warranty_months,
+        "stock_quantity": product.stock_quantity,
+        "active": product.active,
+    }
+
+
+import re as _re
+_IG_URL_RE = _re.compile(r"https?://(?:www\.)?instagram\.com/(?:p|reel|tv)/[A-Za-z0-9_-]+")
+
+
+async def _resolve_reel_urls_to_ids(urls: list, seller) -> list:
+    """For each entry that looks like an Instagram URL, resolve it to a numeric media_id via oEmbed.
+    Entries that are already numeric IDs or can't be resolved are kept as-is."""
+    from app.integrations.instagram import InstagramClient
+
+    if not seller or not seller.instagram_token:
+        return urls
+
+    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+    resolved = []
+    for entry in urls:
+        if isinstance(entry, str) and _IG_URL_RE.search(entry):
+            try:
+                media_id = await client.resolve_ig_url_to_media_id(entry)
+                if media_id:
+                    logger.info("Resolved reel URL %s → media_id %s", entry, media_id)
+                    resolved.append(str(media_id))
+                else:
+                    resolved.append(entry)  # keep original if unresolvable
+            except Exception as exc:
+                logger.warning("Failed to resolve reel URL %s: %s", entry, exc)
+                resolved.append(entry)
+        else:
+            resolved.append(entry)
+    return resolved
 
 
 async def _generate_description_from_bytes(
