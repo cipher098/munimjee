@@ -24,6 +24,38 @@ logger = logging.getLogger(__name__)
 TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
 
 
+async def _classify_image_type(image_b64: str, media_type: str) -> str:
+    """Returns 'payment' if the image is a payment receipt/screenshot, else 'product'."""
+    import anthropic
+    from app.config import settings
+    from app.integrations.claude import MODEL
+
+    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    response = await client.messages.create(
+        model=MODEL,
+        max_tokens=5,
+        messages=[{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": media_type, "data": image_b64},
+                },
+                {
+                    "type": "text",
+                    "text": (
+                        "Is this image a payment receipt or transaction confirmation screenshot "
+                        "(UPI, Paytm, PhonePe, Google Pay, bank transfer success screen, etc.)? "
+                        "Reply with exactly one word: 'payment' or 'product'."
+                    ),
+                },
+            ],
+        }],
+    )
+    result = response.content[0].text.strip().lower()
+    return "payment" if "payment" in result else "product"
+
+
 def _detect_media_type(data: bytes) -> str:
     """Detect image media type from magic bytes — don't trust Content-Type headers."""
     if data[:8] == b'\x89PNG\r\n\x1a\n':
@@ -49,6 +81,28 @@ def _append_bot_reply(conversation: Conversation, reply: str, send_reply: bool) 
     """Only record bot reply in message history when it will actually be sent."""
     if send_reply:
         _append_message(conversation, "bot", reply)
+
+
+def _tag_last_bot_message_mid(conversation: Conversation, mid: str) -> None:
+    """After send_message returns, store the Instagram message_id (and current product_id)
+    on the last bot message so reply_to context can identify which product it was about."""
+    msgs = list(conversation.messages or [])
+    for i in range(len(msgs) - 1, -1, -1):
+        if msgs[i].get("role") == "bot":
+            update: dict = {"mid": mid}
+            if conversation.product_id:
+                update["product_id"] = str(conversation.product_id)
+            msgs[i] = {**msgs[i], **update}
+            conversation.messages = msgs
+            return
+
+
+def find_message_by_mid(conversation: Conversation, mid: str) -> dict | None:
+    """Return the message dict matching the given Instagram message_id, or None."""
+    for msg in (conversation.messages or []):
+        if msg.get("mid") == mid:
+            return msg
+    return None
 
 
 async def _get_or_create_conv_product(
@@ -219,7 +273,11 @@ async def advance_conversation(
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
         try:
-            await client.send_message(conversation.customer_instagram_id, reply)
+            result = await client.send_message(conversation.customer_instagram_id, reply)
+            mid = result.get("message_id")
+            if mid:
+                _tag_last_bot_message_mid(conversation, mid)
+                await db.flush()
         except Exception as exc:
             logger.error(
                 "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",

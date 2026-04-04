@@ -116,17 +116,41 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     from app.bot.conversation import advance_conversation, handle_product_image, handle_payment_screenshot, handle_reel
     from app.api.webhooks.instagram import _IG_URL_RE
 
-    # Payment screenshots must be handled immediately — don't batch them
-    for event in events:
-        if event.get("type") == "image" and conversation.state == "awaiting_payment":
-            await handle_payment_screenshot(conversation, seller, event["image_url"], db)
-            return
+    # Phase 1 — media events: identify products / match reels (context only, no reply).
+    # For images in awaiting_payment state, classify first — customer might be sending
+    # a product image (new inquiry) rather than a payment screenshot.
+    import base64 as _b64
+    import httpx as _httpx
+    from app.bot.conversation import _classify_image_type, _detect_media_type
 
-    # Phase 1 — media events: identify products / match reels (context only, no reply)
     for event in events:
         etype = event.get("type")
         if etype == "image":
-            await handle_product_image(conversation, seller, event["image_url"], db, send_reply=False)
+            image_url = event["image_url"]
+
+            if conversation.state == "awaiting_payment":
+                # Download once, classify, then route
+                try:
+                    async with _httpx.AsyncClient(timeout=15) as http:
+                        img_resp = await http.get(image_url)
+                        img_resp.raise_for_status()
+                    img_b64 = _b64.b64encode(img_resp.content).decode()
+                    media_type = _detect_media_type(img_resp.content)
+                    image_class = await _classify_image_type(img_b64, media_type)
+                    logger.info("Image classified as %r in awaiting_payment state", image_class)
+                except Exception as exc:
+                    logger.warning("Image classification failed: %s — treating as payment", exc)
+                    image_class = "payment"
+
+                if image_class == "payment":
+                    await handle_payment_screenshot(conversation, seller, image_url, db)
+                    return  # payment confirmed — stop processing the batch
+                else:
+                    # Product image — customer is asking about a new product
+                    await handle_product_image(conversation, seller, image_url, db, send_reply=False)
+            else:
+                await handle_product_image(conversation, seller, image_url, db, send_reply=False)
+
         elif etype == "reel":
             # Check for Instagram URL in text too
             ig_url = event.get("reel_url", "")
@@ -137,14 +161,64 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                 send_reply=False,
             )
 
-    # Phase 2 — collect all text parts (including IG URLs in text messages)
+    # Phase 2 — collect all text parts (including IG URLs in text messages).
+    # If the customer replied to a specific old message, resolve that context first.
+    from app.bot.conversation import find_message_by_mid
     text_parts = []
+    reply_context_prefix = ""
+
     for event in events:
         if event.get("type") == "text":
             text = event["text"]
+
+            # Resolve reply_to context from the first event that carries one
+            if not reply_context_prefix and event.get("reply_to_mid"):
+                ref = find_message_by_mid(conversation, event["reply_to_mid"])
+                if ref:
+                    role_label = "Bot" if ref["role"] == "bot" else "Customer"
+                    ref_product_id = ref.get("product_id")
+                    current_product_id = str(conversation.product_id) if conversation.product_id else None
+
+                    if ref_product_id and current_product_id and ref_product_id != current_product_id:
+                        # Customer is replying to a message about a different product —
+                        # switch the conversation to that product so the answer is correct.
+                        from app.models.product import Product as _Product
+                        from sqlalchemy import select as _select
+                        r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id))
+                        ref_product = r1.scalar_one_or_none()
+                        if ref_product:
+                            from app.bot.conversation import _get_or_create_conv_product
+                            conversation.product_id = ref_product_id
+                            ref_conv_product = await _get_or_create_conv_product(
+                                conversation.id, ref_product_id, db
+                            )
+                            # Restore price state for the referenced product
+                            if ref_conv_product.agreed_price:
+                                conversation.state = "awaiting_payment"
+                            elif ref_conv_product.last_counter_price:
+                                conversation.state = "negotiating"
+                            else:
+                                conversation.state = "product_inquiry"
+                            conversation.negotiation_round = ref_conv_product.negotiation_round
+                            conversation.last_counter_price = ref_conv_product.last_counter_price
+                            logger.info(
+                                "reply_to switched product: %s → %s",
+                                current_product_id, ref_product.name,
+                            )
+                        ref_name = ref_product.name if ref_product else ref_product_id
+                        reply_context_prefix = (
+                            f"[Customer is replying to {role_label}'s message about '{ref_name}': \"{ref['content']}\"]\n"
+                        )
+                    else:
+                        reply_context_prefix = (
+                            f"[Customer is replying to {role_label}'s message: \"{ref['content']}\"]\n"
+                        )
+                    logger.info("reply_to context: %r", reply_context_prefix.strip())
+                else:
+                    logger.info("reply_to mid=%s not found in history", event["reply_to_mid"])
+
             ig_match = _IG_URL_RE.search(text)
             if ig_match and conversation.state not in ("payment_confirmed", "dispatched_notified", "failed"):
-                # Treat inline reel URL as a reel event for context
                 await handle_reel(conversation, seller, ig_match.group(0), db, send_reply=False)
             else:
                 text_parts.append(text)
@@ -153,10 +227,10 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     has_media = any(e.get("type") in ("image", "reel") for e in events)
 
     if text_parts:
-        combined_text = "\n".join(text_parts)
+        combined_text = reply_context_prefix + "\n".join(text_parts)
         logger.info("message_batch: combined text=%r (had_media=%s)", combined_text, has_media)
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
     elif has_media:
-        # Media only — product context is set; let advance_conversation generate the natural reply
-        await advance_conversation(conversation, seller, "[customer sent media]", db, send_reply=True)
+        combined_text = reply_context_prefix + "[customer sent media]"
+        await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
     # else: nothing actionable, no reply

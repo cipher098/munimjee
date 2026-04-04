@@ -169,7 +169,10 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
                     })
 
     elif text:
-        _queue_and_schedule({"type": "text", "text": text})
+        reply_to_mid: str | None = message.get("reply_to", {}).get("mid")
+        if reply_to_mid:
+            logger.info("reply_to detected: mid=%s text=%r", reply_to_mid, text)
+        _queue_and_schedule({"type": "text", "text": text, "reply_to_mid": reply_to_mid})
 
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:
