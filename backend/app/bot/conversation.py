@@ -71,6 +71,40 @@ async def _get_or_create_conv_product(
     return conv_product
 
 
+async def _send_product_image_if_new(
+    conversation: Conversation,
+    seller: Seller,
+    product,
+    db: AsyncSession,
+) -> None:
+    """Send product photo to customer when a product is first identified in this conversation.
+    Only fires if photo_url is set and this is the first time this product has been shown
+    (i.e. conv_product has no prior negotiation — negotiation_round == 0 and no last_counter_price).
+    """
+    if not product or not product.photo_url:
+        return
+
+    from app.config import settings
+    from app.integrations.instagram import InstagramClient
+
+    photo_url = product.photo_url
+    # Meta requires a fully-qualified public URL — prefix relative /uploads/ paths
+    if photo_url.startswith("/") and settings.PUBLIC_BASE_URL:
+        photo_url = settings.PUBLIC_BASE_URL.rstrip("/") + photo_url
+    elif photo_url.startswith("/"):
+        logger.warning(
+            "Cannot send product image for %r — PUBLIC_BASE_URL not set in config", product.name
+        )
+        return
+
+    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+    try:
+        await client.send_image(conversation.customer_instagram_id, photo_url)
+        logger.info("Sent product image for %r to %s", product.name, conversation.customer_instagram_id)
+    except Exception as exc:
+        logger.warning("Could not send product image for %r: %s", product.name, exc)
+
+
 async def advance_conversation(
     conversation: Conversation,
     seller: Seller,
@@ -118,8 +152,18 @@ async def advance_conversation(
         if conv_product is not None:
             conv_product.last_counter_price = extra["last_counter_price"]
 
-    if extra.get("product_id"):
-        conversation.product_id = extra["product_id"]
+    # If product was just identified via text (show_product action), send its image first
+    new_product_id = extra.get("product_id")
+    if new_product_id and new_product_id != str(conversation.product_id):
+        conversation.product_id = new_product_id
+        # Load product to get photo_url
+        from sqlalchemy import select as sa_select
+        from app.models.product import Product as ProductModel
+        result = await db.execute(sa_select(ProductModel).where(ProductModel.id == new_product_id))
+        new_product = result.scalar_one_or_none()
+        await _send_product_image_if_new(conversation, seller, new_product, db)
+    elif new_product_id:
+        conversation.product_id = new_product_id
 
     _append_message(conversation, "bot", reply)
     await db.flush()
@@ -271,6 +315,12 @@ async def handle_product_image(
         except Exception as exc:
             logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
+
+    # Send product image back to customer so they can confirm it's the right product —
+    # only on fresh inquiry (no prior counter), not when re-sharing during negotiation.
+    is_fresh_inquiry = not conv_product.last_counter_price and not conv_product.agreed_price
+    if is_fresh_inquiry:
+        await _send_product_image_if_new(conversation, seller, matched_product, db)
 
     # Build a synthetic customer message for the responder.
     # During active negotiation, signal that it's a re-share, not a fresh inquiry —

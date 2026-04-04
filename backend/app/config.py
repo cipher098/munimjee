@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-south-1"
     S3_BUCKET_NAME: str = "sellerbot-uploads"
 
+    PUBLIC_BASE_URL: str = ""  # e.g. https://abc123.ngrok.io — used to build public image URLs for Meta
+
     WHATSAPP_API_URL: str = ""
     WHATSAPP_API_TOKEN: str = ""
     WHATSAPP_PHONE_NUMBER_ID: str = ""

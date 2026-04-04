@@ -203,17 +203,12 @@ async def _handle_attachment(
                 logger.info("Payment screenshot received in conversation %s", conversation.id)
                 await handle_payment_screenshot(conversation, seller, image_url, db)
 
-            elif conversation.state in ("greeting", "product_inquiry", "negotiating"):
+            elif conversation.state not in ("payment_confirmed", "dispatched_notified", "failed"):
                 logger.info(
                     "Product image received in conversation %s (state=%s)",
                     conversation.id, conversation.state,
                 )
                 await handle_product_image(conversation, seller, image_url, db)
-
-            else:
-                logger.debug(
-                    "Image received in unexpected state %s — ignoring", conversation.state
-                )
 
 
 #  UPDATE sellers                                                                                                                                                                                                                                
