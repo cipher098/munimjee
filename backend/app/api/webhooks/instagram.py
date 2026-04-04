@@ -11,6 +11,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.conversation import Conversation
 from app.models.seller import Seller
+from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -114,20 +115,61 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
     text: str | None = message.get("text")
     attachments: list = message.get("attachments", [])
 
-    # Resolve which seller owns this page (match on FB page ID from webhook)
+    # Quick-exit: nothing actionable
+    if not text and not attachments:
+        return
+
+    # Verify seller exists before queuing
     seller = await _get_seller_by_page_id(recipient_id, db)
     if not seller:
         logger.warning("No seller found for Instagram page ID %s", recipient_id)
         return
 
-    # Get or create conversation
-    conversation = await _get_or_create_conversation(seller, sender_id, db)
+    # Serialize event(s) to Redis and schedule / reschedule the batch task
+    from app.workers.message_batch import enqueue_event, get_pending_task_id, set_pending_task_id, BATCH_WINDOW_SECONDS
+
+    def _queue_and_schedule(serialised: dict) -> None:
+        enqueue_event(recipient_id, sender_id, serialised)
+
+        # Revoke any previously scheduled task for this conversation
+        old_task_id = get_pending_task_id(recipient_id, sender_id)
+        if old_task_id:
+            celery_app.control.revoke(old_task_id)
+
+        # Schedule new task BATCH_WINDOW_SECONDS from now
+        from app.workers.message_batch import process_message_batch
+        result = process_message_batch.apply_async(
+            args=[recipient_id, sender_id],
+            countdown=BATCH_WINDOW_SECONDS,
+        )
+        set_pending_task_id(recipient_id, sender_id, result.id)
+        logger.info(
+            "Queued event type=%s for %s:%s, task=%s",
+            serialised.get("type"), recipient_id, sender_id, result.id,
+        )
 
     if attachments:
-        await _handle_attachment(conversation, seller, attachments, db)
-        await db.commit()
+        for attachment in attachments:
+            atype = attachment.get("type")
+            payload = attachment.get("payload", {})
+
+            if atype == "image":
+                image_url: str = payload.get("url", "")
+                if image_url:
+                    _queue_and_schedule({"type": "image", "image_url": image_url})
+
+            elif atype in ("video", "ig_reel", "share"):
+                reel_url: str = payload.get("url", "") or payload.get("link", "")
+                if reel_url:
+                    _queue_and_schedule({
+                        "type": "reel",
+                        "reel_url": reel_url,
+                        "reel_video_id": payload.get("reel_video_id"),
+                        "reel_title": payload.get("title"),
+                    })
+
     elif text:
-        await _handle_text_message(conversation, seller, text, db)
+        _queue_and_schedule({"type": "text", "text": text})
 
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:
@@ -171,68 +213,6 @@ async def _get_or_create_conversation(
 import re as _re
 
 _IG_URL_RE = _re.compile(r"https?://(?:www\.)?instagram\.com/(?:p|reel|tv)/[A-Za-z0-9_-]+")
-
-
-async def _handle_text_message(
-    conversation: Conversation,
-    seller: Seller,
-    text: str,
-    db: AsyncSession,
-) -> None:
-    from app.bot.conversation import advance_conversation, handle_reel
-
-    logger.info(
-        "Text message in conversation %s (state=%s): %r",
-        conversation.id, conversation.state, text,
-    )
-
-    # If the text is (or contains) an Instagram reel/post URL, try reel matching first
-    ig_match = _IG_URL_RE.search(text)
-    if ig_match and conversation.state not in ("payment_confirmed", "dispatched_notified", "failed"):
-        logger.info("Instagram URL detected in text — attempting reel match")
-        await handle_reel(conversation, seller, ig_match.group(0), db)
-        await db.commit()
-        return
-
-    await advance_conversation(conversation, seller, text, db)
-    await db.commit()
-
-
-async def _handle_attachment(
-    conversation: Conversation,
-    seller: Seller,
-    attachments: list,
-    db: AsyncSession,
-) -> None:
-    from app.bot.conversation import handle_payment_screenshot, handle_product_image, handle_reel
-
-    TERMINAL = ("payment_confirmed", "dispatched_notified", "failed")
-
-    for attachment in attachments:
-        atype = attachment.get("type")
-        payload = attachment.get("payload", {})
-
-        if atype == "image":
-            image_url: str = payload.get("url", "")
-            if not image_url:
-                continue
-            if conversation.state == "awaiting_payment":
-                logger.info("Payment screenshot received in conversation %s", conversation.id)
-                await handle_payment_screenshot(conversation, seller, image_url, db)
-            elif conversation.state not in TERMINAL:
-                logger.info("Product image received in conversation %s (state=%s)", conversation.id, conversation.state)
-                await handle_product_image(conversation, seller, image_url, db)
-
-        elif atype in ("video", "ig_reel", "share"):
-            # video = raw CDN URL; ig_reel/share = shared post with permalink
-            reel_url: str = payload.get("url", "") or payload.get("link", "")
-            reel_video_id: str | None = payload.get("reel_video_id")
-            reel_title: str | None = payload.get("title")
-            if not reel_url:
-                continue
-            if conversation.state not in TERMINAL:
-                logger.info("Reel/share received in conversation %s (state=%s, type=%s)", conversation.id, conversation.state, atype)
-                await handle_reel(conversation, seller, reel_url, db, reel_video_id=reel_video_id, reel_title=reel_title)
 
 
 #  UPDATE sellers                                                                                                                                                                                                                                

@@ -45,6 +45,12 @@ def _append_message(conversation: Conversation, role: str, content: str) -> None
     conversation.messages = messages
 
 
+def _append_bot_reply(conversation: Conversation, reply: str, send_reply: bool) -> None:
+    """Only record bot reply in message history when it will actually be sent."""
+    if send_reply:
+        _append_message(conversation, "bot", reply)
+
+
 async def _get_or_create_conv_product(
     conversation_id,
     product_id,
@@ -97,7 +103,10 @@ async def _send_next_product_photo(
 
     idx = conv_product.photos_sent_count if conv_product else 0
     if idx >= len(all_photos):
-        return False  # no more photos
+        # All photos already sent — wrap around to first photo
+        idx = 0
+        if conv_product:
+            conv_product.photos_sent_count = 0
 
     photo_url = all_photos[idx]
     if photo_url.startswith("/") and settings.PUBLIC_BASE_URL:
@@ -135,6 +144,7 @@ async def advance_conversation(
     seller: Seller,
     customer_message: str,
     db: AsyncSession,
+    send_reply: bool = True,
 ) -> None:
     """Main entry point: processes a customer text message and sends a bot reply."""
     if conversation.state in TERMINAL_STATES:
@@ -188,26 +198,33 @@ async def advance_conversation(
         img_product = result.scalar_one_or_none()
 
         if is_new_product:
-            # Product switched — load/create conv_product for new product, send first photo
+            # Product switched — send first photo of new product
             new_conv_product = await _get_or_create_conv_product(conversation.id, new_product_id, db)
             new_conv_product.photos_sent_count = 0
             await _send_next_product_photo(conversation, seller, img_product, new_conv_product, db)
         elif extra.get("send_image"):
-            # Same product, customer asked for photo — send next unshown photo
             await _send_next_product_photo(conversation, seller, img_product, conv_product, db)
 
-    _append_message(conversation, "bot", reply)
+    elif extra.get("send_image") and conversation.product_id:
+        # send_image requested but product_id wasn't in extra (same product already on conversation)
+        from sqlalchemy import select as sa_select
+        from app.models.product import Product as ProductModel
+        result = await db.execute(sa_select(ProductModel).where(ProductModel.id == conversation.product_id))
+        img_product = result.scalar_one_or_none()
+        await _send_next_product_photo(conversation, seller, img_product, conv_product, db)
+
+    _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
 
-    # Send via Instagram
-    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-    try:
-        await client.send_message(conversation.customer_instagram_id, reply)
-    except Exception as exc:
-        logger.error(
-            "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
-            conversation.id, exc,
-        )
+    if send_reply:
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error(
+                "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
+                conversation.id, exc,
+            )
 
 
 async def handle_product_image(
@@ -215,6 +232,7 @@ async def handle_product_image(
     seller: Seller,
     image_url: str,
     db: AsyncSession,
+    send_reply: bool = True,
 ) -> None:
     """Customer sent an image — use Claude Vision to identify the product and start negotiation."""
     from app.integrations.claude import ClaudeClient
@@ -232,13 +250,14 @@ async def handle_product_image(
 
     if not products:
         reply = "Abhi koi product available nahi hai. Thodi der mein try karein 🙏"
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception as exc:
+                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
     products_for_vision = [
@@ -263,13 +282,14 @@ async def handle_product_image(
     except Exception as exc:
         logger.error("Failed to download product image %s: %s", image_url, exc)
         reply = "Image download nahi hua. Dobara bhejein please 🙏"
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception:
-            pass
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception:
+                pass
         return
 
     # Stage 1 — Vision: describe what the customer is holding/showing
@@ -302,13 +322,14 @@ async def handle_product_image(
     if not product_id or confidence == "low":
         # Could not identify — ask customer to clarify
         reply = "Kaunsa product chahiye aapko? Thoda aur clearly batayein ya product ka naam likhein 😊"
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception as exc:
+                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
     # Product identified — set it on conversation and restore per-product price state
@@ -338,13 +359,14 @@ async def handle_product_image(
             f"Bhai deal toh already ho gayi thi — ₹{agreed_rupees} mein! "
             f"Payment kar do, pack karke bhej deta hoon 🚀"
         )
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception as exc:
+                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
     # Send product image back to customer so they can confirm it's the right product —
@@ -383,14 +405,15 @@ async def handle_product_image(
         conversation.last_counter_price = extra["last_counter_price"]
         conv_product.last_counter_price = extra["last_counter_price"]
 
-    _append_message(conversation, "bot", reply)
+    _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
 
-    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-    try:
-        await client.send_message(conversation.customer_instagram_id, reply)
-    except Exception as exc:
-        logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+    if send_reply:
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
 
 
 def _extract_ig_shortcode(url: str) -> str | None:
@@ -437,6 +460,7 @@ async def handle_reel(
     db: AsyncSession,
     reel_video_id: str | None = None,
     reel_title: str | None = None,
+    send_reply: bool = True,
 ) -> None:
     """Customer shared an Instagram Reel — match against product reel_urls and start sales flow."""
     from app.integrations.instagram import InstagramClient
@@ -514,13 +538,14 @@ async def handle_reel(
 
     if not matched_product:
         reply = "Ye reel kaunse product ki hai? Product ka naam batao 😊"
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception as exc:
+                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
     # Product matched — set on conversation and restore per-product price state
@@ -544,13 +569,14 @@ async def handle_reel(
             f"Bhai deal toh already ho gayi thi — ₹{agreed_rupees} mein! "
             f"Payment kar do, pack karke bhej deta hoon 🚀"
         )
-        _append_message(conversation, "bot", reply)
+        _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        if send_reply:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                await client.send_message(conversation.customer_instagram_id, reply)
+            except Exception as exc:
+                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
     # Fresh inquiry — send product photo first
@@ -579,14 +605,15 @@ async def handle_reel(
         conversation.last_counter_price = extra["last_counter_price"]
         conv_product.last_counter_price = extra["last_counter_price"]
 
-    _append_message(conversation, "bot", reply)
+    _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
 
-    client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-    try:
-        await client.send_message(conversation.customer_instagram_id, reply)
-    except Exception as exc:
-        logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+    if send_reply:
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        try:
+            await client.send_message(conversation.customer_instagram_id, reply)
+        except Exception as exc:
+            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
 
 
 async def handle_payment_screenshot(
