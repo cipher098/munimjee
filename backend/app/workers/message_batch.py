@@ -12,7 +12,7 @@ from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-BATCH_WINDOW_SECONDS = 15
+BATCH_WINDOW_SECONDS = 5
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 

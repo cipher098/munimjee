@@ -109,6 +109,9 @@ class ClaudeClient:
         total_photos = context.get("total_photos", 1)
         has_more_photos = total_photos > 1
 
+        history = context.get("message_history", [])
+        history_str = json.dumps(history[-6:], ensure_ascii=False) if history else "[]"
+
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
@@ -122,6 +125,7 @@ class ClaudeClient:
             customer_intent=decision.get("customer_intent", "warm"),
             customer_message=context.get("customer_message", ""),
             has_more_photos=has_more_photos,
+            message_history=history_str,
         )
 
         response = await self._client.messages.create(
