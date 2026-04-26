@@ -211,26 +211,37 @@ def _derive_state_from_decision(
 
     if action == "counter":
         price = decision.get("price")
-        # Hard clamp — counter price can never go below floor
-        if floor_price and price and price < floor_price:
+        listed_price = product.listed_price if product else None
+        # Hard block — fixed-price product (floor == listed): never counter, fall through to hold_firm
+        if floor_price and listed_price and floor_price >= listed_price:
             logger.warning(
-                "Claude countered at %d below floor %d — clamping to floor",
-                price, floor_price,
+                "Claude tried to counter on fixed-price product (listed=%d floor=%d) — overriding to hold_firm",
+                listed_price, floor_price,
             )
-            price = floor_price
-            decision["price"] = floor_price
-        # Hard clamp — counter price can never go HIGHER than last counter
-        if price and effective_last_counter_price and price > effective_last_counter_price:
-            logger.warning(
-                "Claude tried to counter at %d higher than previous offer %d — clamping down",
-                price, effective_last_counter_price,
-            )
-            price = effective_last_counter_price
-            decision["price"] = price
-        if price:
-            extra["last_counter_price"] = price
-        extra["negotiation_round"] = effective_negotiation_round + 1
-        return "negotiating", extra
+            action = "hold_firm"
+            decision["action"] = "hold_firm"
+            decision["price"] = None
+        else:
+            # Hard clamp — counter price can never go below floor
+            if floor_price and price and price < floor_price:
+                logger.warning(
+                    "Claude countered at %d below floor %d — clamping to floor",
+                    price, floor_price,
+                )
+                price = floor_price
+                decision["price"] = floor_price
+            # Hard clamp — counter price can never go HIGHER than last counter
+            if price and effective_last_counter_price and price > effective_last_counter_price:
+                logger.warning(
+                    "Claude tried to counter at %d higher than previous offer %d — clamping down",
+                    price, effective_last_counter_price,
+                )
+                price = effective_last_counter_price
+                decision["price"] = price
+            if price:
+                extra["last_counter_price"] = price
+            extra["negotiation_round"] = effective_negotiation_round + 1
+            return "negotiating", extra
 
     if action == "hold_firm":
         extra["negotiation_round"] = effective_negotiation_round + 1

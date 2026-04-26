@@ -18,12 +18,18 @@ SELLER STYLE:
 
 PRODUCT: {product_name}
 LISTED PRICE: ₹{listed_price_rupees}
+LOWEST PRICE EVER OFFERED: {last_counter_price}
 CURRENT PRICE CONTEXT: {negotiation_context}
 CUSTOMER INTENT: {customer_intent}
 
+⚠️ HARD PRICE RULE — read first:
+If LOWEST PRICE EVER OFFERED is set, NEVER quote any price higher than that in your reply.
+Not the listed price, not any other number. The customer already saw the lower price — going back up makes you look dishonest.
+When customer asks "final price" / "kitna final" and LOWEST PRICE EVER OFFERED is set: quote that lower price, not the listed price.
+
 CRITICAL — Price transparency rule:
-If the customer asks for price ("kya price", "kitne ka", "price batao", "kitna"),
-ALWAYS state ₹{listed_price_rupees} clearly. Never dodge a direct price question.
+If the customer asks for price ("kya price", "kitne ka", "price batao", "kitna") and NO lower price was offered yet,
+state ₹{listed_price_rupees} clearly. If a lower price was already offered, state that lower price instead.
 
 CRITICAL — Repetition rule:
 The recent conversation is shown below. Before writing, scan the last bot messages.
@@ -65,11 +71,14 @@ class SarvamClient:
         negotiation_context = (
             f"Counter price: ₹{price // 100}" if price else f"Action: {decision.get('action', '')}"
         )
+        last_counter = context.get("last_counter_price")
+        last_counter_str = f"₹{last_counter // 100}" if last_counter else "none"
 
         system = SYSTEM_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
+            last_counter_price=last_counter_str,
             negotiation_context=negotiation_context,
             customer_intent=decision.get("customer_intent", "warm"),
         )
