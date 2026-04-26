@@ -82,6 +82,7 @@ class ClaudeClient:
         cod = policies.get("cod")
         cod_charges = policies.get("cod_charges", 0)
         return_days = policies.get("return_days")
+        exchange_days = policies.get("exchange_days")
         delivery_days = policies.get("delivery_days")
         payment_modes = policies.get("payment_modes") or []
 
@@ -102,6 +103,10 @@ class ClaudeClient:
             policy_lines.append(f"{return_days}-day returns accepted")
         elif return_days == 0 and "return_days" in policies:
             policy_lines.append("No returns")
+        if exchange_days:
+            policy_lines.append(f"{exchange_days}-day exchange accepted")
+        elif exchange_days == 0 and "exchange_days" in policies:
+            policy_lines.append("No exchange")
         if delivery_days:
             policy_lines.append(f"Delivery in {delivery_days}")
         policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy; say you'll check and confirm"
@@ -126,6 +131,7 @@ class ClaudeClient:
             customer_message=context.get("customer_message", ""),
             has_more_photos=has_more_photos,
             message_history=history_str,
+            address_term=context.get("address_term", "yaar"),
         )
 
         response = await self._client.messages.create(

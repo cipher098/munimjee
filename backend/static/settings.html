@@ -142,6 +142,24 @@
       <div class="hint">How many days after delivery can customer return?</div>
     </div>
 
+    <!-- Exchange -->
+    <div class="toggle-row" style="margin-top:8px;">
+      <div>
+        <div class="toggle-label">Accept Exchange</div>
+        <div class="toggle-sub">Can customers exchange the product?</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="exchangeEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="charges-row" id="exchangeDaysRow">
+      <label>Exchange Window (days)</label>
+      <input type="number" id="exchange_days" placeholder="e.g. 7" min="1">
+      <div class="hint">How many days after delivery can customer exchange?</div>
+    </div>
+
     <!-- Delivery -->
     <div style="margin-top:8px;">
       <label>Delivery Time</label>
@@ -166,6 +184,8 @@
   const chargesRow = document.getElementById('chargesRow');
   const returnsEnabled = document.getElementById('returnsEnabled');
   const returnDaysRow = document.getElementById('returnDaysRow');
+  const exchangeEnabled = document.getElementById('exchangeEnabled');
+  const exchangeDaysRow = document.getElementById('exchangeDaysRow');
 
   cod.addEventListener('change', () => {
     chargesRow.classList.toggle('visible', cod.checked);
@@ -173,6 +193,10 @@
   });
   returnsEnabled.addEventListener('change', () => {
     returnDaysRow.classList.toggle('visible', returnsEnabled.checked);
+    updatePreview();
+  });
+  exchangeEnabled.addEventListener('change', () => {
+    exchangeDaysRow.classList.toggle('visible', exchangeEnabled.checked);
     updatePreview();
   });
 
@@ -200,6 +224,12 @@
     } else {
       lines.push('No returns');
     }
+    if (exchangeEnabled.checked) {
+      const days = document.getElementById('exchange_days').value;
+      if (days) lines.push(`${days}-day exchange`);
+    } else {
+      lines.push('No exchange');
+    }
     const delivery = document.getElementById('delivery_days').value.trim();
     if (delivery) lines.push(`Delivery: ${delivery}`);
 
@@ -224,6 +254,10 @@
     returnDaysRow.classList.toggle('visible', !!(p.return_days > 0));
     document.getElementById('return_days').value = p.return_days > 0 ? p.return_days : '';
 
+    exchangeEnabled.checked = !!(p.exchange_days > 0);
+    exchangeDaysRow.classList.toggle('visible', !!(p.exchange_days > 0));
+    document.getElementById('exchange_days').value = p.exchange_days > 0 ? p.exchange_days : '';
+
     document.getElementById('delivery_days').value = p.delivery_days || '';
     updatePreview();
   }
@@ -237,6 +271,7 @@
       cod: cod.checked,
       cod_charges: parseInt(document.getElementById('cod_charges').value) || 0,
       return_days: returnsEnabled.checked ? (parseInt(document.getElementById('return_days').value) || 0) : 0,
+      exchange_days: exchangeEnabled.checked ? (parseInt(document.getElementById('exchange_days').value) || 0) : 0,
       delivery_days: document.getElementById('delivery_days').value.trim(),
     };
 

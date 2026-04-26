@@ -25,6 +25,7 @@ class PoliciesUpdate(BaseModel):
     cod: bool
     cod_charges: int = 0          # extra rupees charged for COD, 0 = free COD
     return_days: int = 0          # 0 = no returns
+    exchange_days: int = 0        # 0 = no exchange
     delivery_days: str = ""       # e.g. "3-5 days", empty = not specified
     payment_modes: list[str] = ["upi"]  # e.g. ["upi", "bank_transfer", "card"]
 
@@ -49,6 +50,7 @@ async def save_policies(body: PoliciesUpdate, db: AsyncSession = Depends(get_db)
         "cod": body.cod,
         "cod_charges": body.cod_charges if body.cod else 0,
         "return_days": body.return_days,
+        "exchange_days": body.exchange_days,
         "delivery_days": body.delivery_days.strip(),
         "payment_modes": body.payment_modes or ["upi"],
     }

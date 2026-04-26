@@ -206,6 +206,13 @@ async def advance_conversation(
 
     _append_message(conversation, "customer", customer_message)
 
+    if not conversation.customer_gender and conversation.customer_name:
+        from app.utils.gender import guess_gender, guess_gender_ai
+        gender = guess_gender(conversation.customer_name)
+        if gender == "unknown":
+            gender = await guess_gender_ai(conversation.customer_name)
+        conversation.customer_gender = gender
+
     from app.bot.responder import generate_bot_reply
     from app.integrations.instagram import InstagramClient
 

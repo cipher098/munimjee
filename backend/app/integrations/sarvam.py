@@ -21,6 +21,7 @@ LISTED PRICE: ₹{listed_price_rupees}
 LOWEST PRICE EVER OFFERED: {last_counter_price}
 CURRENT PRICE CONTEXT: {negotiation_context}
 CUSTOMER INTENT: {customer_intent}
+CUSTOMER ADDRESS TERM: {address_term}  ← ALWAYS use this when addressing the customer. Never substitute a different term.
 
 ⚠️ HARD PRICE RULE — read first:
 If LOWEST PRICE EVER OFFERED is set, NEVER quote any price higher than that in your reply.
@@ -81,6 +82,7 @@ class SarvamClient:
             last_counter_price=last_counter_str,
             negotiation_context=negotiation_context,
             customer_intent=decision.get("customer_intent", "warm"),
+            address_term=context.get("address_term", "yaar"),
         )
 
         history = context.get("message_history", [])

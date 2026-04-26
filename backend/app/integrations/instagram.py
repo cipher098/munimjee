@@ -45,6 +45,18 @@ class InstagramClient:
                 return None
             return response.json().get("media_id")
 
+    async def get_user_info(self, user_id: str) -> dict:
+        """Fetch basic profile info (name) for an Instagram user by their IGSID."""
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(
+                f"{self._base_url}/{user_id}",
+                params={"fields": "name", "access_token": self._token},
+            )
+            if response.status_code != 200:
+                logger.warning("get_user_info failed %d: %s", response.status_code, response.text)
+                return {}
+            return response.json()
+
     async def get_media_shortcode(self, media_id: str) -> str | None:
         """Resolve a media ID to its Instagram shortcode via Graph API."""
         async with httpx.AsyncClient(timeout=10) as client:

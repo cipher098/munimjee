@@ -12,7 +12,7 @@ from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-BATCH_WINDOW_SECONDS = 5
+BATCH_WINDOW_SECONDS = 2
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 
@@ -93,6 +93,20 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
         from app.api.webhooks.instagram import _get_or_create_conversation
         conversation = await _get_or_create_conversation(seller, customer_ig_id, db)
         await db.flush()
+
+        # Fetch customer name once — only on new conversations where name is not yet known
+        if not conversation.customer_name:
+            try:
+                from app.integrations.instagram import InstagramClient
+                ig_client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+                user_info = await ig_client.get_user_info(customer_ig_id)
+                name = user_info.get("name", "").strip()
+                if name:
+                    conversation.customer_name = name
+                    await db.flush()
+                    logger.info("Fetched customer name %r for conversation %s", name, conversation.id)
+            except Exception as exc:
+                logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
 
         TERMINAL = {"payment_confirmed", "failed", "dispatched_notified"}
         if conversation.state in TERMINAL:

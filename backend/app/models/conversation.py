@@ -14,6 +14,7 @@ class Conversation(Base):
     seller_id = Column(UUID(as_uuid=True), ForeignKey("sellers.id"), nullable=False)
     customer_instagram_id = Column(String, nullable=False)
     customer_name = Column(String, nullable=True)
+    customer_gender = Column(String, nullable=True)  # male | female | unknown
     state = Column(String, nullable=False, default="greeting")
     # States: greeting | product_inquiry | negotiating | awaiting_payment
     #         verifying | payment_confirmed | failed | manual_review | dispatched_notified

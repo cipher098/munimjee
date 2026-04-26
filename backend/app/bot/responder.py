@@ -21,16 +21,16 @@ DEFAULT_PERSONA = {
     "greeting_style": "Haan ji, kya chahiye?",
     "negotiation_firmness": "medium",
     "closing_phrases": ["Done ho gaya", "Pakka"],
-    "common_expressions": ["bhai", "yaar", "theek hai"],
+    "common_expressions": ["yaar", "theek hai"],
     "hindi_english_ratio": "60% Hindi 40% English",
     "emoji_usage": "light",
     "response_length": "short",
     "tone": "casual",
     "sample_responses": {
         "greeting": "Haan ji! Kya chahiye aapko? 😊",
-        "price_rejection": "Bhai itna kam nahi hoga, last price hai ye",
+        "price_rejection": "Yaar itna kam nahi hoga, last price hai ye",
         "deal_accepted": "Done! Payment kar do jaldi",
-        "payment_request": "Bhai payment kar do, UPI hai — details bhej raha hoon",
+        "payment_request": "Yaar payment kar do, UPI hai — details bhej raha hoon",
         "dispatched": "Dispatch ho gaya aapka order, tracking bhejta hoon"
     }
 }
@@ -125,6 +125,10 @@ async def generate_bot_reply(
 
     all_photo_count = (1 if product and product.photo_url else 0) + (len(product.photo_urls) if product and product.photo_urls else 0)
 
+    from app.utils.gender import guess_gender, address_term as _address_term
+    customer_gender = conversation.customer_gender or guess_gender(conversation.customer_name or "")
+    customer_address_term = _address_term(customer_gender)
+
     reply_context = {
         "decision": decision,
         "persona": persona,
@@ -139,6 +143,7 @@ async def generate_bot_reply(
         "available_products": products_list,
         "message_history": (conversation.messages or [])[-10:],
         "total_photos": all_photo_count,
+        "address_term": customer_address_term,
     }
 
     # Step 2: Sarvam generates the actual message text
