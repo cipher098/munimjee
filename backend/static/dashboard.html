@@ -10,18 +10,34 @@
     .container { max-width: 520px; margin: 40px auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
     h1 { font-size: 20px; margin-bottom: 24px; }
     label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; margin-top: 16px; color: #444; }
-    input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
-    input:focus, textarea:focus { border-color: #6366f1; }
+    input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+    input:focus, textarea:focus, select:focus { border-color: #6366f1; }
     textarea { resize: vertical; min-height: 72px; }
     .hint { font-size: 12px; color: #888; margin-top: 3px; }
     .preview { margin-top: 12px; display: none; }
     .preview img { max-width: 100%; border-radius: 8px; border: 1px solid #eee; }
-    button { margin-top: 24px; width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-primary { margin-top: 24px; width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-ghost { margin-top: 8px; width: 100%; padding: 10px; background: transparent; color: #6366f1; border: 1px solid #c7d2fe; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-ghost:hover { background: #ede9fe; }
     .result { margin-top: 20px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; }
     .result.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
     .result.error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
     .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Step 2 — category & specs */
+    #step2 { display: none; }
+    .step2-box { background: #f8f7ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 20px; margin-top: 20px; }
+    .step2-box h2 { font-size: 15px; font-weight: 700; color: #4338ca; margin-bottom: 4px; }
+    .step2-box .sub { font-size: 13px; color: #6b7280; margin-bottom: 16px; }
+    .tag-field { margin-top: 12px; }
+    .tag-field label { margin-top: 0; font-size: 13px; font-weight: 600; color: #374151; }
+    .tag-field .allowed { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .tag-enum-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .tag-enum-btn { padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 20px; font-size: 12px;
+                    cursor: pointer; background: #fff; color: #374151; transition: all 0.15s; }
+    .tag-enum-btn.selected { background: #6366f1; color: #fff; border-color: #6366f1; }
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 20px 0; }
   </style>
 </head>
 <body>
@@ -31,52 +47,92 @@
       <a href="/dashboard" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;background:#ede9fe;color:#6366f1;font-weight:600;">Add Product</a>
       <a href="/dashboard/products" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">All Products</a>
       <a href="/training/dashboard" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Training</a>
+      <a href="/dashboard/categories" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Categories</a>
       <a href="/dashboard/settings" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Settings</a>
       <a href="/dashboard-auth/logout" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Logout</a>
     </nav>
   </div>
+
   <div class="container" style="margin-top:0;padding-top:24px;">
-    <h1>Add Product</h1>
-    <form id="form">
-      <input type="hidden" name="seller_id" value="ac2303e0-00f3-4470-98ca-36a8f4ae5866">
+    <!-- Step 1: Product basics -->
+    <div id="step1">
+      <h1>Add Product</h1>
+      <form id="form">
+        <input type="hidden" name="seller_id" value="ac2303e0-00f3-4470-98ca-36a8f4ae5866">
 
-      <label>Product Name *</label>
-      <input type="text" name="name" placeholder="e.g. Wooden Wall Clock" required>
+        <label>Product Name *</label>
+        <input type="text" name="name" placeholder="e.g. Wooden Wall Clock" required>
 
-      <div class="price-row">
-        <div>
-          <label>Listed Price (₹) *</label>
-          <input type="number" name="listed_price" placeholder="599" min="1" required>
+        <div class="price-row">
+          <div>
+            <label>Listed Price (₹) *</label>
+            <input type="number" name="listed_price" placeholder="599" min="1" required>
+          </div>
+          <div>
+            <label>Floor Price (₹) *</label>
+            <input type="number" name="floor_price" placeholder="399" min="1" required>
+            <div class="hint">Minimum you'll accept</div>
+          </div>
         </div>
-        <div>
-          <label>Floor Price (₹) *</label>
-          <input type="number" name="floor_price" placeholder="399" min="1" required>
-          <div class="hint">Minimum you'll accept</div>
-        </div>
+
+        <label>Description</label>
+        <textarea name="description" placeholder="Leave empty to auto-generate from image using AI"></textarea>
+        <div class="hint">Optional — AI will describe the product from the image if left blank</div>
+
+        <label>Warranty (months)</label>
+        <input type="number" name="warranty_months" placeholder="e.g. 6" min="1">
+        <div class="hint">Optional — leave blank if no warranty</div>
+
+        <label>Stock Quantity</label>
+        <input type="number" name="stock_quantity" placeholder="e.g. 10" min="1">
+        <div class="hint">Optional — leave blank if not tracking stock</div>
+
+        <label>Product Image *</label>
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
+        <div class="preview" id="preview"><img id="previewImg" src="" alt="preview"></div>
+
+        <button type="submit" class="btn-primary" id="btn">Add Product</button>
+      </form>
+      <div class="result" id="result"></div>
+    </div>
+
+    <!-- Step 2: Category & Specs (shown after product is created) -->
+    <div id="step2">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <div style="width:28px;height:28px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;">✓</div>
+        <span style="font-size:15px;font-weight:700;color:#166534;">Product added!</span>
       </div>
 
-      <label>Description</label>
-      <textarea name="description" placeholder="Leave empty to auto-generate from image using AI"></textarea>
-      <div class="hint">Optional — AI will describe the product from the image if left blank</div>
+      <div class="step2-box">
+        <h2>Step 2 — Category & Specs</h2>
+        <p class="sub">Help the bot answer customer questions accurately. All fields are optional.</p>
 
-      <label>Warranty (months)</label>
-      <input type="number" name="warranty_months" placeholder="e.g. 6" min="1">
-      <div class="hint">Optional — leave blank if no warranty</div>
+        <label style="margin-top:0;">Category Name</label>
+        <input type="text" id="s2-cat-name" placeholder="e.g. Wall Clock">
+        <div class="hint">AI suggestion shown above — edit if needed, or pick an existing one below.</div>
 
-      <label>Stock Quantity</label>
-      <input type="number" name="stock_quantity" placeholder="e.g. 10" min="1">
-      <div class="hint">Optional — leave blank if not tracking stock</div>
+        <label>Or pick existing category</label>
+        <select id="s2-cat-select">
+          <option value="">— create new from name above —</option>
+        </select>
 
-      <label>Product Image *</label>
-      <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
-      <div class="preview" id="preview"><img id="previewImg" src="" alt="preview"></div>
+        <hr class="divider">
 
-      <button type="submit" id="btn">Add Product</button>
-    </form>
-    <div class="result" id="result"></div>
+        <div id="s2-tags-container"></div>
+
+        <button class="btn-primary" id="s2-save-btn" onclick="saveStep2()">Save Category &amp; Specs</button>
+        <button class="btn-ghost" onclick="skipStep2()">Skip for now</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    const SELLER_ID = 'ac2303e0-00f3-4470-98ca-36a8f4ae5866';
+    let createdProductId = null;
+    let suggestedTags = [];      // [{name, display_name, value_type, allowed_values}]
+    let tagValues = {};          // tag_name → value (filled by user)
+
+    // ---- Image preview ----
     document.querySelector('input[name="image"]').addEventListener('change', function() {
       const file = this.files[0];
       if (!file) return;
@@ -88,6 +144,7 @@
       reader.readAsDataURL(file);
     });
 
+    // ---- Step 1: Submit product ----
     document.getElementById('form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('btn');
@@ -101,29 +158,184 @@
         const res = await fetch('/products', { method: 'POST', body: formData });
         const data = await res.json();
         if (res.ok) {
-          result.className = 'result success';
-          result.innerHTML = `
-            <strong>Product added!</strong><br>
-            ID: ${data.id}<br>
-            Name: ${data.name}<br>
-            Listed: ₹${data.listed_price_rupees} &nbsp;|&nbsp; Floor: ₹${data.floor_price_rupees}<br>
-            ${data.warranty_months ? `Warranty: ${data.warranty_months} month(s)<br>` : 'No warranty<br>'}
-            ${data.description ? `<br><em>${data.description}</em>` : ''}
-          `;
-          this.reset();
-          document.getElementById('preview').style.display = 'none';
+          createdProductId = data.id;
+          const suggestion = data.category_suggestion || {};
+          await showStep2(suggestion);
         } else {
           result.className = 'result error';
           result.textContent = data.detail || 'Something went wrong';
+          result.style.display = 'block';
         }
       } catch (err) {
         result.className = 'result error';
         result.textContent = 'Network error — is the server running?';
+        result.style.display = 'block';
       }
-      result.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Add Product';
     });
+
+    async function showStep2(suggestion) {
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+
+      // Pre-fill category name from suggestion
+      document.getElementById('s2-cat-name').value = suggestion.category_name || '';
+      suggestedTags = suggestion.tags || [];
+
+      // Load existing categories for the seller
+      try {
+        const res = await fetch(`/categories?seller_id=${SELLER_ID}`);
+        if (res.ok) {
+          const cats = await res.json();
+          const sel = document.getElementById('s2-cat-select');
+          cats.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            opt.dataset.tags = JSON.stringify(c.tags || []);
+            sel.appendChild(opt);
+          });
+          sel.addEventListener('change', onCategorySelectChange);
+        }
+      } catch (_) {}
+
+      renderTagFields(suggestedTags);
+    }
+
+    function onCategorySelectChange() {
+      const sel = document.getElementById('s2-cat-select');
+      const opt = sel.options[sel.selectedIndex];
+      if (opt.value && opt.dataset.tags) {
+        const tags = JSON.parse(opt.dataset.tags);
+        suggestedTags = tags;
+        renderTagFields(tags);
+        document.getElementById('s2-cat-name').disabled = true;
+      } else {
+        document.getElementById('s2-cat-name').disabled = false;
+        suggestedTags = [];
+        renderTagFields(suggestedTags);
+      }
+    }
+
+    function renderTagFields(tags) {
+      tagValues = {};
+      const container = document.getElementById('s2-tags-container');
+      if (!tags.length) {
+        container.innerHTML = '<p style="font-size:13px;color:#9ca3af;text-align:center;padding:10px 0;">No tags for this category yet.</p>';
+        return;
+      }
+      container.innerHTML = tags.map(t => `
+        <div class="tag-field">
+          <label>${esc(t.display_name)} <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+          ${t.value_type === 'enum' && t.allowed_values && t.allowed_values.length
+            ? `<div class="tag-enum-btns" data-tag="${esc(t.name)}">
+                ${t.allowed_values.map(v =>
+                  `<button type="button" class="tag-enum-btn" onclick="selectEnum(this,'${esc(t.name)}','${esc(v)}')">${esc(v)}</button>`
+                ).join('')}
+               </div>`
+            : `<input type="text" data-tag="${esc(t.name)}" placeholder="Enter value"
+                 onchange="tagValues['${esc(t.name)}'] = this.value"
+                 oninput="tagValues['${esc(t.name)}'] = this.value">`
+          }
+        </div>
+      `).join('');
+    }
+
+    function selectEnum(btn, tagName, value) {
+      const container = btn.closest('.tag-enum-btns');
+      container.querySelectorAll('.tag-enum-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      tagValues[tagName] = value;
+    }
+
+    async function saveStep2() {
+      const btn = document.getElementById('s2-save-btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const existingCatId = document.getElementById('s2-cat-select').value;
+        let categoryId = existingCatId;
+        let finalTags = suggestedTags;
+
+        if (!existingCatId) {
+          // Create new category
+          const catName = document.getElementById('s2-cat-name').value.trim();
+          if (!catName) { skipStep2(); return; }
+
+          const catRes = await fetch('/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ seller_id: SELLER_ID, name: catName }),
+          });
+          if (!catRes.ok) { alert('Failed to create category'); btn.disabled = false; btn.textContent = 'Save Category & Specs'; return; }
+          const cat = await catRes.json();
+          categoryId = cat.id;
+
+          // Create tags for this new category
+          for (const t of suggestedTags) {
+            await fetch(`/categories/${categoryId}/tags`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: t.name,
+                display_name: t.display_name,
+                value_type: t.value_type,
+                allowed_values: t.allowed_values || null,
+              }),
+            });
+          }
+
+          // Re-fetch tags so we have their IDs
+          const tagsRes = await fetch(`/categories/product/${createdProductId}/tags`);
+          if (tagsRes.ok) {
+            const data = await tagsRes.json();
+            finalTags = data.tags || [];
+          }
+        }
+
+        // Assign category to product
+        const fd = new FormData();
+        fd.append('category_id', categoryId);
+        await fetch(`/products/${createdProductId}`, { method: 'PATCH', body: fd });
+
+        // Re-fetch tags to get IDs after category assignment
+        const tagsRes2 = await fetch(`/categories/product/${createdProductId}/tags`);
+        if (tagsRes2.ok) {
+          const tagsData = await tagsRes2.json();
+          finalTags = tagsData.tags || [];
+        }
+
+        // Save filled tag values
+        const tagPayload = finalTags
+          .filter(t => tagValues[t.name] && tagValues[t.name].trim())
+          .map(t => ({ tag_id: t.id, value: tagValues[t.name].trim() }));
+
+        if (tagPayload.length) {
+          await fetch(`/categories/product/${createdProductId}/tags`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tagPayload),
+          });
+        }
+
+        // Done — redirect to products list
+        window.location.href = '/dashboard/products';
+      } catch (err) {
+        alert('Error saving specs: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Save Category & Specs';
+      }
+    }
+
+    function skipStep2() {
+      window.location.href = '/dashboard/products';
+    }
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
   </script>
 </body>
 </html>

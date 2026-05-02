@@ -120,10 +120,16 @@ class ClaudeClient:
         product_description = context.get("product_description") or "No description available"
         logger.warning("generate_reply: product=%r description=%r", context.get("product_name"), product_description)
 
+        tag_values = context.get("product_tag_values") or {}
+        tag_values_str = (
+            ", ".join(f"{k}: {v}" for k, v in tag_values.items()) if tag_values else "None available"
+        )
+
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
             product_description=product_description,
+            product_tag_values=tag_values_str,
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
             warranty_info=warranty_str,
             stock_info=stock_str,
@@ -223,6 +229,120 @@ class ClaudeClient:
         except json.JSONDecodeError:
             logger.error("Claude returned non-JSON catalog match: %r", text)
             return {"product_id": None, "confidence": "low", "reason": "parse error"}
+
+    async def suggest_category(self, product_name: str, product_description: str = "") -> dict:
+        """Suggest a category name and relevant tag definitions for a product.
+        Returns: {category_name, tags: [{name, display_name, value_type, allowed_values}]}
+        """
+        prompt = (
+            f"A seller is listing a product called '{product_name}'.\n"
+            + (f"Description: {product_description}\n" if product_description else "")
+            + "Suggest a product category name and 3-6 useful specification tags a buyer might ask about.\n"
+            "Return ONLY valid JSON, no other text:\n"
+            '{"category_name": "e.g. Wall Clock", "tags": ['
+            '{"name": "power_source", "display_name": "Power Source", "value_type": "enum", "allowed_values": ["AC Power", "Battery", "USB"]}'
+            "]}\n"
+            "Rules:\n"
+            "- category_name: short, generic product type (2-3 words max)\n"
+            "- tag name: lowercase_snake_case slug\n"
+            "- value_type: 'enum' if there are fixed choices, 'text' for free text, 'number' for measurements\n"
+            "- For enum tags, always include allowed_values. For text/number, set allowed_values to null.\n"
+        )
+        response = await self._client.messages.create(
+            model=MODEL,
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = response.content[0].text.strip()
+        try:
+            return _parse_json(text)
+        except json.JSONDecodeError:
+            logger.error("Claude returned non-JSON category suggestion: %r", text)
+            return {"category_name": None, "tags": []}
+
+    async def suggest_tags_for_category(self, category_name: str) -> list[dict]:
+        """Suggest tag definitions for a given product category.
+        Returns: [{name, display_name, value_type, allowed_values, suggested_value}]
+        suggested_value is a typical default value the seller can confirm or change.
+        """
+        prompt = (
+            f"A seller has a product category called '{category_name}'.\n"
+            "Suggest 4-8 specification tags that customers commonly ask about for this product type.\n"
+            "For each tag, also suggest a typical/common value as 'suggested_value'.\n"
+            "Return ONLY a valid JSON array, no other text:\n"
+            "[\n"
+            '  {"name": "power_source", "display_name": "Power Source", "value_type": "enum", '
+            '"allowed_values": ["AC Power", "Battery", "USB Chargeable"], "suggested_value": "AC Power"},\n'
+            '  {"name": "dial_size", "display_name": "Dial Size", "value_type": "text", '
+            '"allowed_values": null, "suggested_value": "30 cm"}\n'
+            "]\n"
+            "Rules:\n"
+            "- name: lowercase_snake_case slug\n"
+            "- value_type: 'enum' if fixed choices exist, 'text' for free input, 'number' for measurements\n"
+            "- For enum: include allowed_values list. For text/number: set allowed_values to null.\n"
+            "- suggested_value: the most common/default value for this category — can be null if unknown.\n"
+        )
+        response = await self._client.messages.create(
+            model=MODEL,
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = response.content[0].text.strip()
+        try:
+            result = _parse_json(text)
+            return result if isinstance(result, list) else []
+        except json.JSONDecodeError:
+            logger.error("Claude returned non-JSON tag suggestions: %r", text)
+            return []
+
+    async def extract_feature_query(
+        self, customer_message: str, tags: list[dict]
+    ) -> dict:
+        """Determine if customer is asking about a product feature and which tag it maps to.
+        tags: [{name, display_name, value_type, allowed_values}]
+        Returns: {
+            is_feature_question: bool,
+            matched_tag_name: str | null,
+            new_tag_name: str | null,
+            new_tag_display_name: str | null,
+            new_tag_value_type: "enum" | "text" | "number" | null,
+            new_tag_allowed_values: list[str] | null,
+        }
+        """
+        tags_json = json.dumps(tags, ensure_ascii=False)
+        prompt = (
+            f"Customer message: \"{customer_message}\"\n\n"
+            f"Known product tags: {tags_json}\n\n"
+            "Is this message asking about a specific product specification or feature?\n"
+            "Examples of feature questions: charging method, power source, size, material, colour, weight, display type, connectivity, whether a feature exists\n"
+            "NOT feature questions: price, warranty, delivery, return policy, 'le lunga', 'order karna hai'\n\n"
+            "If it IS a feature question, check if it maps to one of the known tags above.\n"
+            "If it does NOT map to a known tag, suggest a new tag. For the new tag:\n"
+            "- Choose a clear, meaningful display name (e.g. 'Second Hand' for a clock seconds hand question)\n"
+            "- Decide value_type: 'enum' if the answer has fixed options, 'text' for free text, 'number' for measurements\n"
+            "- For enum: provide the most likely allowed_values list (e.g. Yes/No questions → [\"Yes\", \"No\"])\n"
+            "- For text/number: set allowed_values to null\n\n"
+            "Return ONLY valid JSON, no other text:\n"
+            '{"is_feature_question": true/false, '
+            '"matched_tag_name": "<existing tag slug or null>", '
+            '"new_tag_name": "<snake_case slug if no match, else null>", '
+            '"new_tag_display_name": "<human label if no match, else null>", '
+            '"new_tag_value_type": "<enum|text|number if new tag, else null>", '
+            '"new_tag_allowed_values": ["option1", "option2"] or null}'
+        )
+        response = await self._client.messages.create(
+            model=MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = response.content[0].text.strip()
+        try:
+            return _parse_json(text)
+        except json.JSONDecodeError:
+            logger.error("Claude returned non-JSON feature query: %r", text)
+            return {"is_feature_question": False, "matched_tag_name": None,
+                    "new_tag_name": None, "new_tag_display_name": None,
+                    "new_tag_value_type": None, "new_tag_allowed_values": None}
 
     async def extract_persona(self, conversation_history: str) -> dict:
         prompt = f"""Analyze these Instagram DM conversations from an Indian seller.

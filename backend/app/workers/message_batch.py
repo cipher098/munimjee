@@ -113,6 +113,13 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             logger.info("message_batch: conversation %s is terminal — skipping", conversation.id)
             return
 
+        if conversation.state == "waiting_for_tag":
+            logger.info(
+                "message_batch: conversation %s is waiting for seller to fill a tag — skipping",
+                conversation.id,
+            )
+            return
+
         await _process_events(events, conversation, seller, db)
 
 

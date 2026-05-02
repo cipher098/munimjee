@@ -12,6 +12,7 @@ class Product(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     seller_id = Column(UUID(as_uuid=True), ForeignKey("sellers.id"), nullable=False)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id"), nullable=True)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     listed_price = Column(Integer, nullable=False)   # in paise
@@ -25,5 +26,8 @@ class Product(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     seller = relationship("Seller", back_populates="products")
+    category = relationship("ProductCategory", back_populates="products")
     conversations = relationship("Conversation", back_populates="product")
     orders = relationship("Order", back_populates="product")
+    tag_values = relationship("ProductTagValue", back_populates="product", cascade="all, delete-orphan")
+    alerts = relationship("SellerAlert", back_populates="product")

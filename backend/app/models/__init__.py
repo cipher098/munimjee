@@ -1,5 +1,9 @@
 from app.models.seller import Seller
 from app.models.product import Product
+from app.models.product_category import ProductCategory
+from app.models.category_tag import CategoryTag
+from app.models.product_tag_value import ProductTagValue
+from app.models.seller_alert import SellerAlert
 from app.models.conversation import Conversation
 from app.models.conversation_product import ConversationProduct
 from app.models.order import Order
@@ -10,6 +14,10 @@ from app.models.transaction import Transaction
 __all__ = [
     "Seller",
     "Product",
+    "ProductCategory",
+    "CategoryTag",
+    "ProductTagValue",
+    "SellerAlert",
     "Conversation",
     "ConversationProduct",
     "Order",

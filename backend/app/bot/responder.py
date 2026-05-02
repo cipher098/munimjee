@@ -42,7 +42,7 @@ async def generate_bot_reply(
     seller: Seller,
     db: AsyncSession,
     conv_product: ConversationProduct | None = None,
-) -> tuple[str, str | None, dict[str, Any]]:
+) -> tuple[str | None, str | None, dict[str, Any]]:
     """
     Returns (reply_text, new_state, extra_dict).
     extra_dict may contain: agreed_price, negotiation_round, product_id.
@@ -64,6 +64,10 @@ async def generate_bot_reply(
 
     from app.integrations.claude import ClaudeClient
     from app.integrations.sarvam import SarvamClient
+    from app.models.category_tag import CategoryTag
+    from app.models.product_category import ProductCategory
+    from app.models.product_tag_value import ProductTagValue
+    from app.models.seller_alert import SellerAlert
 
     claude = ClaudeClient()
     sarvam = SarvamClient()
@@ -78,6 +82,109 @@ async def generate_bot_reply(
         effective_negotiation_round = conversation.negotiation_round
         effective_last_counter_price = conversation.last_counter_price if product else None
         price_state_source = "conversation"
+
+    # Tag lookup — load category tags + values for the current product
+    product_tag_values: dict[str, str] = {}   # display_name → value, for known specs
+    category_tags: list[dict] = []            # all tag definitions for this category
+
+    if product and product.category_id:
+        try:
+            cat_result = await db.execute(
+                select(CategoryTag).where(CategoryTag.category_id == product.category_id)
+            )
+            db_tags = cat_result.scalars().all()
+            category_tags = [
+                {
+                    "name": t.name,
+                    "display_name": t.display_name,
+                    "value_type": t.value_type,
+                    "allowed_values": t.allowed_values,
+                }
+                for t in db_tags
+            ]
+            val_result = await db.execute(
+                select(ProductTagValue).where(ProductTagValue.product_id == product.id)
+            )
+            tag_id_to_tag = {t.id: t for t in db_tags}
+            for tv in val_result.scalars().all():
+                tag = tag_id_to_tag.get(tv.tag_id)
+                if tag:
+                    product_tag_values[tag.display_name] = tv.value
+        except Exception as exc:
+            logger.warning("Tag lookup failed: %s", exc)
+
+    # If product has a category and the customer seems to be asking a feature question,
+    # check if we have the answer or need to pause and notify the seller.
+    if product and product.category_id and category_tags:
+        try:
+            fq = await claude.extract_feature_query(customer_message, category_tags)
+            if fq.get("is_feature_question"):
+                matched_name = fq.get("matched_tag_name")
+                new_name = fq.get("new_tag_name")
+                new_display = fq.get("new_tag_display_name") or new_name
+
+                # Find the matched or newly-needed tag
+                matched_tag_obj = None
+                if matched_name:
+                    tag_result = await db.execute(
+                        select(CategoryTag).where(
+                            CategoryTag.category_id == product.category_id,
+                            CategoryTag.name == matched_name,
+                        )
+                    )
+                    matched_tag_obj = tag_result.scalar_one_or_none()
+                elif new_name:
+                    # Auto-create tag for this category using Claude's suggested type/values
+                    new_value_type = fq.get("new_tag_value_type") or "text"
+                    new_allowed = fq.get("new_tag_allowed_values") or None
+                    if new_value_type not in ("enum", "text", "number"):
+                        new_value_type = "text"
+                    matched_tag_obj = CategoryTag(
+                        category_id=product.category_id,
+                        name=new_name,
+                        display_name=new_display or new_name,
+                        value_type=new_value_type,
+                        allowed_values=new_allowed,
+                    )
+                    db.add(matched_tag_obj)
+                    await db.flush()
+                    logger.info(
+                        "Auto-created tag %r (type=%s, options=%s) for category %s",
+                        new_name, new_value_type, new_allowed, product.category_id,
+                    )
+
+                if matched_tag_obj:
+                    has_value = matched_tag_obj.display_name in product_tag_values
+                    if not has_value:
+                        # Pause conversation, alert seller
+                        conversation.state = "waiting_for_tag"
+                        conversation.pending_tag_id = matched_tag_obj.id
+                        await db.flush()
+
+                        # Create alert only if one doesn't already exist
+                        existing_alert = await db.execute(
+                            select(SellerAlert).where(
+                                SellerAlert.product_id == product.id,
+                                SellerAlert.tag_id == matched_tag_obj.id,
+                                SellerAlert.resolved_at.is_(None),
+                            )
+                        )
+                        if not existing_alert.scalar_one_or_none():
+                            db.add(SellerAlert(
+                                seller_id=seller.id,
+                                product_id=product.id,
+                                tag_id=matched_tag_obj.id,
+                                conversation_id=conversation.id,
+                            ))
+
+                        await db.flush()
+                        logger.info(
+                            "Conversation %s paused silently — waiting for tag %r on product %r",
+                            conversation.id, matched_tag_obj.name, product.name,
+                        )
+                        return None, "waiting_for_tag", {}
+        except Exception as exc:
+            logger.warning("Feature query check failed: %s — proceeding normally", exc)
 
     # Step 1: Claude decides action
     decision = await claude.decide({
@@ -134,6 +241,7 @@ async def generate_bot_reply(
         "persona": persona,
         "product_name": product.name if product else "the product",
         "product_description": product.description if product else None,
+        "product_tag_values": product_tag_values,
         "listed_price_rupees": product.listed_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,

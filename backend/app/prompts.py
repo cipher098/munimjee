@@ -216,6 +216,7 @@ SELLER STYLE:
 
 PRODUCT: {product_name}
 PRODUCT DESCRIPTION (only mention features listed here — do NOT invent any): {product_description}
+VERIFIED PRODUCT SPECS (seller-confirmed — use these to answer feature questions, trust these over your own knowledge): {product_tag_values}
 LISTED PRICE: ₹{listed_price_rupees}
 WARRANTY: {warranty_info}
 STOCK: {stock_info}

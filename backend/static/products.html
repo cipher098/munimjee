@@ -80,6 +80,22 @@
              background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
              font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; }
     .toast.show { opacity: 1; }
+
+    /* Category & Specs section in modal */
+    .specs-section { margin-top: 18px; border-top: 1px solid #e5e7eb; padding-top: 14px; }
+    .specs-section h4 { font-size: 13px; font-weight: 700; color: #4338ca; margin-bottom: 10px; }
+    .tag-enum-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+    .tag-enum-btn { padding: 4px 11px; border: 1px solid #d1d5db; border-radius: 20px;
+                    font-size: 12px; cursor: pointer; background: #fff; color: #374151; }
+    .tag-enum-btn.selected { background: #6366f1; color: #fff; border-color: #6366f1; }
+    .alert-dot { display: inline-block; width: 8px; height: 8px; background: #ef4444;
+                 border-radius: 50%; margin-left: 6px; vertical-align: middle; }
+
+    /* Alert banner */
+    .alert-banner { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px;
+                    padding: 10px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px;
+                    display: none; cursor: pointer; }
+    .alert-banner:hover { background: #fde68a; }
   </style>
 </head>
 <body>
@@ -90,6 +106,7 @@
     <a href="/dashboard">Add Product</a>
     <a href="/dashboard/products" class="active">All Products</a>
     <a href="/training/dashboard">Training</a>
+    <a href="/dashboard/categories">Categories</a>
     <a href="/dashboard/settings">Settings</a>
     <a href="/dashboard-auth/logout">Logout</a>
   </nav>
@@ -100,6 +117,8 @@
     <h2>Products</h2>
     <a href="/dashboard" class="btn btn-primary">+ Add New</a>
   </div>
+
+  <div class="alert-banner" id="alertBanner" onclick="openFirstAlert()"></div>
 
   <div class="filter-row">
     <label>
@@ -157,6 +176,19 @@
     <textarea id="edit-reels" placeholder="Paste Instagram reel CDN URLs — one per line&#10;e.g. https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=..." style="min-height:80px;font-size:12px;font-family:monospace;"></textarea>
     <div class="hint">When a customer sends one of these reels in DM, bot will automatically identify the product.</div>
 
+    <!-- Category & Specs -->
+    <div class="specs-section">
+      <h4>Category &amp; Specs</h4>
+
+      <label style="margin-top:0;">Category</label>
+      <select id="edit-category">
+        <option value="">— none —</option>
+      </select>
+      <div class="hint">Helps bot answer feature questions without guessing.</div>
+
+      <div id="edit-tags-container" style="margin-top:10px;"></div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" id="saveBtn" onclick="saveProduct()">Save Changes</button>
@@ -169,13 +201,37 @@
 <script>
   const SELLER_ID = 'ac2303e0-00f3-4470-98ca-36a8f4ae5866';
   let products = [];
+  let allCategories = [];     // [{id, name, tags:[...]}]
+  let editTagValues = {};     // tag_name → value for current edit
+  let editTagDefs = [];       // current tag definitions for selected category
+  let editTagDefChanges = {}; // tag_id → {value_type, allowed_values} — pending tag definition edits
+  let pendingAlerts = [];
 
   async function loadProducts() {
     const includeInactive = document.getElementById('showInactive').checked;
-    const res = await fetch(`/products?seller_id=${SELLER_ID}&include_inactive=${includeInactive}`);
-    if (!res.ok) { showToast('Failed to load products'); return; }
-    products = await res.json();
+    const [pRes, cRes, aRes] = await Promise.all([
+      fetch(`/products?seller_id=${SELLER_ID}&include_inactive=${includeInactive}`),
+      fetch(`/categories?seller_id=${SELLER_ID}`),
+      fetch(`/categories/alerts?seller_id=${SELLER_ID}`),
+    ]);
+    if (pRes.ok) products = await pRes.json();
+    if (cRes.ok) allCategories = await cRes.json();
+    if (aRes.ok) pendingAlerts = await aRes.json();
     renderGrid();
+    renderAlertBanner();
+  }
+
+  function renderAlertBanner() {
+    const banner = document.getElementById('alertBanner');
+    if (!pendingAlerts.length) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    banner.innerHTML = `⚠️ <strong>${pendingAlerts.length} customer question${pendingAlerts.length > 1 ? 's' : ''} waiting</strong> — customers asked about product specs the bot couldn't answer. Click to fill in the details.`;
+  }
+
+  function openFirstAlert() {
+    if (!pendingAlerts.length) return;
+    const a = pendingAlerts[0];
+    openEdit(a.product_id);
   }
 
   function renderGrid() {
@@ -187,7 +243,9 @@
       return;
     }
 
-    grid.innerHTML = products.map(p => `
+    grid.innerHTML = products.map(p => {
+      const hasAlert = pendingAlerts.some(a => a.product_id === p.id);
+      return `
       <div class="card ${p.active ? '' : 'inactive'}" id="card-${p.id}">
         ${p.photo_url
           ? `<img src="${p.photo_url}" alt="${esc(p.name)}" loading="lazy"
@@ -199,7 +257,7 @@
         }
         ${!p.active ? '<div class="badge-inactive">Inactive</div>' : ''}
         <div class="card-body">
-          <div class="card-name">${esc(p.name)}</div>
+          <div class="card-name">${esc(p.name)}${hasAlert ? '<span class="alert-dot" title="Customer question waiting"></span>' : ''}</div>
           <div class="card-prices">
             ₹${p.listed_price_rupees}
             <span class="floor"> · floor ₹${p.floor_price_rupees}</span>
@@ -209,22 +267,24 @@
             ${p.stock_quantity === 0 ? '❌ Out of stock' : p.stock_quantity <= 3 ? `⚠️ Only ${p.stock_quantity} left` : `✅ ${p.stock_quantity} in stock`}
           </div>` : ''}
           ${p.description ? `<div class="card-desc">${esc(p.description)}</div>` : ''}
+          ${p.category_id ? (() => { const cat = allCategories.find(c => c.id === p.category_id); return cat ? `<div style="font-size:11px;color:#6366f1;background:#ede9fe;display:inline-block;padding:2px 8px;border-radius:20px;margin-top:5px;">${esc(cat.name)}</div>` : ''; })() : ''}
           ${p.reel_urls && p.reel_urls.length ? `<div style="font-size:12px;color:#7c3aed;margin-top:4px;">🎬 ${p.reel_urls.length} reel${p.reel_urls.length > 1 ? 's' : ''} linked</div>` : ''}
           <div class="card-actions">
-            <button class="btn btn-ghost" onclick="openEdit('${p.id}')">Edit</button>
+            <button class="btn btn-ghost" onclick="openEdit('${p.id}')">Edit${hasAlert ? ' ⚠️' : ''}</button>
             <button class="btn ${p.active ? 'btn-danger' : 'btn-ghost'}"
               onclick="toggleActive('${p.id}', ${!p.active})">
               ${p.active ? 'Deactivate' : 'Activate'}
             </button>
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
-  function openEdit(id) {
+  async function openEdit(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
+
     document.getElementById('edit-id').value = p.id;
     document.getElementById('edit-name').value = p.name;
     document.getElementById('edit-listed').value = p.listed_price_rupees;
@@ -237,7 +297,6 @@
     document.getElementById('edit-preview').style.display = 'none';
     document.getElementById('edit-reels').value = (p.reel_urls || []).join('\n');
 
-    // Highlight image field if product has a photo_url but it may be missing
     const imgLabel = document.getElementById('edit-image-label');
     const imgCard = document.getElementById(`card-${p.id}`);
     const warningDiv = imgCard ? imgCard.querySelector('[style*="fef9c3"]') : null;
@@ -245,11 +304,146 @@
     imgLabel.textContent = isMissing ? '⚠️ Image missing — please re-upload' : 'Replace Image (optional)';
     imgLabel.style.color = isMissing ? '#92400e' : '';
 
+    // Populate category dropdown
+    const catSel = document.getElementById('edit-category');
+    catSel.innerHTML = '<option value="">— none —</option>';
+    allCategories.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      catSel.appendChild(opt);
+    });
+    catSel.value = p.category_id || '';
+
+    // Load existing tag values for this product
+    editTagValues = {};
+    editTagDefs = [];
+    document.getElementById('edit-tags-container').innerHTML = '';
+    if (p.category_id || catSel.value) {
+      await loadTagsForProduct(p.id, catSel.value || p.category_id);
+    }
+
+    catSel.onchange = () => loadTagsForProduct(p.id, catSel.value);
+
     document.getElementById('overlay').classList.add('open');
+  }
+
+  async function loadTagsForProduct(productId, categoryId) {
+    editTagValues = {};
+    editTagDefs = [];
+    editTagDefChanges = {};
+    const container = document.getElementById('edit-tags-container');
+    if (!categoryId) { container.innerHTML = ''; return; }
+
+    const p = products.find(x => x.id === productId);
+    const savedCatId = p ? p.category_id : null;
+
+    if (categoryId === savedCatId) {
+      // Same category as stored in DB — fetch tags WITH their saved values
+      try {
+        const res = await fetch(`/categories/product/${productId}/tags`);
+        if (!res.ok) { container.innerHTML = ''; return; }
+        const data = await res.json();
+        editTagDefs = data.tags || [];
+        editTagDefs.forEach(t => { if (t.value) editTagValues[t.name] = t.value; });
+        renderEditTags(editTagDefs);
+      } catch (_) { container.innerHTML = ''; }
+    } else {
+      // Different category selected — show that category's tags without pre-filled values
+      const cat = allCategories.find(c => c.id === categoryId);
+      editTagDefs = (cat?.tags || []).map(t => ({ ...t, value: null }));
+      renderEditTags(editTagDefs);
+    }
+  }
+
+  function renderEditTags(tags) {
+    const container = document.getElementById('edit-tags-container');
+    if (!tags.length) { container.innerHTML = ''; return; }
+
+    const productId = document.getElementById('edit-id').value;
+    const alerts4product = pendingAlerts.filter(a => a.product_id === productId);
+
+    container.innerHTML = tags.map(t => {
+      const isAlerted = alerts4product.some(a => a.tag_name === t.name);
+      const pendingChange = editTagDefChanges[t.id];
+      const effectiveType = pendingChange ? pendingChange.value_type : t.value_type;
+      const effectiveAllowed = pendingChange ? pendingChange.allowed_values : t.allowed_values;
+
+      const labelHtml = `
+        <label style="margin-top:0;font-size:13px;font-weight:600;color:${isAlerted ? '#dc2626' : '#374151'};">
+          ${esc(t.display_name)}
+          ${isAlerted ? ' <span style="font-size:11px;color:#dc2626;font-weight:400;">(customer asked this!)</span>' : ''}
+          <span style="font-weight:400;color:#9ca3af;"> (optional)</span>
+        </label>`;
+
+      let inputHtml;
+      if (effectiveType === 'enum' && effectiveAllowed && effectiveAllowed.length) {
+        inputHtml = `<div class="tag-enum-btns" data-tag="${esc(t.name)}">
+          ${effectiveAllowed.map(v =>
+            `<button type="button" class="tag-enum-btn ${editTagValues[t.name] === v ? 'selected' : ''}"
+               onclick="selectEditEnum(this,'${esc(t.name)}','${esc(v)}')">${esc(v)}</button>`
+          ).join('')}
+        </div>`;
+      } else {
+        inputHtml = `<input type="text" id="tagval-${esc(t.id)}" value="${esc(editTagValues[t.name] || '')}"
+          style="margin-top:5px;"
+          placeholder="Enter value"
+          onchange="editTagValues['${esc(t.name)}'] = this.value"
+          oninput="editTagValues['${esc(t.name)}'] = this.value">`;
+      }
+
+      // For text-type alerted tags (often auto-created), show inline enum-promotion UI
+      const enumPromoHtml = (effectiveType !== 'enum' && isAlerted) ? `
+        <div style="margin-top:6px;">
+          <button type="button"
+            style="font-size:11px;color:#6366f1;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;"
+            onclick="toggleEnumPromo('${esc(t.id)}')">⚙ Set fixed options for this tag</button>
+          <div id="enumpromo-${esc(t.id)}" style="display:none;margin-top:8px;background:#f8f7ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px;">
+            <div style="font-size:12px;color:#4338ca;font-weight:600;margin-bottom:6px;">
+              Define allowed values — converts this tag to an enum
+            </div>
+            <input type="text" id="enumopts-${esc(t.id)}"
+              placeholder="e.g. Standard, Sport, Premium"
+              style="font-size:13px;margin-bottom:6px;"
+              value="${esc(pendingChange ? (pendingChange.allowed_values || []).join(', ') : '')}">
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Comma-separated options</div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="applyEnumPromo('${esc(t.id)}','${esc(t.name)}','${esc(t.category_id)}')">Apply</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="cancelEnumPromo('${esc(t.id)}')">Cancel</button>
+          </div>
+        </div>` : '';
+
+      return `<div style="margin-top:10px;">${labelHtml}${inputHtml}${enumPromoHtml}</div>`;
+    }).join('');
+  }
+
+  function toggleEnumPromo(tagId) {
+    const el = document.getElementById(`enumpromo-${tagId}`);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function cancelEnumPromo(tagId) {
+    document.getElementById(`enumpromo-${tagId}`).style.display = 'none';
+  }
+
+  function applyEnumPromo(tagId, tagName, categoryId) {
+    const raw = document.getElementById(`enumopts-${tagId}`).value.trim();
+    if (!raw) { showToast('Enter at least one option'); return; }
+    const allowed_values = raw.split(',').map(s => s.trim()).filter(Boolean);
+    editTagDefChanges[tagId] = { value_type: 'enum', allowed_values, category_id: categoryId };
+    // Re-render so chips appear immediately
+    renderEditTags(editTagDefs);
+  }
+
+  function selectEditEnum(btn, tagName, value) {
+    const container = btn.closest('.tag-enum-btns');
+    container.querySelectorAll('.tag-enum-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    editTagValues[tagName] = value;
   }
 
   function closeModal() {
     document.getElementById('overlay').classList.remove('open');
+    editTagDefChanges = {};
   }
 
   async function saveProduct() {
@@ -277,17 +471,56 @@
       .split('\n').map(s => s.trim()).filter(Boolean);
     fd.append('reel_urls', JSON.stringify(reelLines));
 
+    const selectedCat = document.getElementById('edit-category').value;
+    fd.append('category_id', selectedCat);
+
     const res = await fetch(`/products/${id}`, { method: 'PATCH', body: fd });
     const data = await res.json();
-    btn.disabled = false; btn.textContent = 'Save Changes';
 
-    if (res.ok) {
-      showToast('Product updated');
-      closeModal();
-      loadProducts();
-    } else {
+    if (!res.ok) {
+      btn.disabled = false; btn.textContent = 'Save Changes';
       showToast(data.detail || 'Update failed');
+      return;
     }
+
+    // Update local products array so category pill reflects immediately
+    const idx = products.findIndex(x => x.id === id);
+    if (idx !== -1) products[idx] = { ...products[idx], ...data };
+
+    // Flush any tag definition changes (text → enum promotions) first
+    for (const [tagId, change] of Object.entries(editTagDefChanges)) {
+      const tagDef = editTagDefs.find(t => t.id === tagId);
+      if (!tagDef) continue;
+      const catId = change.category_id || tagDef.category_id;
+      await fetch(`/categories/${catId}/tags/${tagId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: tagDef.name,
+          display_name: tagDef.display_name,
+          value_type: change.value_type,
+          allowed_values: change.allowed_values,
+        }),
+      });
+    }
+
+    // Save tag values if any were set
+    const tagPayload = editTagDefs
+      .filter(t => editTagValues[t.name] !== undefined && editTagValues[t.name] !== '')
+      .map(t => ({ tag_id: t.id, value: editTagValues[t.name] }));
+
+    if (tagPayload.length) {
+      await fetch(`/categories/product/${id}/tags`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tagPayload),
+      });
+    }
+
+    btn.disabled = false; btn.textContent = 'Save Changes';
+    showToast('Product updated');
+    closeModal();
+    loadProducts();
   }
 
   async function toggleActive(id, newState) {
@@ -302,7 +535,6 @@
     }
   }
 
-  // Image preview in modal
   document.getElementById('edit-image').addEventListener('change', function() {
     const file = this.files[0];
     if (!file) return;
@@ -314,7 +546,6 @@
     reader.readAsDataURL(file);
   });
 
-  // Close modal on overlay click
   document.getElementById('overlay').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });

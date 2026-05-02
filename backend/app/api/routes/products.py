@@ -33,6 +33,7 @@ async def create_product(
     stock_quantity: int | None = Form(default=None, description="Stock count, omit if not tracking"),
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs"),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs linked to this product"),
+    category_id: str | None = Form(default=None, description="UUID of an existing ProductCategory to assign"),
     image: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
@@ -92,6 +93,16 @@ async def create_product(
             logger.warning("Description auto-generation failed: %s — leaving blank", exc)
             description = ""
 
+    # Suggest category in the background (non-blocking — returned to frontend)
+    category_suggestion = None
+    try:
+        from app.integrations.claude import ClaudeClient as _Claude
+        _claude = _Claude()
+        category_suggestion = await _claude.suggest_category(name, description)
+        logger.info("Category suggestion for %r: %r", name, category_suggestion)
+    except Exception as exc:
+        logger.warning("Category suggestion failed: %s", exc)
+
     import json as _json
     parsed_photo_urls = None
     if photo_urls:
@@ -115,6 +126,7 @@ async def create_product(
 
     product = Product(
         seller_id=seller_id,
+        category_id=category_id or None,
         name=name,
         description=description or None,
         listed_price=listed_price * 100,   # rupees → paise
@@ -134,6 +146,7 @@ async def create_product(
         "id": str(product.id),
         "name": product.name,
         "description": product.description,
+        "category_id": str(product.category_id) if product.category_id else None,
         "listed_price_rupees": listed_price,
         "floor_price_rupees": floor_price,
         "photo_url": product.photo_url,
@@ -141,6 +154,7 @@ async def create_product(
         "reel_urls": product.reel_urls,
         "warranty_months": product.warranty_months,
         "stock_quantity": product.stock_quantity,
+        "category_suggestion": category_suggestion,
     }
 
 
@@ -158,6 +172,7 @@ async def list_products(seller_id: str, include_inactive: bool = False, db: Asyn
             "id": str(p.id),
             "name": p.name,
             "description": p.description,
+            "category_id": str(p.category_id) if p.category_id else None,
             "listed_price_rupees": p.listed_price // 100,
             "floor_price_rupees": p.floor_price // 100,
             "photo_url": p.photo_url,
@@ -183,6 +198,7 @@ async def update_product(
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs; send '[]' to clear"),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs; send '[]' to clear"),
     active: bool = Form(default=None),
+    category_id: str | None = Form(default=None, description="UUID of ProductCategory; send empty string to clear"),
     image: UploadFile = File(default=None),
     db: AsyncSession = Depends(get_db),
 ):
@@ -199,6 +215,8 @@ async def update_product(
         product.description = description or None
     if active is not None:
         product.active = active
+    if category_id is not None:
+        product.category_id = category_id if category_id else None
 
     if listed_price is not None:
         product.listed_price = listed_price * 100
@@ -299,6 +317,7 @@ async def update_product(
         "id": str(product.id),
         "name": product.name,
         "description": product.description,
+        "category_id": str(product.category_id) if product.category_id else None,
         "listed_price_rupees": product.listed_price // 100,
         "floor_price_rupees": product.floor_price // 100,
         "photo_url": product.photo_url,

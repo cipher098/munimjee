@@ -13,6 +13,7 @@ from app.api.dashboard_auth import router as dashboard_auth_router, verify_dashb
 from app.api.routes.products import router as products_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.training import router as training_router
+from app.api.routes.categories import router as categories_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ app.include_router(dashboard_auth_router)
 app.include_router(products_router)
 app.include_router(settings_router)
 app.include_router(training_router)
+app.include_router(categories_router)
 
 
 @app.get("/health")
@@ -69,3 +71,8 @@ async def products_dashboard(phone: str = Depends(verify_dashboard_cookie)):
 @app.get("/dashboard/settings")
 async def settings_dashboard(phone: str = Depends(verify_dashboard_cookie)):
     return FileResponse("/app/static/settings.html")
+
+
+@app.get("/dashboard/categories")
+async def categories_dashboard(phone: str = Depends(verify_dashboard_cookie)):
+    return FileResponse("/app/static/categories.html")

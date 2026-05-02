@@ -29,7 +29,7 @@ async def _retry_failed() -> None:
         result = await db.execute(
             select(DeliveryUpdate).where(
                 DeliveryUpdate.notified_at.is_(None),
-                DeliveryUpdate.created_at < cutoff,
+                DeliveryUpdate.dispatched_at < cutoff,
             )
         )
         pending = result.scalars().all()

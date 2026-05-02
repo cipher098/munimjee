@@ -199,12 +199,17 @@ async def advance_conversation(
     customer_message: str,
     db: AsyncSession,
     send_reply: bool = True,
+    resume: bool = False,
 ) -> None:
-    """Main entry point: processes a customer text message and sends a bot reply."""
+    """Main entry point: processes a customer text message and sends a bot reply.
+    Pass resume=True when re-processing an already-stored customer message so it
+    is not appended to history a second time.
+    """
     if conversation.state in TERMINAL_STATES:
         return
 
-    _append_message(conversation, "customer", customer_message)
+    if not resume:
+        _append_message(conversation, "customer", customer_message)
 
     if not conversation.customer_gender and conversation.customer_name:
         from app.utils.gender import guess_gender, guess_gender_ai
@@ -273,6 +278,11 @@ async def advance_conversation(
         result = await db.execute(sa_select(ProductModel).where(ProductModel.id == conversation.product_id))
         img_product = result.scalar_one_or_none()
         await _send_next_product_photo(conversation, seller, img_product, conv_product, db)
+
+    if reply is None:
+        # Conversation paused silently (e.g. waiting_for_tag) — do not send anything to customer
+        await db.flush()
+        return
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()

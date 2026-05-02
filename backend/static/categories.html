@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Categories</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+
+    .topbar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px;
+              display: flex; align-items: center; gap: 16px; height: 56px; }
+    .topbar h1 { font-size: 16px; font-weight: 700; }
+    .topbar nav { display: flex; gap: 4px; margin-left: auto; }
+    .topbar nav a { padding: 6px 12px; border-radius: 6px; font-size: 13px;
+                    text-decoration: none; color: #555; }
+    .topbar nav a:hover { background: #f3f4f6; }
+    .topbar nav a.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+    .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .toolbar h2 { font-size: 18px; font-weight: 700; flex: 1; }
+    .toolbar p { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+    .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+           cursor: pointer; border: none; }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-ghost { background: transparent; border: 1px solid #ddd; color: #555; }
+    .btn-ghost:hover { background: #f9fafb; }
+    .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }
+
+    .cat-panel { background: #fff; border-radius: 12px;
+                 box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; }
+    .cat-panel-header { padding: 12px 16px; border-bottom: 1px solid #f3f4f6;
+                        font-size: 12px; font-weight: 700; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: .05em; }
+    .cat-item { padding: 11px 16px; cursor: pointer; border-bottom: 1px solid #f9fafb;
+                font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .cat-item:last-of-type { border-bottom: none; }
+    .cat-item:hover { background: #f9fafb; }
+    .cat-item.active { background: #ede9fe; color: #4338ca; font-weight: 600; }
+    .cat-count { font-size: 11px; color: #9ca3af; background: #f3f4f6;
+                 padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
+    .cat-item.active .cat-count { background: #c7d2fe; color: #4338ca; }
+    .cat-empty { padding: 24px 16px; text-align: center; color: #9ca3af; font-size: 13px; }
+
+    .new-cat-box { padding: 12px 16px; border-top: 1px solid #f3f4f6; background: #fafafa; }
+    .new-cat-box input { width: 100%; padding: 7px 10px; border: 1px solid #ddd;
+                         border-radius: 7px; font-size: 13px; outline: none; margin-bottom: 7px; }
+    .new-cat-box input:focus { border-color: #6366f1; }
+
+    .tag-panel { background: #fff; border-radius: 12px;
+                 box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .tag-panel-header { padding: 14px 20px; border-bottom: 1px solid #f3f4f6;
+                        display: flex; align-items: center; gap: 10px; }
+    .tag-panel-header h3 { font-size: 15px; font-weight: 700; flex: 1; }
+    .tag-placeholder { padding: 60px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
+    .tag-placeholder .icon { font-size: 36px; margin-bottom: 10px; }
+
+    .tag-list { padding: 0 20px; }
+    .tag-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;
+               border-bottom: 1px solid #f9fafb; }
+    .tag-row:last-child { border-bottom: none; }
+    .tag-info { flex: 1; min-width: 0; }
+    .tag-display { font-size: 14px; font-weight: 600; }
+    .tag-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .tag-slug { font-size: 11px; color: #9ca3af; font-family: monospace; }
+    .tag-type-badge { font-size: 11px; color: #6366f1; background: #ede9fe;
+                      padding: 1px 7px; border-radius: 20px; }
+    .tag-allowed { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag-chip { background: #f3f4f6; color: #374151; font-size: 11px; padding: 2px 8px;
+                border-radius: 20px; }
+
+    .add-tag-section { padding: 16px 20px; border-top: 1px solid #f3f4f6;
+                       background: #fafafa; border-radius: 0 0 12px 12px; }
+    .add-tag-section h4 { font-size: 12px; font-weight: 700; color: #9ca3af;
+                          text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: #555; }
+    .form-group input, .form-group select {
+      padding: 7px 10px; border: 1px solid #ddd; border-radius: 7px;
+      font-size: 13px; outline: none; background: #fff; }
+    .form-group input:focus, .form-group select:focus { border-color: #6366f1; }
+    .hint { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+             background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
+             font-size: 13px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Suggest-tags overlay */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+               z-index: 100; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .suggest-modal { background: #fff; border-radius: 14px; width: 640px; max-width: 95vw;
+                     max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .suggest-modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #f3f4f6; }
+    .suggest-modal-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .suggest-modal-header p { font-size: 13px; color: #6b7280; }
+    .suggest-modal-body { padding: 16px 24px; }
+    .suggest-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px;
+                    margin-bottom: 12px; transition: border-color 0.15s; }
+    .suggest-card.accepted { border-color: #86efac; background: #f0fdf4; }
+    .suggest-card.rejected { opacity: 0.4; }
+    .suggest-card-top { display: flex; align-items: center; gap: 10px; }
+    .suggest-card-title { font-size: 14px; font-weight: 700; flex: 1; }
+    .suggest-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+    .suggest-badge.enum { background: #ede9fe; color: #6366f1; }
+    .suggest-badge.text { background: #e0f2fe; color: #0369a1; }
+    .suggest-badge.number { background: #fef9c3; color: #713f12; }
+    .suggest-card-meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .suggest-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .suggest-chip { background: #f3f4f6; color: #374151; font-size: 12px;
+                    padding: 3px 10px; border-radius: 20px; }
+    .suggest-chip.suggested { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
+    .suggest-card-actions { display: flex; gap: 6px; margin-top: 12px; }
+    .suggest-edit-area { margin-top: 12px; background: #f9fafb; border-radius: 8px;
+                         padding: 12px; display: none; }
+    .suggest-edit-area.open { display: block; }
+    .suggest-edit-area .form-row { margin-bottom: 8px; }
+    .suggest-modal-footer { padding: 16px 24px; border-top: 1px solid #f3f4f6;
+                            display: flex; gap: 10px; justify-content: flex-end; }
+    .loading-spinner { text-align: center; padding: 40px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>munimjee.ai</h1>
+  <nav>
+    <a href="/dashboard">Add Product</a>
+    <a href="/dashboard/products">All Products</a>
+    <a href="/training/dashboard">Training</a>
+    <a href="/dashboard/categories" class="active">Categories</a>
+    <a href="/dashboard/settings">Settings</a>
+    <a href="/dashboard-auth/logout">Logout</a>
+  </nav>
+</div>
+
+<div class="container">
+  <div class="toolbar">
+    <div>
+      <h2>Product Categories</h2>
+      <p>Categories define what specs customers can ask about. The bot uses these to answer accurately.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Left: category list -->
+    <div>
+      <div class="cat-panel">
+        <div class="cat-panel-header">Categories</div>
+        <div id="catList">
+          <div class="cat-empty">Loading…</div>
+        </div>
+        <div class="new-cat-box">
+          <input type="text" id="newCatName" placeholder="New category name…" onkeydown="if(event.key==='Enter')addCategory()">
+          <button class="btn btn-primary" style="width:100%;padding:8px;" onclick="addCategory()">+ Add Category</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: tag editor -->
+    <div class="tag-panel" id="tagPanel">
+      <div class="tag-placeholder">
+        <div class="icon">🏷️</div>
+        Select a category on the left to manage its tags
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Suggest-tags modal -->
+<div class="overlay" id="suggestOverlay">
+  <div class="suggest-modal">
+    <div class="suggest-modal-header">
+      <h3 id="suggestTitle">AI-Suggested Tags</h3>
+      <p>Review each suggestion — accept, edit, or reject. Then click "Save Accepted Tags".</p>
+    </div>
+    <div class="suggest-modal-body" id="suggestBody">
+      <div class="loading-spinner">Asking AI for tag suggestions…</div>
+    </div>
+    <div class="suggest-modal-footer">
+      <button class="btn btn-ghost" onclick="closeSuggest()">Skip / Close</button>
+      <button class="btn btn-ghost btn-sm" onclick="acceptAll()" id="acceptAllBtn" style="display:none;">Accept All</button>
+      <button class="btn btn-primary" onclick="saveSuggestedTags()" id="saveTagsBtn" style="display:none;">Save Accepted Tags</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SELLER_ID = 'ac2303e0-00f3-4470-98ca-36a8f4ae5866';
+  let categories = [];
+  let activeCatId = null;
+
+  async function load() {
+    const res = await fetch(`/categories?seller_id=${SELLER_ID}`);
+    if (!res.ok) { showToast('Failed to load categories'); return; }
+    categories = await res.json();
+    renderCatList();
+    if (activeCatId) {
+      const still = categories.find(c => c.id === activeCatId);
+      if (still) openCategory(activeCatId);
+    }
+  }
+
+  function renderCatList() {
+    const el = document.getElementById('catList');
+    if (!categories.length) {
+      el.innerHTML = '<div class="cat-empty">No categories yet.<br>Add one below.</div>';
+      return;
+    }
+    el.innerHTML = categories.map(c => `
+      <div class="cat-item ${c.id === activeCatId ? 'active' : ''}" onclick="openCategory('${c.id}')">
+        <span>${esc(c.name)}</span>
+        <span class="cat-count">${(c.tags || []).length} tag${(c.tags||[]).length !== 1 ? 's' : ''}</span>
+      </div>
+    `).join('');
+  }
+
+  function openCategory(id) {
+    activeCatId = id;
+    renderCatList();
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+    renderTagPanel(cat);
+  }
+
+  function renderTagPanel(cat) {
+    const panel = document.getElementById('tagPanel');
+    const tags = cat.tags || [];
+
+    panel.innerHTML = `
+      <div class="tag-panel-header">
+        <h3>${esc(cat.name)}</h3>
+        <span style="font-size:13px;color:#9ca3af;">${tags.length} tag${tags.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div class="tag-list" id="tagList">
+        ${tags.length ? tags.map(t => renderTagRow(t)).join('') : `
+          <div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">
+            No tags yet. Add one below.
+          </div>
+        `}
+      </div>
+
+      <div class="add-tag-section">
+        <h4>Add Tag</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Display Name</label>
+            <input type="text" id="t-display" placeholder="e.g. Power Source">
+          </div>
+          <div class="form-group">
+            <label>Slug (auto-filled)</label>
+            <input type="text" id="t-name" placeholder="power_source" style="font-family:monospace;font-size:12px;">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select id="t-type" onchange="toggleAllowedValues()">
+              <option value="enum">Enum (fixed choices)</option>
+              <option value="text">Text (free input)</option>
+              <option value="number">Number</option>
+            </select>
+          </div>
+          <div class="form-group" id="t-allowed-group">
+            <label>Allowed Values</label>
+            <input type="text" id="t-allowed" placeholder="AC Power, Battery, USB">
+            <div class="hint">Comma-separated</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addTag('${cat.id}')">+ Add Tag</button>
+      </div>
+    `;
+
+    // Auto-slug from display name
+    document.getElementById('t-display').addEventListener('input', function() {
+      const slug = this.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+      document.getElementById('t-name').value = slug;
+    });
+  }
+
+  function renderTagRow(t) {
+    const allowedHtml = t.allowed_values && t.allowed_values.length
+      ? `<div class="tag-allowed">${t.allowed_values.map(v => `<span class="tag-chip">${esc(v)}</span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="tag-row" id="tagrow-${t.id}">
+        <div class="tag-info">
+          <div class="tag-display">${esc(t.display_name)}</div>
+          <div class="tag-meta">
+            <span class="tag-slug">${esc(t.name)}</span>
+            <span class="tag-type-badge">${esc(t.value_type)}</span>
+          </div>
+          ${allowedHtml}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="editTag('${t.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTag('${t.id}', '${esc(t.display_name)}')">Delete</button>
+      </div>
+    `;
+  }
+
+  function toggleAllowedValues() {
+    const type = document.getElementById('t-type').value;
+    document.getElementById('t-allowed-group').style.opacity = type === 'enum' ? '1' : '0.4';
+    document.getElementById('t-allowed').disabled = type !== 'enum';
+  }
+
+  async function addCategory() {
+    const name = document.getElementById('newCatName').value.trim();
+    if (!name) return;
+    const res = await fetch('/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seller_id: SELLER_ID, name }),
+    });
+    if (!res.ok) { showToast('Failed to create category'); return; }
+    const created = await res.json();
+    document.getElementById('newCatName').value = '';
+    showToast(`Category "${name}" created`);
+    await load();
+    openCategory(created.id);
+    // Immediately trigger AI tag suggestions
+    openSuggestModal(created.id, name);
+  }
+
+  // ---- Suggest-tags modal ----
+  let suggestCatId = null;
+  let suggestCards = [];  // [{tag, state: 'pending'|'accepted'|'rejected', edited: {...}}]
+
+  function openSuggestModal(catId, catName) {
+    suggestCatId = catId;
+    suggestCards = [];
+    document.getElementById('suggestTitle').textContent = `AI-Suggested Tags — ${catName}`;
+    document.getElementById('suggestBody').innerHTML = '<div class="loading-spinner">Asking AI for suggestions…</div>';
+    document.getElementById('acceptAllBtn').style.display = 'none';
+    document.getElementById('saveTagsBtn').style.display = 'none';
+    document.getElementById('suggestOverlay').classList.add('open');
+    loadSuggestions(catId);
+  }
+
+  async function loadSuggestions(catId) {
+    try {
+      const res = await fetch(`/categories/${catId}/suggest-tags`, { method: 'POST' });
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      const suggestions = data.suggestions || [];
+      if (!suggestions.length) {
+        document.getElementById('suggestBody').innerHTML =
+          '<p style="text-align:center;color:#9ca3af;padding:30px;">No suggestions available for this category.</p>';
+        return;
+      }
+      suggestCards = suggestions.map(t => ({ tag: t, state: 'pending', edited: null }));
+      renderSuggestCards();
+      document.getElementById('acceptAllBtn').style.display = 'inline-block';
+      document.getElementById('saveTagsBtn').style.display = 'inline-block';
+    } catch (e) {
+      document.getElementById('suggestBody').innerHTML =
+        '<p style="text-align:center;color:#991b1b;padding:30px;">Failed to load suggestions. You can add tags manually.</p>';
+    }
+  }
+
+  function renderSuggestCards() {
+    document.getElementById('suggestBody').innerHTML = suggestCards.map((card, idx) => {
+      const t = card.edited || card.tag;
+      const chips = t.allowed_values && t.allowed_values.length
+        ? t.allowed_values.map(v =>
+            `<span class="suggest-chip ${v === t.suggested_value ? 'suggested' : ''}">${esc(v)}</span>`
+          ).join('')
+        : '';
+      const suggestedNote = t.suggested_value
+        ? `<span style="margin-left:6px;font-size:11px;color:#6b7280;">default: <b>${esc(t.suggested_value)}</b></span>`
+        : '';
+      const stateClass = card.state === 'accepted' ? 'accepted' : card.state === 'rejected' ? 'rejected' : '';
+      const stateIcon = card.state === 'accepted' ? '✓ ' : card.state === 'rejected' ? '✗ ' : '';
+
+      return `
+        <div class="suggest-card ${stateClass}" id="scard-${idx}">
+          <div class="suggest-card-top">
+            <span class="suggest-card-title">${stateIcon}${esc(t.display_name)}</span>
+            <span class="suggest-badge ${t.value_type}">${t.value_type}</span>
+          </div>
+          <div class="suggest-card-meta">
+            <code style="font-size:11px;background:#f3f4f6;padding:1px 5px;border-radius:4px;">${esc(t.name)}</code>
+            ${suggestedNote}
+          </div>
+          ${chips ? `<div class="suggest-chips">${chips}</div>` : ''}
+
+          <div class="suggest-edit-area" id="sedit-${idx}">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="se-display-${idx}" value="${esc(t.display_name)}">
+              </div>
+              <div class="form-group">
+                <label>Type</label>
+                <select id="se-type-${idx}">
+                  <option value="enum" ${t.value_type==='enum'?'selected':''}>Enum</option>
+                  <option value="text" ${t.value_type==='text'?'selected':''}>Text</option>
+                  <option value="number" ${t.value_type==='number'?'selected':''}>Number</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label>Allowed Values (comma-separated, for enum)</label>
+              <input type="text" id="se-allowed-${idx}" value="${esc((t.allowed_values||[]).join(', '))}">
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label>Default/Suggested Value</label>
+              <input type="text" id="se-suggested-${idx}" value="${esc(t.suggested_value||'')}">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="applyEdit(${idx})">Apply Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="cancelEdit(${idx})">Cancel</button>
+          </div>
+
+          <div class="suggest-card-actions">
+            <button class="btn btn-sm" style="background:#dcfce7;color:#166534;border:1px solid #86efac;"
+                    onclick="setSuggestState(${idx},'accepted')">✓ Accept</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleEdit(${idx})">✎ Edit</button>
+            <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;"
+                    onclick="setSuggestState(${idx},'rejected')">✗ Reject</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function setSuggestState(idx, state) {
+    suggestCards[idx].state = state;
+    renderSuggestCards();
+  }
+
+  function toggleEdit(idx) {
+    const el = document.getElementById(`sedit-${idx}`);
+    el.classList.toggle('open');
+  }
+
+  function cancelEdit(idx) {
+    document.getElementById(`sedit-${idx}`).classList.remove('open');
+  }
+
+  function applyEdit(idx) {
+    const display = document.getElementById(`se-display-${idx}`).value.trim();
+    const type = document.getElementById(`se-type-${idx}`).value;
+    const allowedRaw = document.getElementById(`se-allowed-${idx}`).value.trim();
+    const suggested = document.getElementById(`se-suggested-${idx}`).value.trim();
+    if (!display) { showToast('Display name is required'); return; }
+    const name = display.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    const allowed_values = type === 'enum' && allowedRaw
+      ? allowedRaw.split(',').map(s => s.trim()).filter(Boolean)
+      : null;
+    suggestCards[idx].edited = { ...suggestCards[idx].tag, display_name: display, name, value_type: type, allowed_values, suggested_value: suggested || null };
+    suggestCards[idx].state = 'accepted';
+    renderSuggestCards();
+  }
+
+  function acceptAll() {
+    suggestCards.forEach(c => { if (c.state === 'pending') c.state = 'accepted'; });
+    renderSuggestCards();
+  }
+
+  async function saveSuggestedTags() {
+    const toSave = suggestCards.filter(c => c.state === 'accepted');
+    if (!toSave.length) { showToast('No tags accepted'); return; }
+
+    const btn = document.getElementById('saveTagsBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    let saved = 0;
+    for (const card of toSave) {
+      const t = card.edited || card.tag;
+      const res = await fetch(`/categories/${suggestCatId}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: t.name,
+          display_name: t.display_name,
+          value_type: t.value_type,
+          allowed_values: t.allowed_values || null,
+        }),
+      });
+      if (res.ok) saved++;
+    }
+
+    btn.disabled = false; btn.textContent = 'Save Accepted Tags';
+    showToast(`${saved} tag${saved !== 1 ? 's' : ''} saved`);
+    closeSuggest();
+    await load();
+    openCategory(suggestCatId);
+  }
+
+  function closeSuggest() {
+    document.getElementById('suggestOverlay').classList.remove('open');
+  }
+
+  async function addTag(catId) {
+    const display = document.getElementById('t-display').value.trim();
+    const name = document.getElementById('t-name').value.trim();
+    const type = document.getElementById('t-type').value;
+    const allowedRaw = document.getElementById('t-allowed').value.trim();
+
+    if (!display || !name) { showToast('Display name and slug are required'); return; }
+
+    const allowed_values = type === 'enum' && allowedRaw
+      ? allowedRaw.split(',').map(s => s.trim()).filter(Boolean)
+      : null;
+
+    const res = await fetch(`/categories/${catId}/tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, display_name: display, value_type: type, allowed_values }),
+    });
+    if (!res.ok) { const d = await res.json(); showToast(d.detail || 'Failed to add tag'); return; }
+    showToast(`Tag "${display}" added`);
+    await load();
+    openCategory(catId);
+  }
+
+  function editTag(tagId) {
+    const cat = categories.find(c => c.id === activeCatId);
+    if (!cat) return;
+    const tag = (cat.tags || []).find(t => t.id === tagId);
+    if (!tag) return;
+
+    const row = document.getElementById(`tagrow-${tagId}`);
+    const allowedStr = tag.allowed_values ? tag.allowed_values.join(', ') : '';
+    row.innerHTML = `
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" id="et-display-${tagId}" value="${esc(tag.display_name)}">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="et-type-${tagId}">
+            <option value="enum" ${tag.value_type==='enum'?'selected':''}>Enum</option>
+            <option value="text" ${tag.value_type==='text'?'selected':''}>Text</option>
+            <option value="number" ${tag.value_type==='number'?'selected':''}>Number</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Allowed Values (comma-separated, for enum)</label>
+          <input type="text" id="et-allowed-${tagId}" value="${esc(allowedStr)}" placeholder="AC Power, Battery, USB">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+        <button class="btn btn-primary btn-sm" onclick="saveTagEdit('${activeCatId}','${tagId}')">Save</button>
+        <button class="btn btn-ghost btn-sm" onclick="openCategory('${activeCatId}')">Cancel</button>
+      </div>
+    `;
+  }
+
+  async function saveTagEdit(catId, tagId) {
+    const display = document.getElementById(`et-display-${tagId}`).value.trim();
+    const type = document.getElementById(`et-type-${tagId}`).value;
+    const allowedRaw = document.getElementById(`et-allowed-${tagId}`).value.trim();
+    if (!display) { showToast('Display name required'); return; }
+
+    const allowed_values = type === 'enum' && allowedRaw
+      ? allowedRaw.split(',').map(s => s.trim()).filter(Boolean)
+      : null;
+
+    const cat = categories.find(c => c.id === catId);
+    const tag = cat ? (cat.tags || []).find(t => t.id === tagId) : null;
+    const name = tag ? tag.name : display.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+
+    const res = await fetch(`/categories/${catId}/tags/${tagId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, display_name: display, value_type: type, allowed_values }),
+    });
+    if (!res.ok) { showToast('Failed to update tag'); return; }
+    showToast('Tag updated');
+    await load();
+    openCategory(catId);
+  }
+
+  async function deleteTag(tagId, displayName) {
+    if (!confirm(`Delete tag "${displayName}"? This will also remove all product values for this tag.`)) return;
+    const res = await fetch(`/categories/${activeCatId}/tags/${tagId}`, { method: 'DELETE' });
+    if (res.ok || res.status === 404) {
+      showToast(`Tag deleted`);
+      await load();
+      openCategory(activeCatId);
+    } else {
+      showToast('Failed to delete tag');
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  load();
+</script>
+</body>
+</html>

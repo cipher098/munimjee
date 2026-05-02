@@ -29,3 +29,5 @@ class Seller(Base):
     conversations = relationship("Conversation", back_populates="seller")
     orders = relationship("Order", back_populates="seller")
     delivery_members = relationship("DeliveryMember", back_populates="seller")
+    product_categories = relationship("ProductCategory", back_populates="seller")
+    alerts = relationship("SellerAlert", back_populates="seller")
