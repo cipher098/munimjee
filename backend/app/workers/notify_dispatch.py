@@ -2,7 +2,7 @@
 Celery task: notify customer on Instagram when order is dispatched.
 IDEMPOTENT — checks notified_at before sending to prevent duplicate DMs.
 """
-import asyncio
+from app.workers.async_runner import run_async
 import logging
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @celery_app.task
 def retry_failed() -> None:
     """Re-queue dispatch notifications that never got sent (no notified_at after 5 min)."""
-    asyncio.run(_retry_failed())
+    run_async(_retry_failed())
 
 
 async def _retry_failed() -> None:
@@ -42,7 +42,7 @@ async def _retry_failed() -> None:
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30)
 def notify_customer_dispatch(self, delivery_update_id: str) -> None:
     try:
-        asyncio.run(_notify(delivery_update_id))
+        run_async(_notify(delivery_update_id))
     except Exception as exc:
         logger.error("notify_customer_dispatch failed: %s", exc)
         raise self.retry(exc=exc)

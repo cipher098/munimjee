@@ -2,7 +2,7 @@
 Celery task: send daily 9am reminder to sellers who haven't uploaded their
 bank statement for reconciliation. Runs via Beat on a daily crontab schedule.
 """
-import asyncio
+from app.workers.async_runner import run_async
 import logging
 from datetime import datetime, timezone
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="app.workers.process_statement.send_reminder")
 def send_reminder() -> None:
-    asyncio.run(_send_reminder())
+    run_async(_send_reminder())
 
 
 async def _send_reminder() -> None:

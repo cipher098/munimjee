@@ -2,7 +2,7 @@
 Celery task: expire stale conversations that have had no activity for 24 hours.
 Runs every 2 hours via Beat. Moves eligible conversations to state 'expired'.
 """
-import asyncio
+from app.workers.async_runner import run_async
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -25,7 +25,7 @@ ACTIVE_STATES = {
 
 @celery_app.task(name="app.workers.conversation.expire_stale")
 def expire_stale() -> None:
-    asyncio.run(_expire_stale())
+    run_async(_expire_stale())
 
 
 async def _expire_stale() -> None:

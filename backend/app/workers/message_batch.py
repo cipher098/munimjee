@@ -4,7 +4,7 @@ a 15-second debounce window.  Each incoming webhook event is queued in Redis;
 a delayed task fires after 15 s of silence and processes them all, sending exactly
 one bot reply.
 """
-import asyncio
+from app.workers.async_runner import run_async
 import json
 import logging
 
@@ -62,7 +62,7 @@ def pop_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
 
 @celery_app.task(name="app.workers.message_batch.process_message_batch")
 def process_message_batch(page_id: str, customer_ig_id: str) -> None:
-    asyncio.run(_process_batch(page_id, customer_ig_id))
+    run_async(_process_batch(page_id, customer_ig_id))
 
 
 async def _process_batch(page_id: str, customer_ig_id: str) -> None:

@@ -1,5 +1,5 @@
 """Celery task — refresh Instagram long-lived tokens before they expire."""
-import asyncio
+from app.workers.async_runner import run_async
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="app.workers.refresh_tokens.refresh_expiring_instagram_tokens")
 def refresh_expiring_instagram_tokens() -> None:
-    asyncio.run(_refresh())
+    run_async(_refresh())
 
 
 async def _refresh() -> None:
