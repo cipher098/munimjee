@@ -17,6 +17,7 @@ SELLER STYLE:
 {persona_json}
 
 PRODUCT: {product_name}
+PRODUCT DESCRIPTION (only mention features listed here — do NOT invent any): {product_description}
 LISTED PRICE: ₹{listed_price_rupees}
 LOWEST PRICE EVER OFFERED: {last_counter_price}
 CURRENT PRICE CONTEXT: {negotiation_context}
@@ -78,6 +79,7 @@ class SarvamClient:
         system = SYSTEM_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
+            product_description=context.get("product_description") or "No description available",
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
             last_counter_price=last_counter_str,
             negotiation_context=negotiation_context,

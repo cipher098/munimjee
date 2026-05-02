@@ -133,6 +133,7 @@ async def generate_bot_reply(
         "decision": decision,
         "persona": persona,
         "product_name": product.name if product else "the product",
+        "product_description": product.description if product else None,
         "listed_price_rupees": product.listed_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,

@@ -117,9 +117,13 @@ class ClaudeClient:
         history = context.get("message_history", [])
         history_str = json.dumps(history[-6:], ensure_ascii=False) if history else "[]"
 
+        product_description = context.get("product_description") or "No description available"
+        logger.warning("generate_reply: product=%r description=%r", context.get("product_name"), product_description)
+
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
+            product_description=product_description,
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
             warranty_info=warranty_str,
             stock_info=stock_str,

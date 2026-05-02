@@ -58,19 +58,32 @@ async def create_product(
     ext = Path(image.filename).suffix or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"
     dest = UPLOAD_DIR / filename
-    dest.write_bytes(await image.read())
+    image_bytes = await image.read()
+    dest.write_bytes(image_bytes)
     photo_url = f"/uploads/{filename}"
     logger.info("Saved product image to %s", dest)
+
+    # Validate image matches product name before saving to DB
+    try:
+        import base64 as _b64
+        image_b64 = _b64.b64encode(image_bytes).decode()
+        is_match, detected = await _validate_image_matches_name(
+            image_b64, image.content_type or "image/jpeg", name
+        )
+        if not is_match:
+            dest.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Image looks like a '{detected}' but product name is '{name}'. Please upload a correct image or fix the product name."
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Image validation failed: %s — skipping check", exc)
 
     # Auto-generate description if not provided
     if not description.strip():
         try:
-            from app.integrations.claude import ClaudeClient
-            # Build a publicly accessible URL for Claude Vision
-            # In dev we pass the file contents directly via base64
-            image_bytes = dest.read_bytes()
-            import base64
-            image_b64 = base64.b64encode(image_bytes).decode()
             description = await _generate_description_from_bytes(
                 image_b64, image.content_type or "image/jpeg", name
             )
@@ -179,6 +192,7 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    name_changed = name is not None and name != product.name
     if name is not None:
         product.name = name
     if description is not None:
@@ -195,6 +209,29 @@ async def update_product(
     if product.floor_price > product.listed_price:
         raise HTTPException(status_code=400, detail="Floor price cannot exceed listed price")
 
+    # If name changed but no new image supplied, validate existing image against new name
+    if name_changed and not (image and image.filename) and product.photo_url:
+        try:
+            import base64 as _b64
+            existing_path = UPLOAD_DIR / Path(product.photo_url).name
+            if existing_path.exists():
+                existing_bytes = existing_path.read_bytes()
+                image_b64 = _b64.b64encode(existing_bytes).decode()
+                ext = existing_path.suffix.lower()
+                content_type = "image/png" if ext == ".png" else "image/webp" if ext == ".webp" else "image/jpeg"
+                is_match, detected = await _validate_image_matches_name(
+                    image_b64, content_type, product.name
+                )
+                if not is_match:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Existing product image looks like a '{detected}' but new name is '{product.name}'. Please also upload a matching image."
+                    )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning("Image validation (name change) failed: %s — skipping check", exc)
+
     # warranty_months: -1 = not supplied, 0 = clear warranty, >0 = set warranty
     if warranty_months != -1:
         product.warranty_months = warranty_months if warranty_months > 0 else None
@@ -208,7 +245,27 @@ async def update_product(
         ext = Path(image.filename).suffix or ".jpg"
         filename = f"{uuid.uuid4().hex}{ext}"
         dest = UPLOAD_DIR / filename
-        dest.write_bytes(await image.read())
+        image_bytes = await image.read()
+        dest.write_bytes(image_bytes)
+
+        # Validate image matches the (possibly updated) product name
+        try:
+            import base64 as _b64
+            image_b64 = _b64.b64encode(image_bytes).decode()
+            is_match, detected = await _validate_image_matches_name(
+                image_b64, image.content_type or "image/jpeg", product.name
+            )
+            if not is_match:
+                dest.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Image looks like a '{detected}' but product name is '{product.name}'. Please upload a correct image or fix the product name."
+                )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning("Image validation failed: %s — skipping check", exc)
+
         product.photo_url = f"/uploads/{filename}"
 
     if photo_urls is not None:
@@ -282,6 +339,58 @@ async def _resolve_reel_urls_to_ids(urls: list, seller) -> list:
         else:
             resolved.append(entry)
     return resolved
+
+
+async def _validate_image_matches_name(
+    image_b64: str, content_type: str, product_name: str
+) -> tuple[bool, str]:
+    """Ask Claude Vision whether the image matches the seller's product name.
+    Returns (is_match, detected_product_type).
+    """
+    import json as _json
+    import anthropic
+    from app.config import settings
+    from app.integrations.claude import MODEL
+
+    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    response = await client.messages.create(
+        model=MODEL,
+        max_tokens=100,
+        messages=[{
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": (
+                        f"A seller is listing a product named: '{product_name}'.\n"
+                        "Look at the image carefully and identify exactly what physical object is shown.\n"
+                        "Be STRICT — similar categories are NOT the same. Examples of mismatches:\n"
+                        "  - wall clock / desk clock image ≠ watch / wristwatch / hand watch\n"
+                        "  - shoe image ≠ sandal\n"
+                        "  - shirt image ≠ jacket\n"
+                        "Return ONLY valid JSON, no other text:\n"
+                        '{"match": true/false, "detected": "<exact object in image, 2-4 words>"}'
+                    ),
+                },
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": content_type,
+                        "data": image_b64,
+                    },
+                },
+            ],
+        }],
+    )
+    text = response.content[0].text.strip()
+    logger.warning("Image validation for %r — Claude response: %s", product_name, text)
+    try:
+        result = _json.loads(text)
+        return bool(result.get("match", True)), result.get("detected", "unknown product")
+    except Exception:
+        logger.warning("Image validation parse error for %r — raw: %s", product_name, text)
+        return True, "unknown product"  # fail open — don't block upload on parse error
 
 
 async def _generate_description_from_bytes(
