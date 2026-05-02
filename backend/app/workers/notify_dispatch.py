@@ -4,7 +4,7 @@ IDEMPOTENT — checks notified_at before sending to prevent duplicate DMs.
 """
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import select
@@ -12,6 +12,31 @@ from sqlalchemy import select
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+
+@celery_app.task
+def retry_failed() -> None:
+    """Re-queue dispatch notifications that never got sent (no notified_at after 5 min)."""
+    asyncio.run(_retry_failed())
+
+
+async def _retry_failed() -> None:
+    from app.database import worker_session as AsyncSessionLocal
+    from app.models.delivery_update import DeliveryUpdate
+
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(DeliveryUpdate).where(
+                DeliveryUpdate.notified_at.is_(None),
+                DeliveryUpdate.created_at < cutoff,
+            )
+        )
+        pending = result.scalars().all()
+
+    for update in pending:
+        logger.info("retry_failed: re-queuing DeliveryUpdate %s", update.id)
+        notify_customer_dispatch.delay(str(update.id))
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30)

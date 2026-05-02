@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -197,18 +198,30 @@ async def _get_or_create_conversation(
     conversation = result.scalar_one_or_none()
 
     if not conversation:
-        conversation = Conversation(
-            seller_id=seller.id,
-            customer_instagram_id=customer_instagram_id,
-            state="greeting",
-            messages=[],
-        )
-        db.add(conversation)
-        await db.flush()
-        logger.info(
-            "New conversation %s for seller %s with customer %s",
-            conversation.id, seller.id, customer_instagram_id,
-        )
+        try:
+            conversation = Conversation(
+                seller_id=seller.id,
+                customer_instagram_id=customer_instagram_id,
+                state="greeting",
+                messages=[],
+            )
+            db.add(conversation)
+            await db.flush()
+            logger.info(
+                "New conversation %s for seller %s with customer %s",
+                conversation.id, seller.id, customer_instagram_id,
+            )
+        except IntegrityError:
+            # Another worker inserted concurrently — roll back and fetch theirs
+            await db.rollback()
+            result = await db.execute(
+                select(Conversation).where(
+                    Conversation.seller_id == seller.id,
+                    Conversation.customer_instagram_id == customer_instagram_id,
+                    Conversation.state.not_in(["payment_confirmed", "failed", "dispatched_notified"]),
+                )
+            )
+            conversation = result.scalar_one()
 
     return conversation
 

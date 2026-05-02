@@ -25,7 +25,10 @@ def _make_token(phone: str) -> str:
 def verify_dashboard_cookie(dashboard_session: str | None = Cookie(default=None)) -> str:
     """FastAPI dependency — call this in any route that needs dashboard auth."""
     if not dashboard_session:
-        raise HTTPException(status_code=401, detail="Not logged in")
+        raise HTTPException(
+            status_code=302,
+            headers={"Location": "/dashboard-auth/login"},
+        )
     try:
         payload = jwt.decode(
             dashboard_session, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
@@ -35,7 +38,10 @@ def verify_dashboard_cookie(dashboard_session: str | None = Cookie(default=None)
             raise HTTPException(status_code=403, detail="Not authorised")
         return phone
     except JWTError:
-        raise HTTPException(status_code=401, detail="Session expired — please log in again")
+        raise HTTPException(
+            status_code=302,
+            headers={"Location": "/dashboard-auth/login"},
+        )
 
 
 @router.get("/login")
