@@ -290,7 +290,66 @@ async def generate_bot_reply(
         decision, conversation, product,
         effective_negotiation_round=effective_negotiation_round,
         effective_last_counter_price=effective_last_counter_price,
+        inquiry_products=other_inquiry_products,
     )
+
+    # Compute code-enforced price breakdowns — used for show_multi_price and
+    # as a safe reference when customer explicitly asks for per-product breakdown.
+    multi_price_breakdown: str = ""
+    bundle_breakdown: str = ""
+
+    # show_multi_price: prices come entirely from code, never from LLM.
+    if decision.get("action") == "show_multi_price" and extra.get("product_ids"):
+        parts = []
+        for pid in extra["product_ids"]:
+            p_res = await db.execute(select(Product).where(Product.id == pid))
+            p = p_res.scalar_one_or_none()
+            if not p:
+                continue
+            cp_res = await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == pid,
+                )
+            )
+            cp = cp_res.scalar_one_or_none()
+            raw = (cp.last_counter_price if cp and cp.last_counter_price else p.listed_price) or p.listed_price
+            display_price = max(raw, p.floor_price)
+            parts.append(f"{p.name}: ₹{display_price // 100}")
+            logger.info("show_multi_price code-computed: %s = ₹%d (floor=₹%d)",
+                        p.name, display_price // 100, p.floor_price // 100)
+        multi_price_breakdown = " | ".join(parts)
+
+    # Bundle breakdown: when counter/accept covers multiple products, pre-compute a
+    # floor-safe per-product split so the reply model never has to do this math itself.
+    # Formula: each product gets its floor, surplus is split proportionally by listed price.
+    if other_inquiry_products and decision.get("action") in ("counter", "accept", "bulk_discount"):
+        total_paise = decision.get("price") or 0
+        bundle_items = []
+        if product:
+            bundle_items.append({
+                "name": product.name,
+                "floor": product.floor_price or 0,
+                "listed": product.listed_price or 0,
+            })
+        for p in other_inquiry_products:
+            bundle_items.append({
+                "name": p["name"],
+                "floor": int(p.get("floor_price_rupees", 0)) * 100,
+                "listed": int(p.get("listed_price_rupees", 0)) * 100,
+            })
+        sum_floors = sum(i["floor"] for i in bundle_items)
+        surplus = max(0, total_paise - sum_floors)
+        sum_listed = sum(i["listed"] for i in bundle_items) or 1
+        parts = []
+        for i in bundle_items:
+            allocated = i["floor"] + int(surplus * (i["listed"] / sum_listed))
+            # Final safety clamp — should never be needed but belt-and-suspenders
+            allocated = max(allocated, i["floor"])
+            parts.append(f"{i['name']}: ₹{allocated // 100}")
+        bundle_total = total_paise // 100
+        bundle_breakdown = ", ".join(parts) + f" (total: ₹{bundle_total})"
+        logger.info("Bundle breakdown computed: %s", bundle_breakdown)
 
     # If Claude switched to a different product, reload it so reply text uses the correct product
     switched_product_id = decision.get("product_id")
@@ -326,6 +385,7 @@ async def generate_bot_reply(
         "product_description": product.description if product else None,
         "product_tag_values": product_tag_values,
         "listed_price_rupees": product.listed_price // 100 if product else None,
+        "floor_price_rupees": product.floor_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,
         "last_counter_price": effective_last_counter_price,
@@ -338,6 +398,11 @@ async def generate_bot_reply(
         "address_term": customer_address_term,
         "other_active_products": other_active_products,
         "other_inquiry_products": other_inquiry_products,
+        "multi_price_breakdown": multi_price_breakdown,
+        "bundle_breakdown": bundle_breakdown,
+        "inquiry_floor_total_rupees": sum(
+            int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products
+        ) if other_inquiry_products else 0,
     }
 
     # Step 2: Sarvam generates the actual message text
@@ -388,11 +453,13 @@ def _derive_state_from_decision(
     product: Product | None,
     effective_negotiation_round: int = 0,
     effective_last_counter_price: int | None = None,
+    inquiry_products: list[dict] | None = None,
 ) -> tuple[str | None, dict]:
     """Maps Claude's action to a state transition and extra data.
 
     effective_negotiation_round and effective_last_counter_price are the source-of-truth
     values (from conv_product when available, otherwise from conversation columns).
+    inquiry_products: other_inquiry_products list with floor_price_rupees per item.
     """
     action = decision.get("action", "")
     floor_price = product.floor_price if product else None
@@ -402,13 +469,44 @@ def _derive_state_from_decision(
     if decision.get("rejected_product_ids"):
         extra["rejected_product_ids"] = list(decision["rejected_product_ids"])
 
-    if action == "accept":
-        price = decision.get("price")
-        # Hard clamp — never accept below floor price
-        if floor_price and price and price < floor_price:
+    # Compute inquiry floor total (paise) — sum of all inquiry product floors.
+    # Used to enforce minimum bundle price when the offer covers multiple products.
+    inquiry_floor_paise = sum(
+        int(p.get("floor_price_rupees", 0)) * 100
+        for p in (inquiry_products or [])
+    )
+
+    def _clamp_to_floors(price: int) -> int:
+        """Raise price to the highest applicable floor: single-product or bundle."""
+        # Single-product floor
+        if floor_price and price < floor_price:
             logger.warning(
-                "Claude tried to accept at %d below floor %d — overriding to hold_firm",
+                "FLOOR GUARD: price %d below current product floor %d — clamping",
                 price, floor_price,
+            )
+            price = floor_price
+        # Bundle floor: when price is larger than single product's listed price,
+        # it is covering inquiry products too — enforce sum-of-floors.
+        if inquiry_floor_paise and price > 0:
+            bundle_floor = (floor_price or 0) + inquiry_floor_paise
+            if price < bundle_floor and price > (floor_price or 0):
+                logger.warning(
+                    "FLOOR GUARD: bundle price %d below sum-of-floors %d — clamping",
+                    price, bundle_floor,
+                )
+                price = bundle_floor
+        return price
+
+    if action == "accept":
+        price = decision.get("price") or 0
+        price = _clamp_to_floors(price)
+        decision["price"] = price
+        # If clamping pushed us above what customer offered, revert to hold_firm
+        original_price = decision.get("price", 0)
+        if floor_price and original_price and original_price < floor_price:
+            logger.warning(
+                "FLOOR GUARD: accept %d below floor %d — overriding to hold_firm",
+                original_price, floor_price,
             )
             action = "hold_firm"
             decision["action"] = "hold_firm"
@@ -418,30 +516,24 @@ def _derive_state_from_decision(
             return "awaiting_payment", extra
 
     if action == "counter":
-        price = decision.get("price")
+        price = decision.get("price") or 0
         listed_price = product.listed_price if product else None
         # Hard block — fixed-price product (floor == listed): never counter, fall through to hold_firm
         if floor_price and listed_price and floor_price >= listed_price:
             logger.warning(
-                "Claude tried to counter on fixed-price product (listed=%d floor=%d) — overriding to hold_firm",
+                "FLOOR GUARD: counter on fixed-price product (listed=%d floor=%d) — overriding to hold_firm",
                 listed_price, floor_price,
             )
             action = "hold_firm"
             decision["action"] = "hold_firm"
             decision["price"] = None
         else:
-            # Hard clamp — counter price can never go below floor
-            if floor_price and price and price < floor_price:
-                logger.warning(
-                    "Claude countered at %d below floor %d — clamping to floor",
-                    price, floor_price,
-                )
-                price = floor_price
-                decision["price"] = floor_price
+            price = _clamp_to_floors(price)
+            decision["price"] = price
             # Hard clamp — counter price can never go HIGHER than last counter
             if price and effective_last_counter_price and price > effective_last_counter_price:
                 logger.warning(
-                    "Claude tried to counter at %d higher than previous offer %d — clamping down",
+                    "FLOOR GUARD: counter %d higher than previous offer %d — clamping down",
                     price, effective_last_counter_price,
                 )
                 price = effective_last_counter_price
@@ -456,10 +548,9 @@ def _derive_state_from_decision(
         return "negotiating", extra
 
     if action == "bulk_discount":
-        price = decision.get("price")
-        if floor_price and price and price < floor_price:
-            price = floor_price
-            decision["price"] = floor_price
+        price = decision.get("price") or 0
+        price = _clamp_to_floors(price)
+        decision["price"] = price
         extra["agreed_price"] = price
         extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
         extra["bulk_quantity"] = decision.get("bulk_quantity")

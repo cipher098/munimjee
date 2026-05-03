@@ -231,6 +231,10 @@ STEP 6 — Hard constraints (non-negotiable):
   - If listed_price == floor_price: always hold_firm, never counter
   - Never accept below floor_price
   - Do not counter twice in a row without a new customer offer
+  - BUNDLE FLOOR RULE: if Other inquiry products is non-empty AND the customer's offer covers multiple products,
+    the counter/accept price MUST be >= sum of ALL floor prices involved.
+    Each product's floor is listed in Other inquiry products as floor=₹X (rupees).
+    Convert to paise to compare. NEVER accept a bundle total below sum of individual floors.
 """
 
 REPLY_PROMPT = """⚠️ HARD CONSTRAINTS — read before anything else:
@@ -265,6 +269,7 @@ PRODUCT: {product_name}
 PRODUCT DESCRIPTION (only mention features listed here — do NOT invent any): {product_description}
 VERIFIED PRODUCT SPECS (seller-confirmed — use these to answer feature questions, trust these over your own knowledge): {product_tag_values}
 LISTED PRICE: ₹{listed_price_rupees}
+FLOOR PRICE: ₹{floor_price_rupees} (absolute minimum for {product_name} — never quote this product below this)
 WARRANTY: {warranty_info}
 STOCK: {stock_info}
 SELLER POLICIES: {policy_info}
@@ -277,6 +282,9 @@ CUSTOMER'S LAST MESSAGE: {customer_message}
 CUSTOMER ADDRESS TERM: {address_term}
 OTHER ACTIVE PRODUCTS (customer already asked about these in this conversation — not rejected, not purchased): {other_active_products}
 OTHER INQUIRY PRODUCTS WITH PRICES (customer asked about these, not yet decided — include in bundle pitch): {other_inquiry_products_str}
+SHOW MULTI PRICE DATA — CODE-COMPUTED (use verbatim if ACTION is show_multi_price): {multi_price_breakdown}
+BUNDLE BREAKDOWN — CODE-COMPUTED (use verbatim ONLY if customer explicitly asks for per-product breakdown): {bundle_breakdown}
+BUNDLE MINIMUM TOTAL: ₹{inquiry_floor_total_rupees} (sum of inquiry product floors — total must never go below this)
 MESSAGE HISTORY (last 6 messages — check before writing to avoid repeating yourself):
 {message_history}
 
@@ -288,6 +296,14 @@ CRITICAL — Price rule:
 - If ACTION is "hold_firm": do NOT quote any number lower than current counter, do NOT quote listed price if last_counter_price is set.
 - If ACTION is "engage": do NOT mention any price at all — just respond conversationally to what the customer said.
 - ABSOLUTE RULE: NEVER mention any price higher than LOWEST PRICE EVER OFFERED ({last_counter_price}) in your reply if it is set. The customer already saw that price — quoting higher makes you look dishonest.
+
+CRITICAL — Multi-product / bundle price rule (NO EXCEPTIONS, overrides everything):
+- If ACTION is "show_multi_price": use ONLY the prices in SHOW MULTI PRICE DATA above — verbatim. Do NOT use any other numbers. These are code-computed and floor-enforced.
+- If ACTION is "counter" or "accept" AND OTHER INQUIRY PRODUCTS WITH PRICES is non-empty:
+  → DEFAULT: quote ONLY the TOTAL price from PRICE CONTEXT as one number (e.g. "total ₹2100" or "dono ka ₹2100").
+  → EXCEPTION: if the customer's message explicitly asks for a breakdown ("har ek ka kitna", "alag alag batao", "breakdown", "kis ka kitna", "each ka price"), use BUNDLE BREAKDOWN above verbatim — do NOT compute your own numbers.
+  → If PRICE CONTEXT total is less than BUNDLE MINIMUM TOTAL, use BUNDLE MINIMUM TOTAL instead.
+- NEVER write any individual product price you computed yourself. Only use CODE-COMPUTED prices from SHOW MULTI PRICE DATA or BUNDLE BREAKDOWN. Any price you invent risks being below a product's floor.
 
 CRITICAL — Warranty action rule:
 If ACTION is "warranty": answer using WARRANTY field AND SELLER POLICIES together.
@@ -372,9 +388,12 @@ If ACTION is "show_multi_price": list each requested product with its price clea
 Example: "Wooden Clock ₹1800, Silver Watch ₹1200 — dono ka total ₹3000 hoga {address_term}. Kaunsa le rahe ho ya dono?"
 
 CRITICAL — Multi-product floor price rule (ABSOLUTE):
-OTHER INQUIRY PRODUCTS WITH PRICES contains floor=₹X for each product — that is the minimum you can ever quote for that item.
-When quoting or negotiating bundle prices:
-- NEVER quote any individual product below its own floor=₹X.
+FLOOR PRICE line above gives the minimum for the current product.
+OTHER INQUIRY PRODUCTS WITH PRICES gives floor=₹X for every other product — that is that product's hard minimum.
+When writing any reply that mentions multiple product prices:
+- BEFORE you write a price for any product, check its floor=₹X. The price you write MUST be >= that floor.
+- NEVER allocate less than floor=₹X to any individual product, even in a bundle.
+- Example violation: black rose gold floor=₹1000 → you CANNOT write ₹900 for it, ever.
 - Bundle total floor = sum of all individual floor prices. NEVER accept a total below this.
 - If ACTION is "hold_firm": do NOT reduce any individual price. State the same prices as before, firmly.
 - If a customer's total offer is below the bundle floor: decline firmly, state the minimum total.

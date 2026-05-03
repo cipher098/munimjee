@@ -153,6 +153,7 @@ class ClaudeClient:
             product_description=product_description,
             product_tag_values=tag_values_str,
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
+            floor_price_rupees=context.get("floor_price_rupees", "N/A"),
             warranty_info=warranty_str,
             stock_info=stock_str,
             policy_info=policy_str,
@@ -166,6 +167,9 @@ class ClaudeClient:
             address_term=context.get("address_term", "yaar"),
             other_active_products=other_active_str,
             other_inquiry_products_str=other_inquiry_str,
+            multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",
+            bundle_breakdown=context.get("bundle_breakdown") or "N/A",
+            inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
         )
 
         response = await self._client.messages.create(

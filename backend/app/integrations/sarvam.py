@@ -20,13 +20,16 @@ PRODUCT: {product_name}
 PRODUCT DESCRIPTION (only mention features listed here — do NOT invent any): {product_description}
 VERIFIED PRODUCT SPECS (seller-confirmed — use these to answer feature questions): {product_tag_values}
 LISTED PRICE: ₹{listed_price_rupees}
+FLOOR PRICE: ₹{floor_price_rupees} (absolute minimum for {product_name} — never quote this product below this)
 LOWEST PRICE EVER OFFERED: {last_counter_price}
 CURRENT PRICE CONTEXT: {negotiation_context}
 CUSTOMER INTENT: {customer_intent}
 CUSTOMER ADDRESS TERM: {address_term}  ← ALWAYS use this when addressing the customer. Never substitute a different term.
 OTHER ACTIVE PRODUCTS (customer is already discussing these — not rejected, not purchased): {other_active_products}
-
 OTHER INQUIRY PRODUCTS WITH PRICES: {other_inquiry_products_str}
+SHOW MULTI PRICE DATA — CODE-COMPUTED (use verbatim if ACTION is show_multi_price): {multi_price_breakdown}
+BUNDLE BREAKDOWN — CODE-COMPUTED (use verbatim ONLY if customer explicitly asks for per-product breakdown): {bundle_breakdown}
+BUNDLE MINIMUM TOTAL: ₹{inquiry_floor_total_rupees} (sum of inquiry product floors — total must never go below this)
 
 CRITICAL — Not interested rule:
 If ACTION is "not_interested":
@@ -42,17 +45,14 @@ If ACTION is "bundle_pitch": mention all products in OTHER INQUIRY PRODUCTS WITH
 Example: "Waise {address_term}, aapne Wooden Clock (₹1800), Silver Watch (₹1200) aur Blue Frame (₹900) — teeno le lo toh ek sath ship kar deta hoon, easy hoga na? 😊"
 Keep it casual, one line. No hard sell. Customer can say yes/no freely.
 
-CRITICAL — Show multi price rule:
-If ACTION is "show_multi_price": list each requested product with its price clearly.
-Example: "Wooden Clock ₹1800, Silver Watch ₹1200 — dono ka total ₹3000 hoga {address_term}. Kaunsa le rahe ho ya dono?"
-
-CRITICAL — Multi-product floor price rule (ABSOLUTE):
-OTHER INQUIRY PRODUCTS WITH PRICES contains floor=₹X for each product — that is the minimum you can ever quote for that item.
-When quoting or negotiating bundle prices:
-- NEVER quote any individual product below its own floor=₹X.
-- Bundle total floor = sum of all individual floor prices. NEVER accept a total below this.
-- If ACTION is "hold_firm": do NOT reduce any individual price. State the same prices as before, firmly.
-- If a customer's total offer is below the bundle floor: decline firmly, state the minimum total.
+CRITICAL — Multi-product / bundle price rule (NO EXCEPTIONS, overrides everything):
+- If ACTION is "show_multi_price": use ONLY the prices in SHOW MULTI PRICE DATA above — verbatim. Do NOT use any other numbers. These are code-computed and floor-enforced.
+- If ACTION is "counter" or "accept" AND OTHER INQUIRY PRODUCTS WITH PRICES is non-empty:
+  → DEFAULT: quote ONLY the TOTAL price from PRICE CONTEXT as one number (e.g. "total ₹2100" or "dono ka ₹2100").
+  → EXCEPTION: if customer explicitly asks for breakdown ("har ek ka kitna", "alag alag batao", "breakdown", "kis ka kitna"), use BUNDLE BREAKDOWN above verbatim — do NOT compute your own numbers.
+  → If PRICE CONTEXT total is less than BUNDLE MINIMUM TOTAL, use BUNDLE MINIMUM TOTAL instead.
+- NEVER write any individual product price below its floor=₹X.
+- Example violation: black rose gold floor=₹1000 → you CANNOT write ₹900 for it, ever.
 
 ⚠️ HARD PRICE RULE — read first:
 If LOWEST PRICE EVER OFFERED is set, NEVER quote any price higher than that in your reply.
@@ -131,12 +131,16 @@ class SarvamClient:
             product_description=context.get("product_description") or "No description available",
             product_tag_values=tag_values_str,
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
+            floor_price_rupees=context.get("floor_price_rupees", "N/A"),
             last_counter_price=last_counter_str,
             negotiation_context=negotiation_context,
             customer_intent=decision.get("customer_intent", "warm"),
             address_term=context.get("address_term", "yaar"),
             other_active_products=other_active_str,
             other_inquiry_products_str=other_inquiry_str,
+            multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",
+            bundle_breakdown=context.get("bundle_breakdown") or "N/A",
+            inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
         )
 
         history = context.get("message_history", [])
