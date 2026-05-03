@@ -80,13 +80,12 @@ def _detect_media_type(data: bytes) -> str:
     return "image/jpeg"  # fallback
 
 
-def _append_message(conversation: Conversation, role: str, content: str) -> None:
+def _append_message(conversation: Conversation, role: str, content: str, mid: str | None = None) -> None:
     messages = list(conversation.messages or [])
-    messages.append({
-        "role": role,
-        "content": content,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    entry: dict = {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
+    if mid:
+        entry["mid"] = mid
+    messages.append(entry)
     conversation.messages = messages
 
 
@@ -108,6 +107,26 @@ def _tag_last_bot_message_mid(conversation: Conversation, mid: str) -> None:
             msgs[i] = {**msgs[i], **update}
             conversation.messages = msgs
             return
+
+
+async def _send_and_tag(
+    conversation: Conversation,
+    client,
+    reply: str,
+    db: AsyncSession,
+) -> None:
+    """Send a text reply, capture the mid, and tag the last bot history entry."""
+    try:
+        result = await client.send_message(conversation.customer_instagram_id, reply)
+        mid = result.get("message_id")
+        if mid:
+            _tag_last_bot_message_mid(conversation, mid)
+            await db.flush()
+    except Exception as exc:
+        logger.error(
+            "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
+            conversation.id, exc,
+        )
 
 
 def find_message_by_mid(conversation: Conversation, mid: str) -> dict | None:
@@ -184,10 +203,18 @@ async def _send_next_product_photo(
 
     client = InstagramClient(seller.instagram_token, seller.fb_page_id)
     try:
-        await client.send_image(conversation.customer_instagram_id, photo_url)
+        result = await client.send_image(conversation.customer_instagram_id, photo_url)
         logger.info("Sent product photo %d/%d for %r", idx + 1, len(all_photos), product.name)
         if conv_product:
             conv_product.photos_sent_count = idx + 1
+        # Record the image in message history so reply_to on this photo can be resolved
+        msgs = list(conversation.messages or [])
+        msgs.append({"role": "bot", "content": "[product photo]"})
+        conversation.messages = msgs
+        mid = result.get("message_id")
+        if mid:
+            _tag_last_bot_message_mid(conversation, mid)
+        await db.flush()
         return True
     except Exception as exc:
         logger.warning("Could not send product photo for %r: %s", product.name, exc)
@@ -213,6 +240,7 @@ async def advance_conversation(
     db: AsyncSession,
     send_reply: bool = True,
     resume: bool = False,
+    customer_mid: str | None = None,
 ) -> None:
     """Main entry point: processes a customer text message and sends a bot reply.
     Pass resume=True when re-processing an already-stored customer message so it
@@ -222,7 +250,7 @@ async def advance_conversation(
         return
 
     if not resume:
-        _append_message(conversation, "customer", customer_message)
+        _append_message(conversation, "customer", customer_message, mid=customer_mid)
 
     if not conversation.customer_gender and conversation.customer_name:
         from app.utils.gender import guess_gender, guess_gender_ai
@@ -341,17 +369,7 @@ async def advance_conversation(
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            result = await client.send_message(conversation.customer_instagram_id, reply)
-            mid = result.get("message_id")
-            if mid:
-                _tag_last_bot_message_mid(conversation, mid)
-                await db.flush()
-        except Exception as exc:
-            logger.error(
-                "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
-                conversation.id, exc,
-            )
+        await _send_and_tag(conversation, client, reply, db)
 
 
 async def handle_product_image(
@@ -381,10 +399,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     products_for_vision = [
@@ -413,10 +428,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception:
-                pass
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Stage 1 — Vision: describe what the customer is holding/showing
@@ -453,10 +465,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Product identified — set it on conversation
@@ -479,10 +488,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Send product image back to customer so they can confirm it's the right product —
@@ -524,10 +530,7 @@ async def handle_product_image(
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        await _send_and_tag(conversation, client, reply, db)
 
 
 def _extract_ig_shortcode(url: str) -> str | None:
@@ -656,10 +659,7 @@ async def handle_reel(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Product matched — set on conversation
@@ -677,10 +677,7 @@ async def handle_reel(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Fresh inquiry — send product photo first
@@ -712,10 +709,7 @@ async def handle_reel(
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        await _send_and_tag(conversation, client, reply, db)
 
 
 async def handle_payment_screenshot(

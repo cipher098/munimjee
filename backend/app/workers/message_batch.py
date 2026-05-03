@@ -211,10 +211,12 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     from app.bot.conversation import find_message_by_mid
     text_parts = []
     reply_context_prefix = ""
+    customer_mid: str | None = None
 
     for event in events:
         if event.get("type") == "text":
             text = event["text"]
+            customer_mid = event.get("mid") or customer_mid  # keep last non-null mid
 
             # Resolve reply_to context from the first event that carries one
             if not reply_context_prefix and event.get("reply_to_mid"):
@@ -261,7 +263,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     if text_parts:
         combined_text = reply_context_prefix + "\n".join(text_parts)
         logger.info("message_batch: combined text=%r (had_media=%s)", combined_text, has_media)
-        await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
+        await advance_conversation(conversation, seller, combined_text, db, send_reply=True, customer_mid=customer_mid)
     elif has_media:
         combined_text = reply_context_prefix + "[customer sent media]"
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True)

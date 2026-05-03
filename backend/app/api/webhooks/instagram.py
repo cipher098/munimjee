@@ -149,6 +149,8 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
             serialised.get("type"), recipient_id, sender_id, result.id,
         )
 
+    incoming_mid: str | None = message.get("mid")
+
     if attachments:
         for attachment in attachments:
             atype = attachment.get("type")
@@ -157,7 +159,7 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
             if atype == "image":
                 image_url: str = payload.get("url", "")
                 if image_url:
-                    _queue_and_schedule({"type": "image", "image_url": image_url})
+                    _queue_and_schedule({"type": "image", "image_url": image_url, "mid": incoming_mid})
 
             elif atype in ("video", "ig_reel", "share"):
                 reel_url: str = payload.get("url", "") or payload.get("link", "")
@@ -167,13 +169,14 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
                         "reel_url": reel_url,
                         "reel_video_id": payload.get("reel_video_id"),
                         "reel_title": payload.get("title"),
+                        "mid": incoming_mid,
                     })
 
     elif text:
         reply_to_mid: str | None = message.get("reply_to", {}).get("mid")
         if reply_to_mid:
             logger.info("reply_to detected: mid=%s text=%r", reply_to_mid, text)
-        _queue_and_schedule({"type": "text", "text": text, "reply_to_mid": reply_to_mid})
+        _queue_and_schedule({"type": "text", "text": text, "reply_to_mid": reply_to_mid, "mid": incoming_mid})
 
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:
