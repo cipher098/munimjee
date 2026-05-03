@@ -300,6 +300,16 @@ async def generate_bot_reply(
         if switched:
             product = switched
             logger.info("Product switched to %r for reply generation", product.name)
+            # Reset pricing to new product's negotiation state — old product's counter price must not leak
+            new_cp_res = await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == switched_product_id,
+                )
+            )
+            new_cp = new_cp_res.scalar_one_or_none()
+            effective_last_counter_price = new_cp.last_counter_price if new_cp else None
+            price_state_source = "conv_product" if new_cp else "none"
 
     persona = seller.persona or DEFAULT_PERSONA
 
