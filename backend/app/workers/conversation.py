@@ -1,6 +1,6 @@
 """
 Celery task: expire stale conversations that have had no activity for 24 hours.
-Runs every 2 hours via Beat. Moves eligible conversations to state 'expired'.
+Runs every 2 hours via Beat. Closes eligible active conversations.
 """
 from app.workers.async_runner import run_async
 import logging
@@ -13,14 +13,6 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 STALE_AFTER_HOURS = 24
-
-ACTIVE_STATES = {
-    "greeting",
-    "product_inquiry",
-    "negotiating",
-    "awaiting_payment",
-    "verifying",
-}
 
 
 @celery_app.task(name="app.workers.conversation.expire_stale")
@@ -37,7 +29,7 @@ async def _expire_stale() -> None:
     async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(Conversation).where(
-                Conversation.state.in_(ACTIVE_STATES),
+                Conversation.status == "active",
                 Conversation.updated_at < cutoff,
             )
         )
@@ -48,7 +40,7 @@ async def _expire_stale() -> None:
             return
 
         for conv in stale:
-            conv.state = "expired"
+            conv.status = "closed"
 
         await db.commit()
-        logger.info("expire_stale: marked %d conversations as expired", len(stale))
+        logger.info("expire_stale: closed %d stale conversations", len(stale))

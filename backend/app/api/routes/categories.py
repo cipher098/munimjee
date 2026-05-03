@@ -232,19 +232,25 @@ async def set_product_tag_values(
         for alert in alert_result.scalars().all():
             alert.resolved_at = datetime.now(timezone.utc)
 
-        # Resume waiting conversations
+        # Resume waiting conversations (conversations whose active conv_product is waiting for this tag)
         from app.models.conversation import Conversation
-        conv_result = await db.execute(
-            select(Conversation).where(
-                Conversation.product_id == product_id,
-                Conversation.pending_tag_id == tag_id,
-                Conversation.state == "waiting_for_tag",
+        from app.models.conversation_product import ConversationProduct
+        cp_result = await db.execute(
+            select(ConversationProduct).where(
+                ConversationProduct.product_id == product_id,
+                ConversationProduct.pending_tag_id == tag_id,
+                ConversationProduct.state == "waiting_for_tag",
             )
         )
-        waiting_convs = conv_result.scalars().all()
-        for conv in waiting_convs:
-            await _resume_conversation(conv, product, db)
-            resumed += 1
+        waiting_cps = cp_result.scalars().all()
+        for cp in waiting_cps:
+            conv_result = await db.execute(
+                select(Conversation).where(Conversation.id == cp.conversation_id)
+            )
+            conv = conv_result.scalar_one_or_none()
+            if conv:
+                await _resume_conversation(conv, product, cp, db)
+                resumed += 1
 
     await db.commit()
     return {"updated": len(filled_tag_ids), "conversations_resumed": resumed}
@@ -308,8 +314,8 @@ def _tag_dict(t: CategoryTag) -> dict:
     }
 
 
-async def _resume_conversation(conv, product, db: AsyncSession) -> None:
-    """Reset conversation state and re-run the last customer message through the bot."""
+async def _resume_conversation(conv, product, conv_product, db: AsyncSession) -> None:
+    """Reset conv_product state and re-run the last customer message through the bot."""
     from app.models.seller import Seller
     from app.bot.conversation import advance_conversation
 
@@ -327,8 +333,9 @@ async def _resume_conversation(conv, product, db: AsyncSession) -> None:
         return
 
     # Restore state to product_inquiry before re-processing
-    conv.state = "product_inquiry"
-    conv.pending_tag_id = None
+    if conv_product is not None:
+        conv_product.state = "product_inquiry"
+        conv_product.pending_tag_id = None
     await db.flush()
 
     logger.info("Resuming conversation %s after tag fill for product %s", conv.id, product.name)

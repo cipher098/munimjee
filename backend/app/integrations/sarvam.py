@@ -24,6 +24,35 @@ LOWEST PRICE EVER OFFERED: {last_counter_price}
 CURRENT PRICE CONTEXT: {negotiation_context}
 CUSTOMER INTENT: {customer_intent}
 CUSTOMER ADDRESS TERM: {address_term}  ← ALWAYS use this when addressing the customer. Never substitute a different term.
+OTHER ACTIVE PRODUCTS (customer is already discussing these — not rejected, not purchased): {other_active_products}
+
+OTHER INQUIRY PRODUCTS WITH PRICES: {other_inquiry_products_str}
+
+CRITICAL — Not interested rule:
+If ACTION is "not_interested":
+- If OTHER ACTIVE PRODUCTS is not "none": pivot directly to one of those products by name.
+  Example: "Koi baat nahi {address_term}! Waise {{other_product_name}} toh dekha? Uske baare mein baat karte hain 😊"
+  Do NOT say generic "kuch aur chahiye toh batana" — the customer is mid-discussion on those products.
+- If OTHER ACTIVE PRODUCTS is "none": gracefully acknowledge and offer generic help.
+  Example: "Ok {address_term}, koi baat nahi! Kuch aur chahiye toh batana 😊"
+Keep it warm. Do NOT mention the rejected product. Do NOT pitch price.
+
+CRITICAL — Bundle pitch rule:
+If ACTION is "bundle_pitch": mention all products in OTHER INQUIRY PRODUCTS WITH PRICES plus the current product, with their prices.
+Example: "Waise {address_term}, aapne Wooden Clock (₹1800), Silver Watch (₹1200) aur Blue Frame (₹900) — teeno le lo toh ek sath ship kar deta hoon, easy hoga na? 😊"
+Keep it casual, one line. No hard sell. Customer can say yes/no freely.
+
+CRITICAL — Show multi price rule:
+If ACTION is "show_multi_price": list each requested product with its price clearly.
+Example: "Wooden Clock ₹1800, Silver Watch ₹1200 — dono ka total ₹3000 hoga {address_term}. Kaunsa le rahe ho ya dono?"
+
+CRITICAL — Multi-product floor price rule (ABSOLUTE):
+OTHER INQUIRY PRODUCTS WITH PRICES contains floor=₹X for each product — that is the minimum you can ever quote for that item.
+When quoting or negotiating bundle prices:
+- NEVER quote any individual product below its own floor=₹X.
+- Bundle total floor = sum of all individual floor prices. NEVER accept a total below this.
+- If ACTION is "hold_firm": do NOT reduce any individual price. State the same prices as before, firmly.
+- If a customer's total offer is below the bundle floor: decline firmly, state the minimum total.
 
 ⚠️ HARD PRICE RULE — read first:
 If LOWEST PRICE EVER OFFERED is set, NEVER quote any price higher than that in your reply.
@@ -82,6 +111,20 @@ class SarvamClient:
             ", ".join(f"{k}: {v}" for k, v in tag_values.items()) if tag_values else "None available"
         )
 
+        other_active = context.get("other_active_products") or []
+        other_active_str = (
+            ", ".join(p["name"] for p in other_active) if other_active else "none"
+        )
+
+        other_inquiry = context.get("other_inquiry_products") or []
+        other_inquiry_str = (
+            ", ".join(
+                f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
+                for p in other_inquiry
+            )
+            if other_inquiry else "none"
+        )
+
         system = SYSTEM_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
@@ -92,6 +135,8 @@ class SarvamClient:
             negotiation_context=negotiation_context,
             customer_intent=decision.get("customer_intent", "warm"),
             address_term=context.get("address_term", "yaar"),
+            other_active_products=other_active_str,
+            other_inquiry_products_str=other_inquiry_str,
         )
 
         history = context.get("message_history", [])

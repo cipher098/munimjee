@@ -17,6 +17,12 @@ from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
+
+def _clean_reply(text: str) -> str:
+    """Remove characters that should never appear in customer-facing messages."""
+    return text.replace("—", "").strip()
+
+
 DEFAULT_PERSONA = {
     "greeting_style": "Haan ji, kya chahiye?",
     "negotiation_firmness": "medium",
@@ -72,16 +78,16 @@ async def generate_bot_reply(
     claude = ClaudeClient()
     sarvam = SarvamClient()
 
-    # Resolve price state: conv_product is the source of truth when available,
-    # otherwise fall back to conversation columns for backwards compat.
+    # Resolve price state: conv_product is the source of truth.
+    # When no conv_product exists yet (no product identified), default to zero/none.
     if conv_product is not None:
         effective_negotiation_round = conv_product.negotiation_round
         effective_last_counter_price = conv_product.last_counter_price
         price_state_source = "conv_product"
     else:
-        effective_negotiation_round = conversation.negotiation_round
-        effective_last_counter_price = conversation.last_counter_price if product else None
-        price_state_source = "conversation"
+        effective_negotiation_round = 0
+        effective_last_counter_price = None
+        price_state_source = "none"
 
     # Tag lookup — load category tags + values for the current product
     product_tag_values: dict[str, str] = {}   # display_name → value, for known specs
@@ -118,6 +124,26 @@ async def generate_bot_reply(
     if product and product.category_id and category_tags:
         try:
             fq = await claude.extract_feature_query(customer_message, category_tags)
+
+            # ── TAG DECISION LOG ──────────────────────────────────────────────
+            logger.info(
+                "\n┌─────────────────────────────────────────\n"
+                "│ TAG DECISION\n"
+                "│ CUSTOMER MSG  : %s\n"
+                "│ IS FEATURE Q  : %s\n"
+                "│ MATCHED TAG   : %s\n"
+                "│ NEW TAG NAME  : %s  |  DISPLAY: %s\n"
+                "│ NEW TAG TYPE  : %s  |  OPTIONS: %s\n"
+                "└─────────────────────────────────────────",
+                customer_message,
+                fq.get("is_feature_question"),
+                fq.get("matched_tag_name") or "—",
+                fq.get("new_tag_name") or "—",
+                fq.get("new_tag_display_name") or "—",
+                fq.get("new_tag_value_type") or "—",
+                fq.get("new_tag_allowed_values") or "—",
+            )
+
             if fq.get("is_feature_question"):
                 matched_name = fq.get("matched_tag_name")
                 new_name = fq.get("new_tag_name")
@@ -133,11 +159,19 @@ async def generate_bot_reply(
                         )
                     )
                     matched_tag_obj = tag_result.scalar_one_or_none()
+                    logger.info(
+                        "TAG LOOKUP: matched existing tag %r → found=%s",
+                        matched_name, matched_tag_obj is not None,
+                    )
                 elif new_name:
                     # Auto-create tag for this category using Claude's suggested type/values
                     new_value_type = fq.get("new_tag_value_type") or "text"
                     new_allowed = fq.get("new_tag_allowed_values") or None
                     if new_value_type not in ("enum", "text", "number"):
+                        logger.warning(
+                            "TAG TYPE OVERRIDE: Claude returned %r for tag %r — falling back to 'text'",
+                            new_value_type, new_name,
+                        )
                         new_value_type = "text"
                     matched_tag_obj = CategoryTag(
                         category_id=product.category_id,
@@ -149,16 +183,23 @@ async def generate_bot_reply(
                     db.add(matched_tag_obj)
                     await db.flush()
                     logger.info(
-                        "Auto-created tag %r (type=%s, options=%s) for category %s",
-                        new_name, new_value_type, new_allowed, product.category_id,
+                        "TAG CREATED: %r (display=%r, type=%s, options=%s) for category %s, product %r",
+                        new_name, new_display, new_value_type, new_allowed,
+                        product.category_id, product.name,
                     )
 
                 if matched_tag_obj:
                     has_value = matched_tag_obj.display_name in product_tag_values
+                    logger.info(
+                        "TAG VALUE CHECK: tag=%r  has_value=%s  known_values=%s",
+                        matched_tag_obj.name, has_value,
+                        list(product_tag_values.keys()),
+                    )
                     if not has_value:
-                        # Pause conversation, alert seller
-                        conversation.state = "waiting_for_tag"
-                        conversation.pending_tag_id = matched_tag_obj.id
+                        # Pause this product's state machine, alert seller
+                        if conv_product is not None:
+                            conv_product.state = "waiting_for_tag"
+                            conv_product.pending_tag_id = matched_tag_obj.id
                         await db.flush()
 
                         # Create alert only if one doesn't already exist
@@ -169,26 +210,56 @@ async def generate_bot_reply(
                                 SellerAlert.resolved_at.is_(None),
                             )
                         )
-                        if not existing_alert.scalar_one_or_none():
+                        alert_exists = existing_alert.scalar_one_or_none() is not None
+                        if not alert_exists:
                             db.add(SellerAlert(
                                 seller_id=seller.id,
                                 product_id=product.id,
                                 tag_id=matched_tag_obj.id,
                                 conversation_id=conversation.id,
                             ))
-
                         await db.flush()
                         logger.info(
-                            "Conversation %s paused silently — waiting for tag %r on product %r",
-                            conversation.id, matched_tag_obj.name, product.name,
+                            "SELLER ALERT: tag=%r  product=%r  alert_already_existed=%s  "
+                            "→ conversation %s paused (waiting_for_tag)",
+                            matched_tag_obj.name, product.name, alert_exists, conversation.id,
                         )
                         return None, "waiting_for_tag", {}
         except Exception as exc:
             logger.warning("Feature query check failed: %s — proceeding normally", exc)
 
+    # Split other ConversationProducts into inquiry (undecided, with prices) vs all active
+    _INACTIVE_STATES = {"not_interested", "payment_confirmed", "failed", "dispatched_notified", "purchased"}
+    _other_cp_result = await db.execute(
+        select(ConversationProduct, Product)
+        .join(Product, ConversationProduct.product_id == Product.id)
+        .where(
+            ConversationProduct.conversation_id == conversation.id,
+            ConversationProduct.product_id != conversation.product_id if conversation.product_id else True,
+            ~ConversationProduct.state.in_(_INACTIVE_STATES),
+        )
+    )
+    _other_rows = _other_cp_result.all()
+    other_inquiry_products = [
+        {
+            "id": str(p.id),
+            "name": p.name,
+            "listed_price_rupees": p.listed_price // 100,
+            "floor_price_rupees": p.floor_price // 100 if p.floor_price else p.listed_price // 100,
+            "state": cp.state,
+        }
+        for cp, p in _other_rows
+        if cp.state == "product_inquiry"
+    ]
+    other_active_products = [
+        {"id": str(p.id), "name": p.name, "state": cp.state}
+        for cp, p in _other_rows
+    ]
+
     # Step 1: Claude decides action
+    effective_state = conv_product.state if conv_product is not None else "greeting"
     decision = await claude.decide({
-        "state": conversation.state,
+        "state": effective_state,
         "customer_message": customer_message,
         "negotiation_round": effective_negotiation_round,
         "listed_price": product.listed_price if product else None,
@@ -196,6 +267,8 @@ async def generate_bot_reply(
         "last_counter_price": effective_last_counter_price,
         "message_history": (conversation.messages or [])[-10:],
         "available_products": products_list,
+        "other_inquiry_products": other_inquiry_products,
+        "bundle_pitched": conv_product.bundle_pitched if conv_product is not None else False,
     })
 
     logger.info(
@@ -253,6 +326,8 @@ async def generate_bot_reply(
         "message_history": (conversation.messages or [])[-10:],
         "total_photos": all_photo_count,
         "address_term": customer_address_term,
+        "other_active_products": other_active_products,
+        "other_inquiry_products": other_inquiry_products,
     }
 
     # Step 2: Sarvam generates the actual message text
@@ -269,6 +344,7 @@ async def generate_bot_reply(
         if effective_last_counter_price
         else "none"
     )
+    rejected_ids_str = ", ".join(str(r) for r in (decision.get("rejected_product_ids") or [])) or "—"
     logger.info(
         "\n"
         "┌─────────────────────────────────────────\n"
@@ -278,17 +354,21 @@ async def generate_bot_reply(
         "│ ACTION      : %s  |  PRICE: %s  |  INTENT: %s  |  ROUND: %s\n"
         "│ LAST COUNTER: %s\n"
         "│ REASON      : %s\n"
+        "│ REJECTED IDS: %s\n"
         "│ BOT REPLY   : %s\n"
         "└─────────────────────────────────────────",
         customer_message,
-        conversation.state, new_state or "(no change)",
+        effective_state, new_state or "(no change)",
         product.name if product else "none",
         decision.get("action"), price_str, decision.get("customer_intent"), effective_negotiation_round,
         counter_str,
         decision.get("reason", ""),
+        rejected_ids_str,
         reply,
     )
 
+    if reply:
+        reply = _clean_reply(reply)
     return reply, new_state, extra
 
 
@@ -307,6 +387,10 @@ def _derive_state_from_decision(
     action = decision.get("action", "")
     floor_price = product.floor_price if product else None
     extra: dict[str, Any] = {}
+
+    # Always forward rejected_product_ids regardless of action chosen
+    if decision.get("rejected_product_ids"):
+        extra["rejected_product_ids"] = list(decision["rejected_product_ids"])
 
     if action == "accept":
         price = decision.get("price")
@@ -377,6 +461,34 @@ def _derive_state_from_decision(
     if action == "escalate":
         return "manual_review", extra
 
+    if action == "not_interested":
+        rejected = list(decision.get("rejected_product_ids") or [])
+        decision_product_id = decision.get("product_id")
+        current_product_id = str(product.id) if product else None
+
+        if decision_product_id and current_product_id and str(decision_product_id) != current_product_id:
+            # Claude identified a DIFFERENT product as rejected, not the active one.
+            # Move it to rejected_product_ids only — do not mark the current product.
+            if str(decision_product_id) not in [str(r) for r in rejected]:
+                rejected.append(str(decision_product_id))
+            extra["rejected_product_ids"] = rejected
+            logger.info(
+                "not_interested on non-active product %s → routing to rejected_product_ids only",
+                decision_product_id,
+            )
+            return None, extra
+
+        extra["rejected_product_ids"] = rejected
+        return "not_interested", extra
+
+    if action == "bundle_pitch":
+        extra["bundle_pitch"] = True
+        return None, extra  # no state change
+
+    if action == "show_multi_price":
+        extra["product_ids"] = decision.get("product_ids") or []
+        return None, extra  # no state change
+
     if action == "show_product":
         product_id = decision.get("product_id")
         if product_id:
@@ -394,6 +506,7 @@ async def send_manual_verification_ping(
     seller: Seller,
     image_url: str,
     db: AsyncSession,
+    conv_product=None,
 ) -> None:
     """Level 5: send WhatsApp ping to seller for manual payment confirmation."""
     from app.integrations.instagram import InstagramClient
@@ -410,11 +523,13 @@ async def send_manual_verification_ping(
             "Seller %s has no WhatsApp number — cannot send manual verification ping",
             seller.id,
         )
-        conversation.state = "manual_review"
+        if conv_product is not None:
+            conv_product.state = "manual_review"
         await db.flush()
         return
 
-    amount_rupees = (conversation.agreed_price or 0) // 100
+    agreed_price = conv_product.agreed_price if conv_product is not None else None
+    amount_rupees = (agreed_price or 0) // 100
 
     ping_text = (
         f"💰 Payment screenshot received!\n"
@@ -431,5 +546,6 @@ async def send_manual_verification_ping(
     except Exception as exc:
         logger.error("Failed to send WhatsApp ping to seller %s: %s", seller.id, exc)
 
-    conversation.state = "manual_review"
+    if conv_product is not None:
+        conv_product.state = "manual_review"
     await db.flush()

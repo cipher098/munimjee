@@ -1,10 +1,10 @@
 """
-Conversation state machine.
+Conversation state machine (per ConversationProduct).
 
-States:
-  greeting → product_inquiry → negotiating → awaiting_payment
+States (conv_product.state):
+  product_inquiry → negotiating → awaiting_payment
   → verifying → payment_confirmed | failed | manual_review
-  → dispatched_notified
+  → dispatched_notified | not_interested | waiting_for_tag
 """
 import base64
 import logging
@@ -22,6 +22,19 @@ from app.models.seller import Seller
 logger = logging.getLogger(__name__)
 
 TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
+
+
+async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) -> None:
+    """On conversation close, mark any still-open product_inquiry records as not_interested."""
+    result = await db.execute(
+        select(ConversationProduct).where(
+            ConversationProduct.conversation_id == conversation_id,
+            ConversationProduct.state == "product_inquiry",
+        )
+    )
+    for cp in result.scalars().all():
+        cp.state = "not_interested"
+        logger.info("Sweep: product %s → not_interested on conversation close", cp.product_id)
 
 
 async def _classify_image_type(image_b64: str, media_type: str) -> str:
@@ -205,7 +218,7 @@ async def advance_conversation(
     Pass resume=True when re-processing an already-stored customer message so it
     is not appended to history a second time.
     """
-    if conversation.state in TERMINAL_STATES:
+    if conversation.status == "closed":
         return
 
     if not resume:
@@ -232,24 +245,48 @@ async def advance_conversation(
         conversation, customer_message, seller, db, conv_product=conv_product
     )
 
-    if new_state:
-        conversation.state = new_state
+    if new_state == "not_interested":
+        # Mark this product as rejected, then reset conversation to allow new product inquiry
+        if conv_product is not None:
+            conv_product.state = "not_interested"
+        conversation.product_id = None
+    elif new_state:
+        if conv_product is not None:
+            conv_product.state = new_state
+        # Close conversation when a terminal state is reached
+        if new_state in TERMINAL_STATES:
+            conversation.status = "closed"
+            await _sweep_inquiry_to_not_interested(conversation.id, db)
+
+    # Mark explicitly rejected non-active products as not_interested
+    rejected_ids = extra.get("rejected_product_ids") or []
+    for rid in rejected_ids:
+        _rej_res = await db.execute(
+            select(ConversationProduct).where(
+                ConversationProduct.conversation_id == conversation.id,
+                ConversationProduct.product_id == rid,
+            )
+        )
+        _rej_cp = _rej_res.scalar_one_or_none()
+        if _rej_cp and _rej_cp.state not in TERMINAL_STATES:
+            _rej_cp.state = "not_interested"
+            logger.info("Marked product %s as not_interested (customer dismissed)", rid)
+
+    # Bundle pitched — set flag to prevent repeat
+    if extra.get("bundle_pitch") and conv_product is not None:
+        conv_product.bundle_pitched = True
 
     if extra.get("agreed_price"):
-        conversation.agreed_price = extra["agreed_price"]
-        # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
-        conversation.last_counter_price = extra["agreed_price"]
         if conv_product is not None:
             conv_product.agreed_price = extra["agreed_price"]
+            # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
             conv_product.last_counter_price = extra["agreed_price"]
 
     if extra.get("negotiation_round") is not None:
-        conversation.negotiation_round = extra["negotiation_round"]
         if conv_product is not None:
             conv_product.negotiation_round = extra["negotiation_round"]
 
     if extra.get("last_counter_price") is not None:
-        conversation.last_counter_price = extra["last_counter_price"]
         if conv_product is not None:
             conv_product.last_counter_price = extra["last_counter_price"]
 
@@ -258,6 +295,21 @@ async def advance_conversation(
         from sqlalchemy import select as sa_select
         from app.models.product import Product as ProductModel
         is_new_product = str(new_product_id) != str(conversation.product_id)
+
+        # If switching away from the current product and it was explicitly rejected
+        # (not just browsing via show_product), close it out
+        if is_new_product and conv_product is not None and not extra.get("send_image"):
+            _old_pid = str(conversation.product_id)
+            _already_rejected = [str(r) for r in (extra.get("rejected_product_ids") or [])]
+            _closeable = {"product_inquiry", "negotiating"}
+            if conv_product.state in _closeable and _old_pid not in _already_rejected:
+                _old_state = conv_product.state
+                conv_product.state = "not_interested"
+                logger.info(
+                    "Product switched away from %s (state=%s) without explicit browse — marking not_interested",
+                    _old_pid, _old_state,
+                )
+
         conversation.product_id = new_product_id
 
         result = await db.execute(sa_select(ProductModel).where(ProductModel.id == new_product_id))
@@ -407,22 +459,11 @@ async def handle_product_image(
                 logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
-    # Product identified — set it on conversation and restore per-product price state
+    # Product identified — set it on conversation
     conversation.product_id = product_id
 
     # Get or create the ConversationProduct row for this product
     conv_product = await _get_or_create_conv_product(conversation.id, product_id, db)
-
-    # Restore conversation state from per-product state (source of truth)
-    if conv_product.agreed_price:
-        conversation.state = "awaiting_payment"
-    elif conv_product.last_counter_price:
-        conversation.state = "negotiating"
-    else:
-        conversation.state = "product_inquiry"
-
-    conversation.negotiation_round = conv_product.negotiation_round
-    conversation.last_counter_price = conv_product.last_counter_price
 
     # If deal was already agreed for this product, skip generate_bot_reply —
     # just send a payment reminder. Calling the responder with a product image
@@ -455,7 +496,7 @@ async def handle_product_image(
     # During active negotiation, signal that it's a re-share, not a fresh inquiry —
     # so Claude doesn't restart the pitch at listed price.
     product_name = matched_product.name if matched_product else "product"
-    if conversation.state == "negotiating":
+    if conv_product.state == "negotiating":
         synthetic_message = (
             f"[Customer re-sent image of: {product_name} — negotiation is ongoing, continue from last counter price]"
         )
@@ -467,17 +508,15 @@ async def handle_product_image(
     )
 
     if new_state:
-        conversation.state = new_state
+        conv_product.state = new_state
+        if new_state in TERMINAL_STATES:
+            conversation.status = "closed"
     if extra.get("agreed_price"):
-        conversation.agreed_price = extra["agreed_price"]
-        conversation.last_counter_price = extra["agreed_price"]
         conv_product.agreed_price = extra["agreed_price"]
         conv_product.last_counter_price = extra["agreed_price"]
     if extra.get("negotiation_round") is not None:
-        conversation.negotiation_round = extra["negotiation_round"]
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
-        conversation.last_counter_price = extra["last_counter_price"]
         conv_product.last_counter_price = extra["last_counter_price"]
 
     _append_bot_reply(conversation, reply, send_reply)
@@ -623,19 +662,9 @@ async def handle_reel(
                 logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
         return
 
-    # Product matched — set on conversation and restore per-product price state
+    # Product matched — set on conversation
     conversation.product_id = str(matched_product.id)
     conv_product = await _get_or_create_conv_product(conversation.id, str(matched_product.id), db)
-
-    if conv_product.agreed_price:
-        conversation.state = "awaiting_payment"
-    elif conv_product.last_counter_price:
-        conversation.state = "negotiating"
-    else:
-        conversation.state = "product_inquiry"
-
-    conversation.negotiation_round = conv_product.negotiation_round
-    conversation.last_counter_price = conv_product.last_counter_price
 
     # If deal was already agreed, just send payment reminder
     if conv_product.agreed_price:
@@ -667,17 +696,15 @@ async def handle_reel(
     )
 
     if new_state:
-        conversation.state = new_state
+        conv_product.state = new_state
+        if new_state in TERMINAL_STATES:
+            conversation.status = "closed"
     if extra.get("agreed_price"):
-        conversation.agreed_price = extra["agreed_price"]
-        conversation.last_counter_price = extra["agreed_price"]
         conv_product.agreed_price = extra["agreed_price"]
         conv_product.last_counter_price = extra["agreed_price"]
     if extra.get("negotiation_round") is not None:
-        conversation.negotiation_round = extra["negotiation_round"]
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
-        conversation.last_counter_price = extra["last_counter_price"]
         conv_product.last_counter_price = extra["last_counter_price"]
 
     _append_bot_reply(conversation, reply, send_reply)
@@ -698,11 +725,18 @@ async def handle_payment_screenshot(
     db: AsyncSession,
 ) -> None:
     """Handles an image attachment when the conversation is in awaiting_payment."""
-    conversation.state = "verifying"
+    # Look up the active conv_product to set verifying state on it
+    conv_product: ConversationProduct | None = None
+    if conversation.product_id:
+        conv_product = await _get_or_create_conv_product(
+            conversation.id, conversation.product_id, db
+        )
+    if conv_product is not None:
+        conv_product.state = "verifying"
     _append_message(conversation, "customer", f"[screenshot: {image_url}]")
     await db.flush()
 
     # Phase 2 will wire in OCR + UTR verification here.
     # For Phase 1: fall back to manual review (Level 5 — owner WhatsApp ping).
     from app.bot.responder import send_manual_verification_ping
-    await send_manual_verification_ping(conversation, seller, image_url, db)
+    await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)

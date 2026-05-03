@@ -6,7 +6,7 @@ from app.models.product_tag_value import ProductTagValue
 from app.models.seller_alert import SellerAlert
 from app.models.conversation import Conversation
 from app.models.conversation_product import ConversationProduct
-from app.models.order import Order
+from app.models.order import Order, OrderItem
 from app.models.delivery_member import DeliveryMember
 from app.models.delivery_update import DeliveryUpdate
 from app.models.transaction import Transaction
@@ -21,6 +21,7 @@ __all__ = [
     "Conversation",
     "ConversationProduct",
     "Order",
+    "OrderItem",
     "DeliveryMember",
     "DeliveryUpdate",
     "Transaction",

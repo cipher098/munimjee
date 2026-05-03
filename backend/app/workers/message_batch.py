@@ -8,11 +8,12 @@ from app.workers.async_runner import run_async
 import json
 import logging
 
+from sqlalchemy import select
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-BATCH_WINDOW_SECONDS = 2
+BATCH_WINDOW_SECONDS = 0
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 
@@ -108,17 +109,26 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             except Exception as exc:
                 logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
 
-        TERMINAL = {"payment_confirmed", "failed", "dispatched_notified"}
-        if conversation.state in TERMINAL:
-            logger.info("message_batch: conversation %s is terminal — skipping", conversation.id)
+        if conversation.status == "closed":
+            logger.info("message_batch: conversation %s is closed — skipping", conversation.id)
             return
 
-        if conversation.state == "waiting_for_tag":
-            logger.info(
-                "message_batch: conversation %s is waiting for seller to fill a tag — skipping",
-                conversation.id,
+        # Check active conv_product state
+        if conversation.product_id:
+            from app.models.conversation_product import ConversationProduct
+            cp_result = await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == conversation.product_id,
+                )
             )
-            return
+            active_cp = cp_result.scalar_one_or_none()
+            if active_cp and active_cp.state == "waiting_for_tag":
+                logger.info(
+                    "message_batch: conversation %s waiting for seller tag — skipping",
+                    conversation.id,
+                )
+                return
 
         await _process_events(events, conversation, seller, db)
 
@@ -144,12 +154,26 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     import httpx as _httpx
     from app.bot.conversation import _classify_image_type, _detect_media_type
 
+    # Determine the active conv_product state for routing decisions
+    _active_cp_state = None
+    if conversation.product_id:
+        from app.models.conversation_product import ConversationProduct as _CP
+        _cp_res = await db.execute(
+            select(_CP).where(
+                _CP.conversation_id == conversation.id,
+                _CP.product_id == conversation.product_id,
+            )
+        )
+        _cp = _cp_res.scalar_one_or_none()
+        if _cp:
+            _active_cp_state = _cp.state
+
     for event in events:
         etype = event.get("type")
         if etype == "image":
             image_url = event["image_url"]
 
-            if conversation.state == "awaiting_payment":
+            if _active_cp_state == "awaiting_payment":
                 # Download once, classify, then route
                 try:
                     async with _httpx.AsyncClient(timeout=15) as http:
@@ -208,20 +232,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                         r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id))
                         ref_product = r1.scalar_one_or_none()
                         if ref_product:
-                            from app.bot.conversation import _get_or_create_conv_product
                             conversation.product_id = ref_product_id
-                            ref_conv_product = await _get_or_create_conv_product(
-                                conversation.id, ref_product_id, db
-                            )
-                            # Restore price state for the referenced product
-                            if ref_conv_product.agreed_price:
-                                conversation.state = "awaiting_payment"
-                            elif ref_conv_product.last_counter_price:
-                                conversation.state = "negotiating"
-                            else:
-                                conversation.state = "product_inquiry"
-                            conversation.negotiation_round = ref_conv_product.negotiation_round
-                            conversation.last_counter_price = ref_conv_product.last_counter_price
                             logger.info(
                                 "reply_to switched product: %s → %s",
                                 current_product_id, ref_product.name,
@@ -239,7 +250,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                     logger.info("reply_to mid=%s not found in history", event["reply_to_mid"])
 
             ig_match = _IG_URL_RE.search(text)
-            if ig_match and conversation.state not in ("payment_confirmed", "dispatched_notified", "failed"):
+            if ig_match and conversation.status == "active":
                 await handle_reel(conversation, seller, ig_match.group(0), db, send_reply=False)
             else:
                 text_parts.append(text)

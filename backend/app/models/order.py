@@ -28,3 +28,18 @@ class Order(Base):
     product = relationship("Product", back_populates="orders")
     delivery_updates = relationship("DeliveryUpdate", back_populates="order")
     transactions = relationship("Transaction", back_populates="order")
+    items = relationship("OrderItem", back_populates="order")
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=False)
+    conversation_product_id = Column(UUID(as_uuid=True), ForeignKey("conversation_products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)
+    unit_price = Column(Integer, nullable=False)  # paise — agreed price per unit
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    order = relationship("Order", back_populates="items")
+    conversation_product = relationship("ConversationProduct")

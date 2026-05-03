@@ -192,7 +192,7 @@ async def _get_or_create_conversation(
         select(Conversation).where(
             Conversation.seller_id == seller.id,
             Conversation.customer_instagram_id == customer_instagram_id,
-            Conversation.state.not_in(["payment_confirmed", "failed", "dispatched_notified"]),
+            Conversation.status == "active",
         )
     )
     conversation = result.scalar_one_or_none()
@@ -202,7 +202,6 @@ async def _get_or_create_conversation(
             conversation = Conversation(
                 seller_id=seller.id,
                 customer_instagram_id=customer_instagram_id,
-                state="greeting",
                 messages=[],
             )
             db.add(conversation)
@@ -218,7 +217,7 @@ async def _get_or_create_conversation(
                 select(Conversation).where(
                     Conversation.seller_id == seller.id,
                     Conversation.customer_instagram_id == customer_instagram_id,
-                    Conversation.state.not_in(["payment_confirmed", "failed", "dispatched_notified"]),
+                    Conversation.status == "active",
                 )
             )
             conversation = result.scalar_one()

@@ -20,5 +20,4 @@ class CategoryTag(Base):
 
     category = relationship("ProductCategory", back_populates="tags")
     tag_values = relationship("ProductTagValue", back_populates="tag", cascade="all, delete-orphan")
-    waiting_conversations = relationship("Conversation", back_populates="pending_tag")
     alerts = relationship("SellerAlert", back_populates="tag")

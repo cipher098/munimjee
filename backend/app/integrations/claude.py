@@ -18,12 +18,18 @@ MODEL = "claude-sonnet-4-20250514"
 
 
 def _parse_json(text: str) -> dict:
-    """Parse JSON from Claude's response, stripping markdown code fences if present."""
+    """Parse JSON from Claude's response, handling code fences and prose wrappers."""
     text = text.strip()
+    # Strip markdown code fences
     if text.startswith("```"):
         text = text.split("\n", 1)[-1]
-        text = text.rsplit("```", 1)[0]
-    return json.loads(text.strip())
+        text = text.rsplit("```", 1)[0].strip()
+    # If Claude wrapped JSON in prose, extract the first {...} block
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end + 1]
+    return json.loads(text)
 
 
 class ClaudeClient:
@@ -43,11 +49,13 @@ class ClaudeClient:
             round_number=context.get("negotiation_round", 0),
             message_history=json.dumps(context.get("message_history", []), ensure_ascii=False),
             available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
+            other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
+            bundle_pitched=context.get("bundle_pitched", False),
         )
 
         response = await self._client.messages.create(
             model=MODEL,
-            max_tokens=200,
+            max_tokens=350,
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -125,6 +133,20 @@ class ClaudeClient:
             ", ".join(f"{k}: {v}" for k, v in tag_values.items()) if tag_values else "None available"
         )
 
+        other_active = context.get("other_active_products") or []
+        other_active_str = (
+            ", ".join(p["name"] for p in other_active) if other_active else "none"
+        )
+
+        other_inquiry = context.get("other_inquiry_products") or []
+        other_inquiry_str = (
+            ", ".join(
+                f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
+                for p in other_inquiry
+            )
+            if other_inquiry else "none"
+        )
+
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
@@ -142,6 +164,8 @@ class ClaudeClient:
             has_more_photos=has_more_photos,
             message_history=history_str,
             address_term=context.get("address_term", "yaar"),
+            other_active_products=other_active_str,
+            other_inquiry_products_str=other_inquiry_str,
         )
 
         response = await self._client.messages.create(
@@ -313,9 +337,16 @@ class ClaudeClient:
         prompt = (
             f"Customer message: \"{customer_message}\"\n\n"
             f"Known product tags: {tags_json}\n\n"
-            "Is this message asking about a specific product specification or feature?\n"
-            "Examples of feature questions: charging method, power source, size, material, colour, weight, display type, connectivity, whether a feature exists\n"
-            "NOT feature questions: price, warranty, delivery, return policy, 'le lunga', 'order karna hai'\n\n"
+            "Is this message asking about a specific specification or feature of the CURRENT product being discussed?\n"
+            "Examples of feature questions: charging method, power source, size, material, colour, weight, display type, connectivity, whether a feature exists on THIS product\n"
+            "NOT feature questions:\n"
+            "- price, warranty, delivery, return policy, 'le lunga', 'order karna hai'\n"
+            "- Requests to see OTHER products or designs ('koi aur design hai?', 'aur kuch dikhao', 'different model hai?', 'or sample', 'aur kya hai')\n"
+            "- General browsing or switching ('ye nahi, kuch aur', 'koi doosra', 'aur options')\n"
+            "- Compliments or reactions ('accha hai', 'sundar hai', 'theek hai')\n"
+            "- Expressing DISLIKE or REJECTION of a feature value — even if a tag word appears ('yeh colour nhi chahie', 'ye size nahi chalega', 'is design mein nahi chahiye', 'aur colour hai?'). These mean the customer does not want THIS product, NOT that they are asking what the feature is.\n"
+            "- Asking if a product EXISTS in a different variant/colour/style ('koi blue green colour type hai?', 'X mein kuch hai?', 'koi aur colour hai?', 'X colour available hai?'). These are availability/browse questions — the customer wants to see a different product, not know about THIS product's specs.\n"
+            "Key test: is the customer asking WHAT THIS specific product IS or HAS? Only that is a feature question. 'Do you have X colour?' or 'Is X available?' is browsing, not a feature question.\n\n"
             "If it IS a feature question, check if it maps to one of the known tags above.\n"
             "If it does NOT map to a known tag, suggest a new tag. For the new tag:\n"
             "- Choose a clear, meaningful display name (e.g. 'Second Hand' for a clock seconds hand question)\n"

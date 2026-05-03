@@ -110,10 +110,24 @@ async def _notify(delivery_update_id: str) -> None:
 
         await client.send_message(conversation.customer_instagram_id, message)
 
-        # Mark notified + update order status
+        # Mark notified + update order status + close conversation
         update.notified_at = datetime.now(timezone.utc)
         order.status = "dispatched"
-        conversation.state = "dispatched_notified"
+        conversation.status = "closed"
+
+        # Set dispatched_notified on the active conv_product if possible
+        if conversation.product_id:
+            from app.models.conversation_product import ConversationProduct
+            cp_result = await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == conversation.product_id,
+                )
+            )
+            active_cp = cp_result.scalar_one_or_none()
+            if active_cp:
+                active_cp.state = "dispatched_notified"
+
         await db.commit()
 
         logger.info("Customer notified for order %s via Instagram", order.id)
