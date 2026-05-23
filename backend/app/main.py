@@ -55,10 +55,11 @@ async def health():
 
 @app.get("/", include_in_schema=False)
 async def root():
-    """Public root. Meta hits this when verifying App Domains — must return 200,
-    not 404, or the domain save in the Meta dashboard silently fails. Doubles as
-    the marketing entry point that redirects new sellers to onboarding."""
-    return RedirectResponse(url="/onboarding", status_code=302)
+    """Public root. Meta hits this when verifying App Domains and rejects the
+    save if the response isn't 200 — even 302 fails the validator. Serve the
+    onboarding page directly so the same URL works for both Meta's crawler and
+    real sellers landing on the bare domain."""
+    return FileResponse("/app/static/onboarding.html")
 
 
 @app.get("/privacy", include_in_schema=False)
