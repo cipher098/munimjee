@@ -57,5 +57,8 @@ migrate:
 
 # Show the cache-hit log lines after running traffic. Useful to verify #6 is working.
 # After hitting the bot a few times, run this — look for read=N where N>0.
+# Claude calls happen inside celery, so we look at the worker logs (api too,
+# in case anything ever calls Claude directly from the request path).
 cache-hits:
-    docker compose logs --tail=200 api | grep -E "Claude cache" || echo "No cache hits logged yet — send a couple of messages first."
+    @docker compose logs --tail=400 worker api 2>&1 | grep -E "Claude cache" \
+      || echo "No cache hits logged yet — send a couple of messages first."
