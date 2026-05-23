@@ -53,6 +53,12 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/onboarding", include_in_schema=False)
+async def onboarding_page():
+    """Self-serve seller signup + Instagram connect wizard. Public route."""
+    return FileResponse("/app/static/onboarding.html")
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return Response(status_code=204)

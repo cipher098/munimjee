@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SellerBot — Get Started</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .step-pill { @apply inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-pink-50 via-white to-blue-50 min-h-screen">
+  <div class="max-w-xl mx-auto pt-12 px-4">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">SellerBot</h1>
+      <p class="text-gray-600 mt-1">Hinglish AI for your Instagram DMs</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+      <!-- Stepper -->
+      <div class="flex items-center justify-center mb-8 text-sm">
+        <div id="pill-1" class="step-pill bg-pink-600 text-white">1</div>
+        <div class="w-12 h-px bg-gray-300 mx-2"></div>
+        <div id="pill-2" class="step-pill bg-gray-200 text-gray-500">2</div>
+        <div class="w-12 h-px bg-gray-300 mx-2"></div>
+        <div id="pill-3" class="step-pill bg-gray-200 text-gray-500">3</div>
+      </div>
+
+      <!-- Step 1: Sign up -->
+      <div id="step-1" class="step active">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Create your account</h2>
+        <p class="text-sm text-gray-600 mb-6">30 seconds — no card needed.</p>
+        <form id="signup-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Business name</label>
+            <input type="text" name="business_name" required
+                   placeholder="e.g. Priya's Boutique"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" name="email" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" required minlength="8"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" />
+            <p class="text-xs text-gray-500 mt-1">At least 8 characters.</p>
+          </div>
+          <button type="submit"
+                  class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2.5 rounded-lg transition">
+            Create account
+          </button>
+          <p id="signup-error" class="text-sm text-red-600 hidden"></p>
+        </form>
+      </div>
+
+      <!-- Step 2: Connect Instagram -->
+      <div id="step-2" class="step">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Connect Instagram</h2>
+        <p class="text-sm text-gray-600 mb-6">
+          One click. We'll ask Meta for permission to read your DMs and reply on your behalf.
+          You stay in control — revoke any time from your Instagram settings.
+        </p>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-sm text-blue-900">
+          <strong>Before you click:</strong> your Instagram account must be a
+          <em>Business</em> or <em>Creator</em> account, and it must be linked
+          to a Facebook Page. If it isn't, do that first in the Instagram app:
+          Settings → Account → Switch to Professional Account.
+        </div>
+        <a id="connect-ig-btn" href="#"
+           class="block w-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400
+                  hover:from-fuchsia-600 hover:via-pink-600 hover:to-orange-500
+                  text-white text-center font-semibold py-3 rounded-lg transition">
+          Connect Instagram
+        </a>
+        <p class="text-xs text-gray-500 mt-3 text-center">
+          You'll be redirected to facebook.com to authorise.
+        </p>
+      </div>
+
+      <!-- Step 3: Done -->
+      <div id="step-3" class="step">
+        <div class="text-center">
+          <div class="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">You're live!</h2>
+          <p class="text-sm text-gray-600 mb-6">
+            Instagram is connected. The bot will start replying to DMs immediately.
+            Add a few products so it knows what you're selling.
+          </p>
+          <a href="/dashboard/products"
+             class="block w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2.5 rounded-lg transition">
+            Add your first product
+          </a>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div id="error-banner" class="hidden mt-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800"></div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const stored = JSON.parse(localStorage.getItem("sellerbot_onboarding") || "null");
+
+    function showStep(n) {
+      document.querySelectorAll(".step").forEach(el => el.classList.remove("active"));
+      document.getElementById("step-" + n).classList.add("active");
+      for (let i = 1; i <= 3; i++) {
+        const pill = document.getElementById("pill-" + i);
+        if (i <= n) {
+          pill.className = "step-pill bg-pink-600 text-white";
+        } else {
+          pill.className = "step-pill bg-gray-200 text-gray-500";
+        }
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("error-banner");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+
+    // Deep-link handling: after Meta callback we land on /onboarding?step=done or ?error=...
+    if (params.get("error")) {
+      const errors = {
+        no_instagram_account: "We could not find an Instagram business account linked to your Facebook page. Convert your IG to a Business account and link it to a Facebook page, then try again.",
+        token_exchange_failed: "Meta rejected the login. Try again, or contact support if it persists.",
+        webhook_subscribe_failed: "Connected Instagram but couldn't subscribe the webhook. Contact support.",
+      };
+      showError(errors[params.get("error")] || ("OAuth error: " + params.get("error")));
+      showStep(2);
+    } else if (params.get("step") === "done") {
+      showStep(3);
+    } else if (stored && stored.instagram_oauth_url) {
+      // Returning from a refresh between steps 1 and 2.
+      document.getElementById("connect-ig-btn").href = stored.instagram_oauth_url;
+      showStep(2);
+    } else {
+      showStep(1);
+    }
+
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      document.getElementById("signup-error").classList.add("hidden");
+      const form = new FormData(e.target);
+      const body = {
+        email: form.get("email"),
+        password: form.get("password"),
+        business_name: form.get("business_name"),
+      };
+      try {
+        const res = await fetch("/auth/seller/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Signup failed");
+        }
+        localStorage.setItem("sellerbot_onboarding", JSON.stringify(data));
+        localStorage.setItem("sellerbot_token", data.access_token);
+        document.getElementById("connect-ig-btn").href = data.instagram_oauth_url;
+        showStep(2);
+      } catch (err) {
+        const el = document.getElementById("signup-error");
+        el.textContent = err.message;
+        el.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
