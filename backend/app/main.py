@@ -53,16 +53,16 @@ async def health():
     return {"status": "ok"}
 
 
-@app.get("/", include_in_schema=False)
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 async def root():
-    """Public root. Meta hits this when verifying App Domains and rejects the
-    save if the response isn't 200 — even 302 fails the validator. Serve the
-    onboarding page directly so the same URL works for both Meta's crawler and
-    real sellers landing on the bare domain."""
+    """Public root. Meta probes this when verifying App Domains; it sometimes
+    uses HEAD, which FastAPI does NOT auto-register for GET routes. Without
+    HEAD support Meta gets 405 and silently drops the App Domain on save.
+    Serve onboarding.html directly so the same URL works for real sellers too."""
     return FileResponse("/app/static/onboarding.html")
 
 
-@app.get("/privacy", include_in_schema=False)
+@app.api_route("/privacy", methods=["GET", "HEAD"], include_in_schema=False)
 async def privacy():
     """Placeholder privacy policy URL — Meta requires one configured on the App,
     and the page must respond 200 when Meta crawls it."""
@@ -87,7 +87,7 @@ async def privacy():
     )
 
 
-@app.get("/terms", include_in_schema=False)
+@app.api_route("/terms", methods=["GET", "HEAD"], include_in_schema=False)
 async def terms():
     return HTMLResponse(
         "<!doctype html><meta charset=utf-8>"
@@ -101,7 +101,7 @@ async def terms():
     )
 
 
-@app.get("/onboarding", include_in_schema=False)
+@app.api_route("/onboarding", methods=["GET", "HEAD"], include_in_schema=False)
 async def onboarding_page():
     """Self-serve seller signup + Instagram connect wizard. Public route."""
     return FileResponse("/app/static/onboarding.html")
