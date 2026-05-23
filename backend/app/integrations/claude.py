@@ -15,6 +15,126 @@ from app.prompts import (
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-20250514"
+# Fallback used when the primary model refuses or repeatedly errors.
+# Different model family reduces correlated-refusal risk.
+FALLBACK_MODEL = "claude-3-5-sonnet-20241022"
+
+
+def _to_anthropic_role(raw_role: str) -> str | None:
+    """Map sellerbot conversation roles to Anthropic API roles."""
+    if raw_role == "customer":
+        return "user"
+    if raw_role == "bot":
+        return "assistant"
+    return None
+
+
+def _build_decision_messages(
+    history: list[dict],
+    current_user_text: str,
+    context_block: str,
+) -> list[dict]:
+    """Build an Anthropic messages array with cache_control on the last
+    historical message so prior turns become a stable cached prefix.
+
+    `history` is conversation.messages EXCLUDING the current turn.
+    `current_user_text` is the latest customer message (will go in final user msg).
+    `context_block` is the dynamic CONTEXT string (state/round/prices) — appended
+    to the final user message so it doesn't pollute the cached prefix.
+
+    Guarantees:
+      - Coalesces consecutive same-role messages (Anthropic requires alternation).
+      - Drops leading assistant messages (first must be user).
+      - If the last historical message is user (no bot reply yet), folds it into
+        the current user message instead of placing a cache breakpoint there.
+      - Adds cache_control: ephemeral on the final historical message only when
+        that message is an assistant turn (stable boundary).
+    """
+    coalesced: list[dict] = []
+    last_role: str | None = None
+    for entry in history:
+        role = _to_anthropic_role(entry.get("role", ""))
+        if role is None:
+            continue
+        content = (entry.get("content") or "").strip()
+        if not content:
+            continue
+        if role == last_role and coalesced:
+            coalesced[-1]["content"] += "\n" + content
+        else:
+            coalesced.append({"role": role, "content": content})
+            last_role = role
+
+    # First message must be user.
+    while coalesced and coalesced[0]["role"] != "user":
+        coalesced.pop(0)
+
+    # If trailing historical message is user (bot didn't reply yet), fold it
+    # into the new user turn so we don't end up with two consecutive user msgs.
+    trailing_user_text = ""
+    if coalesced and coalesced[-1]["role"] == "user":
+        trailing_user_text = coalesced.pop()["content"] + "\n\n"
+
+    # Place cache breakpoint on the last historical (assistant) message.
+    if coalesced:
+        last_msg = coalesced[-1]
+        last_msg["content"] = [
+            {
+                "type": "text",
+                "text": last_msg["content"],
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+
+    final_user_text = f"{trailing_user_text}{current_user_text}\n\n{context_block}"
+    coalesced.append({"role": "user", "content": final_user_text})
+    return coalesced
+
+
+def _split_reply_prompt(formatted_prompt: str) -> tuple[str, str]:
+    """Split a fully-formatted REPLY_PROMPT into (static_system, dynamic_context).
+
+    Splits at the `--- DYNAMIC CONTEXT ---` marker which sits BEFORE the
+    data section. Static rules (cacheable) go above, dynamic per-call data
+    (persona, product, prices, etc.) goes below.
+
+    Returns (whole_prompt, "") if the marker is missing — caller falls back
+    to sending the whole prompt as the user message uncached.
+    """
+    marker = "--- DYNAMIC CONTEXT ---"
+    if marker not in formatted_prompt:
+        return formatted_prompt, ""
+    before, _, after = formatted_prompt.partition(marker)
+    return before.rstrip(), marker + after.rstrip()
+
+
+def _split_decision_prompt(formatted_prompt: str) -> tuple[str, str]:
+    """Split a fully-formatted DECISION_PROMPT into (static_system, dynamic_user).
+
+    The training dashboard rewrites DECISION_PROMPT freely, so we split at
+    runtime on stable markers rather than maintaining two prompt constants.
+    Returns (system_prompt, user_prompt) where system holds the rules
+    (cacheable across calls) and user holds the per-call context.
+
+    Falls back to (whole_prompt, "") if markers are missing — caller can
+    detect empty user and skip caching.
+    """
+    ctx_marker = "--- CONTEXT ---"
+    strategy_marker = "--- NEGOTIATION STRATEGY"
+    if ctx_marker not in formatted_prompt or strategy_marker not in formatted_prompt:
+        return formatted_prompt, ""
+    before_ctx, _, after_ctx = formatted_prompt.partition(ctx_marker)
+    if strategy_marker not in after_ctx:
+        return formatted_prompt, ""
+    context_block, _, strategy_block = after_ctx.partition(strategy_marker)
+    static_system = (
+        before_ctx.rstrip()
+        + "\n\n"
+        + strategy_marker
+        + strategy_block.rstrip()
+    )
+    dynamic_user = ctx_marker + context_block.rstrip()
+    return static_system, dynamic_user
 
 
 def _parse_json(text: str) -> dict:
@@ -36,28 +156,107 @@ class ClaudeClient:
     def __init__(self) -> None:
         self._client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
+    async def _create(self, **kwargs):
+        """messages.create with one retry on transient API errors and a
+        model fallback when the primary model emits a content-policy refusal.
+        Logs cache hits so we can verify prompt-caching savings."""
+        model_name = kwargs.get("model", MODEL)
+        try:
+            resp = await self._client.messages.create(**kwargs)
+        except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.RateLimitError) as exc:
+            logger.warning("Anthropic transient error (%s) on model %s — retrying once", type(exc).__name__, model_name)
+            resp = await self._client.messages.create(**kwargs)
+
+        if getattr(resp, "stop_reason", None) == "refusal":
+            logger.warning("Model %s refused — retrying with fallback %s", model_name, FALLBACK_MODEL)
+            kwargs["model"] = FALLBACK_MODEL
+            resp = await self._client.messages.create(**kwargs)
+
+        usage = getattr(resp, "usage", None)
+        if usage is not None:
+            cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+            cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0
+            if cache_read or cache_create:
+                logger.info(
+                    "Claude cache: read=%d write=%d input=%d output=%d model=%s",
+                    cache_read, cache_create,
+                    getattr(usage, "input_tokens", 0) or 0,
+                    getattr(usage, "output_tokens", 0) or 0,
+                    model_name,
+                )
+        return resp
+
     async def decide(self, context: dict) -> dict:
         last_counter = context.get("last_counter_price")
         last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
 
+        # Pass empty customer_message/message_history so .format() still works if
+        # the training dashboard re-introduces those placeholders. The actual
+        # latest customer message and history are sent as native Anthropic
+        # messages below for prefix caching.
         prompt = DECISION_PROMPT.format(
             state=context.get("state", ""),
-            customer_message=context.get("customer_message", ""),
+            customer_message="",
             listed_price=context.get("listed_price", "unknown"),
             floor_price=context.get("floor_price", "unknown"),
             last_counter_price=last_counter_str,
             round_number=context.get("negotiation_round", 0),
-            message_history=json.dumps(context.get("message_history", []), ensure_ascii=False),
+            message_history="",
             available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
             other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
             bundle_pitched=context.get("bundle_pitched", False),
         )
 
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=350,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        system_text, context_block = _split_decision_prompt(prompt)
+
+        # Evaluate intervention rules. Fired reminders go INTO the user-side context
+        # so they remain dynamic (don't pollute the cached system prompt) and give
+        # the model fresh, situation-specific guidance for high-leverage turns.
+        from app.bot import interventions as _interventions
+
+        fired = _interventions.evaluate(context)
+        if fired:
+            logger.info(
+                "Interventions fired: %s",
+                ", ".join(f"{r.id}(p={r.priority})" for r in fired),
+            )
+        reminder_block = _interventions.render_reminders(fired)
+        if reminder_block and context_block:
+            context_block = f"{reminder_block}\n\n{context_block}"
+
+        history = context.get("message_history") or []
+        current_user_text = context.get("customer_message", "")
+        if history and history[-1].get("role") == "customer":
+            # Standard flow: latest history entry IS the current customer turn.
+            history_for_cache = history[:-1]
+        else:
+            # No history or last entry is bot reply — use entire history as cached prefix.
+            history_for_cache = history
+
+        if context_block:
+            messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
+            request_kwargs = dict(
+                model=MODEL,
+                max_tokens=350,
+                system=[
+                    {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
+                ],
+                messages=messages,
+            )
+        else:
+            # Marker missing (training dashboard rewrote prompt structure) — degraded path.
+            logger.warning("DECISION_PROMPT missing CONTEXT/STRATEGY markers — skipping cache")
+            request_kwargs = dict(
+                model=MODEL,
+                max_tokens=350,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+        try:
+            response = await self._create(**request_kwargs)
+        except Exception as exc:
+            logger.exception("Claude decide() failed unrecoverably: %s — returning clarify", exc)
+            return {"action": "clarify", "price": None, "reason": "api error"}
 
         text = response.content[0].text.strip()
         try:
@@ -122,8 +321,7 @@ class ClaudeClient:
         total_photos = context.get("total_photos", 1)
         has_more_photos = total_photos > 1
 
-        history = context.get("message_history", [])
-        history_str = json.dumps(history[-6:], ensure_ascii=False) if history else "[]"
+        history = context.get("message_history") or []
 
         product_description = context.get("product_description") or "No description available"
         logger.warning("generate_reply: product=%r description=%r", context.get("product_name"), product_description)
@@ -147,6 +345,10 @@ class ClaudeClient:
             if other_inquiry else "none"
         )
 
+        # customer_message/message_history are no longer rendered into REPLY_PROMPT —
+        # they're sent as native Anthropic messages below for prefix caching.
+        # Pass empty strings to .format() in case the training dashboard re-introduces
+        # the placeholders later.
         prompt = REPLY_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
@@ -161,9 +363,9 @@ class ClaudeClient:
             price_context=price_context,
             last_counter_price=last_counter_reply_str,
             customer_intent=decision.get("customer_intent", "warm"),
-            customer_message=context.get("customer_message", ""),
+            customer_message="",
             has_more_photos=has_more_photos,
-            message_history=history_str,
+            message_history="",
             address_term=context.get("address_term", "yaar"),
             other_active_products=other_active_str,
             other_inquiry_products_str=other_inquiry_str,
@@ -172,16 +374,42 @@ class ClaudeClient:
             inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
         )
 
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        system_text, context_block = _split_reply_prompt(prompt)
+
+        if context_block:
+            current_user_text = context.get("customer_message", "")
+            if history and history[-1].get("role") == "customer":
+                history_for_cache = history[:-1]
+            else:
+                history_for_cache = history
+            messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
+            request_kwargs = dict(
+                model=MODEL,
+                max_tokens=200,
+                system=[
+                    {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
+                ],
+                messages=messages,
+            )
+        else:
+            logger.warning("REPLY_PROMPT missing DYNAMIC CONTEXT marker — skipping cache")
+            request_kwargs = dict(
+                model=MODEL,
+                max_tokens=200,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+        try:
+            response = await self._create(**request_kwargs)
+        except Exception as exc:
+            logger.exception("Claude generate_reply() failed unrecoverably: %s", exc)
+            # Soft fallback — return a safe acknowledgment rather than crashing the conversation.
+            return ""
         return response.content[0].text.strip()
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
         """Generate a seller-facing product description from an image for catalog use."""
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=200,
             messages=[{
@@ -206,7 +434,7 @@ class ClaudeClient:
         """Stage 1 — Vision only: describe what product is in the customer's image.
         Accepts base64-encoded image bytes (Instagram blocks direct URL fetching).
         """
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=150,
             messages=[{
@@ -245,7 +473,7 @@ class ClaudeClient:
             catalog_json=json.dumps(catalog, ensure_ascii=False),
         )
 
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=150,
             messages=[{"role": "user", "content": prompt}],
@@ -276,7 +504,7 @@ class ClaudeClient:
             "- value_type: 'enum' if there are fixed choices, 'text' for free text, 'number' for measurements\n"
             "- For enum tags, always include allowed_values. For text/number, set allowed_values to null.\n"
         )
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=400,
             messages=[{"role": "user", "content": prompt}],
@@ -310,7 +538,7 @@ class ClaudeClient:
             "- For enum: include allowed_values list. For text/number: set allowed_values to null.\n"
             "- suggested_value: the most common/default value for this category — can be null if unknown.\n"
         )
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=600,
             messages=[{"role": "user", "content": prompt}],
@@ -365,7 +593,7 @@ class ClaudeClient:
             '"new_tag_value_type": "<enum|text|number if new tag, else null>", '
             '"new_tag_allowed_values": ["option1", "option2"] or null}'
         )
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=200,
             messages=[{"role": "user", "content": prompt}],
@@ -401,7 +629,7 @@ Return ONLY valid JSON, no other text:
 }}
 Conversation history: {conversation_history}
 """
-        response = await self._client.messages.create(
+        response = await self._create(
             model=MODEL,
             max_tokens=4000,
             messages=[{"role": "user", "content": prompt}],
