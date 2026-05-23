@@ -27,11 +27,14 @@ from typing import Literal
 
 import anthropic
 
+from app.bot import agent_spec
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-CLASSIFIER_MODEL = "claude-haiku-4-5-20251001"
+# Resolved from agents.yaml at import time. Re-resolved on test reload.
+_SPEC = agent_spec.get("intent_classifier")
+CLASSIFIER_MODEL = _SPEC.model
 
 Sentiment = Literal["positive", "neutral", "negative", "very_negative"]
 IntentLabel = Literal[
@@ -114,9 +117,10 @@ async def classify(customer_message: str, recent_history: list[dict] | None = No
 
     try:
         client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+        spec = agent_spec.get("intent_classifier")
         resp = await client.messages.create(
-            model=CLASSIFIER_MODEL,
-            max_tokens=200,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as exc:

@@ -4,6 +4,7 @@ import logging
 
 import anthropic
 
+from app.bot import agent_spec
 from app.config import settings
 from app.prompts import (
     CATALOG_MATCH_PROMPT,
@@ -14,10 +15,10 @@ from app.prompts import (
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-20250514"
-# Fallback used when the primary model refuses or repeatedly errors.
-# Different model family reduces correlated-refusal risk.
-FALLBACK_MODEL = "claude-3-5-sonnet-20241022"
+# Backward-compat aliases — model selection now lives in agents.yaml.
+# `MODEL` is still re-exported because training.py and tests import it.
+MODEL = agent_spec.get("decide").model
+FALLBACK_MODEL = agent_spec.get("decide").fallback_model or "claude-3-5-sonnet-20241022"
 
 
 def _to_anthropic_role(raw_role: str) -> str | None:
@@ -156,10 +157,11 @@ class ClaudeClient:
     def __init__(self) -> None:
         self._client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
-    async def _create(self, **kwargs):
+    async def _create(self, *, fallback_model: str | None = None, **kwargs):
         """messages.create with one retry on transient API errors and a
         model fallback when the primary model emits a content-policy refusal.
-        Logs cache hits so we can verify prompt-caching savings."""
+        `fallback_model` lets callers override the global FALLBACK_MODEL on a
+        per-method basis (driven by agents.yaml). Logs cache hits."""
         model_name = kwargs.get("model", MODEL)
         try:
             resp = await self._client.messages.create(**kwargs)
@@ -168,8 +170,9 @@ class ClaudeClient:
             resp = await self._client.messages.create(**kwargs)
 
         if getattr(resp, "stop_reason", None) == "refusal":
-            logger.warning("Model %s refused — retrying with fallback %s", model_name, FALLBACK_MODEL)
-            kwargs["model"] = FALLBACK_MODEL
+            target = fallback_model or FALLBACK_MODEL
+            logger.warning("Model %s refused — retrying with fallback %s", model_name, target)
+            kwargs["model"] = target
             resp = await self._client.messages.create(**kwargs)
 
         usage = getattr(resp, "usage", None)
@@ -233,11 +236,12 @@ class ClaudeClient:
             # No history or last entry is bot reply — use entire history as cached prefix.
             history_for_cache = history
 
+        spec = agent_spec.get("decide")
         if context_block:
             messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
             request_kwargs = dict(
-                model=MODEL,
-                max_tokens=350,
+                model=spec.model,
+                max_tokens=spec.max_tokens,
                 system=[
                     {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
                 ],
@@ -247,13 +251,13 @@ class ClaudeClient:
             # Marker missing (training dashboard rewrote prompt structure) — degraded path.
             logger.warning("DECISION_PROMPT missing CONTEXT/STRATEGY markers — skipping cache")
             request_kwargs = dict(
-                model=MODEL,
-                max_tokens=350,
+                model=spec.model,
+                max_tokens=spec.max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
 
         try:
-            response = await self._create(**request_kwargs)
+            response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
         except Exception as exc:
             logger.exception("Claude decide() failed unrecoverably: %s — returning clarify", exc)
             return {"action": "clarify", "price": None, "reason": "api error"}
@@ -376,6 +380,7 @@ class ClaudeClient:
 
         system_text, context_block = _split_reply_prompt(prompt)
 
+        spec = agent_spec.get("generate_reply")
         if context_block:
             current_user_text = context.get("customer_message", "")
             if history and history[-1].get("role") == "customer":
@@ -384,8 +389,8 @@ class ClaudeClient:
                 history_for_cache = history
             messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
             request_kwargs = dict(
-                model=MODEL,
-                max_tokens=200,
+                model=spec.model,
+                max_tokens=spec.max_tokens,
                 system=[
                     {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
                 ],
@@ -394,13 +399,13 @@ class ClaudeClient:
         else:
             logger.warning("REPLY_PROMPT missing DYNAMIC CONTEXT marker — skipping cache")
             request_kwargs = dict(
-                model=MODEL,
-                max_tokens=200,
+                model=spec.model,
+                max_tokens=spec.max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
 
         try:
-            response = await self._create(**request_kwargs)
+            response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
         except Exception as exc:
             logger.exception("Claude generate_reply() failed unrecoverably: %s", exc)
             # Soft fallback — return a safe acknowledgment rather than crashing the conversation.
@@ -409,9 +414,11 @@ class ClaudeClient:
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
         """Generate a seller-facing product description from an image for catalog use."""
+        spec = agent_spec.get("generate_product_description")
         response = await self._create(
-            model=MODEL,
-            max_tokens=200,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{
                 "role": "user",
                 "content": [
@@ -434,9 +441,11 @@ class ClaudeClient:
         """Stage 1 — Vision only: describe what product is in the customer's image.
         Accepts base64-encoded image bytes (Instagram blocks direct URL fetching).
         """
+        spec = agent_spec.get("describe_product_image")
         response = await self._create(
-            model=MODEL,
-            max_tokens=150,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{
                 "role": "user",
                 "content": [
@@ -473,9 +482,11 @@ class ClaudeClient:
             catalog_json=json.dumps(catalog, ensure_ascii=False),
         )
 
+        spec = agent_spec.get("match_product_by_description")
         response = await self._create(
-            model=MODEL,
-            max_tokens=150,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -504,9 +515,11 @@ class ClaudeClient:
             "- value_type: 'enum' if there are fixed choices, 'text' for free text, 'number' for measurements\n"
             "- For enum tags, always include allowed_values. For text/number, set allowed_values to null.\n"
         )
+        spec = agent_spec.get("suggest_category")
         response = await self._create(
-            model=MODEL,
-            max_tokens=400,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
@@ -538,9 +551,11 @@ class ClaudeClient:
             "- For enum: include allowed_values list. For text/number: set allowed_values to null.\n"
             "- suggested_value: the most common/default value for this category — can be null if unknown.\n"
         )
+        spec = agent_spec.get("suggest_tags_for_category")
         response = await self._create(
-            model=MODEL,
-            max_tokens=600,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
@@ -593,9 +608,11 @@ class ClaudeClient:
             '"new_tag_value_type": "<enum|text|number if new tag, else null>", '
             '"new_tag_allowed_values": ["option1", "option2"] or null}'
         )
+        spec = agent_spec.get("extract_feature_query")
         response = await self._create(
-            model=MODEL,
-            max_tokens=200,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
@@ -629,9 +646,11 @@ Return ONLY valid JSON, no other text:
 }}
 Conversation history: {conversation_history}
 """
+        spec = agent_spec.get("extract_persona")
         response = await self._create(
-            model=MODEL,
-            max_tokens=4000,
+            fallback_model=spec.fallback_model,
+            model=spec.model,
+            max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
