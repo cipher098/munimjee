@@ -282,6 +282,14 @@ async def generate_bot_reply(
         intent_classification = None
 
     # Step 1: Claude decides action
+    # IMPORTANT: pass the FULL message history (no sliding window). The
+    # Anthropic prompt cache matches by prefix from position 0 of the messages
+    # array — sliding the window (e.g. [-10:]) bumps the oldest message off
+    # the front every turn and invalidates the cache. We cap defensively at
+    # 200 turns to bound the request size on pathological conversations.
+    _FULL_HIST_CAP = 200
+    full_history = (conversation.messages or [])[-_FULL_HIST_CAP:]
+    decision_history = full_history
     effective_state = conv_product.state if conv_product is not None else "greeting"
     decision = await claude.decide({
         "state": effective_state,
@@ -290,7 +298,7 @@ async def generate_bot_reply(
         "listed_price": product.listed_price if product else None,
         "floor_price": product.floor_price if product else None,   # never forwarded to customer
         "last_counter_price": effective_last_counter_price,
-        "message_history": (conversation.messages or [])[-10:],
+        "message_history": decision_history,
         "available_products": products_list,
         "other_inquiry_products": other_inquiry_products,
         "bundle_pitched": conv_product.bundle_pitched if conv_product is not None else False,
@@ -419,7 +427,8 @@ async def generate_bot_reply(
         "customer_message": customer_message,
         "policies": seller.policies or {},
         "available_products": products_list,
-        "message_history": (conversation.messages or [])[-10:],
+        # Same stable-window rule as decide() — no sliding to preserve cache.
+        "message_history": full_history,
         "total_photos": all_photo_count,
         "address_term": customer_address_term,
         "other_active_products": other_active_products,
