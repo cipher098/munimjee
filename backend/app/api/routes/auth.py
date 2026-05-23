@@ -4,10 +4,10 @@ import hmac
 import logging
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from jose import jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -28,7 +28,30 @@ from app.models.seller import Seller
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# bcrypt has a hard 72-byte input limit. Anything longer must be truncated
+# (or pre-hashed) — otherwise bcrypt 4.x raises ValueError and the request
+# 500s. We truncate by bytes, not characters, because UTF-8 multibyte chars
+# can push a short-looking password past the limit.
+_BCRYPT_MAX_BYTES = 72
+
+
+def _bcrypt_clamp(password: str) -> bytes:
+    encoded = password.encode("utf-8")
+    return encoded[:_BCRYPT_MAX_BYTES]
+
+
+def _hash_password(plain: str) -> str:
+    return bcrypt.hashpw(_bcrypt_clamp(plain), bcrypt.gensalt()).decode("utf-8")
+
+
+def _verify_password(plain: str, hashed: str) -> bool:
+    """Reads `$2a$`, `$2b$`, `$2y$` hashes — compatible with anything passlib used to write."""
+    try:
+        return bcrypt.checkpw(_bcrypt_clamp(plain), hashed.encode("utf-8"))
+    except ValueError:
+        # Malformed hash on the seller row — treat as auth failure, don't crash.
+        return False
 
 
 def _create_token(payload: dict) -> str:
@@ -38,10 +61,6 @@ def _create_token(payload: dict) -> str:
         settings.SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )
-
-
-def _verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
 
 
 class SellerSignupRequest(BaseModel):
@@ -70,7 +89,7 @@ async def seller_signup(body: SellerSignupRequest, request: Request, db: AsyncSe
 
     seller = Seller(
         email=body.email,
-        password_hash=pwd_context.hash(body.password),
+        password_hash=_hash_password(body.password),
         business_name=body.business_name,
         onboarding_state="signed_up",
         is_active=True,
