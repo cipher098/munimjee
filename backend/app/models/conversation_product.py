@@ -18,7 +18,8 @@ class ConversationProduct(Base):
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
 
     negotiation_round = Column(Integer, default=0)
-    last_counter_price = Column(Integer, nullable=True)   # paise — lowest price bot offered
+    last_counter_price = Column(Integer, nullable=True)   # paise — lowest price bot offered (negotiation math)
+    last_shown_price = Column(Integer, nullable=True)     # paise — customer-facing display ceiling; bot must never quote higher
     agreed_price = Column(Integer, nullable=True)         # paise — price customer accepted
     photos_sent_count = Column(Integer, default=0)        # how many photos have been sent to this customer for this product
     state = Column(String, nullable=False, default="product_inquiry")  # full state machine per product
