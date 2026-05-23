@@ -318,6 +318,14 @@ async def advance_conversation(
         if conv_product is not None:
             conv_product.last_counter_price = extra["last_counter_price"]
 
+    # last_shown_price is a monotonic floor on customer-facing prices: it only ever
+    # ratchets DOWN. Once we've shown ₹1100, we can never quote higher; if we later
+    # quote ₹1050, the new value wins.
+    if extra.get("last_shown_price") is not None and conv_product is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
+
     new_product_id = extra.get("product_id")
     if new_product_id:
         from sqlalchemy import select as sa_select
@@ -524,6 +532,10 @@ async def handle_product_image(
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
         conv_product.last_counter_price = extra["last_counter_price"]
+    if extra.get("last_shown_price") is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
@@ -703,6 +715,10 @@ async def handle_reel(
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
         conv_product.last_counter_price = extra["last_counter_price"]
+    if extra.get("last_shown_price") is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()

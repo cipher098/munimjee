@@ -93,10 +93,12 @@ async def generate_bot_reply(
     if conv_product is not None:
         effective_negotiation_round = conv_product.negotiation_round
         effective_last_counter_price = conv_product.last_counter_price
+        effective_last_shown_price = conv_product.last_shown_price
         price_state_source = "conv_product"
     else:
         effective_negotiation_round = 0
         effective_last_counter_price = None
+        effective_last_shown_price = None
         price_state_source = "none"
 
     # Tag lookup — load category tags + values for the current product
@@ -257,6 +259,9 @@ async def generate_bot_reply(
             "name": p.name,
             "listed_price_rupees": p.listed_price // 100,
             "floor_price_rupees": p.floor_price // 100 if p.floor_price else p.listed_price // 100,
+            # Customer-facing display ceiling for this inquiry product — once locked, bot
+            # must never quote a higher number even when this product comes back into focus.
+            "last_shown_price_rupees": cp.last_shown_price // 100 if cp.last_shown_price else None,
             "state": cp.state,
         }
         for cp, p in _other_rows
@@ -301,6 +306,7 @@ async def generate_bot_reply(
         "listed_price": product.listed_price if product else None,
         "floor_price": product.floor_price if product else None,   # never forwarded to customer
         "last_counter_price": effective_last_counter_price,
+        "last_shown_price": effective_last_shown_price,
         "message_history": decision_history,
         "available_products": products_list,
         "other_inquiry_products": other_inquiry_products,
@@ -337,6 +343,8 @@ async def generate_bot_reply(
     bundle_breakdown: str = ""
 
     # show_multi_price: prices come entirely from code, never from LLM.
+    # Per-product ceiling = last_shown_price if set, else last_counter_price, else listed_price.
+    # Then clamp to floor so we never display below cost.
     if decision.get("action") == "show_multi_price" and extra.get("product_ids"):
         parts = []
         for pid in extra["product_ids"]:
@@ -351,11 +359,16 @@ async def generate_bot_reply(
                 )
             )
             cp = cp_res.scalar_one_or_none()
-            raw = (cp.last_counter_price if cp and cp.last_counter_price else p.listed_price) or p.listed_price
+            ceiling = None
+            if cp:
+                ceiling = cp.last_shown_price or cp.last_counter_price
+            raw = ceiling or p.listed_price
             display_price = max(raw, p.floor_price)
             parts.append(f"{p.name}: ₹{display_price // 100}")
-            logger.info("show_multi_price code-computed: %s = ₹%d (floor=₹%d)",
-                        p.name, display_price // 100, p.floor_price // 100)
+            logger.info("show_multi_price code-computed: %s = ₹%d (ceiling=%s floor=₹%d)",
+                        p.name, display_price // 100,
+                        f"₹{ceiling // 100}" if ceiling else "none",
+                        p.floor_price // 100)
         multi_price_breakdown = " | ".join(parts)
 
     # Bundle breakdown: when counter/accept covers multiple products, pre-compute a
@@ -406,6 +419,7 @@ async def generate_bot_reply(
             )
             new_cp = new_cp_res.scalar_one_or_none()
             effective_last_counter_price = new_cp.last_counter_price if new_cp else None
+            effective_last_shown_price = new_cp.last_shown_price if new_cp else None
             price_state_source = "conv_product" if new_cp else "none"
 
     persona = seller.persona or DEFAULT_PERSONA
@@ -416,6 +430,16 @@ async def generate_bot_reply(
     customer_gender = conversation.customer_gender or guess_gender(conversation.customer_name or "")
     customer_address_term = _address_term(customer_gender)
 
+    # Customer-facing display price: if the bot has already shown a (lower) price for
+    # this product to this customer, lock to that. Otherwise listed_price. Belt to the
+    # prompt's suspenders — caps the worst-case where the model ignores the constraint.
+    if effective_last_shown_price and product:
+        display_price_rupees = min(effective_last_shown_price, product.listed_price) // 100
+    elif product:
+        display_price_rupees = product.listed_price // 100
+    else:
+        display_price_rupees = None
+
     reply_context = {
         "decision": decision,
         "persona": persona,
@@ -423,10 +447,12 @@ async def generate_bot_reply(
         "product_description": product.description if product else None,
         "product_tag_values": product_tag_values,
         "listed_price_rupees": product.listed_price // 100 if product else None,
+        "display_price_rupees": display_price_rupees,
         "floor_price_rupees": product.floor_price // 100 if product else None,
         "warranty_months": product.warranty_months if product else None,
         "stock_quantity": product.stock_quantity if product else None,
         "last_counter_price": effective_last_counter_price,
+        "last_shown_price": effective_last_shown_price,
         "bulk_quantity": decision.get("bulk_quantity"),
         "customer_message": customer_message,
         "policies": seller.policies or {},
@@ -584,6 +610,7 @@ def _derive_state_from_decision(
         else:
             extra["agreed_price"] = price
             extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
+            extra["last_shown_price"] = price    # customer-facing ceiling
             return "awaiting_payment", extra
 
     if action == "counter":
@@ -611,6 +638,7 @@ def _derive_state_from_decision(
                 decision["price"] = price
             if price:
                 extra["last_counter_price"] = price
+                extra["last_shown_price"] = price  # customer-facing ceiling
             extra["negotiation_round"] = effective_negotiation_round + 1
             return "negotiating", extra
 
@@ -624,6 +652,7 @@ def _derive_state_from_decision(
         decision["price"] = price
         extra["agreed_price"] = price
         extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
+        extra["last_shown_price"] = price    # customer-facing ceiling
         extra["bulk_quantity"] = decision.get("bulk_quantity")
         return "awaiting_payment", extra
 

@@ -202,6 +202,8 @@ class ClaudeClient:
     async def decide(self, context: dict) -> dict:
         last_counter = context.get("last_counter_price")
         last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
+        last_shown = context.get("last_shown_price")
+        last_shown_str = f"{last_shown} paise (₹{last_shown // 100})" if last_shown else "none yet"
 
         # Pass empty customer_message/message_history so .format() still works if
         # the training dashboard re-introduces those placeholders. The actual
@@ -214,6 +216,7 @@ class ClaudeClient:
             listed_price=context.get("listed_price", "unknown"),
             floor_price=context.get("floor_price", "unknown"),
             last_counter_price=last_counter_str,
+            last_shown_price=last_shown_str,
             round_number=context.get("negotiation_round", 0),
             message_history="",
             available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
@@ -289,6 +292,10 @@ class ClaudeClient:
         price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
         last_counter = context.get("last_counter_price")
         last_counter_reply_str = f"₹{last_counter // 100}" if last_counter else "none"
+        last_shown = context.get("last_shown_price")
+        last_shown_reply_str = f"₹{last_shown // 100}" if last_shown else "none"
+        display_price_rupees = context.get("display_price_rupees")
+        display_price_str = f"₹{display_price_rupees}" if display_price_rupees is not None else "N/A"
 
         warranty = context.get("warranty_months")
         warranty_str = f"{warranty} months" if warranty else "No warranty"
@@ -355,12 +362,15 @@ class ClaudeClient:
         )
 
         other_inquiry = context.get("other_inquiry_products") or []
+
+        def _fmt_inquiry(p: dict) -> str:
+            base = f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
+            if p.get("last_shown_price_rupees"):
+                base += f" last_shown=₹{p['last_shown_price_rupees']} (NEVER quote higher than this)"
+            return base
+
         other_inquiry_str = (
-            ", ".join(
-                f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
-                for p in other_inquiry
-            )
-            if other_inquiry else "none"
+            ", ".join(_fmt_inquiry(p) for p in other_inquiry) if other_inquiry else "none"
         )
 
         # customer_message/message_history are no longer rendered into REPLY_PROMPT —
@@ -374,6 +384,7 @@ class ClaudeClient:
             product_description=product_description,
             product_tag_values=tag_values_str,
             listed_price_rupees=context.get("listed_price_rupees", "N/A"),
+            display_price_rupees=display_price_str,
             floor_price_rupees=context.get("floor_price_rupees", "N/A"),
             warranty_info=warranty_str,
             stock_info=stock_str,
@@ -381,6 +392,7 @@ class ClaudeClient:
             action=decision.get("action", "clarify"),
             price_context=price_context,
             last_counter_price=last_counter_reply_str,
+            last_shown_price=last_shown_reply_str,
             customer_intent=decision.get("customer_intent", "warm"),
             customer_message="",
             has_more_photos=has_more_photos,
