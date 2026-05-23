@@ -325,6 +325,7 @@ async def generate_bot_reply(
         effective_negotiation_round=effective_negotiation_round,
         effective_last_counter_price=effective_last_counter_price,
         inquiry_products=other_inquiry_products,
+        current_state=effective_state,
     )
 
     # Compute code-enforced price breakdowns — used for show_multi_price and
@@ -489,12 +490,15 @@ def _derive_state_from_decision(
     effective_negotiation_round: int = 0,
     effective_last_counter_price: int | None = None,
     inquiry_products: list[dict] | None = None,
+    current_state: str | None = None,
 ) -> tuple[str | None, dict]:
     """Maps Claude's action to a state transition and extra data.
 
     effective_negotiation_round and effective_last_counter_price are the source-of-truth
     values (from conv_product when available, otherwise from conversation columns).
     inquiry_products: other_inquiry_products list with floor_price_rupees per item.
+    current_state: the conv_product state at the START of this turn. Used to enforce
+      "sticky" states (e.g. awaiting_payment cannot regress to negotiating).
     """
     action = decision.get("action", "")
     floor_price = product.floor_price if product else None
@@ -503,6 +507,24 @@ def _derive_state_from_decision(
     # Always forward rejected_product_ids regardless of action chosen
     if decision.get("rejected_product_ids"):
         extra["rejected_product_ids"] = list(decision["rejected_product_ids"])
+
+    # ── Sticky-state guard ───────────────────────────────────────────────
+    # Once a deal is agreed (awaiting_payment), don't let the model regress us
+    # back to negotiating / product_inquiry just because it picked hold_firm
+    # or show_product on a follow-up question. Only escalate and not_interested
+    # are legitimate exits from the locked state.
+    #
+    # The bot's REPLY still happens normally — we only neutralize the state
+    # transition and price-mutating extras. The agreed_price_locked
+    # intervention rule already steers the model toward not-reopening; this
+    # guard catches the cases where it slips through anyway.
+    _PAYMENT_LOCKED_NEUTRALIZE = {"hold_firm", "counter", "accept", "bulk_discount", "show_product"}
+    if current_state == "awaiting_payment" and action in _PAYMENT_LOCKED_NEUTRALIZE:
+        logger.info(
+            "STATE LOCK: action %r blocked from regressing awaiting_payment — keeping state",
+            action,
+        )
+        return None, extra
 
     # Compute inquiry floor total (paise) — sum of all inquiry product floors.
     # Used to enforce minimum bundle price when the offer covers multiple products.
