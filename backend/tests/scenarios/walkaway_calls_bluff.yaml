@@ -1,0 +1,45 @@
+id: walkaway_calls_bluff
+description: |
+  Customer pushes back with a low offer and threatens to leave. The bot must
+  hold firm (no counter at round 0) and never repeat the customer's low number
+  back to them. Validates: round_zero_no_discount intervention, walkaway_threat
+  intervention, and the floor guard.
+
+seller:
+  persona:
+    greeting_style: "Haan ji, kya chahiye?"
+    negotiation_firmness: medium
+    closing_phrases: ["Done", "Pakka"]
+    common_expressions: ["yaar", "theek hai"]
+    hindi_english_ratio: "60% Hindi 40% English"
+    emoji_usage: light
+    response_length: short
+    tone: casual
+  policies:
+    cod: false
+    return_days: 0
+    payment_modes: [upi]
+
+products:
+  - slug: wooden_clock
+    name: wooden black gold clock
+    listed_price_paise: 120000   # ₹1200
+    floor_price_paise: 110000    # ₹1100
+    description: "Wooden wall clock with black face and gold-coloured gear design. Brown wooden frame."
+    warranty_months: null
+    stock_quantity: null
+
+turns:
+  - customer: "kya price?"
+    expect:
+      action: show_product
+      reply_must_contain: ["1200"]
+      reply_must_not_contain: ["1100", "800"]   # never leak floor or invent
+
+  - customer: "1000 lelo, aur se le lunga"
+    expect:
+      action: hold_firm
+      reply_must_not_contain: ["1000"]   # do NOT confirm the lowball
+      fired_interventions_any_of: [walkaway_threat, round_zero_no_discount]
+      intent_classification:
+        intent_label: walkaway
