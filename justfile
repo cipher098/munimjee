@@ -37,6 +37,21 @@ rebuild:
 test:
     docker compose run --rm api pytest tests/ -v
 
+# Run the scenario regression tests (YAML-driven, cassette-backed).
+# Scenarios without cassettes skip cleanly — record them with `just test-scenarios-record`.
+test-scenarios:
+    docker compose run --rm api pytest tests/test_scenarios.py -v
+
+# Record / re-record VCR cassettes for every scenario. Needs ANTHROPIC_API_KEY in backend/.env.
+# Re-run plain `just test-scenarios` afterward to confirm the recorded cassettes replay green.
+test-scenarios-record:
+    docker compose run --rm -e VCR_RECORD=1 api pytest tests/test_scenarios.py -v
+
+# Export a real conversation from the DB as a scenario YAML stub.
+# Usage: just capture-scenario <conversation_uuid>
+capture-scenario CONVO_ID:
+    docker compose run --rm api python -m app.scripts.capture_scenario {{CONVO_ID}}
+
 # Run a single test file or pattern, e.g. `just test-one tests/test_claude_decide.py::test_split_decision_prompt_extracts_static_and_dynamic_parts`
 test-one TARGET:
     docker compose run --rm api pytest {{TARGET}} -v

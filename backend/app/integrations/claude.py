@@ -234,6 +234,9 @@ class ClaudeClient:
                 "Interventions fired: %s",
                 ", ".join(f"{r.id}(p={r.priority})" for r in fired),
             )
+        # Test hook — scenario harness asserts on which rules fired this turn.
+        from app.bot.test_hooks import record as _record_turn
+        _record_turn(fired_interventions=[r.id for r in fired])
         reminder_block = _interventions.render_reminders(fired)
         if reminder_block and context_block:
             context_block = f"{reminder_block}\n\n{context_block}"

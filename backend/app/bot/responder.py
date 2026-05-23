@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.test_hooks import record as _record_turn
 from app.models.conversation import Conversation
 from app.models.conversation_product import ConversationProduct
 from app.models.product import Product
@@ -233,6 +234,7 @@ async def generate_bot_reply(
                             "→ conversation %s paused (waiting_for_tag)",
                             matched_tag_obj.name, product.name, alert_exists, conversation.id,
                         )
+                        _record_turn(action=None, new_state="waiting_for_tag", reply=None)
                         return None, "waiting_for_tag", {}
         except Exception as exc:
             logger.warning("Feature query check failed: %s — proceeding normally", exc)
@@ -277,6 +279,7 @@ async def generate_bot_reply(
             intent_classification.is_repeated_dissatisfaction,
             intent_classification.confidence,
         )
+        _record_turn(intent_classification=intent_classification.as_dict())
     except Exception as exc:
         logger.warning("Intent classification task failed (%s) — proceeding without", exc)
         intent_classification = None
@@ -480,6 +483,17 @@ async def generate_bot_reply(
 
     if reply:
         reply = _clean_reply(reply)
+
+    # Test hook: snapshot the per-turn outcome for the scenario harness.
+    # No-op in production (LAST_TURN is None unless a fixture seeded it).
+    _record_turn(
+        action=decision.get("action"),
+        new_state=new_state,
+        reply=reply,
+        price=decision.get("price"),
+        extra=extra,
+        decision=decision,
+    )
     return reply, new_state, extra
 
 
