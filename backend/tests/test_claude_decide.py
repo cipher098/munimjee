@@ -63,6 +63,7 @@ def test_split_decision_prompt_extracts_static_and_dynamic_parts():
         listed_price=100000,
         floor_price=80000,
         last_counter_price="none yet",
+        last_shown_price="none yet",
         round_number=0,
         message_history="",  # no longer rendered into the prompt
         available_products="[]",
