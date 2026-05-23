@@ -7,6 +7,53 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Scopes required to read pages, receive DMs, and reply on Instagram. All five
+# are needed for the messaging webhook to actually flow:
+#   - pages_show_list, pages_manage_metadata: list the user's pages, subscribe webhook
+#   - pages_messaging: send/receive page messages
+#   - instagram_basic: identify the linked IG business account
+#   - instagram_manage_messages: actually send/receive IG DMs
+#   - business_management: needed when the IG account is owned by a Business Manager
+INSTAGRAM_OAUTH_SCOPES = ",".join([
+    "pages_show_list",
+    "pages_manage_metadata",
+    "pages_messaging",
+    "instagram_basic",
+    "instagram_manage_messages",
+    "business_management",
+])
+
+
+def build_oauth_authorize_url(redirect_uri: str, state: str) -> str:
+    """Build the Facebook Login dialog URL the seller should visit."""
+    from urllib.parse import urlencode
+    params = {
+        "client_id": settings.META_APP_ID,
+        "redirect_uri": redirect_uri,
+        "state": state,
+        "scope": INSTAGRAM_OAUTH_SCOPES,
+        "response_type": "code",
+    }
+    return f"https://www.facebook.com/{settings.META_API_VERSION}/dialog/oauth?{urlencode(params)}"
+
+
+async def exchange_code_for_user_token(code: str, redirect_uri: str) -> str:
+    """Exchange the OAuth `code` from the callback for a short-lived user access token."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token",
+            params={
+                "client_id": settings.META_APP_ID,
+                "client_secret": settings.META_APP_SECRET,
+                "redirect_uri": redirect_uri,
+                "code": code,
+            },
+        )
+        if response.status_code != 200:
+            logger.error("OAuth code exchange failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        return response.json()["access_token"]
+
 
 async def exchange_for_long_lived_token(short_lived_token: str) -> str:
     """Exchange a short-lived token for a long-lived token (valid ~60 days)."""
@@ -25,6 +72,52 @@ async def exchange_for_long_lived_token(short_lived_token: str) -> str:
         response.raise_for_status()
         data = response.json()
         return data["access_token"]
+
+
+async def list_user_pages(user_token: str) -> list[dict]:
+    """List Facebook pages the OAuth user manages.
+
+    Each returned page dict has at least:
+      - id: Facebook page id
+      - name
+      - access_token: long-lived page access token (does not expire for pages)
+      - instagram_business_account: {id} if a business IG account is linked
+    """
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts",
+            params={
+                "access_token": user_token,
+                "fields": "id,name,access_token,instagram_business_account{id,username}",
+            },
+        )
+        if response.status_code != 200:
+            logger.error("list_user_pages failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        return response.json().get("data", [])
+
+
+async def subscribe_page_to_webhook(page_id: str, page_access_token: str) -> None:
+    """Subscribe a Facebook page to our app's webhook so we receive DM events.
+
+    Without this call, the OAuth grant lets us SEND messages but Meta won't
+    POST customer DMs to /webhooks/instagram. This is the missing link sellers
+    historically had to do by hand in the Meta dashboard.
+    """
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.post(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/subscribed_apps",
+            params={
+                "access_token": page_access_token,
+                "subscribed_fields": "messages,messaging_postbacks,message_reactions",
+            },
+        )
+        if response.status_code != 200:
+            logger.error(
+                "subscribe_page_to_webhook failed page=%s %d: %s",
+                page_id, response.status_code, response.text,
+            )
+        response.raise_for_status()
 
 
 class InstagramClient:

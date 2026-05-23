@@ -24,23 +24,9 @@ def _clean_reply(text: str) -> str:
     return text.replace("—", "").strip()
 
 
-DEFAULT_PERSONA = {
-    "greeting_style": "Haan ji, kya chahiye?",
-    "negotiation_firmness": "medium",
-    "closing_phrases": ["Done ho gaya", "Pakka"],
-    "common_expressions": ["yaar", "theek hai"],
-    "hindi_english_ratio": "60% Hindi 40% English",
-    "emoji_usage": "light",
-    "response_length": "short",
-    "tone": "casual",
-    "sample_responses": {
-        "greeting": "Haan ji! Kya chahiye aapko? 😊",
-        "price_rejection": "Yaar itna kam nahi hoga, last price hai ye",
-        "deal_accepted": "Done! Payment kar do jaldi",
-        "payment_request": "Yaar payment kar do, UPI hai — details bhej raha hoon",
-        "dispatched": "Dispatch ho gaya aapka order, tracking bhejta hoon"
-    }
-}
+# Re-export from seller_defaults so the auth router can seed brand-new sellers
+# without importing the full bot stack. Single source of truth lives there.
+from app.seller_defaults import DEFAULT_PERSONA  # noqa: E402,F401
 
 
 async def generate_bot_reply(
