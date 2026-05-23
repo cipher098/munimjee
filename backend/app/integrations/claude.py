@@ -5,14 +5,17 @@ import logging
 import anthropic
 
 from app.bot import agent_spec
+from app.bot import prompt_store
 from app.config import settings
-from app.prompts import (
+# Direct imports kept as in-process fallbacks; prompt_store also reaches into
+# these modules when the DB lookup misses.
+from app.prompts import (  # noqa: F401  (re-exported for training.py and tests)
     CATALOG_MATCH_PROMPT,
     DECISION_PROMPT,
     IMAGE_DESCRIBE_PROMPT,
     REPLY_PROMPT,
 )
-from app.subagent_prompts import (
+from app.subagent_prompts import (  # noqa: F401
     EXTRACT_FEATURE_QUERY_PROMPT,
     EXTRACT_PERSONA_PROMPT,
     GENERATE_PRODUCT_DESCRIPTION_PROMPT,
@@ -204,7 +207,8 @@ class ClaudeClient:
         # the training dashboard re-introduces those placeholders. The actual
         # latest customer message and history are sent as native Anthropic
         # messages below for prefix caching.
-        prompt = DECISION_PROMPT.format(
+        decision_template = await prompt_store.get("decide")
+        prompt = decision_template.format(
             state=context.get("state", ""),
             customer_message="",
             listed_price=context.get("listed_price", "unknown"),
@@ -360,7 +364,8 @@ class ClaudeClient:
         # they're sent as native Anthropic messages below for prefix caching.
         # Pass empty strings to .format() in case the training dashboard re-introduces
         # the placeholders later.
-        prompt = REPLY_PROMPT.format(
+        reply_template = await prompt_store.get("generate_reply")
+        prompt = reply_template.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
             product_description=product_description,
@@ -422,6 +427,7 @@ class ClaudeClient:
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
         """Generate a seller-facing product description from an image for catalog use."""
         spec = agent_spec.get("generate_product_description")
+        template = await prompt_store.get("generate_product_description")
         response = await self._create(
             fallback_model=spec.fallback_model,
             model=spec.model,
@@ -429,10 +435,7 @@ class ClaudeClient:
             messages=[{
                 "role": "user",
                 "content": [
-                    {
-                        "type": "text",
-                        "text": GENERATE_PRODUCT_DESCRIPTION_PROMPT.format(product_name=product_name),
-                    },
+                    {"type": "text", "text": template.format(product_name=product_name)},
                     {"type": "image", "source": {"type": "url", "url": image_url}},
                 ],
             }],
@@ -444,6 +447,7 @@ class ClaudeClient:
         Accepts base64-encoded image bytes (Instagram blocks direct URL fetching).
         """
         spec = agent_spec.get("describe_product_image")
+        template = await prompt_store.get("image_describe")
         response = await self._create(
             fallback_model=spec.fallback_model,
             model=spec.model,
@@ -451,7 +455,7 @@ class ClaudeClient:
             messages=[{
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": IMAGE_DESCRIBE_PROMPT},
+                    {"type": "text", "text": template},
                     {
                         "type": "image",
                         "source": {
@@ -479,7 +483,8 @@ class ClaudeClient:
             for p in products
         ]
 
-        prompt = CATALOG_MATCH_PROMPT.format(
+        template = await prompt_store.get("catalog_match")
+        prompt = template.format(
             description=description,
             catalog_json=json.dumps(catalog, ensure_ascii=False),
         )
@@ -504,7 +509,8 @@ class ClaudeClient:
         Returns: {category_name, tags: [{name, display_name, value_type, allowed_values}]}
         """
         description_line = f"Description: {product_description}\n" if product_description else ""
-        prompt = SUGGEST_CATEGORY_PROMPT.format(
+        template = await prompt_store.get("suggest_category")
+        prompt = template.format(
             product_name=product_name,
             description_line=description_line,
         )
@@ -527,7 +533,8 @@ class ClaudeClient:
         Returns: [{name, display_name, value_type, allowed_values, suggested_value}]
         suggested_value is a typical default value the seller can confirm or change.
         """
-        prompt = SUGGEST_TAGS_FOR_CATEGORY_PROMPT.format(category_name=category_name)
+        template = await prompt_store.get("suggest_tags_for_category")
+        prompt = template.format(category_name=category_name)
         spec = agent_spec.get("suggest_tags_for_category")
         response = await self._create(
             fallback_model=spec.fallback_model,
@@ -558,7 +565,8 @@ class ClaudeClient:
         }
         """
         tags_json = json.dumps(tags, ensure_ascii=False)
-        prompt = EXTRACT_FEATURE_QUERY_PROMPT.format(
+        template = await prompt_store.get("extract_feature_query")
+        prompt = template.format(
             customer_message=customer_message,
             tags_json=tags_json,
         )
@@ -579,7 +587,8 @@ class ClaudeClient:
                     "new_tag_value_type": None, "new_tag_allowed_values": None}
 
     async def extract_persona(self, conversation_history: str) -> dict:
-        prompt = EXTRACT_PERSONA_PROMPT.format(conversation_history=conversation_history)
+        template = await prompt_store.get("extract_persona")
+        prompt = template.format(conversation_history=conversation_history)
         spec = agent_spec.get("extract_persona")
         response = await self._create(
             fallback_model=spec.fallback_model,

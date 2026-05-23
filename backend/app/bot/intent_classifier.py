@@ -27,9 +27,9 @@ from typing import Literal
 
 import anthropic
 
-from app.bot import agent_spec
+from app.bot import agent_spec, prompt_store
 from app.config import settings
-from app.subagent_prompts import INTENT_CLASSIFIER_PROMPT
+from app.subagent_prompts import INTENT_CLASSIFIER_PROMPT  # noqa: F401  (still re-exported for tests)
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +80,10 @@ async def classify(customer_message: str, recent_history: list[dict] | None = No
         return _NEUTRAL_FALLBACK
 
     history_str = _format_history(recent_history or [])
-    # The shared template uses double-braced JSON literals; .format() leaves
-    # them as single braces. We do simple replacement to avoid having to
-    # double-escape the {} in the example schema.
-    prompt = INTENT_CLASSIFIER_PROMPT.replace("{history}", history_str).replace("{message}", customer_message)
+    # Template is consumed by .replace() (NOT .format()) so the JSON schema
+    # braces inside stay literal. Loaded from DB with file fallback.
+    template = await prompt_store.get("intent_classifier")
+    prompt = template.replace("{history}", history_str).replace("{message}", customer_message)
 
     try:
         client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
