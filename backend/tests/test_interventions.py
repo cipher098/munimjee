@@ -93,6 +93,30 @@ def test_loaded_rules_have_known_ids():
         "round_zero_no_discount",
         "fixed_price_no_counter",
         "agreed_price_locked",
+        "complaint_acknowledge",
+        "repeated_dissatisfaction",
+        "very_negative_sentiment_no_close",
     }
     missing = expected - rule_ids
     assert not missing, f"Expected intervention rules missing from YAML: {missing}"
+
+
+def test_match_intent_label_in():
+    ctx = {"intent_classification": {"intent_label": "complaint"}}
+    assert _match({"intent_label_in": ["complaint", "walkaway"]}, ctx)
+    assert not _match({"intent_label_in": ["greeting"]}, ctx)
+    # Missing classification → not a match (defensive).
+    assert not _match({"intent_label_in": ["complaint"]}, {})
+
+
+def test_match_sentiment_in():
+    ctx = {"intent_classification": {"sentiment": "very_negative"}}
+    assert _match({"sentiment_in": ["very_negative", "negative"]}, ctx)
+    assert not _match({"sentiment_in": ["positive"]}, ctx)
+
+
+def test_match_is_repeated_dissatisfaction():
+    ctx_yes = {"intent_classification": {"is_repeated_dissatisfaction": True}}
+    ctx_no = {"intent_classification": {"is_repeated_dissatisfaction": False}}
+    assert _match({"is_repeated_dissatisfaction_eq": True}, ctx_yes)
+    assert not _match({"is_repeated_dissatisfaction_eq": True}, ctx_no)

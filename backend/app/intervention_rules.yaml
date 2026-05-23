@@ -95,6 +95,40 @@ rules:
       and VERIFIED PRODUCT SPECS. Do NOT add a price mention, "order kar do", or any close after.
       The customer is still learning. Push for close only on explicit buying signals.
 
+  - id: complaint_acknowledge
+    description: Classifier flagged a complaint — acknowledge before responding.
+    priority: 105
+    when:
+      intent_label_in:
+        - complaint
+    reminder: |
+      The intent classifier flagged this message as a COMPLAINT. Start your reply by
+      ACKNOWLEDGING the customer's concern directly and warmly before pivoting to
+      explanation or close. Do NOT minimise their feedback. Do NOT immediately push for
+      sale or payment. Example: "Sahi keh rahe ho yaar, samajh sakta hoon — ye dekho..."
+
+  - id: repeated_dissatisfaction
+    description: Customer repeating a complaint — change angle, do not repeat past response.
+    priority: 115
+    when:
+      is_repeated_dissatisfaction_eq: true
+    reminder: |
+      The classifier detected the customer is REPEATING dissatisfaction they've already
+      expressed. Do NOT repeat the same retort/pitch you used before. Pick a different
+      retention angle (e.g. switch from quality argument to social proof, or vice versa).
+      Consider lowering the temperature with a brief acknowledgment first.
+
+  - id: very_negative_sentiment_no_close
+    description: Customer is upset — don't try to close in the same breath.
+    priority: 100
+    when:
+      sentiment_in:
+        - very_negative
+    reminder: |
+      Customer sentiment is VERY NEGATIVE. Do NOT include a sales close, "order kar do",
+      price mention, or upsell in this reply. Acknowledge, de-escalate, and ask one
+      clarifying question. The close can come on the next turn after they cool down.
+
   - id: bundle_already_pitched
     description: Bundle already pitched once — never pitch again.
     priority: 70

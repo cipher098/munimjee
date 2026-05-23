@@ -68,9 +68,18 @@ async def generate_bot_reply(
         for p in all_products
     ]
 
+    from app.bot.intent_classifier import classify as _classify_intent
     from app.integrations.claude import ClaudeClient
     from app.integrations.sarvam import SarvamClient
     from app.models.category_tag import CategoryTag
+
+    # Kick off intent classification in parallel with the synchronous
+    # feature-query and catalog work below. We await the result just before
+    # decide() so it can feed intervention rules without blocking other I/O.
+    import asyncio as _asyncio
+    _intent_task = _asyncio.create_task(
+        _classify_intent(customer_message, conversation.messages or [])
+    )
     from app.models.product_category import ProductCategory
     from app.models.product_tag_value import ProductTagValue
     from app.models.seller_alert import SellerAlert
@@ -256,6 +265,22 @@ async def generate_bot_reply(
         for cp, p in _other_rows
     ]
 
+    # Resolve the classifier result before decide(). It's been running in
+    # parallel since the top of this function so the await is usually instant
+    # by the time we reach here.
+    try:
+        intent_classification = await _intent_task
+        logger.info(
+            "Intent classifier: sentiment=%s label=%s repeated=%s conf=%.2f",
+            intent_classification.sentiment,
+            intent_classification.intent_label,
+            intent_classification.is_repeated_dissatisfaction,
+            intent_classification.confidence,
+        )
+    except Exception as exc:
+        logger.warning("Intent classification task failed (%s) — proceeding without", exc)
+        intent_classification = None
+
     # Step 1: Claude decides action
     effective_state = conv_product.state if conv_product is not None else "greeting"
     decision = await claude.decide({
@@ -269,6 +294,7 @@ async def generate_bot_reply(
         "available_products": products_list,
         "other_inquiry_products": other_inquiry_products,
         "bundle_pitched": conv_product.bundle_pitched if conv_product is not None else False,
+        "intent_classification": intent_classification.as_dict() if intent_classification else None,
     })
 
     logger.info(

@@ -113,6 +113,18 @@ def _match(when: dict, ctx: dict) -> bool:
         elif op == "bundle_pitched_eq":
             if bool(ctx.get("bundle_pitched", False)) is not bool(expected):
                 return False
+        elif op == "intent_label_in":
+            cls = ctx.get("intent_classification") or {}
+            if cls.get("intent_label") not in (expected or []):
+                return False
+        elif op == "sentiment_in":
+            cls = ctx.get("intent_classification") or {}
+            if cls.get("sentiment") not in (expected or []):
+                return False
+        elif op == "is_repeated_dissatisfaction_eq":
+            cls = ctx.get("intent_classification") or {}
+            if bool(cls.get("is_repeated_dissatisfaction", False)) is not bool(expected):
+                return False
         else:
             logger.warning("Unknown intervention operator %r — skipping rule", op)
             return False
