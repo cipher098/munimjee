@@ -12,6 +12,13 @@ from app.prompts import (
     IMAGE_DESCRIBE_PROMPT,
     REPLY_PROMPT,
 )
+from app.subagent_prompts import (
+    EXTRACT_FEATURE_QUERY_PROMPT,
+    EXTRACT_PERSONA_PROMPT,
+    GENERATE_PRODUCT_DESCRIPTION_PROMPT,
+    SUGGEST_CATEGORY_PROMPT,
+    SUGGEST_TAGS_FOR_CATEGORY_PROMPT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -424,12 +431,7 @@ class ClaudeClient:
                 "content": [
                     {
                         "type": "text",
-                        "text": (
-                            f"You are helping an Indian small business seller list a product called '{product_name}'.\n"
-                            "Write a short product description (2-3 sentences) based on this image.\n"
-                            "Mention: material, colour, key features, typical use.\n"
-                            "Write in simple English. No marketing fluff. Return ONLY the description text."
-                        ),
+                        "text": GENERATE_PRODUCT_DESCRIPTION_PROMPT.format(product_name=product_name),
                     },
                     {"type": "image", "source": {"type": "url", "url": image_url}},
                 ],
@@ -501,19 +503,10 @@ class ClaudeClient:
         """Suggest a category name and relevant tag definitions for a product.
         Returns: {category_name, tags: [{name, display_name, value_type, allowed_values}]}
         """
-        prompt = (
-            f"A seller is listing a product called '{product_name}'.\n"
-            + (f"Description: {product_description}\n" if product_description else "")
-            + "Suggest a product category name and 3-6 useful specification tags a buyer might ask about.\n"
-            "Return ONLY valid JSON, no other text:\n"
-            '{"category_name": "e.g. Wall Clock", "tags": ['
-            '{"name": "power_source", "display_name": "Power Source", "value_type": "enum", "allowed_values": ["AC Power", "Battery", "USB"]}'
-            "]}\n"
-            "Rules:\n"
-            "- category_name: short, generic product type (2-3 words max)\n"
-            "- tag name: lowercase_snake_case slug\n"
-            "- value_type: 'enum' if there are fixed choices, 'text' for free text, 'number' for measurements\n"
-            "- For enum tags, always include allowed_values. For text/number, set allowed_values to null.\n"
+        description_line = f"Description: {product_description}\n" if product_description else ""
+        prompt = SUGGEST_CATEGORY_PROMPT.format(
+            product_name=product_name,
+            description_line=description_line,
         )
         spec = agent_spec.get("suggest_category")
         response = await self._create(
@@ -534,23 +527,7 @@ class ClaudeClient:
         Returns: [{name, display_name, value_type, allowed_values, suggested_value}]
         suggested_value is a typical default value the seller can confirm or change.
         """
-        prompt = (
-            f"A seller has a product category called '{category_name}'.\n"
-            "Suggest 4-8 specification tags that customers commonly ask about for this product type.\n"
-            "For each tag, also suggest a typical/common value as 'suggested_value'.\n"
-            "Return ONLY a valid JSON array, no other text:\n"
-            "[\n"
-            '  {"name": "power_source", "display_name": "Power Source", "value_type": "enum", '
-            '"allowed_values": ["AC Power", "Battery", "USB Chargeable"], "suggested_value": "AC Power"},\n'
-            '  {"name": "dial_size", "display_name": "Dial Size", "value_type": "text", '
-            '"allowed_values": null, "suggested_value": "30 cm"}\n'
-            "]\n"
-            "Rules:\n"
-            "- name: lowercase_snake_case slug\n"
-            "- value_type: 'enum' if fixed choices exist, 'text' for free input, 'number' for measurements\n"
-            "- For enum: include allowed_values list. For text/number: set allowed_values to null.\n"
-            "- suggested_value: the most common/default value for this category — can be null if unknown.\n"
-        )
+        prompt = SUGGEST_TAGS_FOR_CATEGORY_PROMPT.format(category_name=category_name)
         spec = agent_spec.get("suggest_tags_for_category")
         response = await self._create(
             fallback_model=spec.fallback_model,
@@ -581,32 +558,9 @@ class ClaudeClient:
         }
         """
         tags_json = json.dumps(tags, ensure_ascii=False)
-        prompt = (
-            f"Customer message: \"{customer_message}\"\n\n"
-            f"Known product tags: {tags_json}\n\n"
-            "Is this message asking about a specific specification or feature of the CURRENT product being discussed?\n"
-            "Examples of feature questions: charging method, power source, size, material, colour, weight, display type, connectivity, whether a feature exists on THIS product\n"
-            "NOT feature questions:\n"
-            "- price, warranty, delivery, return policy, 'le lunga', 'order karna hai'\n"
-            "- Requests to see OTHER products or designs ('koi aur design hai?', 'aur kuch dikhao', 'different model hai?', 'or sample', 'aur kya hai')\n"
-            "- General browsing or switching ('ye nahi, kuch aur', 'koi doosra', 'aur options')\n"
-            "- Compliments or reactions ('accha hai', 'sundar hai', 'theek hai')\n"
-            "- Expressing DISLIKE or REJECTION of a feature value — even if a tag word appears ('yeh colour nhi chahie', 'ye size nahi chalega', 'is design mein nahi chahiye', 'aur colour hai?'). These mean the customer does not want THIS product, NOT that they are asking what the feature is.\n"
-            "- Asking if a product EXISTS in a different variant/colour/style ('koi blue green colour type hai?', 'X mein kuch hai?', 'koi aur colour hai?', 'X colour available hai?'). These are availability/browse questions — the customer wants to see a different product, not know about THIS product's specs.\n"
-            "Key test: is the customer asking WHAT THIS specific product IS or HAS? Only that is a feature question. 'Do you have X colour?' or 'Is X available?' is browsing, not a feature question.\n\n"
-            "If it IS a feature question, check if it maps to one of the known tags above.\n"
-            "If it does NOT map to a known tag, suggest a new tag. For the new tag:\n"
-            "- Choose a clear, meaningful display name (e.g. 'Second Hand' for a clock seconds hand question)\n"
-            "- Decide value_type: 'enum' if the answer has fixed options, 'text' for free text, 'number' for measurements\n"
-            "- For enum: provide the most likely allowed_values list (e.g. Yes/No questions → [\"Yes\", \"No\"])\n"
-            "- For text/number: set allowed_values to null\n\n"
-            "Return ONLY valid JSON, no other text:\n"
-            '{"is_feature_question": true/false, '
-            '"matched_tag_name": "<existing tag slug or null>", '
-            '"new_tag_name": "<snake_case slug if no match, else null>", '
-            '"new_tag_display_name": "<human label if no match, else null>", '
-            '"new_tag_value_type": "<enum|text|number if new tag, else null>", '
-            '"new_tag_allowed_values": ["option1", "option2"] or null}'
+        prompt = EXTRACT_FEATURE_QUERY_PROMPT.format(
+            customer_message=customer_message,
+            tags_json=tags_json,
         )
         spec = agent_spec.get("extract_feature_query")
         response = await self._create(
@@ -625,27 +579,7 @@ class ClaudeClient:
                     "new_tag_value_type": None, "new_tag_allowed_values": None}
 
     async def extract_persona(self, conversation_history: str) -> dict:
-        prompt = f"""Analyze these Instagram DM conversations from an Indian seller.
-Return ONLY valid JSON, no other text:
-{{
-  "greeting_style": "exact phrase they use e.g. 'Haan bolo' or 'Ji kya chahiye'",
-  "negotiation_firmness": "soft | medium | firm",
-  "closing_phrases": ["phrases used when deal closes"],
-  "common_expressions": ["frequent words/phrases they use"],
-  "hindi_english_ratio": "e.g. 70% Hindi 30% English",
-  "emoji_usage": "none | light | moderate | heavy",
-  "response_length": "short | medium | long",
-  "tone": "formal | casual | very_casual",
-  "sample_responses": {{
-    "greeting": "in their exact style",
-    "price_rejection": "how they say no to low offers",
-    "deal_accepted": "how they confirm a deal",
-    "payment_request": "how they ask for payment",
-    "dispatched": "how they say order is shipped"
-  }}
-}}
-Conversation history: {conversation_history}
-"""
+        prompt = EXTRACT_PERSONA_PROMPT.format(conversation_history=conversation_history)
         spec = agent_spec.get("extract_persona")
         response = await self._create(
             fallback_model=spec.fallback_model,

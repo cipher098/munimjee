@@ -29,6 +29,7 @@ import anthropic
 
 from app.bot import agent_spec
 from app.config import settings
+from app.subagent_prompts import INTENT_CLASSIFIER_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -68,40 +69,6 @@ _NEUTRAL_FALLBACK = Classification(
     confidence=0.0,
 )
 
-_PROMPT = """Classify this customer's latest message in an ongoing Instagram seller conversation.
-
-Return ONLY a valid JSON object, no other text. Use this exact schema:
-{
-  "sentiment": "positive|neutral|negative|very_negative",
-  "intent_label": "greeting|feature_question|price_negotiation|walkaway|bulk_inquiry|policy_question|complaint|closing|other",
-  "is_repeated_dissatisfaction": true|false,
-  "confidence": 0.0-1.0
-}
-
-Definitions:
-- sentiment: emotional tone of THIS message. "very_negative" = clearly angry/frustrated.
-- intent_label:
-  - greeting: hello, kya chahiye, hi etc.
-  - feature_question: asking what the product is/has/does (size, material, charging...)
-  - price_negotiation: discussing or pushing on price (counter, discount, kam karo)
-  - walkaway: signalling they will leave or buy elsewhere ("aur se le lunga", "rehne do", "chodo")
-  - bulk_inquiry: asking about multiple pieces / wholesale
-  - policy_question: asking about return, refund, COD, exchange, delivery
-  - complaint: dissatisfaction about product quality, response time, behavior
-  - closing: agreeing to buy / asking payment details ("le lunga", "fix karo", "UPI?")
-  - other: anything else
-- is_repeated_dissatisfaction: TRUE if the message reads like the customer is repeating a
-  complaint or rejection they already expressed. Look at RECENT HISTORY for context.
-- confidence: how confident you are (0.0-1.0).
-
-RECENT HISTORY (oldest first):
-{history}
-
-LATEST CUSTOMER MESSAGE:
-{message}
-"""
-
-
 async def classify(customer_message: str, recent_history: list[dict] | None = None) -> Classification:
     """Classify the latest customer message. Returns _NEUTRAL_FALLBACK on any error.
 
@@ -113,7 +80,10 @@ async def classify(customer_message: str, recent_history: list[dict] | None = No
         return _NEUTRAL_FALLBACK
 
     history_str = _format_history(recent_history or [])
-    prompt = _PROMPT.replace("{history}", history_str).replace("{message}", customer_message)
+    # The shared template uses double-braced JSON literals; .format() leaves
+    # them as single braces. We do simple replacement to avoid having to
+    # double-escape the {} in the example schema.
+    prompt = INTENT_CLASSIFIER_PROMPT.replace("{history}", history_str).replace("{message}", customer_message)
 
     try:
         client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
