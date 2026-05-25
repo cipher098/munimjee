@@ -18,6 +18,9 @@ class Conversation(Base):
     status = Column(String, nullable=False, default="active")  # active | closed
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
     messages = Column(JSONB, default=list)            # [{role, content, timestamp}]
+    # Set whenever a seller replies manually from the IG inbox (echo with novel mid).
+    # The batch worker treats the bot as paused while now() - this < BOT_AUTO_RESUME_AFTER_HOURS.
+    last_seller_manual_reply_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

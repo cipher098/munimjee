@@ -5,6 +5,7 @@ a delayed task fires after 15 s of silence and processes them all, sending exact
 one bot reply.
 """
 from app.workers.async_runner import run_async
+from datetime import datetime, timedelta, timezone
 import json
 import logging
 
@@ -16,6 +17,18 @@ logger = logging.getLogger(__name__)
 BATCH_WINDOW_SECONDS = 0
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
+
+
+def is_bot_paused_for_manual_takeover(
+    last_seller_manual_reply_at: datetime | None,
+    window_hours: int,
+    now: datetime | None = None,
+) -> bool:
+    """True when a recent seller manual reply puts the bot in takeover mode."""
+    if last_seller_manual_reply_at is None:
+        return False
+    current = now or datetime.now(timezone.utc)
+    return (current - last_seller_manual_reply_at) < timedelta(hours=window_hours)
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +124,21 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
 
         if conversation.status == "closed":
             logger.info("message_batch: conversation %s is closed — skipping", conversation.id)
+            return
+
+        # Manual seller takeover: if the seller recently replied from the IG
+        # inbox, stay silent until the auto-resume window elapses.
+        from app.config import settings as _settings
+        if is_bot_paused_for_manual_takeover(
+            conversation.last_seller_manual_reply_at,
+            _settings.BOT_AUTO_RESUME_AFTER_HOURS,
+        ):
+            elapsed = datetime.now(timezone.utc) - conversation.last_seller_manual_reply_at
+            logger.info(
+                "message_batch: conversation %s paused (seller manual reply %.2fh ago, window %dh)",
+                conversation.id, elapsed.total_seconds() / 3600,
+                _settings.BOT_AUTO_RESUME_AFTER_HOURS,
+            )
             return
 
         # Check active conv_product state

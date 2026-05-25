@@ -32,10 +32,15 @@ FALLBACK_MODEL = agent_spec.get("decide").fallback_model or "claude-3-5-sonnet-2
 
 
 def _to_anthropic_role(raw_role: str) -> str | None:
-    """Map sellerbot conversation roles to Anthropic API roles."""
+    """Map sellerbot conversation roles to Anthropic API roles.
+
+    `seller_manual` is a message the seller typed themselves from the IG inbox
+    during a takeover — functionally a brand-side outbound, same as `bot`.
+    Mapping it to `assistant` keeps prompt history coherent when the bot resumes.
+    """
     if raw_role == "customer":
         return "user"
-    if raw_role == "bot":
+    if raw_role in ("bot", "seller_manual"):
         return "assistant"
     return None
 

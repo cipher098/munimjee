@@ -1,0 +1,137 @@
+"""Tests for the seller manual takeover feature.
+
+When the seller replies to a customer from Instagram's own inbox, the bot
+should detect it via the echo webhook event, append the message to
+conversation history as `seller_manual`, stamp `last_seller_manual_reply_at`,
+and pause itself until the auto-resume window elapses.
+
+These tests target the pure helpers extracted for that decision logic. The
+end-to-end webhook path (signature → DB write) is exercised manually per the
+plan's verification section.
+"""
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+from app.api.webhooks.instagram import (
+    build_seller_manual_entry,
+    is_known_outbound_mid,
+)
+from app.integrations.claude import _to_anthropic_role
+from app.workers.message_batch import is_bot_paused_for_manual_takeover
+
+
+# ---------------------------------------------------------------------------
+# is_known_outbound_mid — distinguishes bot's own echo from seller manual reply
+# ---------------------------------------------------------------------------
+
+def test_known_mid_in_history_is_classified_as_bot_echo():
+    messages = [
+        {"role": "customer", "content": "kya price?"},
+        {"role": "bot", "content": "1200 rupees", "mid": "MID_BOT_1"},
+    ]
+    assert is_known_outbound_mid(messages, "MID_BOT_1") is True
+
+
+def test_novel_mid_is_classified_as_seller_manual():
+    messages = [
+        {"role": "bot", "content": "1200 rupees", "mid": "MID_BOT_1"},
+    ]
+    assert is_known_outbound_mid(messages, "MID_NEVER_SEEN") is False
+
+
+def test_missing_mid_is_treated_as_seller_manual():
+    """If the echo arrives without a mid, we can't match — err on seller side
+    so the bot doesn't silently swallow a real manual reply."""
+    messages = [{"role": "bot", "content": "1200 rupees", "mid": "MID_BOT_1"}]
+    assert is_known_outbound_mid(messages, None) is False
+    assert is_known_outbound_mid(messages, "") is False
+
+
+def test_empty_history_with_any_mid_is_seller_manual():
+    assert is_known_outbound_mid([], "MID_BOT_1") is False
+    assert is_known_outbound_mid(None, "MID_BOT_1") is False
+
+
+# ---------------------------------------------------------------------------
+# build_seller_manual_entry — shape of the JSONB entry appended to messages
+# ---------------------------------------------------------------------------
+
+def test_build_seller_manual_entry_has_required_shape():
+    fixed_now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    entry = build_seller_manual_entry("hi ji discount mil jayega", "MID_42", now=fixed_now)
+    assert entry["role"] == "seller_manual"
+    assert entry["content"] == "hi ji discount mil jayega"
+    assert entry["mid"] == "MID_42"
+    assert entry["timestamp"] == fixed_now.isoformat()
+
+
+def test_build_seller_manual_entry_omits_mid_when_missing():
+    entry = build_seller_manual_entry("hi", None)
+    assert "mid" not in entry
+    assert entry["role"] == "seller_manual"
+    assert entry["content"] == "hi"
+
+
+def test_build_seller_manual_entry_handles_empty_text():
+    """Echo for an image-only manual reply has no text — we still want to
+    record something so the timestamp+role provide a takeover signal."""
+    entry = build_seller_manual_entry("", "MID_99")
+    assert entry["content"] == ""
+    assert entry["role"] == "seller_manual"
+
+
+# ---------------------------------------------------------------------------
+# is_bot_paused_for_manual_takeover — auto-resume window math
+# ---------------------------------------------------------------------------
+
+def test_never_paused_when_no_manual_reply_recorded():
+    assert is_bot_paused_for_manual_takeover(None, window_hours=6) is False
+
+
+def test_paused_within_window():
+    now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    one_hour_ago = now - timedelta(hours=1)
+    assert is_bot_paused_for_manual_takeover(one_hour_ago, 6, now=now) is True
+
+
+def test_resumed_after_window():
+    now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    seven_hours_ago = now - timedelta(hours=7)
+    assert is_bot_paused_for_manual_takeover(seven_hours_ago, 6, now=now) is False
+
+
+def test_resumed_exactly_at_window_boundary():
+    """Right at the boundary the bot is NOT paused — strict `<` window."""
+    now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    six_hours_ago = now - timedelta(hours=6)
+    assert is_bot_paused_for_manual_takeover(six_hours_ago, 6, now=now) is False
+
+
+def test_zero_window_means_never_paused():
+    """Useful as an operational kill-switch: setting BOT_AUTO_RESUME_AFTER_HOURS=0
+    instantly resumes every paused conversation on the next customer message."""
+    now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    just_now = now - timedelta(seconds=1)
+    assert is_bot_paused_for_manual_takeover(just_now, window_hours=0, now=now) is False
+
+
+# ---------------------------------------------------------------------------
+# _to_anthropic_role — seller_manual must map to assistant so resumed bot
+# sees the seller's manual turn in Claude's prompt history.
+# ---------------------------------------------------------------------------
+
+def test_seller_manual_role_maps_to_assistant():
+    assert _to_anthropic_role("seller_manual") == "assistant"
+
+
+def test_bot_role_still_maps_to_assistant():
+    assert _to_anthropic_role("bot") == "assistant"
+
+
+def test_customer_role_still_maps_to_user():
+    assert _to_anthropic_role("customer") == "user"
+
+
+def test_unknown_role_returns_none():
+    assert _to_anthropic_role("admin") is None

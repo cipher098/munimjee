@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
@@ -109,8 +110,17 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
         return
 
     message = event.get("message", {})
-    if not message or message.get("is_echo"):
-        # Ignore echo events (messages the bot itself sent)
+    if not message:
+        return
+
+    # Echo events fire for every outbound message from the seller's IG account —
+    # both the bot's own sends AND the seller replying manually from IG's inbox.
+    # We classify by mid: if the echo's mid matches one we already stored on a
+    # bot turn, it's our own send (drop). Otherwise, the seller typed it
+    # manually in IG → record it + stamp last_seller_manual_reply_at so the
+    # bot pauses for this conversation.
+    if message.get("is_echo"):
+        await _handle_echo_event(sender_id, recipient_id, message, db)
         return
 
     text: str | None = message.get("text")
@@ -177,6 +187,83 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
         if reply_to_mid:
             logger.info("reply_to detected: mid=%s text=%r", reply_to_mid, text)
         _queue_and_schedule({"type": "text", "text": text, "reply_to_mid": reply_to_mid, "mid": incoming_mid})
+
+
+def is_known_outbound_mid(messages: list[dict], mid: str | None) -> bool:
+    """True if this Instagram message_id is already on record in conversation history.
+
+    Used to distinguish the bot's own echo (we sent it, we stored the mid) from
+    a seller's manual reply typed in IG's inbox (mid is novel to us). Returns
+    False when mid is falsy — without a mid we can't match anything, so we err
+    on the side of "treat as seller manual" to avoid silently swallowing real
+    seller activity.
+    """
+    if not mid:
+        return False
+    for entry in messages or []:
+        if entry.get("mid") == mid:
+            return True
+    return False
+
+
+def build_seller_manual_entry(text: str, mid: str | None, now: datetime | None = None) -> dict:
+    """Construct the JSONB entry to append to conversation.messages for a manual reply."""
+    entry: dict = {
+        "role": "seller_manual",
+        "content": text or "",
+        "timestamp": (now or datetime.now(timezone.utc)).isoformat(),
+    }
+    if mid:
+        entry["mid"] = mid
+    return entry
+
+
+async def _handle_echo_event(
+    seller_page_id: str,
+    customer_ig_id: str,
+    message: dict,
+    db: AsyncSession,
+) -> None:
+    """Classify echo: bot's own send → drop. Seller manual reply → record + stamp."""
+    echo_mid = message.get("mid")
+    echo_text = message.get("text") or ""
+
+    seller = await _get_seller_by_page_id(seller_page_id, db)
+    if not seller:
+        # Echo for a page we don't manage — nothing to do.
+        return
+
+    # Find the active conversation with this customer. Echoes only matter when
+    # there's an existing thread; if there isn't one, it was a seller-initiated
+    # outbound that we never tracked — ignore.
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.seller_id == seller.id,
+            Conversation.customer_instagram_id == customer_ig_id,
+            Conversation.status == "active",
+        )
+    )
+    conversation = result.scalar_one_or_none()
+    if not conversation:
+        return
+
+    if is_known_outbound_mid(conversation.messages or [], echo_mid):
+        # Bot's own echo (or duplicate webhook delivery) — already recorded.
+        return
+
+    msgs = list(conversation.messages or [])
+    msgs.append(build_seller_manual_entry(echo_text, echo_mid))
+    conversation.messages = msgs
+    conversation.last_seller_manual_reply_at = datetime.now(timezone.utc)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+    logger.info(
+        "seller manual reply detected for conversation %s (text=%r) — bot paused",
+        conversation.id, echo_text,
+    )
 
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:

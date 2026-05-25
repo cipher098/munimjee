@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     DASHBOARD_PASSWORD: str = "changeme"
     DASHBOARD_ALLOWED_PHONES: List[str] = ["8233089333", "7023456161"]
 
+    # If the seller replies manually from the IG inbox, the bot pauses for that
+    # conversation. The clock resets on every manual reply; after this many
+    # hours of seller silence, the bot resumes on the next customer message.
+    BOT_AUTO_RESUME_AFTER_HOURS: int = 6
+
     class Config:
         env_file = ".env"
         case_sensitive = True
