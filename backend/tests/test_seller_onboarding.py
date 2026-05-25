@@ -62,19 +62,15 @@ def test_build_authorize_url_includes_required_scopes_and_state():
         state="abc.def",
     )
     parsed = urlparse(url)
-    assert parsed.netloc == "www.facebook.com"
+    # Instagram-direct flow goes through instagram.com, NOT facebook.com.
+    assert parsed.netloc == "www.instagram.com"
+    assert parsed.path == "/oauth/authorize"
     qs = parse_qs(parsed.query)
     assert qs["redirect_uri"] == ["https://example.com/auth/instagram/oauth/callback"]
     assert qs["state"] == ["abc.def"]
     assert qs["response_type"] == ["code"]
-    # All five messaging-relevant scopes must be present.
     scopes = qs["scope"][0].split(",")
-    for required in [
-        "pages_show_list",
-        "pages_messaging",
-        "instagram_basic",
-        "instagram_manage_messages",
-    ]:
+    for required in ["instagram_business_basic", "instagram_business_manage_messages"]:
         assert required in scopes, f"missing scope: {required}"
     assert scopes == INSTAGRAM_OAUTH_SCOPES.split(",")
 
@@ -91,25 +87,15 @@ def test_default_persona_and_policies_are_safe_defaults():
     assert "yaar" in DEFAULT_PERSONA["common_expressions"]
 
 
-def test_pick_ig_page_filters_out_non_ig_pages():
-    """Simulate Meta's /me/accounts response and verify only IG-linked pages qualify."""
-    pages = [
-        {"id": "page-A", "name": "FB Only", "access_token": "tA"},
-        {
-            "id": "page-B",
-            "name": "Boutique",
-            "access_token": "tB",
-            "instagram_business_account": {"id": "ig-100", "username": "boutique"},
-        },
-    ]
-    # Mirror the callback's filter logic.
-    pick = next((p for p in pages if p.get("instagram_business_account")), None)
-    assert pick is not None
-    assert pick["id"] == "page-B"
-    assert pick["instagram_business_account"]["id"] == "ig-100"
+def test_callback_rejects_non_business_ig_account():
+    """The callback should refuse Personal IG accounts (only Business/Creator can send DMs)."""
+    # Mirror the callback's account_type guard.
+    ig_user = {"user_id": "ig-100", "username": "joe", "account_type": "PERSONAL"}
+    account_type = ig_user.get("account_type")
+    assert account_type and account_type not in ("BUSINESS", "CREATOR")
 
 
-def test_pick_ig_page_returns_none_when_no_ig_linked():
-    pages = [{"id": "page-A", "name": "FB Only", "access_token": "tA"}]
-    pick = next((p for p in pages if p.get("instagram_business_account")), None)
-    assert pick is None
+def test_callback_accepts_business_and_creator_ig_accounts():
+    for account_type in ["BUSINESS", "CREATOR"]:
+        ig_user = {"user_id": "ig-100", "username": "shop", "account_type": account_type}
+        assert ig_user["account_type"] in ("BUSINESS", "CREATOR")

@@ -15,6 +15,14 @@ class Settings(BaseSettings):
     META_WEBHOOK_SECRET: str = ""     # used for webhook signature verification
     META_VERIFY_TOKEN: str
     META_API_VERSION: str = "v19.0"
+    # Instagram-direct OAuth (Instagram API with Instagram Login). These are
+    # separate from META_APP_ID/SECRET — Meta issues a distinct "Instagram App ID"
+    # under Use cases → Manage messaging on Instagram → API setup with Instagram
+    # login → Set up Instagram business login. Without these, OAuth fails at
+    # token exchange because api.instagram.com rejects the Facebook app secret.
+    INSTAGRAM_APP_ID: str = ""
+    INSTAGRAM_APP_SECRET: str = ""
+    INSTAGRAM_API_VERSION: str = "v22.0"
 
     SARVAM_API_KEY: str = ""
     ANTHROPIC_API_KEY: str

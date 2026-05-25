@@ -13,6 +13,25 @@ up:
     @echo "Postgres: localhost:5433"
     @echo "Redis:    localhost:6379"
 
+# Bring the stack up AND start the Cloudflare tunnel so app.vouchrs.in is reachable.
+# Tunnel runs in the background; logs at ~/cloudflared.log. Ctrl-C does NOT stop it —
+# use `just tunnel-down` to kill it.
+serve:
+    docker compose up -d --build
+    @pkill -f "cloudflared tunnel.*sellerbot" 2>/dev/null || true
+    @nohup cloudflared tunnel --config ~/.cloudflared/config.yml run sellerbot \
+      > ~/cloudflared.log 2>&1 &
+    @sleep 1
+    @echo ""
+    @echo "API:    http://localhost:8000"
+    @echo "Public: https://app.vouchrs.in"
+    @echo "Tunnel log: ~/cloudflared.log  (tail -f to watch)"
+
+# Stop the Cloudflare tunnel (leaves docker containers running).
+tunnel-down:
+    @pkill -f "cloudflared tunnel.*sellerbot" && echo "tunnel stopped" \
+      || echo "no tunnel process found"
+
 # Stop and remove all containers (keeps volumes/data).
 down:
     docker compose down

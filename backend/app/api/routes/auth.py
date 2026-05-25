@@ -19,8 +19,8 @@ from app.integrations.instagram import (
     build_oauth_authorize_url,
     exchange_code_for_user_token,
     exchange_for_long_lived_token,
-    list_user_pages,
-    subscribe_page_to_webhook,
+    fetch_ig_user,
+    subscribe_ig_user_to_messages,
 )
 from app.models.delivery_member import DeliveryMember
 from app.models.seller import Seller
@@ -172,15 +172,17 @@ async def connect_instagram(body: ConnectInstagramRequest, db: AsyncSession = De
 
 
 # ---------------------------------------------------------------------------
-# Instagram self-serve OAuth flow
+# Instagram self-serve OAuth flow (Instagram-direct, NOT Facebook Login)
 # ---------------------------------------------------------------------------
 # Seller hits /auth/instagram/oauth/start?seller_id=...
-#   → we 302 to Facebook Login with a signed `state`.
+#   → we 302 to instagram.com/oauth/authorize with a signed `state`.
 # Meta sends them back to /auth/instagram/oauth/callback?code=...&state=...
-#   → we verify state, exchange code → user token → long-lived token,
-#     list their FB pages, pick the one with an IG business account,
-#     persist tokens + page IDs on the Seller row, subscribe the webhook,
-#     and redirect to /onboarding?step=done.
+#   → we verify state, exchange code → short token → long-lived token,
+#     fetch the IG account info via graph.instagram.com/me,
+#     persist on the Seller row, and redirect to /onboarding?step=done.
+#
+# No Facebook Page involved. Webhook subscription is configured once at the
+# App level in Meta dashboard (Webhooks → Instagram → messages), not per seller.
 
 
 def _oauth_redirect_uri(request: Request) -> str:
@@ -265,43 +267,61 @@ async def instagram_oauth_callback(
 
     redirect_uri = _oauth_redirect_uri(request)
     try:
-        user_token = await exchange_code_for_user_token(code, redirect_uri)
-        long_lived = await exchange_for_long_lived_token(user_token)
-        pages = await list_user_pages(long_lived)
-    except Exception as exc:
-        logger.exception("OAuth token exchange / page list failed: %s", exc)
-        return RedirectResponse(url=f"/onboarding?error=token_exchange_failed", status_code=302)
+        code_resp = await exchange_code_for_user_token(code, redirect_uri)
+        short_token = code_resp["access_token"]
+        # user_id is returned by the code-exchange response directly — use it as
+        # a fallback if /me later fails or isn't reachable on this token type.
+        prelim_user_id = code_resp.get("user_id")
 
-    # Pick the first page that has a linked Instagram business account.
-    ig_page = next((p for p in pages if p.get("instagram_business_account")), None)
-    if not ig_page:
-        logger.warning("Seller %s OAuth: no FB page has an Instagram business account linked", seller_id)
+        try:
+            long_lived = await exchange_for_long_lived_token(short_token)
+        except Exception as long_lived_exc:
+            logger.warning("Long-lived token exchange failed (%s) — falling back to short-lived", long_lived_exc)
+            long_lived = short_token
+
+        try:
+            ig_user = await fetch_ig_user(long_lived)
+        except Exception as me_exc:
+            logger.warning("graph.instagram.com/me failed (%s) — using user_id from code exchange", me_exc)
+            ig_user = {"user_id": prelim_user_id}
+    except Exception as exc:
+        logger.exception("Instagram OAuth token exchange failed: %s", exc)
+        return RedirectResponse(url="/onboarding?error=token_exchange_failed", status_code=302)
+
+    ig_user_id = ig_user.get("user_id") or ig_user.get("id")
+    if not ig_user_id:
+        logger.warning("Seller %s OAuth: /me returned no user_id: %s", seller_id, ig_user)
         return RedirectResponse(url="/onboarding?error=no_instagram_account", status_code=302)
 
-    page_id = ig_page["id"]
-    page_access_token = ig_page["access_token"]
-    ig_account = ig_page["instagram_business_account"]
-    ig_user_id = ig_account["id"]
+    account_type = ig_user.get("account_type")
+    if account_type and account_type not in ("BUSINESS", "CREATOR"):
+        logger.warning("Seller %s OAuth: IG account is %s, not Business/Creator", seller_id, account_type)
+        return RedirectResponse(url="/onboarding?error=not_business_account", status_code=302)
 
-    # Subscribe this page to our webhook so customer DMs flow into the bot.
-    try:
-        await subscribe_page_to_webhook(page_id, page_access_token)
-    except Exception as exc:
-        logger.exception("Webhook subscription failed for page %s: %s", page_id, exc)
-        return RedirectResponse(url=f"/onboarding?error=webhook_subscribe_failed", status_code=302)
-
-    # Persist everything we need to send + receive messages for this seller.
+    # Instagram-direct flow: no Page hop. fb_page_id holds the IG user id so
+    # existing send_message code (which builds URLs as <base>/<fb_page_id>/messages)
+    # hits graph.instagram.com/v22.0/<ig_user_id>/messages correctly.
+    # Webhooks are subscribed at the App level in Meta dashboard, not per account.
+    ig_user_id = str(ig_user_id)
     seller.instagram_id = ig_user_id
-    seller.instagram_page_id = ig_user_id  # webhook lookup key — IG user id, NOT FB page id
-    seller.fb_page_id = page_id            # used by InstagramClient as the messaging endpoint
-    seller.instagram_token = page_access_token  # PAGE access token — required for /me/messages
-    seller.instagram_token_expires_at = None    # page tokens don't expire while perms are granted
+    seller.instagram_page_id = ig_user_id
+    seller.fb_page_id = ig_user_id
+    seller.instagram_token = long_lived
+    seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
     seller.onboarding_state = "instagram_connected"
     await db.commit()
 
+    # Subscribe this IG account to the app's `messages` webhook. Without this,
+    # Meta won't fire webhook events for this seller's DMs.
+    try:
+        sub_resp = await subscribe_ig_user_to_messages(ig_user_id, long_lived)
+        logger.info("Subscribed IG %s to messages webhook: %s", ig_user_id, sub_resp)
+    except Exception as sub_exc:
+        logger.warning("Failed to subscribe IG %s to webhook: %s", ig_user_id, sub_exc)
+
     logger.info(
-        "Seller %s connected Instagram: page=%s ig_user=%s username=%s",
-        seller_id, page_id, ig_user_id, ig_account.get("username"),
+        "Seller %s connected Instagram (direct flow): ig_user=%s username=%s",
+        seller_id, ig_user_id, ig_user.get("username"),
     )
     return RedirectResponse(url="/onboarding?step=done", status_code=302)
 

@@ -68,9 +68,12 @@
         </p>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-sm text-blue-900">
           <strong>Before you click:</strong> your Instagram account must be a
-          <em>Business</em> or <em>Creator</em> account, and it must be linked
-          to a Facebook Page. If it isn't, do that first in the Instagram app:
-          Settings → Account → Switch to Professional Account.
+          <em>Business</em> or <em>Creator</em> account. If it isn't, in the
+          Instagram app: Settings → For professionals → Switch to professional
+          account → Business.
+          <br /><br />
+          You'll be sent to instagram.com to authorize.
+          <strong>No Facebook account or Page is required.</strong>
         </div>
         <a id="connect-ig-btn" href="#"
            class="block w-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400
@@ -79,7 +82,7 @@
           Connect Instagram
         </a>
         <p class="text-xs text-gray-500 mt-3 text-center">
-          You'll be redirected to facebook.com to authorise.
+          You'll be redirected to instagram.com to authorise.
         </p>
       </div>
 
@@ -134,9 +137,9 @@
     // Deep-link handling: after Meta callback we land on /onboarding?step=done or ?error=...
     if (params.get("error")) {
       const errors = {
-        no_instagram_account: "We could not find an Instagram business account linked to your Facebook page. Convert your IG to a Business account and link it to a Facebook page, then try again.",
+        no_instagram_account: "We couldn't read your Instagram account from Meta. Make sure your Instagram is a Business or Creator account, then try again.",
+        not_business_account: "Your Instagram account isn't a Business or Creator account. Open the Instagram app → Settings → For professionals → Switch to professional account → Business. Then try again.",
         token_exchange_failed: "Meta rejected the login. Try again, or contact support if it persists.",
-        webhook_subscribe_failed: "Connected Instagram but couldn't subscribe the webhook. Contact support.",
       };
       showError(errors[params.get("error")] || ("OAuth error: " + params.get("error")));
       showStep(2);
