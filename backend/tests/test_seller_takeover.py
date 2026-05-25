@@ -18,7 +18,10 @@ from app.api.webhooks.instagram import (
     is_known_outbound_mid,
 )
 from app.integrations.claude import _to_anthropic_role
-from app.workers.message_batch import is_bot_paused_for_manual_takeover
+from app.workers.message_batch import (
+    extract_customer_text_entries,
+    is_bot_paused_for_manual_takeover,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -123,6 +126,50 @@ def test_minute_granularity_supports_short_windows():
     three_minutes_ago = now - timedelta(minutes=3)
     assert is_bot_paused_for_manual_takeover(one_minute_ago, window_minutes=2, now=now) is True
     assert is_bot_paused_for_manual_takeover(three_minutes_ago, window_minutes=2, now=now) is False
+
+
+# ---------------------------------------------------------------------------
+# extract_customer_text_entries — what we preserve in history during pause
+# ---------------------------------------------------------------------------
+
+def test_extract_customer_text_preserves_each_text_event_with_mid():
+    fixed_now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    events = [
+        {"type": "text", "text": "200 wali dedo", "mid": "MID_C1"},
+        {"type": "text", "text": "Nhi sasti chaiye", "mid": "MID_C2"},
+    ]
+    out = extract_customer_text_entries(events, now=fixed_now)
+    assert len(out) == 2
+    assert out[0] == {
+        "role": "customer", "content": "200 wali dedo",
+        "timestamp": fixed_now.isoformat(), "mid": "MID_C1",
+    }
+    assert out[1]["content"] == "Nhi sasti chaiye"
+    assert out[1]["mid"] == "MID_C2"
+
+
+def test_extract_customer_text_skips_non_text_events():
+    """Image/reel events aren't preserved during pause — seller will see them in IG anyway."""
+    events = [
+        {"type": "image", "image_url": "https://example.com/x.jpg"},
+        {"type": "reel", "reel_url": "https://instagram.com/p/abc"},
+        {"type": "text", "text": "still here"},
+    ]
+    out = extract_customer_text_entries(events)
+    assert len(out) == 1
+    assert out[0]["content"] == "still here"
+
+
+def test_extract_customer_text_skips_empty_text():
+    events = [{"type": "text", "text": ""}, {"type": "text", "text": "  hi  "}]
+    out = extract_customer_text_entries(events)
+    assert len(out) == 1
+    assert out[0]["content"] == "  hi  "
+
+
+def test_extract_customer_text_omits_mid_when_missing():
+    out = extract_customer_text_entries([{"type": "text", "text": "no mid"}])
+    assert "mid" not in out[0]
 
 
 # ---------------------------------------------------------------------------

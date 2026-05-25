@@ -31,6 +31,28 @@ def is_bot_paused_for_manual_takeover(
     return (current - last_seller_manual_reply_at) < timedelta(minutes=window_minutes)
 
 
+def extract_customer_text_entries(events: list[dict], now: datetime | None = None) -> list[dict]:
+    """Turn the worker's queued text events into JSONB rows for conversation.messages.
+
+    Used to preserve customer messages during a seller takeover pause — the
+    reply path is skipped, but we still want the bot to see what was said
+    once it resumes.
+    """
+    ts = (now or datetime.now(timezone.utc)).isoformat()
+    out: list[dict] = []
+    for event in events:
+        if event.get("type") != "text":
+            continue
+        text = event.get("text")
+        if not text:
+            continue
+        entry: dict = {"role": "customer", "content": text, "timestamp": ts}
+        if event.get("mid"):
+            entry["mid"] = event["mid"]
+        out.append(entry)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Redis helpers (sync wrappers — used from the async webhook handler)
 # ---------------------------------------------------------------------------
@@ -127,17 +149,26 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             return
 
         # Manual seller takeover: if the seller recently replied from the IG
-        # inbox, stay silent until the auto-resume window elapses.
+        # inbox, stay silent until the auto-resume window elapses. We still
+        # record customer text messages to conversation history so the bot has
+        # the full context when it resumes — only reply generation is skipped.
         from app.config import settings as _settings
         if is_bot_paused_for_manual_takeover(
             conversation.last_seller_manual_reply_at,
             _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
         ):
             elapsed = datetime.now(timezone.utc) - conversation.last_seller_manual_reply_at
+            new_entries = extract_customer_text_entries(events)
+            if new_entries:
+                msgs = list(conversation.messages or [])
+                msgs.extend(new_entries)
+                conversation.messages = msgs
+                await db.commit()
             logger.info(
-                "message_batch: conversation %s paused (seller manual reply %.1fm ago, window %dm)",
+                "message_batch: conversation %s paused (seller manual reply %.1fm ago, window %dm) — recorded %d customer msg(s) without replying",
                 conversation.id, elapsed.total_seconds() / 60,
                 _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+                len(new_entries),
             )
             return
 
