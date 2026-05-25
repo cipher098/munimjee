@@ -48,8 +48,9 @@ class Settings(BaseSettings):
 
     # If the seller replies manually from the IG inbox, the bot pauses for that
     # conversation. The clock resets on every manual reply; after this many
-    # hours of seller silence, the bot resumes on the next customer message.
-    BOT_AUTO_RESUME_AFTER_HOURS: int = 6
+    # minutes of seller silence, the bot resumes on the next customer message.
+    # 360 minutes = 6h default; smaller values are useful during testing.
+    BOT_AUTO_RESUME_AFTER_MINUTES: int = 360
 
     class Config:
         env_file = ".env"

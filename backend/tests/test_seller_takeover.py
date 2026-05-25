@@ -82,38 +82,47 @@ def test_build_seller_manual_entry_handles_empty_text():
 
 
 # ---------------------------------------------------------------------------
-# is_bot_paused_for_manual_takeover — auto-resume window math
+# is_bot_paused_for_manual_takeover — auto-resume window math (minutes)
 # ---------------------------------------------------------------------------
 
 def test_never_paused_when_no_manual_reply_recorded():
-    assert is_bot_paused_for_manual_takeover(None, window_hours=6) is False
+    assert is_bot_paused_for_manual_takeover(None, window_minutes=360) is False
 
 
 def test_paused_within_window():
     now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
-    one_hour_ago = now - timedelta(hours=1)
-    assert is_bot_paused_for_manual_takeover(one_hour_ago, 6, now=now) is True
+    five_minutes_ago = now - timedelta(minutes=5)
+    assert is_bot_paused_for_manual_takeover(five_minutes_ago, 360, now=now) is True
 
 
 def test_resumed_after_window():
     now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
     seven_hours_ago = now - timedelta(hours=7)
-    assert is_bot_paused_for_manual_takeover(seven_hours_ago, 6, now=now) is False
+    assert is_bot_paused_for_manual_takeover(seven_hours_ago, 360, now=now) is False
 
 
 def test_resumed_exactly_at_window_boundary():
     """Right at the boundary the bot is NOT paused — strict `<` window."""
     now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
-    six_hours_ago = now - timedelta(hours=6)
-    assert is_bot_paused_for_manual_takeover(six_hours_ago, 6, now=now) is False
+    exactly_360_min_ago = now - timedelta(minutes=360)
+    assert is_bot_paused_for_manual_takeover(exactly_360_min_ago, 360, now=now) is False
 
 
 def test_zero_window_means_never_paused():
-    """Useful as an operational kill-switch: setting BOT_AUTO_RESUME_AFTER_HOURS=0
+    """Useful as an operational kill-switch: setting BOT_AUTO_RESUME_AFTER_MINUTES=0
     instantly resumes every paused conversation on the next customer message."""
     now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
     just_now = now - timedelta(seconds=1)
-    assert is_bot_paused_for_manual_takeover(just_now, window_hours=0, now=now) is False
+    assert is_bot_paused_for_manual_takeover(just_now, window_minutes=0, now=now) is False
+
+
+def test_minute_granularity_supports_short_windows():
+    """The whole point of the minutes rename: short windows (e.g. 2m) work."""
+    now = datetime(2026, 5, 26, 12, 0, 0, tzinfo=timezone.utc)
+    one_minute_ago = now - timedelta(minutes=1)
+    three_minutes_ago = now - timedelta(minutes=3)
+    assert is_bot_paused_for_manual_takeover(one_minute_ago, window_minutes=2, now=now) is True
+    assert is_bot_paused_for_manual_takeover(three_minutes_ago, window_minutes=2, now=now) is False
 
 
 # ---------------------------------------------------------------------------

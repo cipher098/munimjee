@@ -21,14 +21,14 @@ _TASK_KEY_PREFIX = "msg_batch_task:"
 
 def is_bot_paused_for_manual_takeover(
     last_seller_manual_reply_at: datetime | None,
-    window_hours: int,
+    window_minutes: int,
     now: datetime | None = None,
 ) -> bool:
     """True when a recent seller manual reply puts the bot in takeover mode."""
     if last_seller_manual_reply_at is None:
         return False
     current = now or datetime.now(timezone.utc)
-    return (current - last_seller_manual_reply_at) < timedelta(hours=window_hours)
+    return (current - last_seller_manual_reply_at) < timedelta(minutes=window_minutes)
 
 
 # ---------------------------------------------------------------------------
@@ -131,13 +131,13 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
         from app.config import settings as _settings
         if is_bot_paused_for_manual_takeover(
             conversation.last_seller_manual_reply_at,
-            _settings.BOT_AUTO_RESUME_AFTER_HOURS,
+            _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
         ):
             elapsed = datetime.now(timezone.utc) - conversation.last_seller_manual_reply_at
             logger.info(
-                "message_batch: conversation %s paused (seller manual reply %.2fh ago, window %dh)",
-                conversation.id, elapsed.total_seconds() / 3600,
-                _settings.BOT_AUTO_RESUME_AFTER_HOURS,
+                "message_batch: conversation %s paused (seller manual reply %.1fm ago, window %dm)",
+                conversation.id, elapsed.total_seconds() / 60,
+                _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
             )
             return
 
