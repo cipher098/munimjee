@@ -123,7 +123,7 @@ INTENT_CLASSIFIER_PROMPT = """Classify this customer's latest message in an ongo
 Return ONLY a valid JSON object, no other text. Use this exact schema:
 {
   "sentiment": "positive|neutral|negative|very_negative",
-  "intent_label": "greeting|feature_question|price_negotiation|walkaway|bulk_inquiry|policy_question|complaint|closing|channel_switch_request|other",
+  "intent_label": "greeting|feature_question|price_negotiation|walkaway|bulk_inquiry|policy_question|complaint|closing|channel_switch_request|disengage|other",
   "is_repeated_dissatisfaction": true|false,
   "confidence": 0.0-1.0
 }
@@ -142,6 +142,14 @@ Definitions:
   - channel_switch_request: customer wants to move off Instagram —
     "WhatsApp pe baat", "call kar lo", "Instagram delete kar diya",
     "phone number do", "DM nahi karna", "email pe", "kahin aur baat"
+  - disengage: customer is softly dropping off — NOT actively negotiating, NOT
+    making a walk-away threat, just signalling they're done. Examples:
+    "ok", "ok thanks", "bye", "ok bye", "nahi chahiye", "let me think",
+    "abhi nahi", "baad mein", "thik hai bye", "rehne do" (when said calmly
+    without a "kahin aur" / "aur se le lunga" follow-up).
+    Critical distinction:
+      - "aur se le lunga" / "kahi aur lunga" → walkaway (adversarial)
+      - "rehne do bhai" / "ok" / "bye" → disengage (passive, ending chat)
   - other: anything else
 - is_repeated_dissatisfaction: TRUE if the message reads like the customer is repeating a
   complaint or rejection they already expressed. Look at RECENT HISTORY for context.

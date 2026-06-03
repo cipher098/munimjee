@@ -21,7 +21,7 @@ from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
-TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
+TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified", "customer_disengaged"}
 
 
 async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) -> None:

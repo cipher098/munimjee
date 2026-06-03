@@ -686,6 +686,12 @@ def _derive_state_from_decision(
         extra["send_image"] = True  # always send product image for show_product
         return "product_inquiry", extra
 
+    if action == "acknowledge_and_close":
+        # Customer disengaged (passive "ok"/"bye"/"nahi chahiye"). Send one warm
+        # acknowledgment and close. customer_disengaged is in TERMINAL_STATES so
+        # advance_conversation flips conversation.status to "closed".
+        return "customer_disengaged", extra
+
     return None, extra
 
 

@@ -138,6 +138,19 @@ rules:
       The bundle has already been pitched once in this conversation. Do NOT pitch it again
       under any circumstance. Treat this turn as a normal single-product negotiation.
 
+  - id: customer_disengaged
+    description: Customer signalled passive disengagement — ack once, then close.
+    priority: 105
+    when:
+      intent_label_in:
+        - disengage
+    reminder: |
+      Customer is softly disengaging (e.g. "ok", "bye", "nahi chahiye", "let me think").
+      Do NOT pitch again. Do NOT counter. Do NOT ask another question.
+      Use action "acknowledge_and_close" — send ONE short warm acknowledgment
+      ("theek hai ji, koi baat nahi — kabhi bhi message kar dena, hum yahin hain")
+      and close the conversation. The bot will fall silent after this turn.
+
   - id: channel_switch_request
     description: Customer wants to move off Instagram — only suggest seller-approved channels.
     priority: 100
