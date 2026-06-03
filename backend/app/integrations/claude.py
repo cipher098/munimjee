@@ -227,6 +227,7 @@ class ClaudeClient:
             available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
             other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
             bundle_pitched=context.get("bundle_pitched", False),
+            seller_channels=json.dumps(context.get("seller_channels", []), ensure_ascii=False),
         )
 
         system_text, context_block = _split_decision_prompt(prompt)

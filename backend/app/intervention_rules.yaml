@@ -137,3 +137,20 @@ rules:
     reminder: |
       The bundle has already been pitched once in this conversation. Do NOT pitch it again
       under any circumstance. Treat this turn as a normal single-product negotiation.
+
+  - id: channel_switch_request
+    description: Customer wants to move off Instagram — only suggest seller-approved channels.
+    priority: 100
+    when:
+      intent_label_in:
+        - channel_switch_request
+    reminder: |
+      The customer is asking to move the conversation off Instagram. You may ONLY suggest a
+      channel that appears in the "Seller allowed channels" list in CONTEXT.
+      - If that list is empty: politely keep the conversation on Instagram. Example:
+        "Yaar abhi sab kuch yahin Instagram pe handle karte hain — aap yahin batao kya
+         chahiye, main jaldi reply karta hoon."
+      - If the list contains the channel the customer asked for: share that specific value
+        from the list (do not invent or alter it).
+      - NEVER improvise a WhatsApp / phone / email that is not in the list, even if it
+        feels helpful.

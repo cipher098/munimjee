@@ -298,6 +298,7 @@ async def generate_bot_reply(
         "other_inquiry_products": other_inquiry_products,
         "bundle_pitched": conv_product.bundle_pitched if conv_product is not None else False,
         "intent_classification": intent_classification.as_dict() if intent_classification else None,
+        "seller_channels": seller.channels or [],
     })
 
     logger.info(

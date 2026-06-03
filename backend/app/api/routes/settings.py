@@ -1,8 +1,9 @@
-"""Seller settings — policies (COD, returns, delivery)."""
+"""Seller settings — policies (COD, returns, delivery) + allowed channels."""
 import logging
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,3 +58,47 @@ async def save_policies(body: PoliciesUpdate, db: AsyncSession = Depends(get_db)
     await db.commit()
     logger.info("Seller policies updated: %s", seller.policies)
     return {"status": "saved", "policies": seller.policies}
+
+
+# ---------------------------------------------------------------------------
+# Approved alternative channels
+# ---------------------------------------------------------------------------
+
+ChannelType = Literal["whatsapp", "phone", "email"]
+
+
+class Channel(BaseModel):
+    type: ChannelType
+    value: str = Field(min_length=1, max_length=200)
+
+    @field_validator("value")
+    @classmethod
+    def strip_value(cls, v: str) -> str:
+        return v.strip()
+
+
+class ChannelsUpdate(BaseModel):
+    channels: list[Channel] = []
+
+
+@router.get("/channels")
+async def get_channels(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    return {"channels": seller.channels or []}
+
+
+@router.post("/channels")
+async def save_channels(body: ChannelsUpdate, db: AsyncSession = Depends(get_db)):
+    """Replace the seller's approved-channels list. Pass [] to clear."""
+    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    seller.channels = [c.model_dump() for c in body.channels] or None
+    await db.commit()
+    logger.info("Seller channels updated: %s", seller.channels)
+    return {"status": "saved", "channels": seller.channels or []}

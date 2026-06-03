@@ -175,6 +175,24 @@
 
     <button class="btn" id="saveBtn" onclick="save()">Save Policies</button>
   </div>
+
+  <div class="card">
+    <h2>Allowed Alternative Channels</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+      If a customer says "I'm not on Instagram much, can we talk on WhatsApp?", the bot will
+      <em>only</em> suggest channels you've added here. Leave empty to keep every conversation on Instagram.
+    </p>
+
+    <div id="channelRows" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+    <button type="button" id="addChannelBtn"
+            style="margin-top:14px;padding:8px 14px;background:#f3f4f6;border:1px dashed #d1d5db;
+                   border-radius:8px;font-size:13px;color:#555;cursor:pointer;">
+      + Add channel
+    </button>
+
+    <button class="btn" id="saveChannelsBtn" onclick="saveChannels()">Save Channels</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -292,7 +310,64 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  // ---------------------------------------------------------------
+  // Allowed alternative channels
+  // ---------------------------------------------------------------
+  const channelRowsEl = document.getElementById('channelRows');
+
+  function buildChannelRow(channel = { type: 'whatsapp', value: '' }) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+      <select style="width:140px;padding:8px;border:1px solid #ddd;border-radius:8px;">
+        <option value="whatsapp">WhatsApp</option>
+        <option value="phone">Phone</option>
+        <option value="email">Email</option>
+      </select>
+      <input type="text" placeholder="e.g. +919876543210"
+             style="flex:1;padding:8px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+      <button type="button"
+              style="padding:6px 10px;background:#fee2e2;color:#b91c1c;border:none;
+                     border-radius:6px;font-size:12px;cursor:pointer;">Remove</button>
+    `;
+    row.querySelector('select').value = channel.type;
+    row.querySelector('input').value = channel.value || '';
+    row.querySelector('button').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  document.getElementById('addChannelBtn').addEventListener('click', () => {
+    channelRowsEl.appendChild(buildChannelRow());
+  });
+
+  async function loadChannels() {
+    const res = await fetch('/settings/channels');
+    if (!res.ok) return;
+    const data = await res.json();
+    channelRowsEl.innerHTML = '';
+    (data.channels || []).forEach(ch => channelRowsEl.appendChild(buildChannelRow(ch)));
+  }
+
+  async function saveChannels() {
+    const btn = document.getElementById('saveChannelsBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const channels = [...channelRowsEl.children]
+      .map(row => ({
+        type: row.querySelector('select').value,
+        value: row.querySelector('input').value.trim(),
+      }))
+      .filter(ch => ch.value);
+    const res = await fetch('/settings/channels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channels }),
+    });
+    btn.disabled = false; btn.textContent = 'Save Channels';
+    showToast(res.ok ? 'Channels saved' : 'Save failed');
+  }
+
   load();
+  loadChannels();
 </script>
 </body>
 </html>

@@ -47,6 +47,7 @@ IntentLabel = Literal[
     "policy_question",
     "complaint",
     "closing",
+    "channel_switch_request",
     "other",
 ]
 
@@ -136,7 +137,8 @@ def _parse(text: str) -> Classification:
                 data.get("intent_label"),
                 {
                     "greeting", "feature_question", "price_negotiation", "walkaway",
-                    "bulk_inquiry", "policy_question", "complaint", "closing", "other",
+                    "bulk_inquiry", "policy_question", "complaint", "closing",
+                    "channel_switch_request", "other",
                 },
                 "other",
             ),

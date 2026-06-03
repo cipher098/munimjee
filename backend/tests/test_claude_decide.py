@@ -69,6 +69,7 @@ def test_split_decision_prompt_extracts_static_and_dynamic_parts():
         available_products="[]",
         other_inquiry_products="[]",
         bundle_pitched=False,
+        seller_channels="[]",
     )
     system, user = _split_decision_prompt(formatted)
 

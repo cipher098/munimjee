@@ -25,6 +25,11 @@ class Seller(Base):
     onboarding_state = Column(String, nullable=False, default="signed_up")
     persona = Column(JSONB, nullable=True)
     policies = Column(JSONB, nullable=True)  # {cod: bool, return_days: int|null, delivery_days: str|null}
+    # Approved alternative channels the bot is allowed to suggest when the
+    # customer asks to move off Instagram. Shape:
+    #   [{type: "whatsapp"|"phone"|"email", value: "<contact>"}, ...]
+    # Empty/null = bot must keep the conversation on Instagram.
+    channels = Column(JSONB, nullable=True)
     negotiation_style = Column(String, default="medium")  # soft | medium | firm
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

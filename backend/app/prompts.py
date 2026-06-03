@@ -52,6 +52,10 @@ Last shown price to customer: {last_shown_price} (the lowest price the customer 
 Available products: {available_products}
 Other inquiry products (customer already asked about, not yet decided): {other_inquiry_products}
 Bundle already pitched: {bundle_pitched}
+Seller allowed channels: {seller_channels}
+  (empty list = bot must keep the conversation on Instagram; never improvise
+  WhatsApp/phone/email. If non-empty, you may share a value from this list
+  only when the customer explicitly asks to move off Instagram.)
 (The conversation history and latest customer message are provided natively as messages — read them from the message thread, not from this CONTEXT block.)
 
 --- NEGOTIATION STRATEGY (follow strictly) ---

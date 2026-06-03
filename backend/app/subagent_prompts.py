@@ -123,7 +123,7 @@ INTENT_CLASSIFIER_PROMPT = """Classify this customer's latest message in an ongo
 Return ONLY a valid JSON object, no other text. Use this exact schema:
 {
   "sentiment": "positive|neutral|negative|very_negative",
-  "intent_label": "greeting|feature_question|price_negotiation|walkaway|bulk_inquiry|policy_question|complaint|closing|other",
+  "intent_label": "greeting|feature_question|price_negotiation|walkaway|bulk_inquiry|policy_question|complaint|closing|channel_switch_request|other",
   "is_repeated_dissatisfaction": true|false,
   "confidence": 0.0-1.0
 }
@@ -139,6 +139,9 @@ Definitions:
   - policy_question: asking about return, refund, COD, exchange, delivery
   - complaint: dissatisfaction about product quality, response time, behavior
   - closing: agreeing to buy / asking payment details ("le lunga", "fix karo", "UPI?")
+  - channel_switch_request: customer wants to move off Instagram —
+    "WhatsApp pe baat", "call kar lo", "Instagram delete kar diya",
+    "phone number do", "DM nahi karna", "email pe", "kahin aur baat"
   - other: anything else
 - is_repeated_dissatisfaction: TRUE if the message reads like the customer is repeating a
   complaint or rejection they already expressed. Look at RECENT HISTORY for context.
