@@ -702,8 +702,12 @@ def _derive_state_from_decision(
 
     if action == "acknowledge_and_close":
         # Customer disengaged (passive "ok"/"bye"/"nahi chahiye"). Send one warm
-        # acknowledgment and close. customer_disengaged is in TERMINAL_STATES so
-        # advance_conversation flips conversation.status to "closed".
+        # acknowledgment, then go quiet via conversation.disengage_paused_until.
+        # The conversation stays active so a follow-up customer message lands on
+        # this conversation (not a new one with a fresh greeting). The pause
+        # gate in the batch worker suppresses replies until the window expires
+        # or the customer sends a re-engagement signal.
+        extra["start_disengage_pause"] = True
         return "customer_disengaged", extra
 
     return None, extra

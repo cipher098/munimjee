@@ -8,6 +8,7 @@ from app.workers.async_runner import run_async
 from datetime import datetime, timedelta, timezone
 import json
 import logging
+import re
 
 from sqlalchemy import select
 from app.workers.celery_app import celery_app
@@ -51,6 +52,54 @@ def extract_customer_text_entries(events: list[dict], now: datetime | None = Non
             entry["mid"] = event["mid"]
         out.append(entry)
     return out
+
+
+def is_bot_paused_for_disengage(
+    disengage_paused_until: datetime | None,
+    now: datetime | None = None,
+) -> bool:
+    """True when the customer-disengagement quiet window has not yet expired."""
+    if disengage_paused_until is None:
+        return False
+    current = now or datetime.now(timezone.utc)
+    return current < disengage_paused_until
+
+
+# Customer messages containing any of these substrings (case-insensitive) lift
+# the disengage pause — they signal renewed buying intent. Intentionally broad:
+# a false positive costs one extra ack, a false negative loses a sale.
+# Note: words that commonly appear in negations ("chahiye" → "nahi chahiye",
+# "milega" → "nahi milega") are deliberately OUT — too easy to invert meaning.
+_REENGAGE_KEYWORDS = (
+    "price", "kitne", "kitna", "dam", "rate",
+    "le lunga", "le lungi", "lelo", "le do", "dedo",
+    "fix karo", "fix kar do", "confirm",
+    "yes", "haan", "accept",
+    "order", "buy", "purchase",
+    "lunga", "lungi", "leta hoon", "leti hoon",
+)
+_REENGAGE_NUMBER_RE = re.compile(r"\d+")
+# If the customer's text contains any of these negation markers we ignore
+# keyword/number matches — likely a polite refusal ("nahi chahiye, 0 interest").
+_NEGATION_MARKERS = ("nahi", "nahin", "no thanks", "not interested", "mat ")
+
+
+def is_reengagement_signal(text: str | None) -> bool:
+    """True when the customer's text shows buying intent and the disengage
+    pause should drop. Keyword / digit / question-mark detection, gated by
+    a negation check so "nahi chahiye" stays muted."""
+    if not text:
+        return False
+    lowered = text.lower()
+    if any(neg in lowered for neg in _NEGATION_MARKERS):
+        return False
+    if any(kw in lowered for kw in _REENGAGE_KEYWORDS):
+        return True
+    if _REENGAGE_NUMBER_RE.search(lowered):
+        return True
+    if "?" in text:
+        return True
+    return False
 
 
 def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:
@@ -170,11 +219,39 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             logger.info("message_batch: conversation %s is closed — skipping", conversation.id)
             return
 
+        # Customer disengagement: if the bot already acked a "bye"/"ok" and
+        # the quiet window hasn't elapsed, stay silent. A re-engagement signal
+        # (buying-intent keyword, 2+ digit token, or question mark) clears the
+        # pause immediately so we don't miss a hot lead.
+        from app.config import settings as _settings
+        if is_bot_paused_for_disengage(conversation.disengage_paused_until):
+            text_events = [e for e in events if e.get("type") == "text"]
+            if any(is_reengagement_signal(e.get("text")) for e in text_events):
+                logger.info(
+                    "message_batch: conversation %s disengage pause cleared by re-engagement signal",
+                    conversation.id,
+                )
+                conversation.disengage_paused_until = None
+                await db.commit()
+                # fall through to normal processing
+            else:
+                new_entries = extract_customer_text_entries(events)
+                if new_entries:
+                    msgs = list(conversation.messages or [])
+                    msgs.extend(new_entries)
+                    conversation.messages = msgs
+                    await db.commit()
+                logger.info(
+                    "message_batch: conversation %s disengage-muted (resume at %s) — recorded %d msg(s)",
+                    conversation.id, conversation.disengage_paused_until.isoformat(),
+                    len(new_entries),
+                )
+                return
+
         # Manual seller takeover: if the seller recently replied from the IG
         # inbox, stay silent until the auto-resume window elapses. We still
         # record customer text messages to conversation history so the bot has
         # the full context when it resumes — only reply generation is skipped.
-        from app.config import settings as _settings
         if is_bot_paused_for_manual_takeover(
             conversation.last_seller_manual_reply_at,
             _settings.BOT_AUTO_RESUME_AFTER_MINUTES,

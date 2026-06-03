@@ -65,6 +65,12 @@ class Settings(BaseSettings):
     CUSTOMER_NUDGE_SECOND_AFTER_HOURS: int = 48
     CUSTOMER_NUDGE_SCAN_EVERY_MINUTES: int = 60
 
+    # After the bot acks customer disengagement ("theek hai ji"), stay quiet
+    # for this many minutes. Customer messages within the window are recorded
+    # but not replied to. A re-engagement signal (buying-intent keyword,
+    # number, question mark) lifts the pause immediately. Default 120 = 2h.
+    CUSTOMER_DISENGAGE_PAUSE_MINUTES: int = 120
+
     class Config:
         env_file = ".env"
         case_sensitive = True

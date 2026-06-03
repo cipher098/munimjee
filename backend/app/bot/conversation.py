@@ -21,7 +21,10 @@ from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
-TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified", "customer_disengaged"}
+TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
+# `customer_disengaged` is NOT terminal — conversation stays active so the
+# customer's next message doesn't spawn a fresh conversation. Bot silence is
+# instead enforced by Conversation.disengage_paused_until (see worker pause gate).
 
 
 async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) -> None:
@@ -326,6 +329,16 @@ async def advance_conversation(
         if conv_product.active_variant_label != selected_variant:
             conv_product.active_variant_label = selected_variant
             conv_product.photos_sent_count = 0
+
+    # Disengagement pause: customer said "bye"/"ok"/"nahi chahiye" and the bot
+    # is sending one warm ack. Stay quiet for CUSTOMER_DISENGAGE_PAUSE_MINUTES.
+    if extra.get("start_disengage_pause"):
+        from app.config import settings as _settings
+        from datetime import timedelta
+        conversation.disengage_paused_until = (
+            datetime.now(timezone.utc)
+            + timedelta(minutes=_settings.CUSTOMER_DISENGAGE_PAUSE_MINUTES)
+        )
 
     if extra.get("agreed_price"):
         if conv_product is not None:
