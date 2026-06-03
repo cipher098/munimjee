@@ -50,7 +50,12 @@ class Settings(BaseSettings):
     # conversation. The clock resets on every manual reply; after this many
     # minutes of seller silence, the bot resumes on the next customer message.
     # 360 minutes = 6h default; smaller values are useful during testing.
-    BOT_AUTO_RESUME_AFTER_MINUTES: int = 360
+    BOT_AUTO_RESUME_AFTER_MINUTES: int = 1
+
+    # How often the periodic beat task scans for expired pauses and dispatches
+    # wake_paused_conversation. 60s is a good default — small enough that
+    # resume feels immediate, large enough that the scan SQL stays cheap.
+    RESUME_SCAN_EVERY_SECONDS: int = 60
 
     class Config:
         env_file = ".env"

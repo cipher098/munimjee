@@ -264,22 +264,9 @@ async def _handle_echo_event(
         "seller manual reply detected for conversation %s (text=%r) — bot paused",
         conversation.id, echo_text,
     )
-
-    # Schedule the proactive wake-up. If no customer message arrives before
-    # the pause window expires, this task fires and replies to any unanswered
-    # customer turns. Earlier-scheduled tasks self-no-op when they fire
-    # (they see the timestamp moved forward or the customer was already
-    # answered), so no revoke logic is needed.
-    from app.workers.message_batch import wake_paused_conversation
-    countdown = settings.BOT_AUTO_RESUME_AFTER_MINUTES * 60
-    wake_paused_conversation.apply_async(
-        args=[str(conversation.id)],
-        countdown=countdown,
-    )
-    logger.info(
-        "scheduled wake_paused_conversation for %s in %ds",
-        conversation.id, countdown,
-    )
+    # No ETA scheduling here — the celery-beat scan_resume_paused_conversations
+    # task picks up expired pauses every RESUME_SCAN_EVERY_SECONDS. That survives
+    # worker restarts and deploys, which the old per-message ETA task did not.
 
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:

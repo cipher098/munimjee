@@ -42,4 +42,8 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.refresh_tokens.refresh_expiring_instagram_tokens",
         "schedule": crontab(hour=10, minute=0),  # daily at 10am IST
     },
+    "scan-resume-paused-conversations": {
+        "task": "app.workers.message_batch.scan_resume_paused_conversations",
+        "schedule": settings.RESUME_SCAN_EVERY_SECONDS,  # default 60s
+    },
 }

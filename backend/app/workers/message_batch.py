@@ -363,6 +363,45 @@ def wake_paused_conversation(conversation_id: str) -> None:
     run_async(_wake_paused_conversation(conversation_id))
 
 
+@celery_app.task(name="app.workers.message_batch.scan_resume_paused_conversations")
+def scan_resume_paused_conversations() -> None:
+    run_async(_scan_resume_paused_conversations())
+
+
+async def _scan_resume_paused_conversations() -> None:
+    """Beat-driven scan that finds conversations whose seller-takeover pause
+    window has expired and dispatches wake_paused_conversation for each.
+
+    Replaces the fragile per-message ETA scheduling: celery countdown tasks
+    sit in worker memory and don't survive restarts, so a deploy during the
+    6h default window silently drops the wake-up. A periodic scan is
+    idempotent and survives any restart.
+    """
+    from app.models.conversation import Conversation
+    from app.database import worker_session
+    from app.config import settings as _settings
+
+    threshold = datetime.now(timezone.utc) - timedelta(
+        minutes=_settings.BOT_AUTO_RESUME_AFTER_MINUTES
+    )
+    async with worker_session() as db:
+        result = await db.execute(
+            select(Conversation.id).where(
+                Conversation.status == "active",
+                Conversation.last_seller_manual_reply_at.isnot(None),
+                Conversation.last_seller_manual_reply_at < threshold,
+            )
+        )
+        ids = [str(cid) for (cid,) in result.all()]
+
+    if not ids:
+        return
+
+    logger.info("scan_resume_paused_conversations: dispatching wake for %d conversation(s)", len(ids))
+    for cid in ids:
+        wake_paused_conversation.apply_async(args=[cid])
+
+
 async def _wake_paused_conversation(conversation_id: str) -> None:
     from app.models.conversation import Conversation
     from app.models.seller import Seller
