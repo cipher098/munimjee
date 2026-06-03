@@ -458,15 +458,18 @@ async def _scan_resume_paused_conversations() -> None:
     from app.database import worker_session
     from app.config import settings as _settings
 
-    threshold = datetime.now(timezone.utc) - timedelta(
-        minutes=_settings.BOT_AUTO_RESUME_AFTER_MINUTES
-    )
+    now = datetime.now(timezone.utc)
+    threshold = now - timedelta(minutes=_settings.BOT_AUTO_RESUME_AFTER_MINUTES)
     async with worker_session() as db:
         result = await db.execute(
             select(Conversation.id).where(
                 Conversation.status == "active",
                 Conversation.last_seller_manual_reply_at.isnot(None),
                 Conversation.last_seller_manual_reply_at < threshold,
+                # Skip conversations still in a disengage pause — waking them
+                # would trigger Claude and immediately re-ack on a "bye" loop.
+                (Conversation.disengage_paused_until.is_(None))
+                | (Conversation.disengage_paused_until < now),
             )
         )
         ids = [str(cid) for (cid,) in result.all()]
@@ -504,6 +507,17 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
             logger.info(
                 "wake_paused_conversation: conversation %s still paused (newer seller reply pushed timestamp) — skip",
                 conversation_id,
+            )
+            return
+
+        # Also honour the disengage pause — without this the seller-takeover
+        # scan would wake the bot during a customer-disengagement quiet window
+        # and immediately fire another acknowledge_and_close, looping every
+        # scan tick.
+        if is_bot_paused_for_disengage(conversation.disengage_paused_until):
+            logger.info(
+                "wake_paused_conversation: conversation %s disengage-paused until %s — skip",
+                conversation_id, conversation.disengage_paused_until.isoformat(),
             )
             return
 
