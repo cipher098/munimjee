@@ -228,6 +228,8 @@ class ClaudeClient:
             other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
             bundle_pitched=context.get("bundle_pitched", False),
             seller_channels=json.dumps(context.get("seller_channels", []), ensure_ascii=False),
+            product_variants=json.dumps(context.get("product_variants", []), ensure_ascii=False),
+            active_variant_label=context.get("active_variant_label") or "none",
         )
 
         system_text, context_block = _split_decision_prompt(prompt)

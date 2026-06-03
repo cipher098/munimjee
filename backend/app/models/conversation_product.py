@@ -25,6 +25,10 @@ class ConversationProduct(Base):
     state = Column(String, nullable=False, default="product_inquiry")  # full state machine per product
     quantity = Column(Integer, default=1)
     bundle_pitched = Column(Boolean, nullable=False, default=False)
+    # When the customer locks in a specific variant ("blue dedo") this stores
+    # the matching Product.variants[*].label so _send_next_product_photo
+    # cycles only that variant's photo list.
+    active_variant_label = Column(String, nullable=True)
     pending_tag_id = Column(UUID(as_uuid=True), ForeignKey("category_tags.id"), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

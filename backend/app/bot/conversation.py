@@ -177,12 +177,27 @@ async def _send_next_product_photo(
     from app.config import settings
     from app.integrations.instagram import InstagramClient
 
-    # Build full photo list
-    all_photos = []
-    if product.photo_url:
-        all_photos.append(product.photo_url)
-    if product.photo_urls:
-        all_photos.extend(product.photo_urls)
+    # Build the photo list. If the customer has locked in a variant
+    # ("blue dedo") and that variant exists on the product, cycle ONLY its
+    # photos. Otherwise fall back to the flat photo_url + photo_urls list.
+    all_photos: list[str] = []
+    variant_label = conv_product.active_variant_label if conv_product else None
+    variants = product.variants or []
+    matched_variant_photos: list[str] = []
+    if variant_label and variants:
+        wanted = variant_label.strip().casefold()
+        for v in variants:
+            if (v.get("label") or "").strip().casefold() == wanted:
+                matched_variant_photos = list(v.get("photo_urls") or [])
+                break
+
+    if matched_variant_photos:
+        all_photos.extend(matched_variant_photos)
+    else:
+        if product.photo_url:
+            all_photos.append(product.photo_url)
+        if product.photo_urls:
+            all_photos.extend(product.photo_urls)
 
     if not all_photos:
         return False
@@ -303,6 +318,14 @@ async def advance_conversation(
     # Bundle pitched — set flag to prevent repeat
     if extra.get("bundle_pitch") and conv_product is not None:
         conv_product.bundle_pitched = True
+
+    # Variant lock-in: customer picked a specific color/size. Reset the photo
+    # counter so the next photo cycle starts from this variant's first image.
+    selected_variant = extra.get("selected_variant_label")
+    if selected_variant and conv_product is not None:
+        if conv_product.active_variant_label != selected_variant:
+            conv_product.active_variant_label = selected_variant
+            conv_product.photos_sent_count = 0
 
     if extra.get("agreed_price"):
         if conv_product is not None:

@@ -19,6 +19,10 @@ class Product(Base):
     floor_price = Column(Integer, nullable=False)    # private minimum — never exposed to customer
     photo_url = Column(String, nullable=True)        # S3 URL
     photo_urls = Column(JSONB, nullable=True)        # list of additional photo URLs (beyond primary photo_url)
+    # Variant list — color/size/material. Shape:
+    #   [{"label": "Red", "photo_urls": ["https://...", ...]}, ...]
+    # Empty/null = no variants (use flat photo_url + photo_urls instead).
+    variants = Column(JSONB, nullable=True)
     reel_urls = Column(JSONB, nullable=True)         # list of Instagram reel URLs linked to this product
     warranty_months = Column(Integer, nullable=True)  # None = no warranty
     stock_quantity = Column(Integer, nullable=True)    # None = untracked

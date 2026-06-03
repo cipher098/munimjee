@@ -36,6 +36,7 @@ Return ONLY valid JSON, no other text:
   "price": <int in paise, only for counter/accept/bulk_discount, else null>,
   "product_id": "<uuid of single product if relevant, else null>",
   "product_ids": ["<uuid>", ...],
+  "selected_variant_label": "<exact label string from VARIANTS list if customer just picked one (e.g. 'Red'), else null>",
   "rejected_product_ids": ["<uuid of EVERY product the customer dismissed — match name from Available products. EXAMPLES: 'wooden black gold hata do' → wooden black gold uuid; 'led nahi chahiye' → led clock uuid; 'dono toh nahi lungi, X hata do' → X uuid. Miss none. Use [] only if zero rejections.>"],
   "customer_intent": "hot|warm|cold|bulk",
   "bulk_quantity": <int if customer mentioned a quantity > 1, else null>,
@@ -52,6 +53,16 @@ Last shown price to customer: {last_shown_price} (the lowest price the customer 
 Available products: {available_products}
 Other inquiry products (customer already asked about, not yet decided): {other_inquiry_products}
 Bundle already pitched: {bundle_pitched}
+Variants for current product: {product_variants}
+  (list of available variants like color/size — each has a "label" and its
+   own photo set. Mention the labels when the customer asks "kya colors hain"
+   / "kaunse size milte hain". When the customer picks one ("blue dedo"),
+   set selected_variant_label to the matching label string so subsequent
+   product photos cycle ONLY that variant.)
+Active variant label: {active_variant_label}
+  (the variant the customer has already locked in this conversation, or
+   "none" if none. Do NOT reset this unless the customer explicitly
+   switches to a different variant.)
 Seller allowed channels: {seller_channels}
   (empty list = bot must keep the conversation on Instagram; never improvise
   WhatsApp/phone/email. If non-empty, you may share a value from this list

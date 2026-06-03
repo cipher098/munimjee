@@ -299,6 +299,11 @@ async def generate_bot_reply(
         "bundle_pitched": conv_product.bundle_pitched if conv_product is not None else False,
         "intent_classification": intent_classification.as_dict() if intent_classification else None,
         "seller_channels": seller.channels or [],
+        "product_variants": [
+            {"label": v.get("label"), "photo_count": len(v.get("photo_urls") or [])}
+            for v in (product.variants or [])
+        ] if product else [],
+        "active_variant_label": conv_product.active_variant_label if conv_product is not None else None,
     })
 
     logger.info(
@@ -534,6 +539,15 @@ def _derive_state_from_decision(
     # Always forward rejected_product_ids regardless of action chosen
     if decision.get("rejected_product_ids"):
         extra["rejected_product_ids"] = list(decision["rejected_product_ids"])
+
+    # Forward a variant pick regardless of action — customer can lock in
+    # "blue dedo" mid-negotiation and the photo cycle should switch.
+    selected_variant = (decision.get("selected_variant_label") or "").strip()
+    if selected_variant and product and product.variants:
+        # Only accept labels that actually exist on the product.
+        valid_labels = {(v.get("label") or "").strip().casefold() for v in (product.variants or [])}
+        if selected_variant.casefold() in valid_labels:
+            extra["selected_variant_label"] = selected_variant
 
     # ── Sticky-state guard ───────────────────────────────────────────────
     # Once a deal is agreed (awaiting_payment), don't let the model regress us
