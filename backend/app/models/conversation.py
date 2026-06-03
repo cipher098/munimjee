@@ -21,6 +21,9 @@ class Conversation(Base):
     # Set whenever a seller replies manually from the IG inbox (echo with novel mid).
     # The batch worker treats the bot as paused while now() - this < BOT_AUTO_RESUME_AFTER_HOURS.
     last_seller_manual_reply_at = Column(DateTime(timezone=True), nullable=True)
+    # Two-nudge follow-up state for silent customers.
+    # Shape: {"count": 0|1|2, "last_nudged_at": "<iso8601>" | null}
+    nudge_state = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

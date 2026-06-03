@@ -57,6 +57,14 @@ class Settings(BaseSettings):
     # resume feels immediate, large enough that the scan SQL stays cheap.
     RESUME_SCAN_EVERY_SECONDS: int = 60
 
+    # Two-nudge follow-up for silent customers. After the last customer message,
+    # at FIRST hours we send one polite nudge; at SECOND hours another; then we
+    # stop. Scan runs every CUSTOMER_NUDGE_SCAN_EVERY_MINUTES, finds eligible
+    # conversations, and dispatches send_nudge for each.
+    CUSTOMER_NUDGE_FIRST_AFTER_HOURS: int = 24
+    CUSTOMER_NUDGE_SECOND_AFTER_HOURS: int = 48
+    CUSTOMER_NUDGE_SCAN_EVERY_MINUTES: int = 60
+
     class Config:
         env_file = ".env"
         case_sensitive = True
