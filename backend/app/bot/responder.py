@@ -57,7 +57,7 @@ async def generate_bot_reply(
 
     from app.bot.intent_classifier import classify as _classify_intent
     from app.integrations.claude import ClaudeClient
-    from app.integrations.sarvam import SarvamClient
+    from app.integrations import llm_provider
     from app.models.category_tag import CategoryTag
 
     # Kick off intent classification in parallel with the synchronous
@@ -71,8 +71,11 @@ async def generate_bot_reply(
     from app.models.product_tag_value import ProductTagValue
     from app.models.seller_alert import SellerAlert
 
+    # Kept for the few subagent calls below (extract_feature_query, etc.) which
+    # are not part of the LLMProvider abstraction. The customer-facing decide()
+    # and generate_reply() routes go through `llm_provider.resolve_and_call`
+    # so per-seller model overrides + fallback work.
     claude = ClaudeClient()
-    sarvam = SarvamClient()
 
     # Resolve price state: conv_product is the source of truth.
     # When no conv_product exists yet (no product identified), default to zero/none.
@@ -285,7 +288,7 @@ async def generate_bot_reply(
     full_history = (conversation.messages or [])[-_FULL_HIST_CAP:]
     decision_history = full_history
     effective_state = conv_product.state if conv_product is not None else "greeting"
-    decision = await claude.decide({
+    decision = await llm_provider.resolve_and_call("decide", seller, {
         "state": effective_state,
         "customer_message": customer_message,
         "negotiation_round": effective_negotiation_round,
@@ -462,12 +465,10 @@ async def generate_bot_reply(
         ) if other_inquiry_products else 0,
     }
 
-    # Step 2: Sarvam generates the actual message text
-    try:
-        reply = await sarvam.generate_reply(reply_context)
-    except Exception as exc:
-        logger.warning("Sarvam failed (%s), falling back to Claude for reply", exc)
-        reply = await claude.generate_reply(reply_context)
+    # Step 2: factory picks the reply provider (per-seller preference, falling
+    # back to agents.yaml app default, falling back again to the configured
+    # fallback_provider on error).
+    reply = await llm_provider.resolve_and_call("generate_reply", seller, reply_context)
 
     price_paise = decision.get("price")
     price_str = f"₹{price_paise // 100}" if price_paise else "—"

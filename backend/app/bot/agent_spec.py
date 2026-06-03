@@ -25,8 +25,10 @@ SPECS_PATH = pathlib.Path(__file__).parent.parent / "agents.yaml"
 
 # Last-resort defaults if agents.yaml is unreadable. Kept in sync with the
 # "defaults" block at the top of agents.yaml.
+_BUILTIN_DEFAULT_PROVIDER = "anthropic"
 _BUILTIN_DEFAULT_MODEL = "claude-sonnet-4-20250514"
 _BUILTIN_DEFAULT_MAX_TOKENS = 1024
+_BUILTIN_DEFAULT_FALLBACK_PROVIDER = "anthropic"
 _BUILTIN_DEFAULT_FALLBACK = "claude-3-5-sonnet-20241022"
 
 
@@ -37,6 +39,8 @@ class AgentSpec:
     max_tokens: int
     fallback_model: Optional[str] = None
     description: str = ""
+    provider: str = "anthropic"
+    fallback_provider: Optional[str] = None
 
 
 @functools.lru_cache(maxsize=1)
@@ -55,8 +59,10 @@ def _defaults() -> dict:
     raw = _load_raw()
     block = raw.get("defaults") or {}
     return {
+        "provider": block.get("provider", _BUILTIN_DEFAULT_PROVIDER),
         "model": block.get("model", _BUILTIN_DEFAULT_MODEL),
         "max_tokens": int(block.get("max_tokens", _BUILTIN_DEFAULT_MAX_TOKENS)),
+        "fallback_provider": block.get("fallback_provider", _BUILTIN_DEFAULT_FALLBACK_PROVIDER),
         "fallback_model": block.get("fallback_model", _BUILTIN_DEFAULT_FALLBACK),
     }
 
@@ -75,14 +81,18 @@ def get(name: str) -> AgentSpec:
         logger.debug("agents.yaml has no entry for %r — using defaults", name)
         return AgentSpec(
             name=name,
+            provider=defaults["provider"],
             model=defaults["model"],
             max_tokens=defaults["max_tokens"],
+            fallback_provider=defaults["fallback_provider"],
             fallback_model=defaults["fallback_model"],
         )
     return AgentSpec(
         name=name,
+        provider=entry.get("provider", defaults["provider"]),
         model=entry.get("model", defaults["model"]),
         max_tokens=int(entry.get("max_tokens", defaults["max_tokens"])),
+        fallback_provider=entry.get("fallback_provider", defaults["fallback_provider"]),
         fallback_model=entry.get("fallback_model", defaults["fallback_model"]),
         description=entry.get("description", ""),
     )

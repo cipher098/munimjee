@@ -30,6 +30,12 @@ class Seller(Base):
     #   [{type: "whatsapp"|"phone"|"email", value: "<contact>"}, ...]
     # Empty/null = bot must keep the conversation on Instagram.
     channels = Column(JSONB, nullable=True)
+    # Per-seller LLM provider/model overrides for the two customer-facing
+    # calls. Shape:
+    #   {"decide": {"provider": "...", "model": "..."},
+    #    "reply":  {"provider": "...", "model": "..."}}
+    # Either key omitted = fall back to app defaults from agents.yaml.
+    llm_preferences = Column(JSONB, nullable=True)
     negotiation_style = Column(String, default="medium")  # soft | medium | firm
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

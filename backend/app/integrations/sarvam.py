@@ -1,16 +1,29 @@
-"""Sarvam AI client — generates Hinglish replies in seller's style."""
+"""Sarvam AI client — Hinglish-tuned chat model used as an alternative
+provider for both the bot's thinking call (decide → JSON) and the
+customer-facing reply.
+
+Driven by the multi-provider factory in `llm_provider.py`: every call
+arrives with an explicit `model` and `max_tokens` chosen by the factory
+based on the app default in `agents.yaml` and the seller's
+`llm_preferences` override (if any). Nothing about model selection lives
+in this file.
+
+Errors propagate — the factory catches them and falls back to the
+provider/model in the agent spec's `fallback_provider` / `fallback_model`.
+"""
 import json
 import logging
 
 import httpx
 
+from app.bot import prompt_store
 from app.config import settings
+from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
 
 logger = logging.getLogger(__name__)
 
-SARVAM_API_URL = "https://api.sarvam.ai/v1/chat/completions"
 
-SYSTEM_PROMPT = """You are a sales assistant for an Indian Instagram seller.
+REPLY_SYSTEM_PROMPT = """You are a sales assistant for an Indian Instagram seller.
 Reply EXACTLY in the seller's personal style below. Never break character. Never reveal you are AI.
 
 SELLER STYLE:
@@ -91,13 +104,93 @@ Rules:
 
 
 class SarvamClient:
+    """Thin httpx wrapper around Sarvam's OpenAI-compatible chat
+    completions endpoint. Model + max_tokens are passed in from the
+    factory; no agents.yaml lookup here."""
+
     def __init__(self) -> None:
         self._api_key = settings.SARVAM_API_KEY
+        self._url = settings.SARVAM_API_URL
 
-    async def generate_reply(self, context: dict) -> str:
+    async def _chat(self, *, model: str, max_tokens: int, system: str, user: str, temperature: float = 0.7) -> str:
         if not self._api_key:
             raise RuntimeError("SARVAM_API_KEY not configured")
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+        last_exc: Exception | None = None
+        for attempt in (1, 2):
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    response = await client.post(
+                        self._url,
+                        headers={
+                            "Authorization": f"Bearer {self._api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json=payload,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return (data["choices"][0]["message"]["content"] or "").strip()
+            except (httpx.HTTPError, KeyError, IndexError) as exc:
+                last_exc = exc
+                logger.warning("Sarvam call attempt %d failed (%s)", attempt, exc)
+        assert last_exc is not None
+        raise last_exc
 
+    async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
+        """Run the decide prompt on Sarvam and parse JSON. Raises
+        LLMOutputParseError on malformed output so the factory falls back."""
+        decision_template = await prompt_store.get("decide")
+        last_counter = context.get("last_counter_price")
+        last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
+        last_shown = context.get("last_shown_price")
+        last_shown_str = f"{last_shown} paise (₹{last_shown // 100})" if last_shown else "none yet"
+
+        prompt = decision_template.format(
+            state=context.get("state", ""),
+            customer_message="",
+            listed_price=context.get("listed_price", "unknown"),
+            floor_price=context.get("floor_price", "unknown"),
+            last_counter_price=last_counter_str,
+            last_shown_price=last_shown_str,
+            round_number=context.get("negotiation_round", 0),
+            message_history="",
+            available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
+            other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
+            bundle_pitched=context.get("bundle_pitched", False),
+            seller_channels=json.dumps(context.get("seller_channels", []), ensure_ascii=False),
+            product_variants=json.dumps(context.get("product_variants", []), ensure_ascii=False),
+            active_variant_label=context.get("active_variant_label") or "none",
+        )
+
+        # Sarvam doesn't have prompt caching — send the whole prompt as
+        # the system message, with the customer turn + recent history as
+        # the user message. The DECISION_PROMPT already instructs
+        # "Return ONLY valid JSON" so no extra wrapper is needed.
+        history = context.get("message_history") or []
+        history_str = json.dumps(history[-10:], ensure_ascii=False) if history else "(empty)"
+        customer_msg = context.get("customer_message") or ""
+        user_block = (
+            f"Recent conversation (oldest first):\n{history_str}\n\n"
+            f"Latest customer message: {customer_msg!r}\n\n"
+            "Choose the next action and return ONLY a JSON object — no prose, no code fences."
+        )
+
+        text = await self._chat(
+            model=model, max_tokens=max_tokens,
+            system=prompt, user=user_block, temperature=0.2,
+        )
+        return parse_json_relaxed(text)
+
+    async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
         decision = context.get("decision", {})
         price = decision.get("price")
         negotiation_context = (
@@ -125,7 +218,7 @@ class SarvamClient:
             if other_inquiry else "none"
         )
 
-        system = SYSTEM_PROMPT.format(
+        system = REPLY_SYSTEM_PROMPT.format(
             persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
             product_name=context.get("product_name", "the product"),
             product_description=context.get("product_description") or "No description available",
@@ -150,23 +243,27 @@ class SarvamClient:
             "Generate the seller's next message."
         )
 
-        async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(
-                SARVAM_API_URL,
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "sarvam-2b",
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user_content},
-                    ],
-                    "max_tokens": 150,
-                    "temperature": 0.7,
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"].strip()
+        return await self._chat(
+            model=model, max_tokens=max_tokens,
+            system=system, user=user_content, temperature=0.7,
+        )
+
+
+# ---------------------------------------------------------------------------
+# LLMProvider wrapper used by the factory
+# ---------------------------------------------------------------------------
+
+from app.integrations.llm_provider import LLMProvider as _LLMProvider  # noqa: E402
+
+
+class SarvamProvider(_LLMProvider):
+    name = "sarvam"
+
+    def __init__(self) -> None:
+        self._client = SarvamClient()
+
+    async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
+        return await self._client.decide(context, model=model, max_tokens=max_tokens)
+
+    async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
+        return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)

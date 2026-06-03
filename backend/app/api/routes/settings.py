@@ -102,3 +102,69 @@ async def save_channels(body: ChannelsUpdate, db: AsyncSession = Depends(get_db)
     await db.commit()
     logger.info("Seller channels updated: %s", seller.channels)
     return {"status": "saved", "channels": seller.channels or []}
+
+
+# ---------------------------------------------------------------------------
+# Per-seller LLM model preferences
+# ---------------------------------------------------------------------------
+
+# Whitelist what the dashboard offers. Adding a new model here is a one-line
+# change. Anything outside this set is rejected on save.
+_ALLOWED_DECIDE_MODELS = {
+    "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
+    "sarvam": {"sarvam-m", "sarvam-2b"},
+}
+_ALLOWED_REPLY_MODELS = {
+    "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
+    "sarvam": {"sarvam-m", "sarvam-2b"},
+}
+
+
+class ModelChoice(BaseModel):
+    provider: Literal["anthropic", "sarvam"]
+    model: str = Field(min_length=1, max_length=120)
+
+
+class LlmPreferencesUpdate(BaseModel):
+    decide: ModelChoice | None = None
+    reply: ModelChoice | None = None
+
+
+@router.get("/llm-preferences")
+async def get_llm_preferences(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    return seller.llm_preferences or {}
+
+
+@router.post("/llm-preferences")
+async def save_llm_preferences(body: LlmPreferencesUpdate, db: AsyncSession = Depends(get_db)):
+    """Upsert per-seller LLM overrides. Pass `null` for either key to fall
+    back to the app default from agents.yaml."""
+    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    new_prefs: dict = {}
+    if body.decide is not None:
+        if body.decide.model not in _ALLOWED_DECIDE_MODELS.get(body.decide.provider, set()):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model {body.decide.model!r} not allowed for provider {body.decide.provider!r} on decide",
+            )
+        new_prefs["decide"] = body.decide.model_dump()
+    if body.reply is not None:
+        if body.reply.model not in _ALLOWED_REPLY_MODELS.get(body.reply.provider, set()):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model {body.reply.model!r} not allowed for provider {body.reply.provider!r} on reply",
+            )
+        new_prefs["reply"] = body.reply.model_dump()
+
+    seller.llm_preferences = new_prefs or None
+    await db.commit()
+    logger.info("Seller llm_preferences updated: %s", seller.llm_preferences)
+    return {"status": "saved", "llm_preferences": seller.llm_preferences or {}}

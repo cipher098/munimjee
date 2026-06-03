@@ -193,6 +193,36 @@
 
     <button class="btn" id="saveChannelsBtn" onclick="saveChannels()">Save Channels</button>
   </div>
+
+  <div class="card">
+    <h2>Bot Model Preferences</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+      Pick which model handles your bot's <strong>thinking</strong>
+      (decides the next action) and which handles <strong>replying</strong>
+      (writes the actual Hinglish message). "Use default" keeps you on the
+      app-wide setting in <code>agents.yaml</code>.
+    </p>
+
+    <label style="margin-top:0;">Thinking model</label>
+    <select id="llm_decide">
+      <option value="">Use default</option>
+      <option value="anthropic|claude-sonnet-4-20250514">Anthropic — Claude Sonnet 4</option>
+      <option value="anthropic|claude-3-5-sonnet-20241022">Anthropic — Claude 3.5 Sonnet</option>
+      <option value="sarvam|sarvam-m">Sarvam — M</option>
+    </select>
+    <div class="hint">Picks the JSON action (counter / hold_firm / accept / …). Claude is safer for strict JSON; Sarvam will auto-fall-back to Claude on parse failure.</div>
+
+    <label>Reply model</label>
+    <select id="llm_reply">
+      <option value="">Use default</option>
+      <option value="anthropic|claude-sonnet-4-20250514">Anthropic — Claude Sonnet 4</option>
+      <option value="anthropic|claude-3-5-sonnet-20241022">Anthropic — Claude 3.5 Sonnet</option>
+      <option value="sarvam|sarvam-m">Sarvam — M</option>
+    </select>
+    <div class="hint">Writes the actual message the customer sees. Sarvam M is Hinglish-tuned; Claude is more careful with multi-product/bundle pricing.</div>
+
+    <button class="btn" id="saveLlmBtn" onclick="saveLlmPreferences()">Save Model Preferences</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -366,8 +396,53 @@
     showToast(res.ok ? 'Channels saved' : 'Save failed');
   }
 
+  // ---------------------------------------------------------------
+  // LLM model preferences
+  // ---------------------------------------------------------------
+  function _encodeChoice(provider, model) {
+    return `${provider}|${model}`;
+  }
+
+  function _decodeChoice(value) {
+    if (!value) return null;
+    const [provider, model] = value.split('|');
+    return { provider, model };
+  }
+
+  async function loadLlmPreferences() {
+    const res = await fetch('/settings/llm-preferences');
+    if (!res.ok) return;
+    const prefs = await res.json();
+    document.getElementById('llm_decide').value = prefs.decide
+      ? _encodeChoice(prefs.decide.provider, prefs.decide.model) : '';
+    document.getElementById('llm_reply').value = prefs.reply
+      ? _encodeChoice(prefs.reply.provider, prefs.reply.model) : '';
+  }
+
+  async function saveLlmPreferences() {
+    const btn = document.getElementById('saveLlmBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const body = {
+      decide: _decodeChoice(document.getElementById('llm_decide').value),
+      reply:  _decodeChoice(document.getElementById('llm_reply').value),
+    };
+    const res = await fetch('/settings/llm-preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    btn.disabled = false; btn.textContent = 'Save Model Preferences';
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Save failed');
+    } else {
+      showToast('Model preferences saved');
+    }
+  }
+
   load();
   loadChannels();
+  loadLlmPreferences();
 </script>
 </body>
 </html>

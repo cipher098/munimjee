@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     INSTAGRAM_API_VERSION: str = "v22.0"
 
     SARVAM_API_KEY: str = ""
+    SARVAM_API_URL: str = "https://api.sarvam.ai/v1/chat/completions"
     ANTHROPIC_API_KEY: str
 
     GOOGLE_APPLICATION_CREDENTIALS: str = ""

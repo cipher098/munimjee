@@ -153,19 +153,10 @@ def _split_decision_prompt(formatted_prompt: str) -> tuple[str, str]:
     return static_system, dynamic_user
 
 
-def _parse_json(text: str) -> dict:
-    """Parse JSON from Claude's response, handling code fences and prose wrappers."""
-    text = text.strip()
-    # Strip markdown code fences
-    if text.startswith("```"):
-        text = text.split("\n", 1)[-1]
-        text = text.rsplit("```", 1)[0].strip()
-    # If Claude wrapped JSON in prose, extract the first {...} block
-    start = text.find("{")
-    end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        text = text[start:end + 1]
-    return json.loads(text)
+from app.integrations._json_utils import (  # noqa: F401  (re-export for test compatibility)
+    LLMOutputParseError,
+    parse_json_relaxed as _parse_json,
+)
 
 
 class ClaudeClient:
@@ -204,7 +195,7 @@ class ClaudeClient:
                 )
         return resp
 
-    async def decide(self, context: dict) -> dict:
+    async def decide(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> dict:
         last_counter = context.get("last_counter_price")
         last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
         last_shown = context.get("last_shown_price")
@@ -262,11 +253,13 @@ class ClaudeClient:
             history_for_cache = history
 
         spec = agent_spec.get("decide")
+        effective_model = model or spec.model
+        effective_max_tokens = max_tokens or spec.max_tokens
         if context_block:
             messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
             request_kwargs = dict(
-                model=spec.model,
-                max_tokens=spec.max_tokens,
+                model=effective_model,
+                max_tokens=effective_max_tokens,
                 system=[
                     {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
                 ],
@@ -276,25 +269,20 @@ class ClaudeClient:
             # Marker missing (training dashboard rewrote prompt structure) — degraded path.
             logger.warning("DECISION_PROMPT missing CONTEXT/STRATEGY markers — skipping cache")
             request_kwargs = dict(
-                model=spec.model,
-                max_tokens=spec.max_tokens,
+                model=effective_model,
+                max_tokens=effective_max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-        try:
-            response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
-        except Exception as exc:
-            logger.exception("Claude decide() failed unrecoverably: %s — returning clarify", exc)
-            return {"action": "clarify", "price": None, "reason": "api error"}
-
+        # NB: errors propagate to the LLM-provider factory so it can fall back
+        # to the configured fallback_provider/fallback_model. The old
+        # "return clarify on error" path swallowed failures and prevented
+        # the factory from ever firing the fallback.
+        response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
         text = response.content[0].text.strip()
-        try:
-            return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON decision: %r", text)
-            return {"action": "clarify", "price": None, "reason": "parse error"}
+        return _parse_json(text)  # raises LLMOutputParseError on bad JSON
 
-    async def generate_reply(self, context: dict) -> str:
+    async def generate_reply(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> str:
         decision = context.get("decision", {})
         price = decision.get("price")
         price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
@@ -416,6 +404,8 @@ class ClaudeClient:
         system_text, context_block = _split_reply_prompt(prompt)
 
         spec = agent_spec.get("generate_reply")
+        effective_model = model or spec.model
+        effective_max_tokens = max_tokens or spec.max_tokens
         if context_block:
             current_user_text = context.get("customer_message", "")
             if history and history[-1].get("role") == "customer":
@@ -424,8 +414,8 @@ class ClaudeClient:
                 history_for_cache = history
             messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
             request_kwargs = dict(
-                model=spec.model,
-                max_tokens=spec.max_tokens,
+                model=effective_model,
+                max_tokens=effective_max_tokens,
                 system=[
                     {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
                 ],
@@ -434,17 +424,16 @@ class ClaudeClient:
         else:
             logger.warning("REPLY_PROMPT missing DYNAMIC CONTEXT marker — skipping cache")
             request_kwargs = dict(
-                model=spec.model,
-                max_tokens=spec.max_tokens,
+                model=effective_model,
+                max_tokens=effective_max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-        try:
-            response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
-        except Exception as exc:
-            logger.exception("Claude generate_reply() failed unrecoverably: %s", exc)
-            # Soft fallback — return a safe acknowledgment rather than crashing the conversation.
-            return ""
+        # Propagate errors to the LLM-provider factory for fallback. Old
+        # `return ""` swallow path is gone — factory routes to fallback
+        # provider/model on exception, which is more useful than a silent ""
+        # reply that prints "BOT REPLY :" with nothing.
+        response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
         return response.content[0].text.strip()
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
@@ -523,7 +512,7 @@ class ClaudeClient:
         text = response.content[0].text.strip()
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
+        except LLMOutputParseError:
             logger.error("Claude returned non-JSON catalog match: %r", text)
             return {"product_id": None, "confidence": "low", "reason": "parse error"}
 
@@ -547,7 +536,7 @@ class ClaudeClient:
         text = response.content[0].text.strip()
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
+        except LLMOutputParseError:
             logger.error("Claude returned non-JSON category suggestion: %r", text)
             return {"category_name": None, "tags": []}
 
@@ -569,7 +558,7 @@ class ClaudeClient:
         try:
             result = _parse_json(text)
             return result if isinstance(result, list) else []
-        except json.JSONDecodeError:
+        except LLMOutputParseError:
             logger.error("Claude returned non-JSON tag suggestions: %r", text)
             return []
 
@@ -603,7 +592,7 @@ class ClaudeClient:
         text = response.content[0].text.strip()
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
+        except LLMOutputParseError:
             logger.error("Claude returned non-JSON feature query: %r", text)
             return {"is_feature_question": False, "matched_tag_name": None,
                     "new_tag_name": None, "new_tag_display_name": None,
@@ -622,6 +611,28 @@ class ClaudeClient:
         text = response.content[0].text.strip()
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
+        except LLMOutputParseError:
             logger.error("Claude returned non-JSON persona: %r", text)
             return {}
+
+
+# ---------------------------------------------------------------------------
+# LLMProvider wrapper — exposed via app.integrations.llm_provider for the
+# factory. Subagent methods (vision, catalog, etc.) stay on ClaudeClient
+# directly; only the customer-facing decide / generate_reply go through here.
+# ---------------------------------------------------------------------------
+
+from app.integrations.llm_provider import LLMProvider as _LLMProvider  # noqa: E402
+
+
+class ClaudeProvider(_LLMProvider):
+    name = "anthropic"
+
+    def __init__(self) -> None:
+        self._client = ClaudeClient()
+
+    async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
+        return await self._client.decide(context, model=model, max_tokens=max_tokens)
+
+    async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
+        return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)
