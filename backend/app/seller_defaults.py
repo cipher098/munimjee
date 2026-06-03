@@ -10,7 +10,7 @@ this dict to avoid drift.
 DEFAULT_PERSONA = {
     "greeting_style": "Haan ji, kya chahiye?",
     "negotiation_firmness": "medium",
-    "closing_phrases": ["Done ho gaya", "Pakka"],
+    "closing_phrases": ["Theek hai", "Bilkul"],
     "common_expressions": ["yaar", "theek hai"],
     "hindi_english_ratio": "60% Hindi 40% English",
     "emoji_usage": "light",
