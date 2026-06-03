@@ -21,6 +21,7 @@ from app.integrations.claude import _to_anthropic_role
 from app.workers.message_batch import (
     extract_customer_text_entries,
     is_bot_paused_for_manual_takeover,
+    unanswered_customer_messages,
 )
 
 
@@ -170,6 +171,79 @@ def test_extract_customer_text_skips_empty_text():
 def test_extract_customer_text_omits_mid_when_missing():
     out = extract_customer_text_entries([{"type": "text", "text": "no mid"}])
     assert "mid" not in out[0]
+
+
+# ---------------------------------------------------------------------------
+# unanswered_customer_messages — drives proactive wake-up decision
+# ---------------------------------------------------------------------------
+
+def test_unanswered_empty_history_returns_empty():
+    assert unanswered_customer_messages([]) == []
+    assert unanswered_customer_messages(None) == []
+
+
+def test_unanswered_returns_all_trailing_customer_turns():
+    messages = [
+        {"role": "customer", "content": "kya price?"},
+        {"role": "bot", "content": "1200 rupees"},
+        {"role": "customer", "content": "warranty?"},
+        {"role": "customer", "content": "color options?"},
+    ]
+    out = unanswered_customer_messages(messages)
+    assert len(out) == 2
+    assert [e["content"] for e in out] == ["warranty?", "color options?"]
+
+
+def test_unanswered_stops_at_seller_manual():
+    """Seller manual reply means the customer's prior turns were addressed —
+    only count customer messages that came AFTER it."""
+    messages = [
+        {"role": "customer", "content": "old question"},
+        {"role": "seller_manual", "content": "I handled this manually"},
+        {"role": "customer", "content": "new question"},
+    ]
+    out = unanswered_customer_messages(messages)
+    assert len(out) == 1
+    assert out[0]["content"] == "new question"
+
+
+def test_unanswered_empty_when_ending_in_bot():
+    """Bot just replied — nothing unanswered, wake-up should no-op."""
+    messages = [
+        {"role": "customer", "content": "kya price?"},
+        {"role": "bot", "content": "1200"},
+    ]
+    assert unanswered_customer_messages(messages) == []
+
+
+def test_unanswered_empty_when_ending_in_seller_manual():
+    """Seller just answered — nothing unanswered, wake-up should no-op."""
+    messages = [
+        {"role": "customer", "content": "kya price?"},
+        {"role": "seller_manual", "content": "1200 hai"},
+    ]
+    assert unanswered_customer_messages(messages) == []
+
+
+def test_unanswered_preserves_mid_for_last_customer_msg():
+    """Wake-up needs the last customer mid to pass to advance_conversation."""
+    messages = [
+        {"role": "bot", "content": "hi"},
+        {"role": "customer", "content": "A", "mid": "MID_A"},
+        {"role": "customer", "content": "B", "mid": "MID_B"},
+    ]
+    out = unanswered_customer_messages(messages)
+    assert out[-1]["mid"] == "MID_B"
+
+
+def test_unanswered_only_customer_msgs_returns_them_all():
+    """Brand-new conversation: customer talked first, no brand response yet."""
+    messages = [
+        {"role": "customer", "content": "hi"},
+        {"role": "customer", "content": "anyone there?"},
+    ]
+    out = unanswered_customer_messages(messages)
+    assert len(out) == 2
 
 
 # ---------------------------------------------------------------------------

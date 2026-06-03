@@ -53,6 +53,28 @@ def extract_customer_text_entries(events: list[dict], now: datetime | None = Non
     return out
 
 
+def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:
+    """Return the trailing run of customer turns from conversation history.
+
+    Walks backwards until we hit a `bot` or `seller_manual` turn — those are
+    brand-side messages, meaning anything before them has already been
+    addressed. Returns the customer turns in chronological order.
+
+    Empty when the most recent entry is brand-side (bot or seller_manual) —
+    that's the signal nothing is unanswered, so the wake-up task should no-op.
+    """
+    if not messages:
+        return []
+    out: list[dict] = []
+    for entry in reversed(messages):
+        role = entry.get("role") or ""
+        if role == "customer":
+            out.append(entry)
+            continue
+        break  # hit bot or seller_manual — stop walking back
+    return list(reversed(out))
+
+
 # ---------------------------------------------------------------------------
 # Redis helpers (sync wrappers — used from the async webhook handler)
 # ---------------------------------------------------------------------------
@@ -327,3 +349,69 @@ async def _process_events(events: list, conversation, seller, db) -> None:
         combined_text = reply_context_prefix + "[customer sent media]"
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
     # else: nothing actionable, no reply
+
+
+# ---------------------------------------------------------------------------
+# Proactive wake-up: when the seller takeover pause window expires AND the
+# customer is still waiting, this task fires and generates the bot reply that
+# the reactive gate (which only fires on inbound webhooks) would have missed.
+# Scheduled by _handle_echo_event in webhooks/instagram.py.
+# ---------------------------------------------------------------------------
+
+@celery_app.task(name="app.workers.message_batch.wake_paused_conversation")
+def wake_paused_conversation(conversation_id: str) -> None:
+    run_async(_wake_paused_conversation(conversation_id))
+
+
+async def _wake_paused_conversation(conversation_id: str) -> None:
+    from app.models.conversation import Conversation
+    from app.models.seller import Seller
+    from app.database import worker_session
+    from app.config import settings as _settings
+    from app.bot.conversation import advance_conversation
+
+    async with worker_session() as db:
+        result = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
+        conversation = result.scalar_one_or_none()
+        if not conversation:
+            logger.info("wake_paused_conversation: conversation %s not found — skip", conversation_id)
+            return
+
+        if conversation.status == "closed":
+            logger.info("wake_paused_conversation: conversation %s closed — skip", conversation_id)
+            return
+
+        if is_bot_paused_for_manual_takeover(
+            conversation.last_seller_manual_reply_at,
+            _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+        ):
+            logger.info(
+                "wake_paused_conversation: conversation %s still paused (newer seller reply pushed timestamp) — skip",
+                conversation_id,
+            )
+            return
+
+        pending = unanswered_customer_messages(conversation.messages)
+        if not pending:
+            logger.info(
+                "wake_paused_conversation: conversation %s already answered — skip",
+                conversation_id,
+            )
+            return
+
+        seller_result = await db.execute(select(Seller).where(Seller.id == conversation.seller_id))
+        seller = seller_result.scalar_one_or_none()
+        if not seller or not seller.is_active:
+            logger.info("wake_paused_conversation: seller %s inactive — skip", conversation.seller_id)
+            return
+
+        combined_text = "\n".join((e.get("content") or "").strip() for e in pending if (e.get("content") or "").strip())
+        last_mid = pending[-1].get("mid")
+        logger.info(
+            "wake_paused_conversation: conversation %s — replying to %d customer msg(s)",
+            conversation_id, len(pending),
+        )
+        await advance_conversation(
+            conversation, seller, combined_text, db,
+            send_reply=True, resume=True, customer_mid=last_mid,
+        )

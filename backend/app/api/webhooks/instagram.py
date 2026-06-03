@@ -265,6 +265,22 @@ async def _handle_echo_event(
         conversation.id, echo_text,
     )
 
+    # Schedule the proactive wake-up. If no customer message arrives before
+    # the pause window expires, this task fires and replies to any unanswered
+    # customer turns. Earlier-scheduled tasks self-no-op when they fire
+    # (they see the timestamp moved forward or the customer was already
+    # answered), so no revoke logic is needed.
+    from app.workers.message_batch import wake_paused_conversation
+    countdown = settings.BOT_AUTO_RESUME_AFTER_MINUTES * 60
+    wake_paused_conversation.apply_async(
+        args=[str(conversation.id)],
+        countdown=countdown,
+    )
+    logger.info(
+        "scheduled wake_paused_conversation for %s in %ds",
+        conversation.id, countdown,
+    )
+
 
 async def _get_seller_by_page_id(page_id: str, db: AsyncSession) -> Seller | None:
     result = await db.execute(
