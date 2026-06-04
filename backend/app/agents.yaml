@@ -7,8 +7,8 @@
 # (intent_classifier, vision, catalog, etc.) are NEVER per-seller.
 #
 # Why this exists: keeps model + provider choice, token limits, and
-# fallback wiring declarative — switch generate_reply from Sarvam to
-# Claude (or to any future provider) without touching Python.
+# fallback wiring declarative — switch a method's model/provider without
+# touching Python.
 #
 # Conventions:
 #   provider          : "anthropic" | "sarvam"
@@ -18,33 +18,35 @@
 #                       error / refusal). Omit to disable fallback.
 #   fallback_model    : model used on fallback (paired with
 #                       fallback_provider).
+#
+# Current policy: everything runs on Claude Haiku (claude-haiku-4-5).
 
 defaults:
   provider: anthropic
-  model: claude-sonnet-4-20250514
+  model: claude-haiku-4-5-20251001
   max_tokens: 1024
   fallback_provider: anthropic
-  fallback_model: claude-3-5-sonnet-20241022
+  fallback_model: claude-haiku-4-5-20251001
 
 agents:
   decide:
     description: Negotiation action chooser — returns JSON action + price + intent.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 350
     fallback_provider: anthropic
-    fallback_model: claude-3-5-sonnet-20241022
+    fallback_model: claude-haiku-4-5-20251001
 
   generate_reply:
     description: Hinglish reply writer driven by decide()'s chosen action.
-    provider: sarvam
-    model: sarvam-30b
+    provider: anthropic
+    model: claude-haiku-4-5-20251001
     max_tokens: 200
     fallback_provider: anthropic
-    fallback_model: claude-sonnet-4-20250514
+    fallback_model: claude-haiku-4-5-20251001
 
   intent_classifier:
-    description: Pre-decide haiku-based sentiment/intent/repeated-dissatisfaction classifier.
+    description: Pre-decide sentiment/intent/repeated-dissatisfaction classifier.
     provider: anthropic
     model: claude-haiku-4-5-20251001
     max_tokens: 200
@@ -52,41 +54,41 @@ agents:
   generate_product_description:
     description: Catalog-onboarding helper — image -> short description.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 200
 
   describe_product_image:
     description: Stage 1 vision pass on a customer-sent product image.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 150
 
   match_product_by_description:
     description: Stage 2 catalog match — text-only.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 150
 
   suggest_category:
     description: One-shot category + tag suggestions during onboarding.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 400
 
   suggest_tags_for_category:
     description: Bulk tag suggestions for a known category.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 600
 
   extract_feature_query:
     description: Detects if customer message is a product-feature question and which tag it maps to.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 200
 
   extract_persona:
     description: Onboarding-time analyzer of seller conversation samples -> persona JSON.
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-haiku-4-5-20251001
     max_tokens: 4000
