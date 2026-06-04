@@ -40,9 +40,9 @@ def test_unknown_model_returns_none():
 
 
 def test_used_bucket_with_null_rate_returns_none():
-    # sarvam-30b has all sub-rates null in pricing.yaml; a call that used
-    # input/output tokens cannot be priced → None.
-    assert compute_cost_usd("sarvam-30b", 1000, 500) is None
+    # sarvam-105b is listed but has all sub-rates null in pricing.yaml; a call
+    # that used input/output tokens cannot be priced → None.
+    assert compute_cost_usd("sarvam-105b", 1000, 500) is None
 
 
 def test_null_rate_ignored_when_bucket_unused():

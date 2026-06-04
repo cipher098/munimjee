@@ -58,6 +58,23 @@ async def conversation_cost(conversation_id: str, db: AsyncSession = Depends(get
         )
     ).all()
 
+    # Per-message breakdown: group by the triggering Instagram message id.
+    by_message_rows = (
+        await db.execute(
+            select(
+                LLMCallLog.customer_message_mid,
+                func.count(LLMCallLog.id),
+                func.coalesce(func.sum(LLMCallLog.cost_usd), 0),
+                func.coalesce(func.sum(LLMCallLog.input_tokens), 0),
+                func.coalesce(func.sum(LLMCallLog.output_tokens), 0),
+                func.min(LLMCallLog.created_at),
+            )
+            .where(LLMCallLog.conversation_id == conversation_id)
+            .group_by(LLMCallLog.customer_message_mid)
+            .order_by(func.min(LLMCallLog.created_at).asc())
+        )
+    ).all()
+
     calls = (
         await db.execute(
             select(
@@ -99,6 +116,15 @@ async def conversation_cost(conversation_id: str, db: AsyncSession = Depends(get
                 "input_tokens": int(r[5]), "output_tokens": int(r[6]),
             }
             for r in breakdown_rows
+        ],
+        "by_message": [
+            {
+                "customer_message_mid": r[0],
+                "calls": r[1], "cost_usd": _f(r[2]),
+                "input_tokens": int(r[3]), "output_tokens": int(r[4]),
+                "first_at": r[5].isoformat() if r[5] else None,
+            }
+            for r in by_message_rows
         ],
         "calls": [
             {
@@ -168,6 +194,82 @@ async def cost_summary(db: AsyncSession = Depends(get_db)):
             for r in by_model
         ],
         "unpriced_models": [{"model": r[0], "calls": r[1]} for r in unpriced],
+    }
+
+
+@router.get("/by-seller")
+async def cost_by_seller(db: AsyncSession = Depends(get_db)):
+    """Total spend grouped by seller (joined to the seller name)."""
+    from app.models.seller import Seller
+
+    rows = (
+        await db.execute(
+            select(
+                LLMCallLog.seller_id,
+                Seller.business_name,
+                func.count(LLMCallLog.id),
+                func.coalesce(func.sum(LLMCallLog.cost_usd), 0),
+                func.coalesce(func.sum(LLMCallLog.input_tokens), 0),
+                func.coalesce(func.sum(LLMCallLog.output_tokens), 0),
+                func.count(func.distinct(LLMCallLog.conversation_id)),
+            )
+            .outerjoin(Seller, Seller.id == LLMCallLog.seller_id)
+            .group_by(LLMCallLog.seller_id, Seller.business_name)
+            .order_by(func.sum(LLMCallLog.cost_usd).desc().nullslast())
+        )
+    ).all()
+
+    return {
+        "sellers": [
+            {
+                "seller_id": str(r[0]) if r[0] else None,
+                "seller_name": r[1],
+                "calls": r[2],
+                "cost_usd": _f(r[3]),
+                "input_tokens": int(r[4]),
+                "output_tokens": int(r[5]),
+                "conversations": r[6],
+            }
+            for r in rows
+        ]
+    }
+
+
+@router.get("/by-conversation")
+async def cost_by_conversation(limit: int = 50, db: AsyncSession = Depends(get_db)):
+    """Conversations ranked by total LLM spend (most expensive first)."""
+    limit = max(1, min(limit, 500))
+    rows = (
+        await db.execute(
+            select(
+                LLMCallLog.conversation_id,
+                LLMCallLog.seller_id,
+                func.count(LLMCallLog.id),
+                func.coalesce(func.sum(LLMCallLog.cost_usd), 0),
+                func.coalesce(func.sum(LLMCallLog.input_tokens), 0),
+                func.coalesce(func.sum(LLMCallLog.output_tokens), 0),
+                func.max(LLMCallLog.created_at),
+            )
+            .where(LLMCallLog.conversation_id.isnot(None))
+            .group_by(LLMCallLog.conversation_id, LLMCallLog.seller_id)
+            .order_by(func.sum(LLMCallLog.cost_usd).desc().nullslast())
+            .limit(limit)
+        )
+    ).all()
+
+    return {
+        "conversations": [
+            {
+                "conversation_id": str(r[0]),
+                "seller_id": str(r[1]) if r[1] else None,
+                "calls": r[2],
+                "cost_usd": _f(r[3]),
+                "input_tokens": int(r[4]),
+                "output_tokens": int(r[5]),
+                "last_at": r[6].isoformat() if r[6] else None,
+            }
+            for r in rows
+        ]
     }
 
 

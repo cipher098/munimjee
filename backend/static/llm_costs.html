@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — LLM Costs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+    .topbar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px;
+              display: flex; align-items: center; gap: 16px; height: 56px; }
+    .topbar h1 { font-size: 16px; font-weight: 700; }
+    .topbar nav { display: flex; gap: 4px; margin-left: auto; }
+    .topbar nav a { padding: 6px 12px; border-radius: 6px; font-size: 13px;
+                    text-decoration: none; color: #555; }
+    .topbar nav a:hover { background: #f3f4f6; }
+    .topbar nav a.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+
+    .container { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 20px; }
+    .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px;
+               padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;
+               display: flex; align-items: center; justify-content: space-between; }
+
+    .stats { display: flex; flex-wrap: wrap; gap: 14px; }
+    .stat { flex: 1; min-width: 130px; background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 10px; padding: 14px; }
+    .stat .label { font-size: 11px; color: #94a3b8; text-transform: uppercase;
+                   letter-spacing: 0.05em; margin-bottom: 6px; }
+    .stat .value { font-size: 20px; font-weight: 700; color: #1f2937; }
+    .stat .sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
+    th { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .pill.anthropic { background: #ecfdf5; color: #047857; }
+    .pill.sarvam { background: #eff6ff; color: #1d4ed8; }
+    .pill.err { background: #fef2f2; color: #b91c1c; }
+    .pill.ok { background: #f1f5f9; color: #475569; }
+
+    label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
+    input[type="text"] { width: 100%; padding: 9px 11px; border: 1px solid #ddd;
+                         border-radius: 8px; font-size: 14px; outline: none; }
+    input:focus { border-color: #6366f1; }
+    .row { display: flex; gap: 10px; align-items: flex-end; }
+    .row > div { flex: 1; }
+
+    .btn { padding: 10px 16px; background: #6366f1; color: #fff; border: none;
+           border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn.secondary { background: #eef2ff; color: #4338ca; }
+    .btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .hint { font-size: 12px; color: #9ca3af; margin-top: 8px; }
+    .warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+            border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-top: 12px; }
+    .empty { color: #9ca3af; font-size: 13px; padding: 16px 0; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+             background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
+             font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>munimjee.ai</h1>
+  <nav>
+    <a href="/dashboard">Add Product</a>
+    <a href="/dashboard/products">All Products</a>
+    <a href="/training/dashboard">Training</a>
+    <a href="/dashboard/settings">Settings</a>
+    <a href="/dashboard/llm-costs" class="active">Costs</a>
+    <a href="/dashboard-auth/logout">Logout</a>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- Overall summary -->
+  <div class="card">
+    <h2>
+      Overall LLM spend
+      <button class="btn secondary" id="recomputeBtn" onclick="recompute()">Recompute from pricing.yaml</button>
+    </h2>
+    <div class="stats" id="summaryStats">
+      <div class="empty">Loading…</div>
+    </div>
+    <div id="unpricedWarn"></div>
+    <h3 style="font-size:13px;font-weight:700;margin-top:22px;color:#374151;">By model</h3>
+    <div id="byModel"></div>
+    <p class="hint">Costs are computed from <code>app/pricing.yaml</code> at write time. Edit that file
+       and hit <b>Recompute</b> to re-price all stored calls. ₹ shown at ₹85 = $1.</p>
+  </div>
+
+  <!-- Per seller -->
+  <div class="card">
+    <h2>Cost per seller</h2>
+    <div id="bySeller"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- Per conversation (ranked) -->
+  <div class="card">
+    <h2>Cost per conversation <span style="font-size:11px;font-weight:500;color:#9ca3af;">top 50 by spend — click a row to drill in</span></h2>
+    <div id="byConversation"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- Per-conversation detail (incl. per-message) -->
+  <div class="card">
+    <h2>Conversation detail <span style="font-size:11px;font-weight:500;color:#9ca3af;">incl. cost per message</span></h2>
+    <div class="row">
+      <div>
+        <label>Conversation ID</label>
+        <input type="text" id="convId" placeholder="e.g. 3d1afaac-6471-4d5b-a587-99042a6d5f6d" />
+      </div>
+      <button class="btn" onclick="loadConversation()">Look up</button>
+    </div>
+    <p class="hint">Paste a conversation UUID (or click a row above) to see total spend, cost per message, a per-method breakdown, and every LLM call.</p>
+    <div id="convResult"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FX = 85; // ₹ per $ — display only; keep in sync with pricing.yaml comment.
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function usd(v) { return v == null ? '—' : '$' + Number(v).toFixed(4); }
+function inr(v) { return v == null ? '—' : '₹' + (Number(v) * FX).toFixed(2); }
+function num(v) { return v == null ? '0' : Number(v).toLocaleString(); }
+function providerPill(p) { return `<span class="pill ${p === 'sarvam' ? 'sarvam' : 'anthropic'}">${p}</span>`; }
+
+async function loadSummary() {
+  try {
+    const r = await fetch('/llm-costs/summary');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    const t = d.totals;
+    document.getElementById('summaryStats').innerHTML = `
+      <div class="stat"><div class="label">Total calls</div><div class="value">${num(t.calls)}</div></div>
+      <div class="stat"><div class="label">Total cost</div><div class="value">${usd(t.cost_usd)}</div><div class="sub">${inr(t.cost_usd)}</div></div>
+      <div class="stat"><div class="label">Input tokens</div><div class="value">${num(t.input_tokens)}</div></div>
+      <div class="stat"><div class="label">Output tokens</div><div class="value">${num(t.output_tokens)}</div></div>
+    `;
+
+    document.getElementById('byModel').innerHTML = d.by_model.length ? `
+      <table>
+        <thead><tr><th>Provider</th><th>Model</th><th class="num">Calls</th><th class="num">In tok</th><th class="num">Out tok</th><th class="num">Cost ($)</th><th class="num">Cost (₹)</th></tr></thead>
+        <tbody>${d.by_model.map(m => `
+          <tr><td>${providerPill(m.provider)}</td><td>${m.model}</td>
+              <td class="num">${num(m.calls)}</td><td class="num">${num(m.input_tokens)}</td>
+              <td class="num">${num(m.output_tokens)}</td><td class="num">${usd(m.cost_usd)}</td>
+              <td class="num">${inr(m.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No LLM calls logged yet.</div>';
+
+    const up = d.unpriced_models || [];
+    document.getElementById('unpricedWarn').innerHTML = up.length ?
+      `<div class="warn">⚠️ ${up.length} model(s) have no price in pricing.yaml, so their cost is excluded:
+        ${up.map(u => `<b>${u.model}</b> (${u.calls} calls)`).join(', ')}.
+        Add rates and hit Recompute.</div>` : '';
+  } catch (e) {
+    document.getElementById('summaryStats').innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`;
+  }
+}
+
+async function recompute() {
+  const btn = document.getElementById('recomputeBtn');
+  btn.disabled = true; btn.textContent = 'Recomputing…';
+  try {
+    const r = await fetch('/llm-costs/recompute', { method: 'POST' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    toast(`Recomputed ${d.updated}/${d.rows} rows`);
+    await Promise.all([loadSummary(), loadBySeller(), loadByConversation()]);
+  } catch (e) {
+    toast('Recompute failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Recompute from pricing.yaml';
+  }
+}
+
+function shortId(id) { return id ? id.slice(0, 8) + '…' : '—'; }
+
+async function loadBySeller() {
+  const box = document.getElementById('bySeller');
+  try {
+    const r = await fetch('/llm-costs/by-seller');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    box.innerHTML = d.sellers.length ? `
+      <table>
+        <thead><tr><th>Seller</th><th class="num">Convos</th><th class="num">Calls</th><th class="num">In tok</th><th class="num">Out tok</th><th class="num">Cost ($)</th><th class="num">Cost (₹)</th></tr></thead>
+        <tbody>${d.sellers.map(s => `
+          <tr><td>${s.seller_name || '<span style="color:#9ca3af;">' + shortId(s.seller_id) + '</span>'}</td>
+              <td class="num">${num(s.conversations)}</td><td class="num">${num(s.calls)}</td>
+              <td class="num">${num(s.input_tokens)}</td><td class="num">${num(s.output_tokens)}</td>
+              <td class="num">${usd(s.cost_usd)}</td><td class="num">${inr(s.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No LLM calls logged yet.</div>';
+  } catch (e) { box.innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`; }
+}
+
+async function loadByConversation() {
+  const box = document.getElementById('byConversation');
+  try {
+    const r = await fetch('/llm-costs/by-conversation?limit=50');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    box.innerHTML = d.conversations.length ? `
+      <table>
+        <thead><tr><th>Conversation</th><th>Last activity</th><th class="num">Calls</th><th class="num">In tok</th><th class="num">Out tok</th><th class="num">Cost ($)</th><th class="num">Cost (₹)</th></tr></thead>
+        <tbody>${d.conversations.map(c => `
+          <tr style="cursor:pointer;" onclick="drillIn('${c.conversation_id}')">
+              <td style="font-family:monospace;font-size:12px;color:#4338ca;">${c.conversation_id}</td>
+              <td>${c.last_at ? new Date(c.last_at).toLocaleString() : '—'}</td>
+              <td class="num">${num(c.calls)}</td><td class="num">${num(c.input_tokens)}</td>
+              <td class="num">${num(c.output_tokens)}</td><td class="num">${usd(c.cost_usd)}</td>
+              <td class="num">${inr(c.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No LLM calls logged yet.</div>';
+  } catch (e) { box.innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`; }
+}
+
+function drillIn(id) {
+  document.getElementById('convId').value = id;
+  loadConversation();
+  document.getElementById('convResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function loadConversation() {
+  const id = document.getElementById('convId').value.trim();
+  const box = document.getElementById('convResult');
+  if (!id) { toast('Enter a conversation ID'); return; }
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const r = await fetch('/llm-costs/conversation/' + encodeURIComponent(id));
+    if (r.status === 404) { box.innerHTML = '<div class="empty">No LLM calls found for this conversation.</div>'; return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    const t = d.totals;
+    box.innerHTML = `
+      <div class="stats" style="margin-top:18px;">
+        <div class="stat"><div class="label">Calls</div><div class="value">${num(t.calls)}</div></div>
+        <div class="stat"><div class="label">Cost</div><div class="value">${usd(t.cost_usd)}</div><div class="sub">${inr(t.cost_usd)}</div></div>
+        <div class="stat"><div class="label">Input tok</div><div class="value">${num(t.input_tokens)}</div><div class="sub">cache read ${num(t.cache_read_input_tokens)}</div></div>
+        <div class="stat"><div class="label">Output tok</div><div class="value">${num(t.output_tokens)}</div></div>
+      </div>
+      <h3 style="font-size:13px;font-weight:700;margin-top:22px;color:#374151;">Cost per message</h3>
+      <table>
+        <thead><tr><th>Customer message (mid)</th><th>First call</th><th class="num">Calls</th><th class="num">In tok</th><th class="num">Out tok</th><th class="num">Cost ($)</th><th class="num">Cost (₹)</th></tr></thead>
+        <tbody>${d.by_message.map(m => `
+          <tr><td style="font-family:monospace;font-size:12px;">${m.customer_message_mid || '<span style="color:#9ca3af;">(no message id)</span>'}</td>
+              <td>${m.first_at ? new Date(m.first_at).toLocaleString() : '—'}</td>
+              <td class="num">${num(m.calls)}</td><td class="num">${num(m.input_tokens)}</td>
+              <td class="num">${num(m.output_tokens)}</td><td class="num">${usd(m.cost_usd)}</td><td class="num">${inr(m.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <h3 style="font-size:13px;font-weight:700;margin-top:22px;color:#374151;">By method / model</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Provider</th><th>Model</th><th class="num">Calls</th><th class="num">Cost ($)</th><th class="num">Cost (₹)</th></tr></thead>
+        <tbody>${d.breakdown.map(b => `
+          <tr><td>${b.method}</td><td>${providerPill(b.provider)}</td><td>${b.model}</td>
+              <td class="num">${num(b.calls)}</td><td class="num">${usd(b.cost_usd)}</td><td class="num">${inr(b.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <h3 style="font-size:13px;font-weight:700;margin-top:22px;color:#374151;">Every call (${d.calls.length})</h3>
+      <table>
+        <thead><tr><th>Time</th><th>Method</th><th>Model</th><th>Status</th><th class="num">In</th><th class="num">Out</th><th class="num">Cost ($)</th></tr></thead>
+        <tbody>${d.calls.map(c => `
+          <tr><td>${c.created_at ? new Date(c.created_at).toLocaleString() : '—'}</td>
+              <td>${c.method}</td><td>${c.model}</td>
+              <td><span class="pill ${c.status === 'error' ? 'err' : 'ok'}">${c.status}</span></td>
+              <td class="num">${num(c.input_tokens)}</td><td class="num">${num(c.output_tokens)}</td>
+              <td class="num">${usd(c.cost_usd)}</td></tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) {
+    box.innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`;
+  }
+}
+
+// Allow Enter to trigger lookup.
+document.getElementById('convId').addEventListener('keydown', e => { if (e.key === 'Enter') loadConversation(); });
+
+loadSummary();
+loadBySeller();
+loadByConversation();
+</script>
+</body>
+</html>

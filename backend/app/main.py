@@ -132,3 +132,8 @@ async def settings_dashboard(phone: str = Depends(verify_dashboard_cookie)):
 @app.get("/dashboard/categories")
 async def categories_dashboard(phone: str = Depends(verify_dashboard_cookie)):
     return FileResponse("/app/static/categories.html")
+
+
+@app.get("/dashboard/llm-costs")
+async def llm_costs_dashboard(phone: str = Depends(verify_dashboard_cookie)):
+    return FileResponse("/app/static/llm_costs.html")
