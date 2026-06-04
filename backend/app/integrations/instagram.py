@@ -17,6 +17,48 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Outbound message-id registry (Redis)
+#
+# Instagram fires an "echo" webhook for EVERY outbound message on the seller's
+# account — both the bot's own sends and the seller typing manually in the IG
+# inbox. We must tell them apart, else the bot's own sends get recorded as
+# `seller_manual` and pause the bot on its own activity. Matching by scanning
+# conversation.messages JSONB is racy (the echo can arrive before we tag the
+# mid, and photo/duplicate sends tag unreliably), so every send registers its
+# returned message_id here the instant it succeeds. The echo handler checks
+# this first. Keyed per-mid (globally unique) with a short TTL.
+# ---------------------------------------------------------------------------
+
+_OUTBOUND_MID_TTL_SECONDS = 900  # 15 min — echoes arrive within seconds
+
+
+def _redis():
+    import redis as _redis_lib
+    return _redis_lib.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+def register_outbound_mid(mid: str | None) -> None:
+    """Record a message_id we just sent so its echo is recognized as the bot's."""
+    if not mid:
+        return
+    try:
+        _redis().set(f"outbound_mid:{mid}", "1", ex=_OUTBOUND_MID_TTL_SECONDS)
+    except Exception as exc:  # logging must never break sending
+        logger.warning("could not register outbound mid %s: %s", mid, exc)
+
+
+def is_registered_outbound_mid(mid: str | None) -> bool:
+    """True if `mid` was sent by the bot (registered via register_outbound_mid)."""
+    if not mid:
+        return False
+    try:
+        return bool(_redis().exists(f"outbound_mid:{mid}"))
+    except Exception as exc:
+        logger.warning("could not check outbound mid %s: %s", mid, exc)
+        return False
+
 # Scopes for the Instagram-direct flow. The "Manage messaging & content on
 # Instagram" use case grants these without App Review for the app's developers
 # and testers; production sellers need App Review.
@@ -201,7 +243,9 @@ class InstagramClient:
                     "Instagram send_message failed %d: %s", response.status_code, response.text
                 )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            register_outbound_mid(data.get("message_id"))
+            return data
 
     async def send_image(self, recipient_id: str, image_url: str) -> dict:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -223,4 +267,6 @@ class InstagramClient:
                     "Instagram send_image failed %d: %s", response.status_code, response.text
                 )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            register_outbound_mid(data.get("message_id"))
+            return data

@@ -225,8 +225,23 @@ async def _handle_echo_event(
     db: AsyncSession,
 ) -> None:
     """Classify echo: bot's own send → drop. Seller manual reply → record + stamp."""
+    from app.integrations.instagram import is_registered_outbound_mid
+
     echo_mid = message.get("mid")
     echo_text = message.get("text") or ""
+    has_attachment = bool(message.get("attachments") or message.get("attachment"))
+
+    # Fast path: the bot registered this mid the moment it sent the message.
+    # Robust against the JSONB tag losing the race with the echo webhook.
+    if is_registered_outbound_mid(echo_mid):
+        return
+
+    # An attachment-only echo with no text (e.g. the bot's own photo send, or a
+    # delivery artifact) carries no manual-reply signal — recording it just
+    # creates a blank seller_manual entry and falsely pauses the bot. Skip it.
+    if not echo_text and has_attachment:
+        logger.info("Skipping blank attachment echo (mid=%s)", echo_mid)
+        return
 
     seller = await _get_seller_by_page_id(seller_page_id, db)
     if not seller:

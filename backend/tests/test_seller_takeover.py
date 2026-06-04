@@ -29,6 +29,31 @@ from app.workers.message_batch import (
 # is_known_outbound_mid — distinguishes bot's own echo from seller manual reply
 # ---------------------------------------------------------------------------
 
+def test_redis_outbound_mid_registry_recognizes_bot_sends(monkeypatch):
+    """Every bot send registers its mid in Redis; the echo handler checks that
+    first so the bot never records its own send as a seller_manual reply (which
+    would pause it on its own activity). Uses a fake redis — no real connection."""
+    from app.integrations import instagram as ig
+
+    store: dict = {}
+
+    class _FakeRedis:
+        def set(self, k, v, ex=None):
+            store[k] = v
+        def exists(self, k):
+            return 1 if k in store else 0
+
+    monkeypatch.setattr(ig, "_redis", lambda: _FakeRedis())
+
+    assert ig.is_registered_outbound_mid("MID_X") is False  # not sent yet
+    ig.register_outbound_mid("MID_X")
+    assert ig.is_registered_outbound_mid("MID_X") is True    # recognized as bot's own
+    # falsy mids are never registered / never matched
+    ig.register_outbound_mid(None)
+    assert ig.is_registered_outbound_mid(None) is False
+    assert ig.is_registered_outbound_mid("") is False
+
+
 def test_known_mid_in_history_is_classified_as_bot_echo():
     messages = [
         {"role": "customer", "content": "kya price?"},

@@ -332,6 +332,24 @@ async def generate_bot_reply(
         )
         decision["action"] = "engage"
 
+    # Inverse safety net — never pitch a product the customer didn't ask for.
+    # If the model chose show_product/counter but we can't resolve a product
+    # (no product_id in the decision AND no active product on the conversation)
+    # and the seller has more than one product, downgrade to clarify so the
+    # reply asks which item instead of guessing one from the catalog.
+    if (
+        decision.get("action") in ("show_product", "counter")
+        and not decision.get("product_id")
+        and product is None
+        and len(products_list) > 1
+    ):
+        logger.warning(
+            "Model chose %r with no resolvable product and %d in catalog — overriding to clarify",
+            decision.get("action"), len(products_list),
+        )
+        decision["action"] = "clarify"
+        decision["product_id"] = None
+
     new_state, extra = _derive_state_from_decision(
         decision, conversation, product,
         effective_negotiation_round=effective_negotiation_round,
