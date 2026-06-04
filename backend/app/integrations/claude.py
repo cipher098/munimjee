@@ -157,42 +157,70 @@ from app.integrations._json_utils import (  # noqa: F401  (re-export for test co
     LLMOutputParseError,
     parse_json_relaxed as _parse_json,
 )
+from app.integrations import llm_logging
+
+
+def _response_text(resp) -> str:
+    """Concatenate the text blocks of an Anthropic response for the cost log."""
+    try:
+        parts = [getattr(b, "text", "") for b in (resp.content or [])]
+        return "".join(p for p in parts if p)
+    except Exception:  # pragma: no cover - defensive
+        return ""
 
 
 class ClaudeClient:
     def __init__(self) -> None:
         self._client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
-    async def _create(self, *, fallback_model: str | None = None, **kwargs):
+    async def _create(self, *, fallback_model: str | None = None, log_method: str | None = None, **kwargs):
         """messages.create with one retry on transient API errors and a
         model fallback when the primary model emits a content-policy refusal.
         `fallback_model` lets callers override the global FALLBACK_MODEL on a
-        per-method basis (driven by agents.yaml). Logs cache hits."""
+        per-method basis (driven by agents.yaml). `log_method` names the
+        logical call (decide / generate_reply / subagent) for the cost
+        ledger. Logs cache hits and records the call via llm_logging."""
         model_name = kwargs.get("model", MODEL)
         try:
-            resp = await self._client.messages.create(**kwargs)
-        except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.RateLimitError) as exc:
-            logger.warning("Anthropic transient error (%s) on model %s — retrying once", type(exc).__name__, model_name)
-            resp = await self._client.messages.create(**kwargs)
+            try:
+                resp = await self._client.messages.create(**kwargs)
+            except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.RateLimitError) as exc:
+                logger.warning("Anthropic transient error (%s) on model %s — retrying once", type(exc).__name__, model_name)
+                resp = await self._client.messages.create(**kwargs)
 
-        if getattr(resp, "stop_reason", None) == "refusal":
-            target = fallback_model or FALLBACK_MODEL
-            logger.warning("Model %s refused — retrying with fallback %s", model_name, target)
-            kwargs["model"] = target
-            resp = await self._client.messages.create(**kwargs)
+            if getattr(resp, "stop_reason", None) == "refusal":
+                target = fallback_model or FALLBACK_MODEL
+                logger.warning("Model %s refused — retrying with fallback %s", model_name, target)
+                kwargs["model"] = target
+                resp = await self._client.messages.create(**kwargs)
+        except Exception as exc:
+            llm_logging.record(
+                "anthropic", kwargs.get("model", model_name), log_method,
+                status="error", request=kwargs, error=f"{type(exc).__name__}: {exc}",
+            )
+            raise
 
+        used_model = kwargs.get("model", model_name)
         usage = getattr(resp, "usage", None)
-        if usage is not None:
-            cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
-            cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0
-            if cache_read or cache_create:
-                logger.info(
-                    "Claude cache: read=%d write=%d input=%d output=%d model=%s",
-                    cache_read, cache_create,
-                    getattr(usage, "input_tokens", 0) or 0,
-                    getattr(usage, "output_tokens", 0) or 0,
-                    model_name,
-                )
+        cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0 if usage else 0
+        cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0 if usage else 0
+        if usage is not None and (cache_read or cache_create):
+            logger.info(
+                "Claude cache: read=%d write=%d input=%d output=%d model=%s",
+                cache_read, cache_create,
+                getattr(usage, "input_tokens", 0) or 0,
+                getattr(usage, "output_tokens", 0) or 0,
+                used_model,
+            )
+        llm_logging.record(
+            "anthropic", used_model, log_method,
+            input_tokens=(getattr(usage, "input_tokens", None) if usage else None),
+            output_tokens=(getattr(usage, "output_tokens", None) if usage else None),
+            cache_read_input_tokens=cache_read,
+            cache_creation_input_tokens=cache_create,
+            request=kwargs,
+            response=_response_text(resp),
+        )
         return resp
 
     async def decide(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> dict:
@@ -278,7 +306,7 @@ class ClaudeClient:
         # to the configured fallback_provider/fallback_model. The old
         # "return clarify on error" path swallowed failures and prevented
         # the factory from ever firing the fallback.
-        response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
+        response = await self._create(fallback_model=spec.fallback_model, log_method="decide", **request_kwargs)
         text = response.content[0].text.strip()
         return _parse_json(text)  # raises LLMOutputParseError on bad JSON
 
@@ -433,7 +461,7 @@ class ClaudeClient:
         # `return ""` swallow path is gone — factory routes to fallback
         # provider/model on exception, which is more useful than a silent ""
         # reply that prints "BOT REPLY :" with nothing.
-        response = await self._create(fallback_model=spec.fallback_model, **request_kwargs)
+        response = await self._create(fallback_model=spec.fallback_model, log_method="generate_reply", **request_kwargs)
         return response.content[0].text.strip()
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
@@ -442,6 +470,7 @@ class ClaudeClient:
         template = await prompt_store.get("generate_product_description")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{
@@ -462,6 +491,7 @@ class ClaudeClient:
         template = await prompt_store.get("image_describe")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{
@@ -504,6 +534,7 @@ class ClaudeClient:
         spec = agent_spec.get("match_product_by_description")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
@@ -529,6 +560,7 @@ class ClaudeClient:
         spec = agent_spec.get("suggest_category")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
@@ -550,6 +582,7 @@ class ClaudeClient:
         spec = agent_spec.get("suggest_tags_for_category")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
@@ -585,6 +618,7 @@ class ClaudeClient:
         spec = agent_spec.get("extract_feature_query")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],
@@ -604,6 +638,7 @@ class ClaudeClient:
         spec = agent_spec.get("extract_persona")
         response = await self._create(
             fallback_model=spec.fallback_model,
+            log_method=spec.name,
             model=spec.model,
             max_tokens=spec.max_tokens,
             messages=[{"role": "user", "content": prompt}],

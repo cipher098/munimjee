@@ -14,12 +14,40 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.integrations import llm_logging
 from app.models.conversation import Conversation
 from app.models.conversation_product import ConversationProduct
 from app.models.product import Product
 from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
+
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _capture_llm_calls(db, *, seller_id, conversation_id, customer_message_mid=None):
+    """Capture every LLM call made during a turn and persist the cost ledger.
+
+    Brackets a top-level handler so all nested decide/reply/subagent calls
+    (including those in child asyncio tasks, e.g. the intent classifier)
+    attribute themselves to this conversation + triggering message. Rows are
+    staged on `db` and flushed even if the body raises, so failed-turn costs
+    are still recorded.
+    """
+    token = llm_logging.begin(
+        seller_id=seller_id,
+        conversation_id=conversation_id,
+        customer_message_mid=customer_message_mid,
+    )
+    try:
+        yield
+    finally:
+        try:
+            await llm_logging.persist(db)
+        finally:
+            llm_logging.end(token)
 
 TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
 # `customer_disengaged` is NOT terminal — conversation stays active so the
@@ -47,7 +75,7 @@ async def _classify_image_type(image_b64: str, media_type: str) -> str:
     from app.integrations.claude import MODEL
 
     client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    response = await client.messages.create(
+    request_kwargs = dict(
         model=MODEL,
         max_tokens=5,
         messages=[{
@@ -68,7 +96,15 @@ async def _classify_image_type(image_b64: str, media_type: str) -> str:
             ],
         }],
     )
+    response = await client.messages.create(**request_kwargs)
     result = response.content[0].text.strip().lower()
+    usage = getattr(response, "usage", None)
+    llm_logging.record(
+        "anthropic", MODEL, "classify_image_type",
+        input_tokens=(getattr(usage, "input_tokens", None) if usage else None),
+        output_tokens=(getattr(usage, "output_tokens", None) if usage else None),
+        request=request_kwargs, response=result,
+    )
     return "payment" if "payment" in result else "product"
 
 
@@ -267,6 +303,26 @@ async def advance_conversation(
     if conversation.status == "closed":
         return
 
+    async with _capture_llm_calls(
+        db,
+        seller_id=seller.id,
+        conversation_id=conversation.id,
+        customer_message_mid=customer_mid,
+    ):
+        await _advance_conversation_inner(
+            conversation, seller, customer_message, db, send_reply, resume, customer_mid
+        )
+
+
+async def _advance_conversation_inner(
+    conversation: Conversation,
+    seller: Seller,
+    customer_message: str,
+    db: AsyncSession,
+    send_reply: bool,
+    resume: bool,
+    customer_mid: str | None,
+) -> None:
     if not resume:
         _append_message(conversation, "customer", customer_message, mid=customer_mid)
 
@@ -424,6 +480,17 @@ async def handle_product_image(
     send_reply: bool = True,
 ) -> None:
     """Customer sent an image — use Claude Vision to identify the product and start negotiation."""
+    async with _capture_llm_calls(db, seller_id=seller.id, conversation_id=conversation.id):
+        await _handle_product_image_inner(conversation, seller, image_url, db, send_reply)
+
+
+async def _handle_product_image_inner(
+    conversation: Conversation,
+    seller: Seller,
+    image_url: str,
+    db: AsyncSession,
+    send_reply: bool,
+) -> None:
     from app.integrations.claude import ClaudeClient
     from app.integrations.instagram import InstagramClient
     from app.bot.responder import generate_bot_reply, DEFAULT_PERSONA
@@ -628,6 +695,21 @@ async def handle_reel(
     send_reply: bool = True,
 ) -> None:
     """Customer shared an Instagram Reel — match against product reel_urls and start sales flow."""
+    async with _capture_llm_calls(db, seller_id=seller.id, conversation_id=conversation.id):
+        await _handle_reel_inner(
+            conversation, seller, reel_url, db, reel_video_id, reel_title, send_reply
+        )
+
+
+async def _handle_reel_inner(
+    conversation: Conversation,
+    seller: Seller,
+    reel_url: str,
+    db: AsyncSession,
+    reel_video_id: str | None,
+    reel_title: str | None,
+    send_reply: bool,
+) -> None:
     from app.integrations.instagram import InstagramClient
 
     _append_message(conversation, "customer", f"[reel: {reel_url}]")

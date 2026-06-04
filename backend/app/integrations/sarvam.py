@@ -18,6 +18,7 @@ import httpx
 
 from app.bot import prompt_store
 from app.config import settings
+from app.integrations import llm_logging
 from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,8 @@ class SarvamClient:
         self._api_key = settings.SARVAM_API_KEY
         self._url = settings.SARVAM_API_URL
 
-    async def _chat(self, *, model: str, max_tokens: int, system: str, user: str, temperature: float = 0.7) -> str:
+    async def _chat(self, *, model: str, max_tokens: int, system: str, user: str,
+                    temperature: float = 0.7, log_method: str | None = None) -> str:
         if not self._api_key:
             raise RuntimeError("SARVAM_API_KEY not configured")
         payload = {
@@ -159,15 +161,36 @@ class SarvamClient:
                     if not content:
                         # Reasoning consumed the whole budget and never emitted
                         # an answer. Treat as a failure so the factory falls back.
-                        raise LLMOutputParseError(
+                        msg = (
                             f"Sarvam returned empty content "
                             f"(finish_reason={data['choices'][0].get('finish_reason')})"
                         )
+                        usage = data.get("usage") or {}
+                        llm_logging.record(
+                            "sarvam", model, log_method,
+                            status="error",
+                            input_tokens=usage.get("prompt_tokens"),
+                            output_tokens=usage.get("completion_tokens"),
+                            request=payload, error=msg,
+                        )
+                        raise LLMOutputParseError(msg)
+                    usage = data.get("usage") or {}
+                    llm_logging.record(
+                        "sarvam", model, log_method,
+                        input_tokens=usage.get("prompt_tokens"),
+                        output_tokens=usage.get("completion_tokens"),
+                        request=payload,
+                        response=content,
+                    )
                     return content
             except (httpx.HTTPError, KeyError, IndexError) as exc:
                 last_exc = exc
                 logger.warning("Sarvam call attempt %d failed (%s)", attempt, exc)
         assert last_exc is not None
+        llm_logging.record(
+            "sarvam", model, log_method,
+            status="error", request=payload, error=f"{type(last_exc).__name__}: {last_exc}",
+        )
         raise last_exc
 
     async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
@@ -212,6 +235,7 @@ class SarvamClient:
         text = await self._chat(
             model=model, max_tokens=max_tokens,
             system=prompt, user=user_block, temperature=0.2,
+            log_method="decide",
         )
         return parse_json_relaxed(text)
 
@@ -271,6 +295,7 @@ class SarvamClient:
         return await self._chat(
             model=model, max_tokens=max_tokens,
             system=system, user=user_content, temperature=0.7,
+            log_method="generate_reply",
         )
 
 

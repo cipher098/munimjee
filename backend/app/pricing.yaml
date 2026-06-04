@@ -1,0 +1,51 @@
+# LLM pricing for cost accounting.
+#
+# Rates are USD per 1,000,000 tokens. Each model maps to four sub-rates:
+#   input        — normal (uncached) input tokens
+#   output       — generated output tokens
+#   cache_read   — tokens served from prompt cache (Anthropic only)
+#   cache_write  — tokens written to prompt cache (Anthropic only)
+#
+# Rules used by app/integrations/llm_pricing.py:
+#   - A model NOT listed here  -> cost_usd is stored as NULL for that call.
+#   - A sub-rate left as `null` -> if a call actually used that token bucket
+#     (count > 0), cost_usd is NULL for the whole call; if the bucket was 0
+#     it's ignored. So you can price only the buckets you care about.
+#
+# After editing this file, run  POST /llm-costs/recompute  (dashboard-auth)
+# to backfill cost_usd on already-stored rows.
+#
+# The Anthropic rates below are public list prices (USD/M tokens) as of the
+# model launch; adjust to your negotiated rate. Sarvam has no public
+# USD-per-token price — fill in once you have it.
+
+models:
+  claude-sonnet-4-20250514:
+    input: 3.00
+    output: 15.00
+    cache_read: 0.30
+    cache_write: 3.75
+
+  claude-3-5-sonnet-20241022:
+    input: 3.00
+    output: 15.00
+    cache_read: 0.30
+    cache_write: 3.75
+
+  claude-haiku-4-5-20251001:
+    input: 1.00
+    output: 5.00
+    cache_read: 0.10
+    cache_write: 1.25
+
+  sarvam-30b:
+    input: null
+    output: null
+    cache_read: null
+    cache_write: null
+
+  sarvam-105b:
+    input: null
+    output: null
+    cache_read: null
+    cache_write: null

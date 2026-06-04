@@ -45,6 +45,14 @@ async def generate_bot_reply(
         result = await db.execute(select(Product).where(Product.id == conversation.product_id))
         product = result.scalar_one_or_none()
 
+    # Attribute this turn's LLM calls to the resolved product (the capture
+    # context was opened by the caller — advance_conversation / media handlers).
+    from app.integrations import llm_logging as _llm_logging
+    _llm_logging.set_product(
+        product_id=(product.id if product else conversation.product_id),
+        conversation_product_id=(conv_product.id if conv_product is not None else None),
+    )
+
     # Always load full catalog so Claude can switch products mid-conversation
     result = await db.execute(
         select(Product).where(Product.seller_id == seller.id, Product.active == True)
