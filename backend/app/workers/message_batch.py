@@ -128,6 +128,26 @@ def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:
 # Redis helpers (sync wrappers — used from the async webhook handler)
 # ---------------------------------------------------------------------------
 
+async def _lock_conversation(db, conversation_id) -> None:
+    """Serialize all bot REPLY work for one conversation across the two paths
+    that can each send a reply — the message-batch path and the seller-takeover
+    resume scan (_wake_paused_conversation).
+
+    Without this they race: the resume scan reads conversation.messages and sees
+    the customer's message as "unanswered" before a concurrently-running batch
+    has committed its bot reply, so both reply → the customer gets two messages.
+
+    A pg advisory *xact* lock is held until the surrounding transaction commits,
+    so whoever runs second blocks here, then re-reads state (now including the
+    first reply) and skips. Keyed on the conversation id.
+    """
+    from sqlalchemy import text
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:cid))"),
+        {"cid": str(conversation_id)},
+    )
+
+
 def _redis():
     import redis as _redis_lib
     from app.config import settings
@@ -287,6 +307,15 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
                     conversation.id,
                 )
                 return
+
+        # Serialize the reply against a concurrent takeover-resume wake for this
+        # same conversation, then refresh so we reply on top of any reply it just
+        # committed (prevents double replies).
+        await _lock_conversation(db, conversation.id)
+        await db.refresh(conversation)
+        if conversation.status == "closed":
+            logger.info("message_batch: conversation %s closed after lock — skipping", conversation.id)
+            return
 
         await _process_events(events, conversation, seller, db)
 
@@ -490,6 +519,10 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
     from app.bot.conversation import advance_conversation
 
     async with worker_session() as db:
+        # Take the per-conversation lock BEFORE reading state, so if a message
+        # batch is mid-reply we block until it commits and then see its reply
+        # (the pending re-check below will skip). Prevents double replies.
+        await _lock_conversation(db, conversation_id)
         result = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
         conversation = result.scalar_one_or_none()
         if not conversation:
