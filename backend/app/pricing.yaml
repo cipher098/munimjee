@@ -55,8 +55,10 @@ models:
     cache_write: null
 
   # Google Gemini (USD/1M tokens). Flash-Lite is ~10x cheaper than Haiku.
+  # cache_read is Gemini 2.5 implicit-cache pricing: 25% of the input rate
+  # ($0.10 * 0.25). Implicit caching has no write fee, so cache_write stays null.
   gemini-2.5-flash-lite:
     input: 0.10
     output: 0.40
-    cache_read: null
+    cache_read: 0.025
     cache_write: null

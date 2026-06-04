@@ -19,6 +19,7 @@ from app.bot.prompt_builders import (
     build_reply_prompt,
     evaluate_interventions,
     render_transcript,
+    split_decide_prompt,
 )
 from app.integrations import llm_logging
 from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
@@ -102,10 +103,19 @@ class OpenAICompatClient:
                             request=payload, error=msg,
                         )
                         raise LLMOutputParseError(msg)
+                    # Gemini (and other OpenAI-compat vendors) report cached
+                    # prefix tokens under usage.prompt_tokens_details.cached_tokens.
+                    # prompt_tokens is the TOTAL and already includes the cached
+                    # ones, so bill the uncached remainder at the input rate and
+                    # the cached tokens at the cheaper cache_read rate.
+                    cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0
+                    prompt_toks = usage.get("prompt_tokens")
+                    billable_input = prompt_toks - cached if prompt_toks is not None else None
                     llm_logging.record(
                         self.name, model, log_method,
-                        input_tokens=usage.get("prompt_tokens"),
+                        input_tokens=billable_input,
                         output_tokens=usage.get("completion_tokens"),
+                        cache_read_input_tokens=cached or None,
                         request=payload, response=content,
                     )
                     return content
@@ -121,19 +131,28 @@ class OpenAICompatClient:
 
     async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
         prompt = await build_decide_prompt(context)
+        # Split the static rules (cacheable system prefix) from the per-turn
+        # CONTEXT block so the system prompt stays byte-identical across calls
+        # and the vendor's implicit prefix cache can hit it. Mirrors the Claude
+        # path (ClaudeClient.decide). Falls back to the whole prompt as system
+        # when the CONTEXT/STRATEGY markers are missing (context_block == "").
+        system_text, context_block = split_decide_prompt(prompt)
         reminder_block = evaluate_interventions(context)
         transcript = render_transcript(context.get("message_history"))
         customer_msg = context.get("customer_message") or ""
         parts = []
         if reminder_block:
             parts.append(reminder_block)
+        if context_block:
+            parts.append(context_block)
         parts.append(f"Recent conversation:\n{transcript}")
         parts.append(f"Latest customer message: {customer_msg!r}")
         parts.append("Choose the next action and return ONLY a JSON object — no prose, no code fences.")
         user_block = "\n\n".join(parts)
         text = await self._chat(
             model=model, max_tokens=max_tokens,
-            system=prompt, user=user_block, temperature=0.2, log_method="decide",
+            system=system_text if context_block else prompt,
+            user=user_block, temperature=0.2, log_method="decide",
         )
         return parse_json_relaxed(text)
 
