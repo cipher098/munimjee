@@ -69,42 +69,24 @@ async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) ->
 
 
 async def _classify_image_type(image_b64: str, media_type: str) -> str:
-    """Returns 'payment' if the image is a payment receipt/screenshot, else 'product'."""
-    import anthropic
-    from app.config import settings
-    from app.integrations.claude import MODEL
+    """Returns 'payment' if the image is a payment receipt/screenshot, else 'product'.
+    Routed to the agents.yaml-configured provider (vision) with fallback."""
+    from app.integrations import llm_provider
 
-    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    request_kwargs = dict(
-        model=MODEL,
-        max_tokens=5,
-        messages=[{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {"type": "base64", "media_type": media_type, "data": image_b64},
-                },
-                {
-                    "type": "text",
-                    "text": (
-                        "Is this image a payment receipt or transaction confirmation screenshot "
-                        "(UPI, Paytm, PhonePe, Google Pay, bank transfer success screen, etc.)? "
-                        "Reply with exactly one word: 'payment' or 'product'."
-                    ),
-                },
-            ],
-        }],
+    prompt = (
+        "Is this image a payment receipt or transaction confirmation screenshot "
+        "(UPI, Paytm, PhonePe, Google Pay, bank transfer success screen, etc.)? "
+        "Reply with exactly one word: 'payment' or 'product'."
     )
-    response = await client.messages.create(**request_kwargs)
-    result = response.content[0].text.strip().lower()
-    usage = getattr(response, "usage", None)
-    llm_logging.record(
-        "anthropic", MODEL, "classify_image_type",
-        input_tokens=(getattr(usage, "input_tokens", None) if usage else None),
-        output_tokens=(getattr(usage, "output_tokens", None) if usage else None),
-        request=request_kwargs, response=result,
-    )
+    try:
+        result = (await llm_provider.complete_vision(
+            "classify_image_type",
+            prompt=prompt,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
+        )).strip().lower()
+    except Exception as exc:
+        logger.warning("Image-type classify failed (%s) — defaulting to 'product'", exc)
+        return "product"
     return "payment" if "payment" in result else "product"
 
 

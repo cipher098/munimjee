@@ -39,9 +39,10 @@ def test_shipped_yaml_covers_every_caller():
 def test_get_known_method_returns_yaml_values():
     spec = agent_spec.get("decide")
     assert spec.name == "decide"
-    assert spec.model.startswith("claude-")
+    assert spec.provider == "gemini"
+    assert spec.model.startswith("gemini-")
     assert spec.max_tokens > 0
-    assert spec.fallback_model  # decide explicitly sets a fallback
+    assert spec.fallback_model.startswith("claude-")  # decide falls back to Claude
 
 
 def test_get_unknown_method_falls_back_to_defaults():
@@ -53,12 +54,13 @@ def test_get_unknown_method_falls_back_to_defaults():
     assert spec.max_tokens > 0
 
 
-def test_intent_classifier_uses_haiku():
-    """Intent classifier is hot-path and must stay on the cheap fast model."""
+def test_intent_classifier_uses_cheap_model_with_fallback():
+    """Intent classifier is hot-path — runs on the cheap model (Gemini Flash-Lite)
+    with a Claude fallback so a provider blip never blocks the pipeline."""
     spec = agent_spec.get("intent_classifier")
-    assert "haiku" in spec.model.lower(), (
-        f"intent_classifier should use a haiku model, got {spec.model}"
-    )
+    assert spec.provider == "gemini"
+    assert spec.model == "gemini-2.5-flash-lite"
+    assert spec.fallback_provider == "anthropic"
 
 
 def test_reload_clears_cache(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch):

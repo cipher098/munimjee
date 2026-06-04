@@ -188,3 +188,10 @@ class SarvamProvider(_LLMProvider):
 
     async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
         return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)
+
+    async def complete_text(self, *, system: str, user: str, model: str,
+                            max_tokens: int, log_method: str | None = None) -> str:
+        return await self._client._chat(
+            model=model, max_tokens=max_tokens, system=system or "", user=user,
+            temperature=0.3, log_method=log_method,
+        )

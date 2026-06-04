@@ -40,14 +40,37 @@ class OpenAICompatClient:
 
     async def _chat(self, *, model: str, max_tokens: int, system: str, user: str,
                     temperature: float = 0.7, log_method: str | None = None) -> str:
+        messages = [{"role": "user", "content": user}]
+        if system:
+            messages.insert(0, {"role": "system", "content": system})
+        return await self._post(
+            model=model, max_tokens=max_tokens, messages=messages,
+            temperature=temperature, log_method=log_method,
+        )
+
+    async def _chat_vision(self, *, model: str, max_tokens: int, prompt: str,
+                           image_url: str, temperature: float = 0.2,
+                           log_method: str | None = None) -> str:
+        """OpenAI-compatible vision call — image as a (possibly data:) URL."""
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image_url}},
+            ],
+        }]
+        return await self._post(
+            model=model, max_tokens=max_tokens, messages=messages,
+            temperature=temperature, log_method=log_method,
+        )
+
+    async def _post(self, *, model: str, max_tokens: int, messages: list,
+                    temperature: float = 0.7, log_method: str | None = None) -> str:
         if not self._api_key:
             raise RuntimeError(f"{self.name.upper()}_API_KEY not configured")
         payload = {
             "model": model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
+            "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
@@ -142,3 +165,21 @@ class OpenAICompatProvider(LLMProvider):
 
     async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
         return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)
+
+    async def complete_text(self, *, system: str, user: str, model: str,
+                            max_tokens: int, log_method: str | None = None) -> str:
+        return await self._client._chat(
+            model=model, max_tokens=max_tokens, system=system, user=user,
+            temperature=0.3, log_method=log_method,
+        )
+
+    async def complete_vision(self, *, prompt: str, image: dict, model: str,
+                              max_tokens: int, log_method: str | None = None) -> str:
+        if image.get("kind") == "base64":
+            image_url = f"data:{image['media_type']};base64,{image['data']}"
+        else:
+            image_url = image["url"]
+        return await self._client._chat_vision(
+            model=model, max_tokens=max_tokens, prompt=prompt, image_url=image_url,
+            log_method=log_method,
+        )

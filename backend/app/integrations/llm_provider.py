@@ -64,6 +64,20 @@ class LLMProvider(ABC):
         """Return the customer-facing reply text. Raise on any error so
         the factory can drive fallback."""
 
+    # Generic primitives for subagent calls (intent classifier, catalog,
+    # vision, etc.) — not all providers implement every one. Default raises so
+    # routing a method to a provider that can't do it fails loudly (and the
+    # dispatcher falls back).
+    async def complete_text(self, *, system: str, user: str, model: str,
+                            max_tokens: int, log_method: str | None = None) -> str:
+        raise NotImplementedError(f"{getattr(self, 'name', '?')} has no complete_text")
+
+    async def complete_vision(self, *, prompt: str, image: dict, model: str,
+                              max_tokens: int, log_method: str | None = None) -> str:
+        """`image` is {"kind":"base64","media_type":..,"data":..} or
+        {"kind":"url","url":..}."""
+        raise NotImplementedError(f"{getattr(self, 'name', '?')} has no complete_vision")
+
 
 # ---------------------------------------------------------------------------
 # Provider registry
@@ -188,3 +202,52 @@ async def _dispatch(
     if method == "generate_reply":
         return await provider.generate_reply(context, model=model, max_tokens=max_tokens)
     raise ValueError(f"unsupported method {method!r}")
+
+
+# ---------------------------------------------------------------------------
+# Subagent dispatch (intent classifier, catalog, vision, …)
+#
+# Unlike resolve_and_call, these run a generic text/vision completion on the
+# agents.yaml-configured provider (NO seller override) and fall back to the
+# spec's fallback_provider/model on error. This is what lets every subagent —
+# not just decide/generate_reply — be routed to any provider via agents.yaml.
+# ---------------------------------------------------------------------------
+
+async def _run_with_fallback(method: str, run) -> Any:
+    """`run(provider, model, max_tokens)` -> awaitable. Resolve agents.yaml
+    provider/model for `method` and fall back on any error."""
+    _ensure_providers_registered()
+    spec = agent_spec.get(method)
+    provider_name, model = spec.provider, spec.model
+    try:
+        logger.info("subagent %s → %s/%s", method, provider_name, model)
+        return await run(get_provider(provider_name), model, spec.max_tokens)
+    except Exception as exc:
+        if (not spec.fallback_provider or not spec.fallback_model
+                or (spec.fallback_provider, spec.fallback_model) == (provider_name, model)):
+            raise
+        logger.warning(
+            "subagent %s: %s/%s raised %s — falling back to %s/%s",
+            method, provider_name, model, type(exc).__name__,
+            spec.fallback_provider, spec.fallback_model,
+        )
+        return await run(get_provider(spec.fallback_provider), spec.fallback_model, spec.max_tokens)
+
+
+async def complete_text(method: str, *, user: str, system: str = "") -> str:
+    """Run a plain text completion for `method` on its configured provider."""
+    return await _run_with_fallback(
+        method,
+        lambda p, model, mt: p.complete_text(
+            system=system, user=user, model=model, max_tokens=mt, log_method=method),
+    )
+
+
+async def complete_vision(method: str, *, prompt: str, image: dict) -> str:
+    """Run a vision (prompt+image) completion for `method` on its provider.
+    `image` is {"kind":"base64","media_type":..,"data":..} or {"kind":"url","url":..}."""
+    return await _run_with_fallback(
+        method,
+        lambda p, model, mt: p.complete_vision(
+            prompt=prompt, image=image, model=model, max_tokens=mt, log_method=method),
+    )

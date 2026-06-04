@@ -112,6 +112,7 @@ from app.integrations._json_utils import (  # noqa: F401  (re-export for test co
     parse_json_relaxed as _parse_json,
 )
 from app.integrations import llm_logging
+from app.integrations import llm_provider as _llm_provider
 # Prompt construction is shared with the Sarvam provider so the two never drift.
 from app.bot.prompt_builders import (
     build_decide_prompt,
@@ -277,51 +278,25 @@ class ClaudeClient:
         return response.content[0].text.strip()
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
-        """Generate a seller-facing product description from an image for catalog use."""
-        spec = agent_spec.get("generate_product_description")
+        """Generate a seller-facing product description from an image for catalog use.
+        Routed to the agents.yaml-configured provider (vision) with fallback."""
         template = await prompt_store.get("generate_product_description")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": template.format(product_name=product_name)},
-                    {"type": "image", "source": {"type": "url", "url": image_url}},
-                ],
-            }],
+        return await _llm_provider.complete_vision(
+            "generate_product_description",
+            prompt=template.format(product_name=product_name),
+            image={"kind": "url", "url": image_url},
         )
-        return response.content[0].text.strip()
 
     async def describe_product_image(self, image_b64: str, media_type: str = "image/jpeg") -> str:
         """Stage 1 — Vision only: describe what product is in the customer's image.
         Accepts base64-encoded image bytes (Instagram blocks direct URL fetching).
-        """
-        spec = agent_spec.get("describe_product_image")
+        Routed to the configured provider (vision) with fallback."""
         template = await prompt_store.get("image_describe")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": template},
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_b64,
-                        },
-                    },
-                ],
-            }],
+        return await _llm_provider.complete_vision(
+            "describe_product_image",
+            prompt=template,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
         )
-        return response.content[0].text.strip()
 
     async def match_product_by_description(
         self, description: str, products: list[dict]
@@ -343,20 +318,11 @@ class ClaudeClient:
             catalog_json=json.dumps(catalog, ensure_ascii=False),
         )
 
-        spec = agent_spec.get("match_product_by_description")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("match_product_by_description", user=prompt)
         try:
             return _parse_json(text)
         except LLMOutputParseError:
-            logger.error("Claude returned non-JSON catalog match: %r", text)
+            logger.error("LLM returned non-JSON catalog match: %r", text)
             return {"product_id": None, "confidence": "low", "reason": "parse error"}
 
     async def suggest_category(self, product_name: str, product_description: str = "") -> dict:
@@ -369,19 +335,11 @@ class ClaudeClient:
             product_name=product_name,
             description_line=description_line,
         )
-        spec = agent_spec.get("suggest_category")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("suggest_category", user=prompt)
         try:
             return _parse_json(text)
         except LLMOutputParseError:
-            logger.error("Claude returned non-JSON category suggestion: %r", text)
+            logger.error("LLM returned non-JSON category suggestion: %r", text)
             return {"category_name": None, "tags": []}
 
     async def suggest_tags_for_category(self, category_name: str) -> list[dict]:
@@ -391,20 +349,12 @@ class ClaudeClient:
         """
         template = await prompt_store.get("suggest_tags_for_category")
         prompt = template.format(category_name=category_name)
-        spec = agent_spec.get("suggest_tags_for_category")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("suggest_tags_for_category", user=prompt)
         try:
             result = _parse_json(text)
             return result if isinstance(result, list) else []
         except LLMOutputParseError:
-            logger.error("Claude returned non-JSON tag suggestions: %r", text)
+            logger.error("LLM returned non-JSON tag suggestions: %r", text)
             return []
 
     async def extract_feature_query(
@@ -427,19 +377,11 @@ class ClaudeClient:
             customer_message=customer_message,
             tags_json=tags_json,
         )
-        spec = agent_spec.get("extract_feature_query")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("extract_feature_query", user=prompt)
         try:
             return _parse_json(text)
         except LLMOutputParseError:
-            logger.error("Claude returned non-JSON feature query: %r", text)
+            logger.error("LLM returned non-JSON feature query: %r", text)
             return {"is_feature_question": False, "matched_tag_name": None,
                     "new_tag_name": None, "new_tag_display_name": None,
                     "new_tag_value_type": None, "new_tag_allowed_values": None}
@@ -447,19 +389,11 @@ class ClaudeClient:
     async def extract_persona(self, conversation_history: str) -> dict:
         template = await prompt_store.get("extract_persona")
         prompt = template.format(conversation_history=conversation_history)
-        spec = agent_spec.get("extract_persona")
-        response = await self._create(
-            fallback_model=spec.fallback_model,
-            log_method=spec.name,
-            model=spec.model,
-            max_tokens=spec.max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("extract_persona", user=prompt)
         try:
             return _parse_json(text)
         except LLMOutputParseError:
-            logger.error("Claude returned non-JSON persona: %r", text)
+            logger.error("LLM returned non-JSON persona: %r", text)
             return {}
 
 
@@ -483,3 +417,27 @@ class ClaudeProvider(_LLMProvider):
 
     async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
         return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)
+
+    async def complete_text(self, *, system: str, user: str, model: str,
+                            max_tokens: int, log_method: str | None = None) -> str:
+        kwargs = dict(model=model, max_tokens=max_tokens,
+                      messages=[{"role": "user", "content": user}])
+        if system:
+            kwargs["system"] = system
+        resp = await self._client._create(log_method=log_method, **kwargs)
+        return resp.content[0].text.strip()
+
+    async def complete_vision(self, *, prompt: str, image: dict, model: str,
+                              max_tokens: int, log_method: str | None = None) -> str:
+        if image.get("kind") == "base64":
+            source = {"type": "base64", "media_type": image["media_type"], "data": image["data"]}
+        else:
+            source = {"type": "url", "url": image["url"]}
+        resp = await self._client._create(
+            log_method=log_method, model=model, max_tokens=max_tokens,
+            messages=[{"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image", "source": source},
+            ]}],
+        )
+        return resp.content[0].text.strip()

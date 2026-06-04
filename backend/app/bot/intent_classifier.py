@@ -88,33 +88,15 @@ async def classify(customer_message: str, recent_history: list[dict] | None = No
     template = await prompt_store.get("intent_classifier")
     prompt = template.replace("{history}", history_str).replace("{message}", customer_message)
 
-    spec = agent_spec.get("intent_classifier")
-    request_kwargs = dict(
-        model=spec.model,
-        max_tokens=spec.max_tokens,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    # Routed via the provider factory (agents.yaml `intent_classifier` entry) so
+    # it follows the same provider as the rest of the bot, with fallback. Usage
+    # is logged inside the provider. Failures must NOT block the bot.
+    from app.integrations import llm_provider
     try:
-        client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-        resp = await client.messages.create(**request_kwargs)
+        text = (await llm_provider.complete_text("intent_classifier", user=prompt)).strip()
     except Exception as exc:
-        logger.warning("Intent classifier API failed (%s) — using neutral fallback", exc)
-        llm_logging.record(
-            "anthropic", spec.model, "intent_classifier",
-            status="error", request=request_kwargs, error=f"{type(exc).__name__}: {exc}",
-        )
+        logger.warning("Intent classifier failed (%s) — using neutral fallback", exc)
         return _NEUTRAL_FALLBACK
-
-    text = resp.content[0].text.strip() if resp.content else ""
-    usage = getattr(resp, "usage", None)
-    llm_logging.record(
-        "anthropic", spec.model, "intent_classifier",
-        input_tokens=(getattr(usage, "input_tokens", None) if usage else None),
-        output_tokens=(getattr(usage, "output_tokens", None) if usage else None),
-        cache_read_input_tokens=(getattr(usage, "cache_read_input_tokens", 0) or 0 if usage else 0),
-        cache_creation_input_tokens=(getattr(usage, "cache_creation_input_tokens", 0) or 0 if usage else 0),
-        request=request_kwargs, response=text,
-    )
     return _parse(text)
 
 

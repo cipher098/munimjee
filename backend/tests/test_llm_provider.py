@@ -74,9 +74,9 @@ def _swap_provider_registry(monkeypatch):
 def test_resolve_choice_uses_app_default_when_seller_has_no_prefs():
     seller = _FakeSeller(llm_preferences=None)
     provider, model, max_tokens = resolve_choice("decide", seller)
-    # agents.yaml decide default is anthropic / claude-sonnet-4-...
-    assert provider == "anthropic"
-    assert model.startswith("claude-")
+    # agents.yaml decide default is now gemini / gemini-2.5-flash-lite
+    assert provider == "gemini"
+    assert model.startswith("gemini-")
     assert max_tokens > 0
 
 
@@ -84,8 +84,8 @@ def test_resolve_choice_uses_app_default_when_seller_pref_is_for_other_key():
     """Seller overrode reply only — decide should still use app default."""
     seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-30b"}})
     provider, model, _ = resolve_choice("decide", seller)
-    assert provider == "anthropic"
-    assert model.startswith("claude-")
+    assert provider == "gemini"
+    assert model.startswith("gemini-")
 
 
 def test_resolve_choice_honours_seller_override_for_decide():
@@ -109,12 +109,12 @@ def test_resolve_choice_ignores_seller_override_for_subagent_methods():
         # Even if (hypothetically) a key matched a subagent method, it must be ignored.
     })
     provider, _, _ = resolve_choice("intent_classifier", seller)
-    assert provider == "anthropic"  # subagent stays on app default
+    assert provider == "gemini"  # subagent stays on app default, ignoring seller pref
 
 
 def test_resolve_choice_works_with_seller_none():
     provider, model, _ = resolve_choice("decide", None)
-    assert provider == "anthropic"
+    assert provider == "gemini"
 
 
 # ---------------------------------------------------------------------------
