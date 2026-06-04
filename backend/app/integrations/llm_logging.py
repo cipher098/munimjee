@@ -96,6 +96,11 @@ def set_product(
         ctx.conversation_product_id = conversation_product_id
 
 
+def current() -> Optional["_TurnContext"]:
+    """The active turn context, or None outside a turn."""
+    return _ctx.get()
+
+
 def end(token: contextvars.Token) -> None:
     try:
         _ctx.reset(token)

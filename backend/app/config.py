@@ -26,6 +26,13 @@ class Settings(BaseSettings):
 
     SARVAM_API_KEY: str = ""
     SARVAM_API_URL: str = "https://api.sarvam.ai/v1/chat/completions"
+    # Sarvam-30b/105b are reasoning models: they spend tokens on an internal
+    # reasoning stream before the visible answer, billed against max_tokens.
+    # effort ∈ {low, medium, high}; headroom is added on top of the caller's
+    # answer budget so max_tokens keeps meaning "answer length". Tune up only
+    # if the eval shows it closes the quality gap with Claude.
+    SARVAM_REASONING_EFFORT: str = "low"
+    SARVAM_REASONING_HEADROOM_TOKENS: int = 1800
     ANTHROPIC_API_KEY: str
 
     GOOGLE_APPLICATION_CREDENTIALS: str = ""

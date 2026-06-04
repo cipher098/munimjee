@@ -107,57 +107,19 @@ def _build_decision_messages(
     return coalesced
 
 
-def _split_reply_prompt(formatted_prompt: str) -> tuple[str, str]:
-    """Split a fully-formatted REPLY_PROMPT into (static_system, dynamic_context).
-
-    Splits at the `--- DYNAMIC CONTEXT ---` marker which sits BEFORE the
-    data section. Static rules (cacheable) go above, dynamic per-call data
-    (persona, product, prices, etc.) goes below.
-
-    Returns (whole_prompt, "") if the marker is missing — caller falls back
-    to sending the whole prompt as the user message uncached.
-    """
-    marker = "--- DYNAMIC CONTEXT ---"
-    if marker not in formatted_prompt:
-        return formatted_prompt, ""
-    before, _, after = formatted_prompt.partition(marker)
-    return before.rstrip(), marker + after.rstrip()
-
-
-def _split_decision_prompt(formatted_prompt: str) -> tuple[str, str]:
-    """Split a fully-formatted DECISION_PROMPT into (static_system, dynamic_user).
-
-    The training dashboard rewrites DECISION_PROMPT freely, so we split at
-    runtime on stable markers rather than maintaining two prompt constants.
-    Returns (system_prompt, user_prompt) where system holds the rules
-    (cacheable across calls) and user holds the per-call context.
-
-    Falls back to (whole_prompt, "") if markers are missing — caller can
-    detect empty user and skip caching.
-    """
-    ctx_marker = "--- CONTEXT ---"
-    strategy_marker = "--- NEGOTIATION STRATEGY"
-    if ctx_marker not in formatted_prompt or strategy_marker not in formatted_prompt:
-        return formatted_prompt, ""
-    before_ctx, _, after_ctx = formatted_prompt.partition(ctx_marker)
-    if strategy_marker not in after_ctx:
-        return formatted_prompt, ""
-    context_block, _, strategy_block = after_ctx.partition(strategy_marker)
-    static_system = (
-        before_ctx.rstrip()
-        + "\n\n"
-        + strategy_marker
-        + strategy_block.rstrip()
-    )
-    dynamic_user = ctx_marker + context_block.rstrip()
-    return static_system, dynamic_user
-
-
 from app.integrations._json_utils import (  # noqa: F401  (re-export for test compatibility)
     LLMOutputParseError,
     parse_json_relaxed as _parse_json,
 )
 from app.integrations import llm_logging
+# Prompt construction is shared with the Sarvam provider so the two never drift.
+from app.bot.prompt_builders import (
+    build_decide_prompt,
+    build_reply_prompt,
+    evaluate_interventions,
+    split_decide_prompt as _split_decision_prompt,
+    split_reply_prompt as _split_reply_prompt,
+)
 
 
 def _response_text(resp) -> str:
@@ -224,50 +186,14 @@ class ClaudeClient:
         return resp
 
     async def decide(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> dict:
-        last_counter = context.get("last_counter_price")
-        last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
-        last_shown = context.get("last_shown_price")
-        last_shown_str = f"{last_shown} paise (₹{last_shown // 100})" if last_shown else "none yet"
-
-        # Pass empty customer_message/message_history so .format() still works if
-        # the training dashboard re-introduces those placeholders. The actual
-        # latest customer message and history are sent as native Anthropic
-        # messages below for prefix caching.
-        decision_template = await prompt_store.get("decide")
-        prompt = decision_template.format(
-            state=context.get("state", ""),
-            customer_message="",
-            listed_price=context.get("listed_price", "unknown"),
-            floor_price=context.get("floor_price", "unknown"),
-            last_counter_price=last_counter_str,
-            last_shown_price=last_shown_str,
-            round_number=context.get("negotiation_round", 0),
-            message_history="",
-            available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
-            other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
-            bundle_pitched=context.get("bundle_pitched", False),
-            seller_channels=json.dumps(context.get("seller_channels", []), ensure_ascii=False),
-            product_variants=json.dumps(context.get("product_variants", []), ensure_ascii=False),
-            active_variant_label=context.get("active_variant_label") or "none",
-        )
-
+        # Shared builder — same prompt Sarvam uses. customer_message/history are
+        # sent below as native Anthropic messages for prefix caching.
+        prompt = await build_decide_prompt(context)
         system_text, context_block = _split_decision_prompt(prompt)
 
-        # Evaluate intervention rules. Fired reminders go INTO the user-side context
-        # so they remain dynamic (don't pollute the cached system prompt) and give
-        # the model fresh, situation-specific guidance for high-leverage turns.
-        from app.bot import interventions as _interventions
-
-        fired = _interventions.evaluate(context)
-        if fired:
-            logger.info(
-                "Interventions fired: %s",
-                ", ".join(f"{r.id}(p={r.priority})" for r in fired),
-            )
-        # Test hook — scenario harness asserts on which rules fired this turn.
-        from app.bot.test_hooks import record as _record_turn
-        _record_turn(fired_interventions=[r.id for r in fired])
-        reminder_block = _interventions.render_reminders(fired)
+        # Fired intervention reminders go INTO the user-side context so they stay
+        # dynamic (don't pollute the cached system prompt). Shared with Sarvam.
+        reminder_block = evaluate_interventions(context)
         if reminder_block and context_block:
             context_block = f"{reminder_block}\n\n{context_block}"
 
@@ -311,124 +237,10 @@ class ClaudeClient:
         return _parse_json(text)  # raises LLMOutputParseError on bad JSON
 
     async def generate_reply(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> str:
-        decision = context.get("decision", {})
-        price = decision.get("price")
-        price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
-        last_counter = context.get("last_counter_price")
-        last_counter_reply_str = f"₹{last_counter // 100}" if last_counter else "none"
-        last_shown = context.get("last_shown_price")
-        last_shown_reply_str = f"₹{last_shown // 100}" if last_shown else "none"
-        display_price_rupees = context.get("display_price_rupees")
-        display_price_str = f"₹{display_price_rupees}" if display_price_rupees is not None else "N/A"
-
-        warranty = context.get("warranty_months")
-        warranty_str = f"{warranty} months" if warranty else "No warranty"
-
-        stock = context.get("stock_quantity")
-        if stock is None:
-            stock_str = "Not tracked"
-        elif stock == 0:
-            stock_str = "Out of stock"
-        elif stock <= 3:
-            stock_str = f"Only {stock} left"
-        else:
-            stock_str = f"{stock} in stock"
-
-        policies = context.get("policies") or {}
-        cod = policies.get("cod")
-        cod_charges = policies.get("cod_charges", 0)
-        return_days = policies.get("return_days")
-        exchange_days = policies.get("exchange_days")
-        delivery_days = policies.get("delivery_days")
-        payment_modes = policies.get("payment_modes") or []
-
-        _mode_labels = {"upi": "UPI", "bank_transfer": "Bank Transfer/NEFT", "card": "Card"}
-        mode_str = " / ".join(_mode_labels.get(m, m) for m in payment_modes) if payment_modes else None
-
-        policy_lines = []
-        if mode_str:
-            policy_lines.append(f"Accepted payment: {mode_str}")
-        if cod is True:
-            if cod_charges:
-                policy_lines.append(f"COD available with ₹{cod_charges} extra charge")
-            else:
-                policy_lines.append("COD available, no extra charge")
-        elif cod is False:
-            policy_lines.append("No COD — prepaid only")
-        if return_days:
-            policy_lines.append(f"{return_days}-day returns accepted")
-        elif return_days == 0 and "return_days" in policies:
-            policy_lines.append("No returns")
-        if exchange_days:
-            policy_lines.append(f"{exchange_days}-day exchange accepted")
-        elif exchange_days == 0 and "exchange_days" in policies:
-            policy_lines.append("No exchange")
-        if delivery_days:
-            policy_lines.append(f"Delivery in {delivery_days}")
-        policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy; say you'll check and confirm"
-
-        total_photos = context.get("total_photos", 1)
-        has_more_photos = total_photos > 1
-
         history = context.get("message_history") or []
 
-        product_description = context.get("product_description") or "No description available"
-        logger.warning("generate_reply: product=%r description=%r", context.get("product_name"), product_description)
-
-        tag_values = context.get("product_tag_values") or {}
-        tag_values_str = (
-            ", ".join(f"{k}: {v}" for k, v in tag_values.items()) if tag_values else "None available"
-        )
-
-        other_active = context.get("other_active_products") or []
-        other_active_str = (
-            ", ".join(p["name"] for p in other_active) if other_active else "none"
-        )
-
-        other_inquiry = context.get("other_inquiry_products") or []
-
-        def _fmt_inquiry(p: dict) -> str:
-            base = f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
-            if p.get("last_shown_price_rupees"):
-                base += f" last_shown=₹{p['last_shown_price_rupees']} (NEVER quote higher than this)"
-            return base
-
-        other_inquiry_str = (
-            ", ".join(_fmt_inquiry(p) for p in other_inquiry) if other_inquiry else "none"
-        )
-
-        # customer_message/message_history are no longer rendered into REPLY_PROMPT —
-        # they're sent as native Anthropic messages below for prefix caching.
-        # Pass empty strings to .format() in case the training dashboard re-introduces
-        # the placeholders later.
-        reply_template = await prompt_store.get("generate_reply")
-        prompt = reply_template.format(
-            persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
-            product_name=context.get("product_name", "the product"),
-            product_description=product_description,
-            product_tag_values=tag_values_str,
-            listed_price_rupees=context.get("listed_price_rupees", "N/A"),
-            display_price_rupees=display_price_str,
-            floor_price_rupees=context.get("floor_price_rupees", "N/A"),
-            warranty_info=warranty_str,
-            stock_info=stock_str,
-            policy_info=policy_str,
-            action=decision.get("action", "clarify"),
-            price_context=price_context,
-            last_counter_price=last_counter_reply_str,
-            last_shown_price=last_shown_reply_str,
-            customer_intent=decision.get("customer_intent", "warm"),
-            customer_message="",
-            has_more_photos=has_more_photos,
-            message_history="",
-            address_term=context.get("address_term", "yaar"),
-            other_active_products=other_active_str,
-            other_inquiry_products_str=other_inquiry_str,
-            multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",
-            bundle_breakdown=context.get("bundle_breakdown") or "N/A",
-            inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
-        )
-
+        # Shared builder — identical prompt + context to the Sarvam provider.
+        prompt = await build_reply_prompt(context)
         system_text, context_block = _split_reply_prompt(prompt)
 
         spec = agent_spec.get("generate_reply")
