@@ -82,6 +82,21 @@ def split_decide_prompt(formatted_prompt: str) -> tuple[str, str]:
     return static_system, dynamic_user
 
 
+def split_reply_prompt(formatted_prompt: str) -> tuple[str, str]:
+    """Split a formatted reply prompt into (static_system, dynamic_user).
+
+    Splits on `--- DYNAMIC CONTEXT ---`: everything before is the static,
+    cacheable rules/persona/policy block; the marker plus everything after is
+    the per-turn dynamic context (price, stock, warranty, action, …). Returns
+    (whole, "") if the marker is missing — caller detects empty user and skips
+    caching."""
+    marker = "--- DYNAMIC CONTEXT ---"
+    if marker not in formatted_prompt:
+        return formatted_prompt, ""
+    before, sep, after = formatted_prompt.partition(marker)
+    return before.rstrip(), (sep + after).rstrip()
+
+
 # ---------------------------------------------------------------------------
 # Interventions (decide only) — evaluated once per turn by whichever provider
 # handles decide; records the test hook for the scenario harness.

@@ -20,8 +20,9 @@ from app.bot.prompt_builders import (
     evaluate_interventions,
     render_transcript,
     split_decide_prompt,
+    split_reply_prompt,
 )
-from app.integrations import llm_logging
+from app.integrations import gemini_cache, llm_logging
 from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
 from app.integrations.llm_provider import LLMProvider
 from app.integrations.sarvam import _clean_reply_text
@@ -38,6 +39,29 @@ class OpenAICompatClient:
         base = (base_url or "").rstrip("/")
         self._url = base if base.endswith("/chat/completions") else f"{base}/chat/completions"
         self._api_key = api_key
+        # Gemini exposes a native generateContent API (…/v1beta) alongside the
+        # OpenAI-compat one (…/v1beta/openai). Only the native one supports
+        # explicit context caching, so derive its base for the cached path.
+        self._native_base = self._url.split("/openai")[0] if "/openai" in self._url else None
+
+    async def _chat_cached_or_plain(self, *, model: str, max_tokens: int, system: str,
+                                    user: str, temperature: float, log_method: str | None) -> str:
+        """Prefer the explicit-cached native Gemini path (system prefix billed at
+        the cache_read rate); fall back to the plain OpenAI-compat call on any
+        failure so caching never breaks the bot."""
+        if self._native_base and system:
+            try:
+                return await gemini_cache.cached_generate(
+                    native_base=self._native_base, api_key=self._api_key, model=model,
+                    system_text=system, user_text=user, max_tokens=max_tokens,
+                    temperature=temperature, log_method=log_method,
+                )
+            except Exception as exc:
+                logger.warning("%s cached generate failed (%s) — uncached fallback", self.name, exc)
+        return await self._chat(
+            model=model, max_tokens=max_tokens, system=system, user=user,
+            temperature=temperature, log_method=log_method,
+        )
 
     async def _chat(self, *, model: str, max_tokens: int, system: str, user: str,
                     temperature: float = 0.7, log_method: str | None = None) -> str:
@@ -149,7 +173,7 @@ class OpenAICompatClient:
         parts.append(f"Latest customer message: {customer_msg!r}")
         parts.append("Choose the next action and return ONLY a JSON object — no prose, no code fences.")
         user_block = "\n\n".join(parts)
-        text = await self._chat(
+        text = await self._chat_cached_or_plain(
             model=model, max_tokens=max_tokens,
             system=system_text if context_block else prompt,
             user=user_block, temperature=0.2, log_method="decide",
@@ -158,18 +182,26 @@ class OpenAICompatClient:
 
     async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
         prompt = await build_reply_prompt(context)
+        # Split the static rules/persona block (cacheable system prefix) from the
+        # per-turn DYNAMIC CONTEXT so the system prompt stays byte-identical
+        # across calls and the explicit cache can hit it. Falls back to the whole
+        # prompt as system when the marker is missing (dynamic_block == "").
+        system_text, dynamic_block = split_reply_prompt(prompt)
         transcript = render_transcript(context.get("message_history"))
         customer_msg = context.get("customer_message") or ""
         action = (context.get("decision") or {}).get("action", "")
-        user_block = (
-            f"Action to take: {action}\n\n"
-            f"Recent conversation:\n{transcript}\n\n"
-            f"Latest customer message: {customer_msg!r}\n\n"
-            "Generate the seller's next message — reply text only, no quotes, no speaker label."
-        )
-        text = await self._chat(
+        parts = []
+        if dynamic_block:
+            parts.append(dynamic_block)
+        parts.append(f"Action to take: {action}")
+        parts.append(f"Recent conversation:\n{transcript}")
+        parts.append(f"Latest customer message: {customer_msg!r}")
+        parts.append("Generate the seller's next message — reply text only, no quotes, no speaker label.")
+        user_block = "\n\n".join(parts)
+        text = await self._chat_cached_or_plain(
             model=model, max_tokens=max_tokens,
-            system=prompt, user=user_block, temperature=0.7, log_method="generate_reply",
+            system=system_text if dynamic_block else prompt,
+            user=user_block, temperature=0.7, log_method="generate_reply",
         )
         return _clean_reply_text(text)
 
