@@ -208,7 +208,8 @@
       <option value="">Use default</option>
       <option value="anthropic|claude-sonnet-4-20250514">Anthropic — Claude Sonnet 4</option>
       <option value="anthropic|claude-3-5-sonnet-20241022">Anthropic — Claude 3.5 Sonnet</option>
-      <option value="sarvam|sarvam-m">Sarvam — M</option>
+      <option value="sarvam|sarvam-30b">Sarvam — 30B</option>
+      <option value="sarvam|sarvam-105b">Sarvam — 105B</option>
     </select>
     <div class="hint">Picks the JSON action (counter / hold_firm / accept / …). Claude is safer for strict JSON; Sarvam will auto-fall-back to Claude on parse failure.</div>
 
@@ -217,9 +218,10 @@
       <option value="">Use default</option>
       <option value="anthropic|claude-sonnet-4-20250514">Anthropic — Claude Sonnet 4</option>
       <option value="anthropic|claude-3-5-sonnet-20241022">Anthropic — Claude 3.5 Sonnet</option>
-      <option value="sarvam|sarvam-m">Sarvam — M</option>
+      <option value="sarvam|sarvam-30b">Sarvam — 30B</option>
+      <option value="sarvam|sarvam-105b">Sarvam — 105B</option>
     </select>
-    <div class="hint">Writes the actual message the customer sees. Sarvam M is Hinglish-tuned; Claude is more careful with multi-product/bundle pricing.</div>
+    <div class="hint">Writes the actual message the customer sees. Sarvam is Hinglish-tuned; Claude is more careful with multi-product/bundle pricing.</div>
 
     <button class="btn" id="saveLlmBtn" onclick="saveLlmPreferences()">Save Model Preferences</button>
   </div>

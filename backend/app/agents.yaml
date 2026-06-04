@@ -38,7 +38,7 @@ agents:
   generate_reply:
     description: Hinglish reply writer driven by decide()'s chosen action.
     provider: sarvam
-    model: sarvam-m
+    model: sarvam-30b
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-sonnet-4-20250514

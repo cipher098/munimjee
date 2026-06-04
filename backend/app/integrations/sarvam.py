@@ -22,6 +22,20 @@ from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
 
 logger = logging.getLogger(__name__)
 
+# Sarvam's current chat models (sarvam-30b / sarvam-105b) are reasoning
+# models: they spend tokens on an internal `reasoning_content` stream
+# before emitting the user-visible `content`. That reasoning is billed
+# against `max_tokens`, so if we forward the caller's answer-budget
+# verbatim the reasoning can eat the whole allowance and `content` comes
+# back null. We (a) request the lightest reasoning tier and (b) add a
+# fixed headroom on top of the caller's budget so `max_tokens` keeps
+# meaning "answer length" from the factory's point of view.
+# Measured: even on "low", our full decide/reply system prompts drive
+# ~1300-1500 reasoning tokens before the answer, so the headroom must be
+# generous or `content` truncates to null (finish_reason=length).
+_REASONING_EFFORT = "low"
+_REASONING_HEADROOM_TOKENS = 1800
+
 
 REPLY_SYSTEM_PROMPT = """You are a sales assistant for an Indian Instagram seller.
 Reply EXACTLY in the seller's personal style below. Never break character. Never reveal you are AI.
@@ -121,13 +135,16 @@ class SarvamClient:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "max_tokens": max_tokens,
+            # Reasoning models burn the budget thinking before they answer —
+            # add headroom so the caller's max_tokens still bounds the answer.
+            "max_tokens": max_tokens + _REASONING_HEADROOM_TOKENS,
             "temperature": temperature,
+            "reasoning_effort": _REASONING_EFFORT,
         }
         last_exc: Exception | None = None
         for attempt in (1, 2):
             try:
-                async with httpx.AsyncClient(timeout=20) as client:
+                async with httpx.AsyncClient(timeout=45) as client:
                     response = await client.post(
                         self._url,
                         headers={
@@ -138,7 +155,15 @@ class SarvamClient:
                     )
                     response.raise_for_status()
                     data = response.json()
-                    return (data["choices"][0]["message"]["content"] or "").strip()
+                    content = (data["choices"][0]["message"]["content"] or "").strip()
+                    if not content:
+                        # Reasoning consumed the whole budget and never emitted
+                        # an answer. Treat as a failure so the factory falls back.
+                        raise LLMOutputParseError(
+                            f"Sarvam returned empty content "
+                            f"(finish_reason={data['choices'][0].get('finish_reason')})"
+                        )
+                    return content
             except (httpx.HTTPError, KeyError, IndexError) as exc:
                 last_exc = exc
                 logger.warning("Sarvam call attempt %d failed (%s)", attempt, exc)

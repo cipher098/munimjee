@@ -82,17 +82,17 @@ def test_resolve_choice_uses_app_default_when_seller_has_no_prefs():
 
 def test_resolve_choice_uses_app_default_when_seller_pref_is_for_other_key():
     """Seller overrode reply only — decide should still use app default."""
-    seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-m"}})
+    seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-30b"}})
     provider, model, _ = resolve_choice("decide", seller)
     assert provider == "anthropic"
     assert model.startswith("claude-")
 
 
 def test_resolve_choice_honours_seller_override_for_decide():
-    seller = _FakeSeller(llm_preferences={"decide": {"provider": "sarvam", "model": "sarvam-m"}})
+    seller = _FakeSeller(llm_preferences={"decide": {"provider": "sarvam", "model": "sarvam-30b"}})
     provider, model, _ = resolve_choice("decide", seller)
     assert provider == "sarvam"
-    assert model == "sarvam-m"
+    assert model == "sarvam-30b"
 
 
 def test_resolve_choice_honours_seller_override_for_reply():
@@ -105,7 +105,7 @@ def test_resolve_choice_honours_seller_override_for_reply():
 def test_resolve_choice_ignores_seller_override_for_subagent_methods():
     """Subagent methods (intent_classifier, etc.) must NEVER honour seller prefs."""
     seller = _FakeSeller(llm_preferences={
-        "decide": {"provider": "sarvam", "model": "sarvam-m"},
+        "decide": {"provider": "sarvam", "model": "sarvam-30b"},
         # Even if (hypothetically) a key matched a subagent method, it must be ignored.
     })
     provider, _, _ = resolve_choice("intent_classifier", seller)
@@ -148,7 +148,7 @@ async def test_falls_back_on_parse_failure():
     fallback = _FakeProvider("anthropic", decide_result={"action": "ok"})
     llm_provider.register("sarvam", primary)
     llm_provider.register("anthropic", fallback)
-    seller = _FakeSeller(llm_preferences={"decide": {"provider": "sarvam", "model": "sarvam-m"}})
+    seller = _FakeSeller(llm_preferences={"decide": {"provider": "sarvam", "model": "sarvam-30b"}})
     result = await resolve_and_call("decide", seller, {})
     assert result == {"action": "ok"}
     # Both providers should have been called.
@@ -162,7 +162,7 @@ async def test_falls_back_on_generic_exception():
     fallback = _FakeProvider("anthropic", reply_result="fallback reply")
     llm_provider.register("sarvam", primary)
     llm_provider.register("anthropic", fallback)
-    seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-m"}})
+    seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-30b"}})
     reply = await resolve_and_call("generate_reply", seller, {})
     assert reply == "fallback reply"
 

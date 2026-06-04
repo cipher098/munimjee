@@ -112,11 +112,11 @@ async def save_channels(body: ChannelsUpdate, db: AsyncSession = Depends(get_db)
 # change. Anything outside this set is rejected on save.
 _ALLOWED_DECIDE_MODELS = {
     "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
-    "sarvam": {"sarvam-m", "sarvam-2b"},
+    "sarvam": {"sarvam-30b", "sarvam-105b"},
 }
 _ALLOWED_REPLY_MODELS = {
     "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
-    "sarvam": {"sarvam-m", "sarvam-2b"},
+    "sarvam": {"sarvam-30b", "sarvam-105b"},
 }
 
 
