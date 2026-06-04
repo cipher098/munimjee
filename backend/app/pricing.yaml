@@ -53,3 +53,10 @@ models:
     output: null
     cache_read: null
     cache_write: null
+
+  # Google Gemini (USD/1M tokens). Flash-Lite is ~10x cheaper than Haiku.
+  gemini-2.5-flash-lite:
+    input: 0.10
+    output: 0.40
+    cache_read: null
+    cache_write: null

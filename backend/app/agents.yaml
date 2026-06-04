@@ -31,16 +31,16 @@ defaults:
 agents:
   decide:
     description: Negotiation action chooser — returns JSON action + price + intent.
-    provider: anthropic
-    model: claude-haiku-4-5-20251001
+    provider: gemini
+    model: gemini-2.5-flash-lite
     max_tokens: 350
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
 
   generate_reply:
     description: Hinglish reply writer driven by decide()'s chosen action.
-    provider: anthropic
-    model: claude-haiku-4-5-20251001
+    provider: gemini
+    model: gemini-2.5-flash-lite
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001

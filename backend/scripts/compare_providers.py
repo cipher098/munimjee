@@ -1,13 +1,17 @@
-"""Sarvam-vs-Claude reply/decide parity eval.
+"""Candidate-vs-reference reply/decide parity eval.
 
-Runs a set of fixed conversation situations through BOTH providers (directly,
-bypassing the factory fallback), prints replies side-by-side with
-latency/tokens/cost, and asks Claude to judge the Sarvam reply against the
-Claude reply. Aggregates an overall parity score so "at par" is measurable and
-regressions are visible.
+Runs fixed conversation situations through a REFERENCE provider/model (default
+the current prod model, Claude Haiku) and a CANDIDATE provider/model (default
+gemini/gemini-2.5-flash-lite), prints replies side-by-side with
+latency/tokens/cost, asks Claude to judge the candidate reply against the
+reference, checks the candidate's decide JSON, and reports a parity score + cost
+delta so "at par + cheaper" is measurable.
 
-Run in-container (hits live Anthropic + Sarvam APIs):
-    docker compose run --rm api python scripts/compare_providers.py
+Configure via env: EVAL_REF_PROVIDER/EVAL_REF_MODEL,
+EVAL_CANDIDATE_PROVIDER/EVAL_CANDIDATE_MODEL, EVAL_JUDGE_MODEL.
+
+Run in-container (hits live APIs for both providers):
+    docker compose run --rm -e PYTHONPATH=/app api python scripts/compare_providers.py
 
 It does NOT touch the DB — prompts resolve via prompt_store (DB→file fallback)
 and token/cost come from the in-memory llm_logging capture, not persisted.
@@ -21,13 +25,17 @@ import anthropic
 
 from app.config import settings
 from app.integrations import llm_logging as L
-from app.integrations.claude import ClaudeProvider
+from app.integrations import llm_provider
 from app.integrations.llm_pricing import compute_cost_usd
-from app.integrations.sarvam import SarvamProvider
 
-CLAUDE_MODEL = os.environ.get("EVAL_CLAUDE_MODEL", "claude-sonnet-4-20250514")
-SARVAM_MODEL = os.environ.get("EVAL_SARVAM_MODEL", "sarvam-30b")
+# Reference = current production model; candidate = the cheaper model under test.
+REF_PROVIDER = os.environ.get("EVAL_REF_PROVIDER", "anthropic")
+REF_MODEL = os.environ.get("EVAL_REF_MODEL", "claude-haiku-4-5-20251001")
+CAND_PROVIDER = os.environ.get("EVAL_CANDIDATE_PROVIDER", "gemini")
+CAND_MODEL = os.environ.get("EVAL_CANDIDATE_MODEL", "gemini-2.5-flash-lite")
+JUDGE_MODEL = os.environ.get("EVAL_JUDGE_MODEL", "claude-sonnet-4-20250514")
 REPLY_MAX_TOKENS = 200
+DECIDE_MAX_TOKENS = 350
 
 
 def _base_ctx(**over) -> dict:
@@ -163,10 +171,10 @@ SITUATION: {scenario['name']}
 GROUND-TRUTH FACTS the reply must respect: {scenario['facts']}
 CUSTOMER MESSAGE: {scenario['ctx']['customer_message']!r}
 
-REPLY A (reference, Claude):
+REPLY A (reference):
 {reply_claude}
 
-REPLY B (candidate, Sarvam):
+REPLY B (candidate):
 {reply_sarvam}
 
 Score REPLY B on a 1-5 scale (5=best) on each dimension, judged against the facts
@@ -180,7 +188,7 @@ and using REPLY A as a quality reference:
 Return ONLY JSON:
 {{"hinglish_tone":n,"factual_correctness":n,"price_accuracy":n,"brevity":n,"overall":n,"note":"one short sentence"}}"""
     resp = await client.messages.create(
-        model=CLAUDE_MODEL, max_tokens=300,
+        model=JUDGE_MODEL, max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
     text = resp.content[0].text.strip()
@@ -192,33 +200,57 @@ Return ONLY JSON:
 
 
 async def main():
-    claude = ClaudeProvider()
-    sarvam = SarvamProvider()
+    llm_provider._ensure_providers_registered()
+    ref = llm_provider.get_provider(REF_PROVIDER)
+    cand = llm_provider.get_provider(CAND_PROVIDER)
     judge_client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     overalls = []
-    print(f"\n{'='*100}\nSarvam ({SARVAM_MODEL}) vs Claude ({CLAUDE_MODEL}) — reply parity eval"
-          f"\nreasoning_effort={settings.SARVAM_REASONING_EFFORT} headroom={settings.SARVAM_REASONING_HEADROOM_TOKENS}\n{'='*100}")
+    decide_match = decide_valid = decide_total = 0
+    ref_cost = cand_cost = 0.0
+    print(f"\n{'='*100}\nCANDIDATE {CAND_PROVIDER}/{CAND_MODEL}  vs  REFERENCE {REF_PROVIDER}/{REF_MODEL}"
+          f"\nreply parity (judge 1-5) + decide JSON check + cost\n{'='*100}")
 
     for sc in SCENARIOS:
         ctx = sc["ctx"]
-        rc, tc, ic, oc, cc = await _capture(claude.generate_reply(ctx, model=CLAUDE_MODEL, max_tokens=REPLY_MAX_TOKENS))
-        rs, ts, is_, os_, cs = await _capture(sarvam.generate_reply(ctx, model=SARVAM_MODEL, max_tokens=REPLY_MAX_TOKENS))
-        verdict = await _judge(judge_client, sc, rc, rs)
+        # --- generate_reply ---
+        rr, tr, ir, orr, cr = await _capture(ref.generate_reply(ctx, model=REF_MODEL, max_tokens=REPLY_MAX_TOKENS))
+        rk, tk, ik, ok, ck = await _capture(cand.generate_reply(ctx, model=CAND_MODEL, max_tokens=REPLY_MAX_TOKENS))
+        ref_cost += cr
+        cand_cost += ck
+        verdict = await _judge(judge_client, sc, rr, rk)
         if isinstance(verdict.get("overall"), (int, float)):
             overalls.append(verdict["overall"])
 
+        # --- decide (JSON validity + action agreement) ---
+        decide_total += 1
+        d_ref, *_ = await _capture(ref.decide(ctx, model=REF_MODEL, max_tokens=DECIDE_MAX_TOKENS))
+        d_cand, *_ = await _capture(cand.decide(ctx, model=CAND_MODEL, max_tokens=DECIDE_MAX_TOKENS))
+        ref_action = d_ref.get("action") if isinstance(d_ref, dict) else None
+        cand_action = d_cand.get("action") if isinstance(d_cand, dict) else None
+        if isinstance(d_cand, dict):
+            decide_valid += 1
+        if ref_action and ref_action == cand_action:
+            decide_match += 1
+
         print(f"\n── {sc['name']} ──  customer: {ctx['customer_message']!r}")
         print(f"   facts: {sc['facts']}")
-        print(f"   CLAUDE ({tc:.1f}s, {ic}+{oc}tok, ${cc:.5f}): {rc}")
-        print(f"   SARVAM ({ts:.1f}s, {is_}+{os_}tok, ${cs:.5f}): {rs}")
-        print(f"   JUDGE B(Sarvam): tone={verdict.get('hinglish_tone')} "
+        print(f"   REF  ({tr:.1f}s, {ir}+{orr}tok, ${cr:.5f}): {rr}")
+        print(f"   CAND ({tk:.1f}s, {ik}+{ok}tok, ${ck:.5f}): {rk}")
+        print(f"   JUDGE candidate: tone={verdict.get('hinglish_tone')} "
               f"correct={verdict.get('factual_correctness')} price={verdict.get('price_accuracy')} "
               f"brevity={verdict.get('brevity')} overall={verdict.get('overall')} — {verdict.get('note')}")
+        print(f"   DECIDE action: ref={ref_action} cand={cand_action} "
+              f"{'(JSON OK)' if isinstance(d_cand, dict) else '(CAND JSON FAILED)'}")
 
+    print(f"\n{'='*100}")
     if overalls:
-        print(f"\n{'='*100}\nMean Sarvam parity (overall, 1-5): {sum(overalls)/len(overalls):.2f}  "
-              f"over {len(overalls)} scenarios\n{'='*100}\n")
+        print(f"Mean candidate reply parity (overall 1-5): {sum(overalls)/len(overalls):.2f} over {len(overalls)}")
+    print(f"Decide JSON valid: {decide_valid}/{decide_total}   action matches ref: {decide_match}/{decide_total}")
+    if ref_cost:
+        print(f"Reply cost over {len(SCENARIOS)} turns: ref ${ref_cost:.5f}  cand ${cand_cost:.5f}  "
+              f"({ref_cost/cand_cost:.1f}x cheaper)" if cand_cost else "")
+    print(f"{'='*100}\n")
 
 
 if __name__ == "__main__":

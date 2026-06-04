@@ -89,14 +89,17 @@ def _ensure_providers_registered() -> None:
     """Lazy-register concrete providers on first factory call. Avoids
     circular imports at module load time (claude.py / sarvam.py import
     settings + anthropic SDK which we don't want at app-spec load)."""
-    if "anthropic" in _PROVIDERS and "sarvam" in _PROVIDERS:
+    if all(p in _PROVIDERS for p in ("anthropic", "sarvam", "gemini")):
         return
     # Local imports to dodge circular import — concrete providers depend on
     # this module too (LLMProvider, LLMOutputParseError).
+    from app.config import settings
     from app.integrations.claude import ClaudeProvider
+    from app.integrations.openai_compat import OpenAICompatProvider
     from app.integrations.sarvam import SarvamProvider
     register("anthropic", ClaudeProvider())
     register("sarvam", SarvamProvider())
+    register("gemini", OpenAICompatProvider("gemini", settings.GEMINI_BASE_URL, settings.GEMINI_API_KEY))
 
 
 # ---------------------------------------------------------------------------

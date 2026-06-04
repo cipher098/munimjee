@@ -113,15 +113,17 @@ async def save_channels(body: ChannelsUpdate, db: AsyncSession = Depends(get_db)
 _ALLOWED_DECIDE_MODELS = {
     "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
     "sarvam": {"sarvam-30b", "sarvam-105b"},
+    "gemini": {"gemini-2.5-flash-lite", "gemini-2.5-flash"},
 }
 _ALLOWED_REPLY_MODELS = {
     "anthropic": {"claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-haiku-4-5-20251001"},
     "sarvam": {"sarvam-30b", "sarvam-105b"},
+    "gemini": {"gemini-2.5-flash-lite", "gemini-2.5-flash"},
 }
 
 
 class ModelChoice(BaseModel):
-    provider: Literal["anthropic", "sarvam"]
+    provider: Literal["anthropic", "sarvam", "gemini"]
     model: str = Field(min_length=1, max_length=120)
 
 

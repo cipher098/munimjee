@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     # if the eval shows it closes the quality gap with Claude.
     SARVAM_REASONING_EFFORT: str = "low"
     SARVAM_REASONING_HEADROOM_TOKENS: int = 1800
+
+    # Gemini via its OpenAI-compatible endpoint (served by the generic
+    # OpenAICompatProvider). Cheaper than Haiku and strong on Hinglish.
+    GEMINI_API_KEY: str = ""
+    GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai"
     ANTHROPIC_API_KEY: str
 
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
