@@ -38,10 +38,14 @@ models:
     cache_read: 0.10
     cache_write: 1.25
 
+  # Sarvam list price is in INR/1M tokens: input ₹2.5, cached input ₹1.5,
+  # output ₹10. Converted to USD at ₹85 = $1 — adjust if your FX differs.
+  # Sarvam has no published cache-write rate (and our client doesn't use
+  # prompt caching), so cache_write stays null.
   sarvam-30b:
-    input: null
-    output: null
-    cache_read: null
+    input: 0.0294118       # ₹2.5 / 85
+    output: 0.1176471      # ₹10 / 85
+    cache_read: 0.0176471  # ₹1.5 / 85
     cache_write: null
 
   sarvam-105b:
