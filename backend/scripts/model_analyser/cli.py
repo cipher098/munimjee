@@ -30,6 +30,13 @@ def main() -> None:
     t.add_argument("--no-commit", action="store_true",
                    help="write tuned prompts but do not git-commit")
 
+    r = sub.add_parser("test", help="replay+judge a candidate model -> runs/<label>.json (no tuning)")
+    r.add_argument("--label", default=None, help="name for this run (defaults to model)")
+    r.add_argument("--model", default=None, help="candidate model id (default: agents.yaml)")
+    r.add_argument("--provider", default=None, help="candidate provider (with --model)")
+    r.add_argument("--threshold", type=int, default=9)
+    r.add_argument("--approved-only", action="store_true")
+
     args = parser.parse_args()
     if args.cmd == "generate":
         from . import generate
@@ -39,6 +46,12 @@ def main() -> None:
         asyncio.run(tune.run(
             threshold=args.threshold, max_iters=args.max_iters,
             approved_only=args.approved_only, commit=not args.no_commit,
+        ))
+    elif args.cmd == "test":
+        from . import test
+        asyncio.run(test.run(
+            label=args.label, model=args.model, provider=args.provider,
+            threshold=args.threshold, approved_only=args.approved_only,
         ))
 
 

@@ -40,6 +40,27 @@ def force_opus(model: str = OPUS_MODEL):
 
 
 @contextlib.contextmanager
+def force_model(model: str, provider: str | None = None):
+    """Force every method to `model` (and optionally `provider`), keeping each
+    method's max_tokens. Used by `test` to evaluate an arbitrary candidate."""
+    from app.bot import agent_spec
+    original = agent_spec.get
+
+    def patched(name: str):
+        spec = original(name)
+        return replace(
+            spec, provider=(provider or spec.provider), model=model,
+            fallback_provider=(provider or spec.provider), fallback_model=model,
+        )
+
+    agent_spec.get = patched
+    try:
+        yield
+    finally:
+        agent_spec.get = original
+
+
+@contextlib.contextmanager
 def override_prompts(mapping: dict[str, str]):
     """Serve `mapping[name]` for prompt `name` (e.g. 'decide', 'generate_reply',
     'extract_feature_query'); fall through to the real store otherwise."""

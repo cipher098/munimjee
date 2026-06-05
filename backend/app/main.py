@@ -15,6 +15,7 @@ from app.api.routes.settings import router as settings_router
 from app.api.routes.training import router as training_router
 from app.api.routes.categories import router as categories_router
 from app.api.routes.llm_costs import router as llm_costs_router
+from app.api.routes.model_analyser import router as model_analyser_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ app.include_router(settings_router)
 app.include_router(training_router)
 app.include_router(categories_router)
 app.include_router(llm_costs_router)
+app.include_router(model_analyser_router)
 
 
 @app.get("/health")
@@ -137,3 +139,8 @@ async def categories_dashboard(phone: str = Depends(verify_dashboard_cookie)):
 @app.get("/dashboard/llm-costs")
 async def llm_costs_dashboard(phone: str = Depends(verify_dashboard_cookie)):
     return FileResponse("/app/static/llm_costs.html")
+
+
+@app.get("/dashboard/model-analyser")
+async def model_analyser_dashboard(phone: str = Depends(verify_dashboard_cookie)):
+    return FileResponse("/app/static/model_analyser.html")

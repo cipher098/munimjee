@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Model Analyser</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+    .topbar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px;
+              display: flex; align-items: center; gap: 16px; height: 56px; }
+    .topbar h1 { font-size: 16px; font-weight: 700; }
+    .topbar nav { display: flex; gap: 4px; margin-left: auto; }
+    .topbar nav a { padding: 6px 12px; border-radius: 6px; font-size: 13px;
+                    text-decoration: none; color: #555; }
+    .topbar nav a:hover { background: #f3f4f6; }
+    .topbar nav a.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+
+    .layout { display: flex; max-width: 1200px; margin: 24px auto; padding: 0 16px; gap: 18px;
+              align-items: flex-start; }
+    .sidebar { width: 280px; flex-shrink: 0; }
+    .main { flex: 1; min-width: 0; }
+    .card { background: #fff; border-radius: 12px; padding: 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .card h2 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #374151;
+               text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .plist { list-style: none; }
+    .plist li { padding: 9px 11px; border-radius: 8px; cursor: pointer; font-size: 13px;
+                display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .plist li:hover { background: #f3f4f6; }
+    .plist li.active { background: #ede9fe; color: #4338ca; font-weight: 600; }
+    .plist .meta { font-size: 11px; color: #9ca3af; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot.ok { background: #10b981; } .dot.no { background: #d1d5db; }
+
+    select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
+             font-size: 13px; background: #fff; }
+    .summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .stat { flex: 1; min-width: 80px; background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 10px; }
+    .stat .label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+    .stat .value { font-size: 18px; font-weight: 700; color: #1f2937; }
+
+    .turn { margin-bottom: 18px; }
+    .cust { background: #eef2f7; border-radius: 12px 12px 12px 3px; padding: 9px 13px;
+            font-size: 14px; max-width: 78%; display: inline-block; }
+    .cust .who { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .botrow { display: flex; gap: 12px; margin-top: 8px; }
+    .botcol { flex: 1; min-width: 0; }
+    .botcol .htag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+                    color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .bot { border-radius: 12px 12px 3px 12px; padding: 9px 13px; font-size: 14px; }
+    .bot.golden { background: #f5f3ff; border: 1px solid #ede9fe; }
+    .bot.cand { background: #f0fdf4; border: 1px solid #dcfce7; }
+    .act { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+           border-radius: 999px; background: #e0e7ff; color: #4338ca; margin-bottom: 6px; }
+    .rationale { font-size: 12px; color: #6b7280; margin-top: 6px; font-style: italic; }
+    .score { display: inline-flex; align-items: center; justify-content: center; min-width: 30px;
+             height: 22px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; padding: 0 7px; }
+    .score.hi { background: #10b981; } .score.mid { background: #f59e0b; } .score.lo { background: #ef4444; }
+    .empty { color: #9ca3af; font-size: 13px; padding: 24px 0; text-align: center; }
+    .persona-hdr { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+    .persona-sub { font-size: 13px; color: #6b7280; margin-bottom: 16px; }
+    code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>🤖 SellerBot</h1>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/dashboard/products">Products</a>
+      <a href="/dashboard/categories">Categories</a>
+      <a href="/dashboard/settings">Settings</a>
+      <a href="/dashboard/llm-costs">LLM Costs</a>
+      <a href="/dashboard/model-analyser" class="active">Model Analyser</a>
+    </nav>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="card">
+        <h2>Golden conversations</h2>
+        <ul class="plist" id="personaList"><li class="empty">Loading…</li></ul>
+      </div>
+      <div class="card">
+        <h2>Compare with test run</h2>
+        <select id="runSelect" onchange="onRunChange()">
+          <option value="">— golden only —</option>
+        </select>
+        <div class="summary" id="runSummary"></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="card" id="convCard">
+        <div class="empty">Select a golden conversation on the left.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let GOLDEN = [], RUNS = [], curPersona = null, curRun = null, runDoc = null;
+
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function rupees(paise){ return paise==null ? '' : '₹'+Math.round(paise/100); }
+function scoreClass(s){ return s>=9?'hi':(s>=7?'mid':'lo'); }
+
+function decideLabel(out){
+  if(!out || typeof out!=='object') return '';
+  const a = out.action || '?';
+  const p = out.price!=null ? ' '+rupees(out.price) : '';
+  return a+p;
+}
+
+async function loadGolden(){
+  const r = await fetch('/model-analyser/golden'); const d = await r.json();
+  GOLDEN = d.golden || [];
+  const ul = document.getElementById('personaList');
+  if(!GOLDEN.length){ ul.innerHTML = '<li class="empty">No golden conversations yet. Run <code>generate</code>.</li>'; return; }
+  ul.innerHTML = GOLDEN.map(g => `
+    <li data-id="${esc(g.conv_id)}" onclick="selectPersona('${esc(g.conv_id)}')">
+      <span><span class="dot ${g.approved?'ok':'no'}"></span> ${esc(g.conv_id)}</span>
+      <span class="meta">${g.turns}t · ${g.calls}c</span>
+    </li>`).join('');
+}
+
+async function loadRuns(){
+  const r = await fetch('/model-analyser/runs'); const d = await r.json();
+  RUNS = d.runs || [];
+  const sel = document.getElementById('runSelect');
+  sel.innerHTML = '<option value="">— golden only —</option>' +
+    RUNS.map(x => `<option value="${esc(x.file)}">${esc(x.label)} (mean ${x.summary?.mean ?? '–'})</option>`).join('');
+}
+
+function renderRunSummary(){
+  const box = document.getElementById('runSummary');
+  if(!runDoc){ box.innerHTML=''; return; }
+  const s = runDoc.summary || {};
+  box.innerHTML = `
+    <div class="stat"><div class="label">Mean</div><div class="value">${s.mean ?? '–'}</div></div>
+    <div class="stat"><div class="label">Min</div><div class="value">${s.min ?? '–'}</div></div>
+    <div class="stat"><div class="label">Below ${s.threshold ?? 9}</div><div class="value">${s.n_below_threshold ?? '–'}/${s.n_turns ?? '–'}</div></div>`;
+}
+
+async function onRunChange(){
+  curRun = document.getElementById('runSelect').value || null;
+  runDoc = null;
+  if(curRun){ const r = await fetch('/model-analyser/runs/'+encodeURIComponent(curRun)); runDoc = await r.json(); }
+  renderRunSummary();
+  if(curPersona) selectPersona(curPersona);
+}
+
+async function selectPersona(id){
+  curPersona = id;
+  document.querySelectorAll('#personaList li').forEach(li =>
+    li.classList.toggle('active', li.dataset.id===id));
+  const r = await fetch('/model-analyser/golden/'+encodeURIComponent(id));
+  const g = await r.json();
+  // candidate turns for this persona, keyed by `${turn_index}:${method}`
+  let cand = {};
+  if(runDoc){
+    const c = (runDoc.conversations||[]).find(x => x.conv_id===id);
+    (c?.turns||[]).forEach(t => { cand[t.turn_index+':'+t.method] = t; });
+  }
+
+  let html = `<div class="persona-hdr">${esc(g.conv_id)}</div>
+    <div class="persona-sub">${esc(g.persona?.goal||'')} — <em>${esc(g.persona?.style||'')}</em>${runDoc?` · vs <strong>${esc(runDoc.label)}</strong>`:''}</div>`;
+
+  for(const turn of (g.turns||[])){
+    const decide = (turn.calls||[]).find(c=>c.method==='decide');
+    const reply  = (turn.calls||[]).find(c=>c.method==='generate_reply');
+    html += `<div class="turn"><div class="cust"><div class="who">customer</div>${esc(turn.customer_message)}</div>`;
+
+    // bot row: golden (+ candidate if run)
+    const gReply = reply ? reply.golden_output : '';
+    const gAct = decide ? decideLabel(decide.golden_output) : '';
+    const cR = cand[turn.index+':generate_reply'];
+    const cD = cand[turn.index+':decide'];
+
+    html += `<div class="botrow"><div class="botcol">
+        <div class="htag">golden (opus-4.8)</div>
+        <div class="bot golden">${gAct?`<span class="act">${esc(gAct)}</span><br>`:''}${esc(gReply)}</div>
+      </div>`;
+    if(runDoc){
+      const cReply = cR ? cR.candidate : (cD ? '' : null);
+      const cAct = cD ? decideLabel(cD.candidate) : '';
+      const sc = (cR? cR.score : null) ?? (cD? cD.score : null);
+      const rat = (cR? cR.rationale : '') || (cD? cD.rationale : '');
+      html += `<div class="botcol">
+        <div class="htag">candidate ${sc!=null?`<span class="score ${scoreClass(sc)}">${sc}</span>`:''}</div>
+        <div class="bot cand">${cAct?`<span class="act">${esc(cAct)}</span><br>`:''}${esc(cReply!=null?cReply:'(not replayed)')}
+          ${rat?`<div class="rationale">${esc(rat)}</div>`:''}</div>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  document.getElementById('convCard').innerHTML = html;
+}
+
+(async () => { await loadGolden(); await loadRuns(); })();
+</script>
+</body>
+</html>
