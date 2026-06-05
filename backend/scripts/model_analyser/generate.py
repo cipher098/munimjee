@@ -116,21 +116,30 @@ async def _generate_one(persona: dict, seller: Seller, db: AsyncSession,
     from app.bot.conversation import advance_conversation
 
     turns: list[GoldenTurn] = []
+    last_product_id = None
     with recording() as sink, force_opus():
         for i in range(max_turns):
             customer_msg = await _opus_customer(anthropic_client, persona, conv.messages or [])
             if not customer_msg or "<END>" in customer_msg:
                 break
             before = len(sink)
-            await advance_conversation(conv, seller, customer_msg, db, send_reply=False)
+            try:
+                await advance_conversation(conv, seller, customer_msg, db, send_reply=False)
+            except Exception as exc:
+                # A bad model output (e.g. a hallucinated product_id) can crash a
+                # turn — keep the turns captured so far and end this conversation.
+                print(f"      · turn {i} aborted ({type(exc).__name__}); salvaging {len(turns)} turns")
+                break
             calls = _to_calls(sink[before:])
             turns.append(GoldenTurn(index=i, customer_message=customer_msg, calls=calls))
+            if conv.product_id:
+                last_product_id = conv.product_id
             if conv.status == "closed" or _decide_action(calls) in END_ACTIONS:
                 break
 
     return GoldenConversation(
         conv_id=persona["id"], persona=persona, seller_id=str(seller.id),
-        product_ids=[str(conv.product_id)] if conv.product_id else [],
+        product_ids=[str(last_product_id)] if last_product_id else [],
         turns=turns,
     )
 
@@ -154,18 +163,32 @@ async def run(n: int | None = None, max_turns: int = DEFAULT_MAX_TURNS) -> None:
 
     # Own engine/session so we can run everything in ONE transaction and roll it
     # back — the DB is never mutated; golden data lives in JSON files.
+    # Each persona runs in its OWN session so a bad turn (e.g. a model returning
+    # a malformed product_id, which the responder feeds into a DB query) can only
+    # fail that persona — the rest continue. Already-generated personas are
+    # skipped so a re-run resumes.
     eng = create_async_engine(settings.DATABASE_URL, poolclass=NullPool)
     factory = async_sessionmaker(eng, class_=AsyncSession, expire_on_commit=False)
+    done = 0
     try:
-        async with factory() as db:
-            seller = (await db.execute(select(Seller).where(Seller.id == SELLER_ID))).scalar_one()
-            for persona in personas:
-                gc = await _generate_one(persona, seller, db, anthropic_client, max_turns)
-                out = GOLDEN_DIR / f"conv_{persona['id']}.json"
+        for persona in personas:
+            out = GOLDEN_DIR / f"conv_{persona['id']}.json"
+            if out.exists():
+                print(f"  • {persona['id']:<18} already exists — skipping")
+                done += 1
+                continue
+            try:
+                async with factory() as db:
+                    seller = (await db.execute(
+                        select(Seller).where(Seller.id == SELLER_ID))).scalar_one()
+                    gc = await _generate_one(persona, seller, db, anthropic_client, max_turns)
+                    await db.rollback()   # discard this persona's DB writes
                 out.write_text(json.dumps(gc.to_dict(), indent=2, ensure_ascii=False, default=str))
                 n_calls = sum(len(t.calls) for t in gc.turns)
-                print(f"  ✓ {persona['id']:<18} {len(gc.turns):>2} turns, {n_calls:>3} method calls → {out.name}")
-            await db.rollback()   # discard all DB writes
+                print(f"  ✓ {persona['id']:<18} {len(gc.turns):>2} turns, {n_calls:>3} calls → {out.name}")
+                done += 1
+            except Exception as exc:
+                print(f"  ✗ {persona['id']:<18} failed: {type(exc).__name__}: {exc}")
     finally:
         await eng.dispose()
-    print(f"\nWrote {len(personas)} golden conversations to {GOLDEN_DIR}/ (DB rolled back).")
+    print(f"\nWrote {done}/{len(personas)} golden conversations to {GOLDEN_DIR}/ (DB rolled back).")
