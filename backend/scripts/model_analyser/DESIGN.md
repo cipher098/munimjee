@@ -56,18 +56,30 @@ scripts/model_analyser/
   DESIGN.md          ← this file
   personas.yaml      ← customer personas/goals for self-play
   schema.py          ← golden-conversation / score dataclasses (JSON (de)serial.)
-  agents.opus.yaml   ← agents.yaml variant routing ALL methods to opus-4.8 (TODO)
-  recorder.py        ← provider wrapper capturing {context, output} (TODO)
-  generate.py        ← self-play generation → golden/conv_NN.json (TODO)
-  tune.py            ← replay + judge + tuner loop (TODO)
-  cli.py             ← `generate` / `tune` entrypoints (TODO)
+  runtime.py         ← force_opus() + override_prompts() context managers ✓
+  recorder.py        ← provider wrapper capturing {context, output} ✓
+  generate.py        ← self-play generation → golden/conv_NN.json ✓
+  tune.py            ← replay + judge + tuner loop + prompt write-back ✓
+  cli.py             ← `generate` / `tune` entrypoints ✓
   golden/            ← generated golden conversations (JSON)
 ```
+Opus routing is done via a `force_opus()` monkeypatch of `agent_spec.get`
+(keeps per-method max_tokens) — no separate agents.opus.yaml needed.
 
-## Open questions before the engine build
-- Confirm **teacher-forcing** (vs free-run trajectory comparison).
-- Conversation **end condition** during generate (deal closed / walkaway / max
-  turns)? Default: stop on `accept`/`not_interested`/`acknowledge_and_close`,
-  hard cap ~12 turns.
-- Where to seed the **test seller/products** — reuse an existing seller, or a
-  dedicated fixture seller? (Replay needs the same product IDs the contexts use.)
+## Resolved decisions
+- **Teacher-forcing**: yes (replay re-invokes the candidate on each saved context).
+- **Customer**: opus-4.8 self-play (a) from `personas.yaml`.
+- **Test seller**: existing `ac2303e0-…`; generation runs in a rolled-back txn
+  (no DB pollution) with Instagram sends stubbed.
+- **End condition**: stop on decide action `accept`/`not_interested`/
+  `acknowledge_and_close`, conversation close, or 12 turns.
+- **Tuning target**: opus rewrites prompts → written to `app/prompts.py` +
+  git-committed on this branch; validated (renders, no dropped placeholders,
+  markers intact) before write.
+
+## Known scope limit (follow-up)
+decide + generate_reply are fully replayed/judged/tuned (structured context →
+re-invokable under a tweaked prompt). **Subagents** (intent_classifier,
+extract_feature_query, …) are captured into the golden record but not yet
+auto-tuned — that needs function-level structured-input capture so they can be
+re-rendered with a tweaked prompt. The harness is structured to extend there.
