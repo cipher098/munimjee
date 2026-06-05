@@ -124,7 +124,11 @@ async def _generate_one(persona: dict, seller: Seller, db: AsyncSession,
                 break
             before = len(sink)
             try:
-                await advance_conversation(conv, seller, customer_msg, db, send_reply=False)
+                # send_reply=True so the bot reply is appended to conversation
+                # history (advance only records it when "sent") — otherwise the
+                # self-play customer never sees the seller's replies. Real sends
+                # are neutralised by the InstagramClient stubs in run().
+                await advance_conversation(conv, seller, customer_msg, db, send_reply=True)
             except Exception as exc:
                 # A bad model output (e.g. a hallucinated product_id) can crash a
                 # turn — keep the turns captured so far and end this conversation.
