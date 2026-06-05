@@ -135,6 +135,20 @@ def _placeholders(text: str) -> set[str]:
     return {f for _, f, _, _ in string.Formatter().parse(text) if f}
 
 
+def _split_tunable(method: str, template: str) -> tuple[str, str]:
+    """Return (tunable, fixed) so the tuner only rewrites placeholder-free rules
+    text and the dynamic block (which holds the {placeholders}) is reattached
+    verbatim — opus can't drop a placeholder it never sees. For generate_reply
+    the dynamic block is the '--- DYNAMIC CONTEXT ---' tail; decide keeps its
+    full-rewrite (its rewrites preserve the mid-prompt CONTEXT block fine)."""
+    if method == "generate_reply":
+        marker = "--- DYNAMIC CONTEXT ---"
+        if marker in template:
+            before, sep, after = template.partition(marker)
+            return before.rstrip(), "\n\n" + sep + after
+    return template, ""
+
+
 async def _valid_prompt(method: str, new_text: str, original_text: str) -> bool:
     """A tuned prompt is valid only if it (a) still renders via the real builder,
     (b) keeps every {placeholder} the original had — a dropped one renders fine
@@ -276,8 +290,9 @@ async def run(threshold: int = 9, max_iters: int = 5, approved_only: bool = Fals
             name = PROMPT_NAME[method]
             current = prompts.get(name) or await prompt_store.get(name)
             baseline = await prompt_store.get(name)
+            tunable, fixed = _split_tunable(method, current)
             for attempt in range(2):
-                new_text = await _tune_prompt(client, name, current, fails)
+                new_text = await _tune_prompt(client, name, tunable, fails) + fixed
                 if await _valid_prompt(method, new_text, baseline):
                     prompts[name] = new_text
                     tuned_methods.add(method)
