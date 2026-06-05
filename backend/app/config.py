@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     # OpenAICompatProvider). Cheaper than Haiku and strong on Hinglish.
     GEMINI_API_KEY: str = ""
     GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai"
+    # Kill-switch for explicit context caching of the decide/reply system prefix
+    # (native generateContent + cachedContents). Off → plain OpenAI-compat calls.
+    GEMINI_EXPLICIT_CACHE: bool = True
     ANTHROPIC_API_KEY: str
 
     GOOGLE_APPLICATION_CREDENTIALS: str = ""

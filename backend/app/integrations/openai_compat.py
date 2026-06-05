@@ -22,6 +22,7 @@ from app.bot.prompt_builders import (
     split_decide_prompt,
     split_reply_prompt,
 )
+from app.config import settings
 from app.integrations import gemini_cache, llm_logging
 from app.integrations._json_utils import LLMOutputParseError, parse_json_relaxed
 from app.integrations.llm_provider import LLMProvider
@@ -49,7 +50,7 @@ class OpenAICompatClient:
         """Prefer the explicit-cached native Gemini path (system prefix billed at
         the cache_read rate); fall back to the plain OpenAI-compat call on any
         failure so caching never breaks the bot."""
-        if self._native_base and system:
+        if self._native_base and system and settings.GEMINI_EXPLICIT_CACHE:
             try:
                 return await gemini_cache.cached_generate(
                     native_base=self._native_base, api_key=self._api_key, model=model,
