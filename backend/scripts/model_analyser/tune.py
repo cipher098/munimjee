@@ -95,6 +95,9 @@ _TUNER_SYSTEM = (
     "the prompt to close the gap.\n"
     "HARD RULES:\n"
     "- Preserve EVERY {placeholder} and {{escaped-brace}} exactly as-is.\n"
+    "- BRACES: a single {name} is a format placeholder; any LITERAL brace in "
+    "examples/JSON MUST be doubled ({{ and }}). Every { needs a matching }. Never "
+    "emit an unbalanced or single literal brace — it breaks str.format.\n"
     "- Preserve all section markers verbatim (e.g. '--- CONTEXT ---', "
     "'--- NEGOTIATION STRATEGY (follow strictly) ---', '--- DYNAMIC CONTEXT ---').\n"
     "- Keep it a drop-in replacement: same inputs, same output format.\n"
@@ -137,7 +140,14 @@ async def _valid_prompt(method: str, new_text: str, original_text: str) -> bool:
     (b) keeps every {placeholder} the original had — a dropped one renders fine
     but silently loses dynamic data — and (c) preserves the section markers the
     splitters rely on."""
-    missing = _placeholders(original_text) - _placeholders(new_text)
+    try:
+        new_placeholders = _placeholders(new_text)
+    except ValueError as exc:
+        # string.Formatter().parse raises on an unbalanced/single literal brace —
+        # a malformed rewrite is rejected, not fatal to the run.
+        print(f"    ✗ tuned {method} prompt rejected (malformed format braces: {exc})")
+        return False
+    missing = _placeholders(original_text) - new_placeholders
     if missing:
         print(f"    ✗ tuned {method} prompt rejected (dropped placeholders: {sorted(missing)})")
         return False
@@ -258,17 +268,23 @@ async def run(threshold: int = 9, max_iters: int = 5, approved_only: bool = Fals
             print("\n• Max iterations reached.")
             break
 
-        # Tune each prompt that produced failures.
+        # Tune each prompt that produced failures (one retry on a rejected
+        # rewrite — wholesale rewrites of the big prompts occasionally mangle a
+        # brace, so give opus a second shot before keeping the baseline).
+        from app.bot import prompt_store
         for method, fails in fails_by_method.items():
             name = PROMPT_NAME[method]
-            from app.bot import prompt_store
             current = prompts.get(name) or await prompt_store.get(name)
             baseline = await prompt_store.get(name)
-            new_text = await _tune_prompt(client, name, current, fails)
-            if await _valid_prompt(method, new_text, baseline):
-                prompts[name] = new_text
-                tuned_methods.add(method)
-                print(f"    ↻ rewrote {method} prompt ({len(fails)} failing turns)")
+            for attempt in range(2):
+                new_text = await _tune_prompt(client, name, current, fails)
+                if await _valid_prompt(method, new_text, baseline):
+                    prompts[name] = new_text
+                    tuned_methods.add(method)
+                    print(f"    ↻ rewrote {method} prompt ({len(fails)} failing turns)")
+                    break
+            else:
+                print(f"    – kept baseline {method} prompt (no valid rewrite in 2 tries)")
 
     # Persist accepted prompts → files + git commit.
     written = []
