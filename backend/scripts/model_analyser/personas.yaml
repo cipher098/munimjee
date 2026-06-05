@@ -1,0 +1,57 @@
+# Customer personas for opus-4.8 self-play during `generate`.
+# Each becomes one golden conversation. opus plays the CUSTOMER using these
+# traits + goal; the bot (all methods on opus-4.8) responds. `product_hint`
+# tells the generator which seeded product the customer is shopping for.
+#
+# Keep these diverse — they define the quality bar the candidate must match.
+
+personas:
+  - id: hard_haggler
+    goal: 'Buy the clock but push hard for the lowest possible price.'
+    style: 'Blunt, price-obsessed Hinglish, makes lowball offers, threatens to leave.'
+    product_hint: led clock
+
+  - id: feature_curious
+    goal: 'Understand exactly what the product does before buying.'
+    style: 'Asks many spec/feature questions (size, material, warranty, what it shows).'
+    product_hint: led clock
+
+  - id: warranty_worrier
+    goal: 'Make sure they are protected if the product breaks.'
+    style: 'Anxious about defects, returns, "kharab nikla toh?", guarantees.'
+    product_hint: led clock
+
+  - id: bulk_buyer
+    goal: 'Buy several pieces for resale at a wholesale rate.'
+    style: 'Mentions quantity early, wants per-unit discount, business-like.'
+    product_hint: led clock
+
+  - id: browser_switcher
+    goal: 'Not sure what they want; keeps asking for other designs/colours.'
+    style: 'Indecisive, "koi aur design hai?", switches products.'
+    product_hint: led clock
+
+  - id: ready_buyer
+    goal: 'Already decided, wants to pay quickly.'
+    style: 'Short, "le lunga", asks for payment/UPI, COD question.'
+    product_hint: led clock
+
+  - id: polite_negotiator
+    goal: 'Get a small discount without being pushy.'
+    style: 'Warm, respectful, single gentle counter, accepts a fair price.'
+    product_hint: led clock
+
+  - id: skeptical_quality
+    goal: 'Convince themselves the quality is worth it.'
+    style: 'Doubts quality/material, compares to cheaper options elsewhere.'
+    product_hint: led clock
+
+  - id: gifting
+    goal: 'Buy as a gift, cares about presentation and delivery timing.'
+    style: 'Asks about packaging, delivery days, "gift ke liye theek hai?".'
+    product_hint: led clock
+
+  - id: channel_switcher
+    goal: 'Wants to move the chat to WhatsApp/phone.'
+    style: '"WhatsApp pe baat karo", "number do" — tests channel handling.'
+    product_hint: led clock

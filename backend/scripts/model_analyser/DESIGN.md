@@ -1,0 +1,73 @@
+# Model Analyser — prompt/model optimization harness
+
+Goal: drive a candidate model (whatever `agents.yaml` points to, e.g.
+gemini-2.5-flash-lite) toward the quality of a gold-standard model
+(**claude-opus-4-8**) on this bot, by auto-tuning the prompts until opus rates
+every turn ≥ 9/10.
+
+## Pipeline
+
+### 1. `generate` — build 10 golden conversations
+- Opus-4.8 **self-plays the customer**: given a persona + goal (`personas.yaml`)
+  and the conversation so far, it produces the next customer message.
+- The **bot** side runs the real pipeline with **every method routed to
+  claude-opus-4-8** (`agents.opus.yaml`).
+- A recording wrapper captures **every** LLM method call the bot makes for each
+  turn — `decide`, `generate_reply`, and all subagents (`intent_classifier`,
+  `extract_feature_query`, …) — as `{method, context_in, golden_output}`.
+- Each conversation is saved to `golden/conv_NN.json`.
+
+### 2. verify (manual)
+You read/edit/approve the `golden/conv_NN.json` files. Only approved ones are
+used for tuning.
+
+### 3. `tune` — replay → score → auto-tune loop
+For the candidate `agents.yaml` and the current (in-memory) prompt set:
+1. **Replay (teacher-forced):** re-invoke the candidate model/prompt on each
+   captured `context_in` — identical inputs to the golden run, so per-turn
+   outputs are directly comparable (no trajectory drift).
+2. **Score:** opus-4.8 judges each candidate output against the golden output,
+   **per turn**, 1–10, with a rationale.
+3. **Stop?** If every scored turn ≥ 9 → done. Else continue.
+4. **Tune:** opus-4.8, shown the low-scoring turns (candidate out, golden out,
+   judge rationale, current prompt), rewrites the offending prompt(s)
+   (decide / reply / subagent). Applied to the in-memory prompt set.
+5. Re-replay + re-score. Loop until all turns ≥ 9 **or** N iterations.
+6. On accept/stop: write tuned prompts to `app/prompts.py` /
+   `app/subagent_prompts.py` and **git-commit on this branch** (git is rollback).
+
+## Key design decisions
+- **Teacher-forcing** (re-invoke on saved context) — chosen because scoring is
+  **per turn**; a free-running replay would diverge and make per-turn scores
+  meaningless. ← confirm this is what you want.
+- **Generator + judge + tuner** all = `claude-opus-4-8`.
+- **Tune everything**: decide, generate_reply, and all subagent prompts.
+- **Customer = opus self-play** from `personas.yaml`.
+- Golden data + score reports persisted as **JSON files** here (eyeballable).
+- Prompt tweaks go to the **real prompt files, committed on this branch**;
+  the loop itself uses in-memory overrides via `prompt_store`'s cache so replay
+  picks up tweaks without writing/reloading until accepted.
+- A fixed **test seller + products** must be seeded so generate and replay share
+  the same catalog/state the contexts reference.
+
+## Layout
+```
+scripts/model_analyser/
+  DESIGN.md          ← this file
+  personas.yaml      ← customer personas/goals for self-play
+  schema.py          ← golden-conversation / score dataclasses (JSON (de)serial.)
+  agents.opus.yaml   ← agents.yaml variant routing ALL methods to opus-4.8 (TODO)
+  recorder.py        ← provider wrapper capturing {context, output} (TODO)
+  generate.py        ← self-play generation → golden/conv_NN.json (TODO)
+  tune.py            ← replay + judge + tuner loop (TODO)
+  cli.py             ← `generate` / `tune` entrypoints (TODO)
+  golden/            ← generated golden conversations (JSON)
+```
+
+## Open questions before the engine build
+- Confirm **teacher-forcing** (vs free-run trajectory comparison).
+- Conversation **end condition** during generate (deal closed / walkaway / max
+  turns)? Default: stop on `accept`/`not_interested`/`acknowledge_and_close`,
+  hard cap ~12 turns.
+- Where to seed the **test seller/products** — reuse an existing seller, or a
+  dedicated fixture seller? (Replay needs the same product IDs the contexts use.)
