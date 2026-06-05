@@ -67,6 +67,7 @@ def _fallback_from_modules(name: str) -> Optional[str]:
         "extract_feature_query": "EXTRACT_FEATURE_QUERY_PROMPT",
         "extract_persona": "EXTRACT_PERSONA_PROMPT",
         "intent_classifier": "INTENT_CLASSIFIER_PROMPT",
+        "extract_payment_details": "EXTRACT_PAYMENT_DETAILS_PROMPT",
     }
     const_name = explicit_aliases.get(name)
     if not const_name:

@@ -298,6 +298,27 @@ class ClaudeClient:
             image={"kind": "base64", "media_type": media_type, "data": image_b64},
         )
 
+    async def extract_payment_details(self, image_b64: str, media_type: str = "image/jpeg") -> dict:
+        """Vision — extract UPI payment fields from a screenshot. Fields only; the
+        pass/fail verdict is made deterministically in app.bot.payment_verification.
+        Returns {payee_upi_id, payee_name, amount_rupees, datetime, utr, app,
+        status_text} with nulls for anything not visible. Never raises — returns
+        an all-null dict on parse failure so the verifier routes to manual review."""
+        template = await prompt_store.get("extract_payment_details")
+        text = await _llm_provider.complete_vision(
+            "extract_payment_details",
+            prompt=template,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
+        )
+        empty = {"payee_upi_id": None, "payee_name": None, "amount_rupees": None,
+                 "datetime": None, "utr": None, "app": None, "status_text": None}
+        try:
+            parsed = _parse_json(text)
+            return {**empty, **parsed} if isinstance(parsed, dict) else empty
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON payment extraction: %r", text)
+            return empty
+
     async def match_product_by_description(
         self, description: str, products: list[dict]
     ) -> dict:

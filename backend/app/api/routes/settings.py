@@ -170,3 +170,131 @@ async def save_llm_preferences(body: LlmPreferencesUpdate, db: AsyncSession = De
     await db.commit()
     logger.info("Seller llm_preferences updated: %s", seller.llm_preferences)
     return {"status": "saved", "llm_preferences": seller.llm_preferences or {}}
+
+
+# ---------------------------------------------------------------------------
+# Payment methods (UPI) — what the bot shares + matches against
+# ---------------------------------------------------------------------------
+
+import uuid as _uuid
+from pathlib import Path as _Path
+
+from fastapi import File, UploadFile
+from app.models.payment_method import PaymentMethod
+
+_QR_DIR = _Path("/app/uploads/payment_screenshots/qr")
+
+
+class PaymentMethodIn(BaseModel):
+    id: str | None = None
+    category: Literal["upi"] = "upi"
+    upi_id: str = Field(min_length=1, max_length=120)
+    account_name: str = Field(min_length=1, max_length=120)
+    qr_code_url: str | None = None
+    label: str | None = None
+    is_primary: bool = False
+
+
+def _pm_dict(m: PaymentMethod) -> dict:
+    return {
+        "id": str(m.id), "category": m.category, "upi_id": m.upi_id,
+        "account_name": m.account_name, "qr_code_url": m.qr_code_url,
+        "label": m.label, "is_primary": m.is_primary, "is_active": m.is_active,
+    }
+
+
+@router.get("/payment-methods")
+async def list_payment_methods(db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(
+        select(PaymentMethod).where(
+            PaymentMethod.seller_id == SELLER_ID,
+            PaymentMethod.is_active == True,  # noqa: E712
+        ).order_by(PaymentMethod.is_primary.desc(), PaymentMethod.created_at.asc())
+    )).scalars().all()
+    return {"payment_methods": [_pm_dict(m) for m in rows]}
+
+
+@router.post("/payment-methods/upload-qr")
+async def upload_qr(file: UploadFile = File(...)):
+    _QR_DIR.mkdir(parents=True, exist_ok=True)
+    ext = _Path(file.filename or "").suffix or ".png"
+    fname = f"qr_{_uuid.uuid4().hex}{ext}"
+    (_QR_DIR / fname).write_bytes(await file.read())
+    return {"qr_code_url": f"/uploads/payment_screenshots/qr/{fname}"}
+
+
+@router.post("/payment-methods")
+async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(get_db)):
+    """Create or update a UPI payment method. Setting is_primary unsets the
+    primary flag on the seller's other methods in the same category."""
+    if body.id:
+        m = await db.get(PaymentMethod, body.id)
+        if m is None or str(m.seller_id) != SELLER_ID:
+            raise HTTPException(status_code=404, detail="Payment method not found")
+    else:
+        m = PaymentMethod(seller_id=SELLER_ID, category=body.category)
+        db.add(m)
+
+    m.category = body.category
+    m.upi_id = body.upi_id.strip()
+    m.account_name = body.account_name.strip()
+    m.qr_code_url = (body.qr_code_url or "").strip() or None
+    m.label = (body.label or "").strip() or None
+    m.is_active = True
+
+    if body.is_primary:
+        # Unset any existing primary in this category.
+        others = (await db.execute(
+            select(PaymentMethod).where(
+                PaymentMethod.seller_id == SELLER_ID,
+                PaymentMethod.category == body.category,
+                PaymentMethod.is_primary == True,  # noqa: E712
+            )
+        )).scalars().all()
+        for o in others:
+            o.is_primary = False
+        m.is_primary = True
+    await db.flush()
+
+    # Ensure at least one primary exists per category.
+    has_primary = (await db.execute(
+        select(PaymentMethod).where(
+            PaymentMethod.seller_id == SELLER_ID,
+            PaymentMethod.category == body.category,
+            PaymentMethod.is_primary == True,  # noqa: E712
+            PaymentMethod.is_active == True,  # noqa: E712
+        )
+    )).scalars().first()
+    if not has_primary:
+        m.is_primary = True
+
+    await db.commit()
+    logger.info("Saved payment method %s (primary=%s) for seller %s", m.id, m.is_primary, SELLER_ID)
+    return {"status": "saved", "payment_method": _pm_dict(m)}
+
+
+@router.post("/payment-methods/{method_id}/primary")
+async def set_primary_payment_method(method_id: str, db: AsyncSession = Depends(get_db)):
+    m = await db.get(PaymentMethod, method_id)
+    if m is None or str(m.seller_id) != SELLER_ID:
+        raise HTTPException(status_code=404, detail="Payment method not found")
+    others = (await db.execute(
+        select(PaymentMethod).where(
+            PaymentMethod.seller_id == SELLER_ID, PaymentMethod.category == m.category,
+        )
+    )).scalars().all()
+    for o in others:
+        o.is_primary = (o.id == m.id)
+    await db.commit()
+    return {"status": "ok"}
+
+
+@router.delete("/payment-methods/{method_id}")
+async def delete_payment_method(method_id: str, db: AsyncSession = Depends(get_db)):
+    m = await db.get(PaymentMethod, method_id)
+    if m is None or str(m.seller_id) != SELLER_ID:
+        raise HTTPException(status_code=404, detail="Payment method not found")
+    m.is_active = False
+    m.is_primary = False
+    await db.commit()
+    return {"status": "deleted"}

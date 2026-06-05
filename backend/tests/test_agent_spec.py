@@ -24,6 +24,7 @@ REQUIRED_METHODS = {
     "suggest_tags_for_category",
     "extract_feature_query",
     "extract_persona",
+    "extract_payment_details",
 }
 
 

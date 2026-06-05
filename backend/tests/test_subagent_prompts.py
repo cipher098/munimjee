@@ -61,3 +61,12 @@ def test_intent_classifier_replace_substitution():
     assert "{message}" not in out
     # Schema braces stay literal — model needs to see them as JSON delimiters.
     assert '"sentiment"' in out
+
+
+def test_extract_payment_details_prompt_present():
+    # Used directly (not .format()'d), so literal JSON braces are fine. Just
+    # assert it exists and asks for the fields the verifier needs.
+    out = p.EXTRACT_PAYMENT_DETAILS_PROMPT
+    assert isinstance(out, str) and out.strip()
+    for key in ("payee_upi_id", "payee_name", "amount_rupees", "datetime", "utr"):
+        assert key in out

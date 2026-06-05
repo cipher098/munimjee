@@ -230,6 +230,23 @@
 
     <button class="btn" id="saveLlmBtn" onclick="saveLlmPreferences()">Save Model Preferences</button>
   </div>
+
+  <div class="card">
+    <h2>Payment methods (UPI)</h2>
+    <p class="hint" style="margin-bottom:12px;">The primary UPI method's QR is sent when the bot asks for payment, and screenshots are verified against it.</p>
+    <div id="pmRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+
+    <label>UPI ID</label>
+    <input type="text" id="pmUpi" placeholder="shop@okaxis" />
+    <label>Account / payee name (as shown in UPI apps)</label>
+    <input type="text" id="pmName" placeholder="Shop India" />
+    <label>QR code image</label>
+    <input type="file" id="pmQr" accept="image/*" />
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+      <input type="checkbox" id="pmPrimary" /> Make primary
+    </label>
+    <button class="btn" id="savePmBtn" onclick="savePaymentMethod()" style="margin-top:14px;">Add payment method</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -447,9 +464,66 @@
     }
   }
 
+  async function loadPaymentMethods() {
+    const res = await fetch('/settings/payment-methods');
+    if (!res.ok) return;
+    const data = await res.json();
+    const rows = document.getElementById('pmRows');
+    const list = data.payment_methods || [];
+    rows.innerHTML = list.length ? list.map(m => `
+      <div style="display:flex;align-items:center;gap:10px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;">
+        ${m.qr_code_url ? `<img src="${m.qr_code_url}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;" />` : ''}
+        <div style="flex:1;font-size:13px;">
+          <div style="font-weight:600;">${m.upi_id} ${m.is_primary ? '<span style="color:#6366f1;">(primary)</span>' : ''}</div>
+          <div style="color:#6b7280;">${m.account_name || ''}</div>
+        </div>
+        ${m.is_primary ? '' : `<button class="btn" style="width:auto;padding:5px 10px;font-size:12px;margin:0;" onclick="setPrimaryPm('${m.id}')">Make primary</button>`}
+        <button class="btn" style="width:auto;padding:5px 10px;font-size:12px;margin:0;background:#ef4444;" onclick="deletePm('${m.id}')">Delete</button>
+      </div>`).join('') : '<div class="hint">No payment methods yet.</div>';
+  }
+
+  async function savePaymentMethod() {
+    const upi = document.getElementById('pmUpi').value.trim();
+    const name = document.getElementById('pmName').value.trim();
+    if (!upi || !name) { showToast('UPI ID and account name are required'); return; }
+    const btn = document.getElementById('savePmBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    let qr_code_url = null;
+    const file = document.getElementById('pmQr').files[0];
+    if (file) {
+      const fd = new FormData(); fd.append('file', file);
+      const up = await fetch('/settings/payment-methods/upload-qr', { method: 'POST', body: fd });
+      if (up.ok) { qr_code_url = (await up.json()).qr_code_url; }
+      else { showToast('QR upload failed'); btn.disabled = false; btn.textContent = 'Add payment method'; return; }
+    }
+    const res = await fetch('/settings/payment-methods', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ upi_id: upi, account_name: name, qr_code_url,
+                             is_primary: document.getElementById('pmPrimary').checked }),
+    });
+    btn.disabled = false; btn.textContent = 'Add payment method';
+    if (!res.ok) { showToast('Save failed'); return; }
+    document.getElementById('pmUpi').value = '';
+    document.getElementById('pmName').value = '';
+    document.getElementById('pmQr').value = '';
+    document.getElementById('pmPrimary').checked = false;
+    showToast('Payment method saved');
+    loadPaymentMethods();
+  }
+
+  async function setPrimaryPm(id) {
+    await fetch(`/settings/payment-methods/${id}/primary`, { method: 'POST' });
+    loadPaymentMethods();
+  }
+  async function deletePm(id) {
+    await fetch(`/settings/payment-methods/${id}`, { method: 'DELETE' });
+    loadPaymentMethods();
+  }
+
   load();
   loadChannels();
   loadLlmPreferences();
+  loadPaymentMethods();
 </script>
 </body>
 </html>

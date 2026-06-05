@@ -161,3 +161,26 @@ RECENT HISTORY (oldest first):
 LATEST CUSTOMER MESSAGE:
 {message}
 """
+
+
+EXTRACT_PAYMENT_DETAILS_PROMPT = """You are reading a UPI payment screenshot (Google Pay / PhonePe / Paytm / BHIM / bank app) that a customer sent as proof of payment.
+
+Extract ONLY what is visibly present. Do NOT guess or infer. Many fields are partly masked — copy exactly what you see, including masks (e.g. "ab****@okaxis").
+
+Return ONLY valid JSON, no other text:
+{
+  "payee_upi_id": "<the UPI id money was PAID TO (the receiver/payee), exactly as shown incl. any masking, else null>",
+  "payee_name": "<the name of the person/business money was PAID TO, else null>",
+  "amount_rupees": <number of rupees paid, e.g. 1150, else null>,
+  "datetime": "<the payment date & time exactly as shown, e.g. '5 Jun 2026, 4:28 PM' or '2026-06-05 16:28', else null>",
+  "utr": "<the UTR / UPI transaction id / reference number, else null>",
+  "app": "<gpay|phonepe|paytm|bhim|bank|other, else null>",
+  "status_text": "<the success/failure label shown, e.g. 'Paid', 'Successful', 'Failed', else null>"
+}
+
+Rules:
+- payee = the RECEIVER (to whom money was sent), NOT the sender/payer. If the screenshot shows "Paid to X", X is the payee.
+- If the screenshot is not a payment receipt at all, set every field to null.
+- amount_rupees is a plain number (no ₹, no commas).
+- Never invent a UTR — if no reference number is visible, return null.
+"""

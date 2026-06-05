@@ -31,6 +31,11 @@ class ConversationProduct(Base):
     active_variant_label = Column(String, nullable=True)
     pending_tag_id = Column(UUID(as_uuid=True), ForeignKey("category_tags.id"), nullable=True)
 
+    # Payment tracking (UPI screenshot verification).
+    amount_paid = Column(Integer, nullable=False, default=0)   # paise — cumulative verified payments
+    payment_method_id = Column(UUID(as_uuid=True), ForeignKey("payment_methods.id"), nullable=True)  # method we shared
+    payment_requested_at = Column(DateTime(timezone=True), nullable=True)  # when we shared the QR (verify-window start)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -11,6 +11,7 @@ from app.models.delivery_member import DeliveryMember
 from app.models.delivery_update import DeliveryUpdate
 from app.models.transaction import Transaction
 from app.models.llm_call_log import LLMCallLog
+from app.models.payment_method import PaymentMethod
 
 __all__ = [
     "Seller",
@@ -27,4 +28,5 @@ __all__ = [
     "DeliveryUpdate",
     "Transaction",
     "LLMCallLog",
+    "PaymentMethod",
 ]

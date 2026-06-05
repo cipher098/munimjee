@@ -69,6 +69,14 @@ agents:
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
 
+  extract_payment_details:
+    description: Vision — extract UPI payment fields (payee, amount, datetime, UTR) from a screenshot.
+    provider: gemini
+    model: gemini-2.5-flash-lite
+    max_tokens: 300
+    fallback_provider: anthropic
+    fallback_model: claude-haiku-4-5-20251001
+
   classify_image_type:
     description: Vision — is a customer image a payment receipt or a product?
     provider: gemini
