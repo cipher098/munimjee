@@ -588,11 +588,22 @@ def _derive_state_from_decision(
     # guard catches the cases where it slips through anyway.
     _PAYMENT_LOCKED_NEUTRALIZE = {"hold_firm", "counter", "accept", "bulk_discount", "show_product"}
     if current_state == "awaiting_payment" and action in _PAYMENT_LOCKED_NEUTRALIZE:
-        logger.info(
-            "STATE LOCK: action %r blocked from regressing awaiting_payment — keeping state",
-            action,
+        # Allow switching to a DIFFERENT product — the customer changed their mind
+        # and wants another item; don't trap them in the agreed deal. Only
+        # neutralize attempts to reopen the SAME product's negotiation.
+        _new_pid = decision.get("product_id")
+        _is_switch = (
+            action == "show_product"
+            and _new_pid
+            and str(_new_pid) != str(conversation.product_id)
         )
-        return None, extra
+        if not _is_switch:
+            logger.info(
+                "STATE LOCK: action %r blocked from regressing awaiting_payment — keeping state",
+                action,
+            )
+            return None, extra
+        logger.info("STATE LOCK: allowing product switch out of awaiting_payment → %s", _new_pid)
 
     # Compute inquiry floor total (paise) — sum of all inquiry product floors.
     # Used to enforce minimum bundle price when the offer covers multiple products.

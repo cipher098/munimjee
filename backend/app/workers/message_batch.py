@@ -374,12 +374,15 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                     logger.warning("Image classification failed: %s — treating as payment", exc)
                     image_class = "payment"
 
-                if image_class == "payment":
-                    await handle_payment_screenshot(conversation, seller, image_url, db)
-                    return  # payment confirmed — stop processing the batch
-                else:
-                    # Product image — customer is asking about a new product
-                    await handle_product_image(conversation, seller, image_url, db, send_reply=False)
+                # In awaiting_payment, treat ANY image as a payment-proof attempt.
+                # The verifier downgrades a non-payment / wrong payment to manual
+                # review (or tells the customer it went to the wrong UPI), so a
+                # misclassified screenshot is never silently handled as a product
+                # image (which used to re-share the QR instead of flagging it).
+                if image_class != "payment":
+                    logger.info("Image classified %r but state is awaiting_payment — verifying as payment", image_class)
+                await handle_payment_screenshot(conversation, seller, image_url, db)
+                return
             else:
                 await handle_product_image(conversation, seller, image_url, db, send_reply=False)
 

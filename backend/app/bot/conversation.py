@@ -289,10 +289,14 @@ async def _get_primary_upi_method(seller_id, db: AsyncSession):
 
 
 async def _share_primary_payment_method(conversation, seller, conv_product, db) -> str | None:
-    """On entering awaiting_payment: record which UPI method we're sharing + when,
-    send its QR image, and return a deterministic payment-instruction text to send
-    (UPI id + exact amount come from the DB, never the LLM). Returns None if the
-    seller has no usable UPI method (caller keeps the existing manual flow)."""
+    """On an awaiting_payment turn: record the UPI method + window, (re)send its
+    QR image if not already delivered, and return a deterministic instruction to
+    append — but ONLY claim "QR bhej diya" when the image actually went out.
+
+    Returns the instruction text on the first turn or when the QR is sent this
+    turn; None otherwise (already set up + QR delivered, or no UPI method) so we
+    don't spam the same message every turn. The QR send is retried on later turns
+    until it succeeds (heals a transient tunnel-down)."""
     from app.config import settings
     from app.integrations.instagram import InstagramClient
 
@@ -301,13 +305,16 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
         logger.warning("No active UPI payment method for seller %s — cannot share QR", seller.id)
         return None
 
-    conv_product.payment_method_id = method.id
-    conv_product.payment_requested_at = datetime.now(timezone.utc)
+    first_time = conv_product.payment_requested_at is None
+    if first_time:
+        conv_product.payment_method_id = method.id
+        conv_product.payment_requested_at = datetime.now(timezone.utc)
 
-    due_paise = (conv_product.agreed_price or conv_product.last_counter_price or 0) - (conv_product.amount_paid or 0)
+    qr_already_sent = any((m.get("content") == "[payment QR]") for m in (conversation.messages or []))
+    qr_sent_now = False
 
-    # Send the QR image if configured + publicly reachable.
-    if method.qr_code_url:
+    # (Re)send the QR image only if it hasn't gone out yet.
+    if not qr_already_sent and method.qr_code_url:
         qr_url = method.qr_code_url
         if qr_url.startswith("/") and settings.PUBLIC_BASE_URL:
             qr_url = settings.PUBLIC_BASE_URL.rstrip("/") + qr_url
@@ -324,14 +331,27 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
                 mid = result.get("message_id")
                 if mid:
                     _tag_last_bot_message_mid(conversation, mid)
+                qr_sent_now = True
             except Exception as exc:
-                logger.warning("Could not send payment QR: %s", exc)
+                logger.warning("Could not send payment QR (will retry next turn): %s", exc)
     await db.flush()
 
+    qr_delivered = qr_already_sent or qr_sent_now
+    # Only speak up on the first turn, or the turn the QR finally goes out.
+    if not first_time and not qr_sent_now:
+        return None
+
+    due_paise = (conv_product.agreed_price or conv_product.last_counter_price or 0) - (conv_product.amount_paid or 0)
     amount_str = f"₹{due_paise // 100} " if due_paise > 0 else ""
+    if qr_delivered:
+        return (
+            f"{amount_str}ka payment is UPI pe kar do: {method.upi_id} 🙏 "
+            f"QR bhi bhej diya hai, scan karke pay kar sakte ho. "
+            f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
+        )
+    # QR couldn't be delivered — give the UPI id (works as text), don't claim a QR.
     return (
-        f"{amount_str}ka payment is UPI pe kar do: {method.upi_id} 🙏 "
-        f"QR bhi bhej diya hai, scan karke pay kar sakte ho. "
+        f"{amount_str}ka payment is UPI id pe kar do: {method.upi_id} 🙏 "
         f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
     )
 
@@ -426,9 +446,13 @@ async def _advance_conversation_inner(
             conversation.status = "closed"
             await _sweep_inquiry_to_not_interested(conversation.id, db)
 
-    # On entering awaiting_payment, share the seller's primary UPI QR once and
-    # append exact payment instructions (UPI id + amount from DB, never the LLM).
-    if new_state == "awaiting_payment" and conv_product is not None and conv_product.payment_requested_at is None:
+    # While awaiting_payment, ensure the QR is delivered + exact instructions are
+    # sent (UPI id + amount from DB, never the LLM). Keyed on the CURRENT state
+    # (not just the transition turn) so a failed first send is retried on later
+    # turns — the STATE LOCK keeps the state at awaiting_payment and returns
+    # new_state=None on those turns. The helper sends the QR once, retries until
+    # it succeeds, and only claims "QR bhej diya" when the image actually went out.
+    if conv_product is not None and conv_product.state == "awaiting_payment":
         _pay_instr = await _share_primary_payment_method(conversation, seller, conv_product, db)
         if _pay_instr:
             reply = f"{reply}\n\n{_pay_instr}" if reply else _pay_instr
@@ -955,10 +979,6 @@ async def _handle_payment_screenshot_inner(
         conv_product = await _get_or_create_conv_product(
             conversation.id, conversation.product_id, db
         )
-    _append_message(conversation, "customer", f"[screenshot: {image_url}]")
-    if conv_product is not None:
-        conv_product.state = "verifying"
-    await db.flush()
 
     async def _send(text: str) -> None:
         _append_message(conversation, "bot", text)
@@ -969,13 +989,9 @@ async def _handle_payment_screenshot_inner(
     async def _manual() -> None:
         await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)
 
-    # We can only auto-verify if we actually shared a method (have a window + payee).
-    if conv_product is None or conv_product.payment_requested_at is None or conv_product.payment_method_id is None:
-        return await _manual()
-
-    method = await db.get(PaymentMethod, conv_product.payment_method_id)
-
-    # Download + persist the screenshot, then extract fields via vision.
+    # Download + extract FIRST, so a non-payment image (e.g. the customer sharing
+    # a different product while awaiting payment) is routed to product handling
+    # instead of being mis-verified as a payment.
     try:
         async with httpx.AsyncClient(timeout=15) as http:
             r = await http.get(image_url)
@@ -984,12 +1000,29 @@ async def _handle_payment_screenshot_inner(
         img_b64 = base64.b64encode(img_bytes).decode()
         media_type = _detect_media_type(img_bytes)
     except Exception as exc:
-        logger.warning("Could not download payment screenshot %s: %s — manual review", image_url, exc)
-        return await _manual()
+        logger.warning("Could not download image %s: %s — handling as product", image_url, exc)
+        return await _handle_product_image_inner(conversation, seller, image_url, db, send_reply=True)
 
-    screenshot_url = _save_payment_screenshot(img_bytes, media_type)
     from app.integrations.claude import ClaudeClient
     extracted = await ClaudeClient().extract_payment_details(img_b64, media_type)
+    looks_like_payment = bool(
+        extracted.get("utr") or extracted.get("amount_rupees")
+        or extracted.get("payee_upi_id") or extracted.get("payee_name")
+    )
+    if not looks_like_payment:
+        logger.info("Image in awaiting_payment has no payment fields — handling as product image")
+        return await _handle_product_image_inner(conversation, seller, image_url, db, send_reply=True)
+
+    # It IS a payment proof — record it and verify.
+    _append_message(conversation, "customer", f"[screenshot: {image_url}]")
+    if conv_product is not None:
+        conv_product.state = "verifying"
+    screenshot_url = _save_payment_screenshot(img_bytes, media_type)
+    await db.flush()
+
+    if conv_product is None or conv_product.payment_requested_at is None or conv_product.payment_method_id is None:
+        return await _manual()
+    method = await db.get(PaymentMethod, conv_product.payment_method_id)
 
     # Anti-replay: has this UTR ever been recorded?
     utr = (extracted.get("utr") or "").strip() or None
@@ -1014,6 +1047,20 @@ async def _handle_payment_screenshot_inner(
         await _send("Ye payment toh pehle hi mil chuka hai ✅")
         return
     if verdict.outcome == pv.MANUAL_REVIEW:
+        # Payee mismatch = the payment went somewhere other than our UPI. Tell the
+        # customer plainly (don't silently re-share/ping) so they can re-pay
+        # correctly. Other reasons (unreadable/unclear) → manual seller review.
+        if "payee" in (verdict.reason or "").lower():
+            conv_product.state = "awaiting_payment"
+            await db.flush()
+            due = (conv_product.agreed_price or 0) - (conv_product.amount_paid or 0)
+            upi = (method.upi_id if method else "") or ""
+            amt = f"₹{due // 100} " if due > 0 else ""
+            await _send(
+                f"Ye payment to kisi aur UPI pe gaya lagta hai 🤔 "
+                f"Mera UPI {upi} hai — {amt} ispe pay karke screenshot bhejo na, fir turant confirm 🙏"
+            )
+            return
         return await _manual()
 
     # confirmed_full or partial → record the transaction against an order.
