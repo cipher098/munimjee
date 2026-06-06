@@ -343,6 +343,15 @@ class ClaudeClient:
         try:
             return _parse_json(text)
         except LLMOutputParseError:
+            # A verbose "reason" can blow the token cap and truncate the JSON
+            # mid-string. product_id + confidence are emitted first, so recover
+            # them with a regex rather than dropping a valid match to no-match.
+            import re
+            pid = re.search(r'"product_id"\s*:\s*"([0-9a-fA-F-]{36})"', text)
+            conf = re.search(r'"confidence"\s*:\s*"(high|medium|low)"', text)
+            if pid and conf:
+                logger.warning("Recovered truncated catalog match: %s (%s)", pid.group(1), conf.group(1))
+                return {"product_id": pid.group(1), "confidence": conf.group(1), "reason": "recovered (truncated)"}
             logger.error("LLM returned non-JSON catalog match: %r", text)
             return {"product_id": None, "confidence": "low", "reason": "parse error"}
 

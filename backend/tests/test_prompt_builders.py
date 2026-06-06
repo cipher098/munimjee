@@ -43,7 +43,42 @@ def _reply_context() -> dict:
         "other_active_products": [],
         "other_inquiry_products": [],
         "message_history": [{"role": "customer", "content": "kitna?"}],
+        "past_orders_summary": "Gold Clock — ₹1600 — 2026-05-10 — dispatched",
+        "previous_price_paise": 150000,
     }
+
+
+@pytest.mark.asyncio
+async def test_reply_prompt_includes_past_orders_and_previous_price():
+    prompt = await build_reply_prompt(_reply_context())
+    assert "Gold Clock — ₹1600 — 2026-05-10 — dispatched" in prompt
+    assert "₹1500" in prompt  # previous_price 150000 paise rendered
+
+
+@pytest.mark.asyncio
+async def test_reply_prompt_handles_missing_past_orders_and_previous_price():
+    ctx = _reply_context()
+    ctx.pop("past_orders_summary")
+    ctx.pop("previous_price_paise")
+    prompt = await build_reply_prompt(ctx)
+    assert "PAST ORDERS" in prompt  # default "none" renders, no KeyError
+
+
+@pytest.mark.asyncio
+async def test_decide_prompt_includes_past_orders_and_previous_price():
+    ctx = {
+        "state": "returning_customer",
+        "negotiation_round": 0,
+        "listed_price": 180000,
+        "floor_price": 140000,
+        "available_products": [],
+        "other_inquiry_products": [],
+        "past_orders_summary": "Gold Clock — ₹1600 — 2026-05-10 — dispatched",
+        "previous_price_paise": 150000,
+    }
+    prompt = await build_decide_prompt(ctx)
+    assert "Gold Clock — ₹1600 — 2026-05-10 — dispatched" in prompt
+    assert "₹1500" in prompt
 
 
 # ---------------------------------------------------------------------------

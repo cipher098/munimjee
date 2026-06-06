@@ -117,9 +117,11 @@ async def _scan_for_nudge_candidates() -> None:
     from app.config import settings as _settings
 
     async with worker_session() as db:
+        # Only nudge threads currently mid-funnel (a product is in focus).
+        # Idle post-purchase threads (product_id NULL) are never nudged.
         result = await db.execute(
             select(Conversation.id, Conversation.messages, Conversation.nudge_state).where(
-                Conversation.status == "active",
+                Conversation.product_id.isnot(None),
             )
         )
         candidates: list[tuple[str, int]] = []
@@ -166,7 +168,8 @@ async def _send_nudge(conversation_id: str, target_count: int) -> None:
         conversation = result.scalar_one_or_none()
         if not conversation:
             return
-        if conversation.status != "active":
+        # Only nudge a thread still in focus (mid-funnel).
+        if not conversation.product_id:
             return
 
         # Re-check eligibility now (the scan and this task race a bit).
@@ -189,9 +192,9 @@ async def _send_nudge(conversation_id: str, target_count: int) -> None:
                 select(ConversationProduct).where(
                     ConversationProduct.conversation_id == conversation.id,
                     ConversationProduct.product_id == conversation.product_id,
-                )
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
             )
-            cp = cp_result.scalar_one_or_none()
+            cp = cp_result.scalars().first()
             if cp and cp.state in _NUDGE_BLOCKING_PRODUCT_STATES:
                 logger.info(
                     "send_nudge %s: blocked by conv_product state=%s",

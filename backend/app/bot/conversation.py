@@ -50,22 +50,16 @@ async def _capture_llm_calls(db, *, seller_id, conversation_id, customer_message
             llm_logging.end(token)
 
 TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
-# `customer_disengaged` is NOT terminal — conversation stays active so the
-# customer's next message doesn't spawn a fresh conversation. Bot silence is
-# instead enforced by Conversation.disengage_paused_until (see worker pause gate).
+# A purchase cycle's ConversationProduct goes terminal, but the CONVERSATION is
+# permanent — never closed. On a terminal state we just clear the conversation's
+# current-focus pointer (product_id). `awaiting_address` is post-payment but NOT
+# terminal (we're still collecting the delivery address for that order).
+# `customer_disengaged` is also not terminal — silence is enforced by
+# Conversation.disengage_paused_until (see worker pause gate).
 
-
-async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) -> None:
-    """On conversation close, mark any still-open product_inquiry records as not_interested."""
-    result = await db.execute(
-        select(ConversationProduct).where(
-            ConversationProduct.conversation_id == conversation_id,
-            ConversationProduct.state == "product_inquiry",
-        )
-    )
-    for cp in result.scalars().all():
-        cp.state = "not_interested"
-        logger.info("Sweep: product %s → not_interested on conversation close", cp.product_id)
+# States in which a ConversationProduct is "done" — a new inquiry for the same
+# product starts a fresh cycle (new row) rather than reusing this one.
+_CP_INACTIVE_STATES = {"payment_confirmed", "dispatched_notified", "failed", "not_interested"}
 
 
 async def _classify_image_type(image_b64: str, media_type: str) -> str:
@@ -103,6 +97,10 @@ def _detect_media_type(data: bytes) -> str:
 
 def _append_message(conversation: Conversation, role: str, content: str, mid: str | None = None) -> None:
     messages = list(conversation.messages or [])
+    # Idempotent on mid: a retry/redelivery of the same message must not append a
+    # duplicate. (Messages without a mid — synthetic/media markers — aren't deduped.)
+    if mid and any(m.get("mid") == mid for m in messages):
+        return
     entry: dict = {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
     if mid:
         entry["mid"] = mid
@@ -163,14 +161,24 @@ async def _get_or_create_conv_product(
     product_id,
     db: AsyncSession,
 ) -> ConversationProduct:
-    """Return the ConversationProduct row for this (conversation, product) pair, creating it if absent."""
+    """Return the ACTIVE purchase-cycle ConversationProduct for this
+    (conversation, product), creating a fresh one if none is active.
+
+    ConversationProduct is no longer unique per (conversation, product): a
+    customer can buy the same product more than once. A finished cycle
+    (payment_confirmed / dispatched_notified / failed / not_interested) is left
+    as history; the next inquiry for that product starts a NEW row. Within a
+    conversation the message batch is serialized by an advisory lock, so this
+    get-active-or-create is race-safe.
+    """
     result = await db.execute(
         select(ConversationProduct).where(
             ConversationProduct.conversation_id == conversation_id,
             ConversationProduct.product_id == product_id,
-        )
+            ~ConversationProduct.state.in_(_CP_INACTIVE_STATES),
+        ).order_by(ConversationProduct.created_at.desc()).limit(1)
     )
-    conv_product = result.scalar_one_or_none()
+    conv_product = result.scalars().first()
     if conv_product is None:
         conv_product = ConversationProduct(
             conversation_id=conversation_id,
@@ -182,6 +190,125 @@ async def _get_or_create_conv_product(
         db.add(conv_product)
         await db.flush()
     return conv_product
+
+
+async def _get_cycle_order(conv_product: "ConversationProduct", db: AsyncSession):
+    """The Order for this purchase cycle (1:1 with the CP via OrderItem), or None
+    if payment hasn't started yet."""
+    from app.models.order import Order, OrderItem
+    res = await db.execute(
+        select(Order)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .where(OrderItem.conversation_product_id == conv_product.id)
+        .order_by(Order.created_at.desc())
+        .limit(1)
+    )
+    return res.scalars().first()
+
+
+async def _ensure_cycle_order(conversation, seller, conv_product, method, db):
+    """Create (once) the per-cycle Order when payment starts, in status
+    awaiting_payment, with the payment method + window start recorded on it.
+    Returns the existing order if one already exists for this cycle."""
+    price = conv_product.agreed_price or conv_product.last_counter_price or 0
+    qty = conv_product.quantity or 1
+    order = await _get_cycle_order(conv_product, db)
+    if order is not None:
+        # Heal ONLY a never-initialised amount (the order was opened before the
+        # price was known). Never overwrite an already-set total — that would
+        # clobber a multi-line bundle order with the focused product's price.
+        if order.status == "awaiting_payment" and price and (order.amount or 0) == 0 and (order.amount_paid or 0) == 0:
+            order.amount = price * qty
+        return order
+    from app.models.order import Order, OrderItem
+    order = Order(
+        seller_id=seller.id,
+        conversation_id=conversation.id,
+        customer_name=conversation.customer_name or "",
+        customer_instagram_id=conversation.customer_instagram_id,
+        amount=price * qty,
+        status="awaiting_payment",
+        amount_paid=0,
+        payment_method_id=method.id if method else None,
+        payment_requested_at=datetime.now(timezone.utc),
+    )
+    db.add(order)
+    await db.flush()
+    db.add(OrderItem(
+        order_id=order.id,
+        conversation_product_id=conv_product.id,
+        quantity=qty,
+        unit_price=price,
+    ))
+    await db.flush()
+    return order
+
+
+async def _build_deal_order(conversation, seller, focused_cp, deal_lines, db):
+    """Create ONE order for a multi-product deal, with one OrderItem per product
+    (priced per-product as negotiated, with its own quantity). Consolidates away any
+    prior unpaid orders for the participating products so a product that hit payment
+    earlier (then got bundled) doesn't leave a stranded order."""
+    from sqlalchemy import delete as sa_delete
+    from app.models.order import Order, OrderItem
+
+    method = await _get_primary_upi_method(seller.id, db)
+    pids = [str(l["product_id"]) for l in deal_lines]
+
+    # Drop prior unpaid (awaiting_payment, nothing paid) orders that contain any of
+    # these products (via their line items) — removes a stranded single-product order
+    # for a product that's now part of the bundle.
+    existing_ids = (await db.execute(
+        select(Order.id)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .join(ConversationProduct, OrderItem.conversation_product_id == ConversationProduct.id)
+        .where(
+            Order.conversation_id == conversation.id,
+            Order.status == "awaiting_payment",
+            Order.amount_paid == 0,
+            ConversationProduct.product_id.in_(pids),
+        )
+    )).scalars().all()
+    for oid in set(existing_ids):
+        await db.execute(sa_delete(OrderItem).where(OrderItem.order_id == oid))
+        await db.execute(sa_delete(Order).where(Order.id == oid))
+    await db.flush()
+
+    total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
+    order = Order(
+        seller_id=seller.id,
+        conversation_id=conversation.id,
+        customer_name=conversation.customer_name or "",
+        customer_instagram_id=conversation.customer_instagram_id,
+        amount=total,
+        status="awaiting_payment",
+        amount_paid=0,
+        payment_method_id=method.id if method else None,
+        payment_requested_at=datetime.now(timezone.utc),
+    )
+    db.add(order)
+    await db.flush()
+    for l in deal_lines:
+        if str(l["product_id"]) == str(focused_cp.product_id):
+            cp = focused_cp
+        else:
+            cp = await _get_or_create_conv_product(conversation.id, l["product_id"], db)
+        cp.agreed_price = l["unit_price_paise"]
+        cp.last_counter_price = l["unit_price_paise"]
+        # Per-product display ceiling — keep it the product's own price, not the
+        # bundle total that a combined counter may have written here.
+        cp.last_shown_price = l["unit_price_paise"]
+        cp.quantity = l["quantity"]
+        cp.state = "awaiting_payment"
+        db.add(OrderItem(
+            order_id=order.id,
+            conversation_product_id=cp.id,
+            quantity=l["quantity"],
+            unit_price=l["unit_price_paise"],
+        ))
+    await db.flush()
+    logger.info("Built deal order %s with %d line items (total ₹%d)", order.id, len(deal_lines), total // 100)
+    return order
 
 
 async def _send_next_product_photo(
@@ -243,9 +370,11 @@ async def _send_next_product_photo(
         logger.info("Sent product photo %d/%d for %r", idx + 1, len(all_photos), product.name)
         if conv_product:
             conv_product.photos_sent_count = idx + 1
-        # Record the image in message history so reply_to on this photo can be resolved
+        # Record the image in history tagged with THIS product's id (not
+        # conversation.product_id, which is unset during a multi-product send) so a
+        # "reply to this photo" can be mapped back to the right product.
         msgs = list(conversation.messages or [])
-        msgs.append({"role": "bot", "content": "[product photo]"})
+        msgs.append({"role": "bot", "content": "[product photo]", "product_id": str(product.id)})
         conversation.messages = msgs
         mid = result.get("message_id")
         if mid:
@@ -305,10 +434,10 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
         logger.warning("No active UPI payment method for seller %s — cannot share QR", seller.id)
         return None
 
-    first_time = conv_product.payment_requested_at is None
-    if first_time:
-        conv_product.payment_method_id = method.id
-        conv_product.payment_requested_at = datetime.now(timezone.utc)
+    # The per-cycle Order is the payment container — create it on the first
+    # awaiting_payment turn (records the method + verify-window start).
+    first_time = await _get_cycle_order(conv_product, db) is None
+    order = await _ensure_cycle_order(conversation, seller, conv_product, method, db)
 
     qr_already_sent = any((m.get("content") == "[payment QR]") for m in (conversation.messages or []))
     qr_sent_now = False
@@ -341,7 +470,7 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
     if not first_time and not qr_sent_now:
         return None
 
-    due_paise = (conv_product.agreed_price or conv_product.last_counter_price or 0) - (conv_product.amount_paid or 0)
+    due_paise = (order.amount or 0) - (order.amount_paid or 0)
     amount_str = f"₹{due_paise // 100} " if due_paise > 0 else ""
     if qr_delivered:
         return (
@@ -386,9 +515,6 @@ async def advance_conversation(
     Pass resume=True when re-processing an already-stored customer message so it
     is not appended to history a second time.
     """
-    if conversation.status == "closed":
-        return
-
     async with _capture_llm_calls(
         db,
         seller_id=seller.id,
@@ -441,10 +567,81 @@ async def _advance_conversation_inner(
     elif new_state:
         if conv_product is not None:
             conv_product.state = new_state
-        # Close conversation when a terminal state is reached
+        # The conversation is permanent — on a terminal product state just drop
+        # the current-focus pointer so the next message is handled fresh.
         if new_state in TERMINAL_STATES:
-            conversation.status = "closed"
-            await _sweep_inquiry_to_not_interested(conversation.id, db)
+            conversation.product_id = None
+            conversation.nudge_state = None
+            conversation.disengage_paused_until = None
+
+    # Post-payment address capture: the customer replied to "send your address"
+    # while this cycle was awaiting_address. Save it on the cycle's Order.
+    if extra.get("save_address") and conv_product is not None:
+        order = await _get_cycle_order(conv_product, db)
+        if order is not None:
+            order.customer_address = customer_message
+            logger.info("Saved delivery address for order %s", order.id)
+
+    # Apply price-state extras to the CP BEFORE the awaiting_payment block below,
+    # so the per-cycle Order is created with the correct agreed amount (not 0).
+    if extra.get("bulk_quantity") and conv_product is not None:
+        # The ONLY place quantity is persisted — "2 piece" must reach the order.
+        try:
+            conv_product.quantity = max(1, int(extra["bulk_quantity"]))
+        except (TypeError, ValueError):
+            pass
+    if extra.get("agreed_price") and conv_product is not None:
+        conv_product.agreed_price = extra["agreed_price"]
+        # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
+        conv_product.last_counter_price = extra["agreed_price"]
+    if extra.get("negotiation_round") is not None and conv_product is not None:
+        conv_product.negotiation_round = extra["negotiation_round"]
+    if extra.get("last_counter_price") is not None and conv_product is not None:
+        conv_product.last_counter_price = extra["last_counter_price"]
+    # last_shown_price is a monotonic floor on customer-facing prices: it only ever
+    # ratchets DOWN. Once we've shown ₹1100, we can never quote higher; if we later
+    # quote ₹1050, the new value wins.
+    if extra.get("last_shown_price") is not None and conv_product is not None:
+        _new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or _new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = _new_shown
+
+    # Multi-product photo request ("teeno bhej do") — send the first photo of
+    # each requested product. No single focus is set (customer hasn't picked one).
+    for _pid in (extra.get("show_product_ids") or []):
+        from sqlalchemy import select as _sa_select
+        from app.models.product import Product as _ProductModel
+        _p = (await db.execute(_sa_select(_ProductModel).where(_ProductModel.id == _pid))).scalar_one_or_none()
+        if _p is None:
+            continue
+        _cp = await _get_or_create_conv_product(conversation.id, str(_p.id), db)
+        await _send_next_product_photo(conversation, seller, _p, _cp, db)
+
+    # Deal accepted → rebuild ONE order from the current combo BEFORE the QR-share
+    # block (so _ensure_cycle_order finds it, no duplicate).
+    if extra.get("deal_lines") and conv_product is not None:
+        _lines = extra["deal_lines"]
+        _line_pids = {str(l["product_id"]) for l in _lines}
+        # If the focused product was DROPPED from the deal, it must not linger in
+        # awaiting_payment (a stray turn set it) — that would spawn a phantom order
+        # for it in the QR-share step. Revert it and move focus into the deal so the
+        # QR-share/payment all operate on the deal's order.
+        if str(conv_product.product_id) not in _line_pids:
+            # Delete any unpaid order this dropped product had (phantom cleanup).
+            _stray = await _get_cycle_order(conv_product, db)
+            if _stray is not None and _stray.status == "awaiting_payment" and (_stray.amount_paid or 0) == 0:
+                from sqlalchemy import delete as _sa_del
+                from app.models.order import Order as _O, OrderItem as _OI
+                await db.execute(_sa_del(_OI).where(_OI.order_id == _stray.id))
+                await db.execute(_sa_del(_O).where(_O.id == _stray.id))
+            conv_product.state = "not_interested"
+            conv_product.agreed_price = None
+            conv_product.last_counter_price = None
+            conversation.product_id = _lines[0]["product_id"]
+            conv_product = await _get_or_create_conv_product(
+                conversation.id, conversation.product_id, db
+            )
+        await _build_deal_order(conversation, seller, conv_product, _lines, db)
 
     # While awaiting_payment, ensure the QR is delivered + exact instructions are
     # sent (UPI id + amount from DB, never the LLM). Keyed on the CURRENT state
@@ -492,28 +689,6 @@ async def _advance_conversation_inner(
             datetime.now(timezone.utc)
             + timedelta(minutes=_settings.CUSTOMER_DISENGAGE_PAUSE_MINUTES)
         )
-
-    if extra.get("agreed_price"):
-        if conv_product is not None:
-            conv_product.agreed_price = extra["agreed_price"]
-            # Lock last_counter_price to agreed price — if customer renegotiates, can't go lower
-            conv_product.last_counter_price = extra["agreed_price"]
-
-    if extra.get("negotiation_round") is not None:
-        if conv_product is not None:
-            conv_product.negotiation_round = extra["negotiation_round"]
-
-    if extra.get("last_counter_price") is not None:
-        if conv_product is not None:
-            conv_product.last_counter_price = extra["last_counter_price"]
-
-    # last_shown_price is a monotonic floor on customer-facing prices: it only ever
-    # ratchets DOWN. Once we've shown ₹1100, we can never quote higher; if we later
-    # quote ₹1050, the new value wins.
-    if extra.get("last_shown_price") is not None and conv_product is not None:
-        new_shown = extra["last_shown_price"]
-        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
-            conv_product.last_shown_price = new_shown
 
     new_product_id = extra.get("product_id")
     if new_product_id:
@@ -667,8 +842,15 @@ async def _handle_product_image_inner(
     )
 
     if not product_id or confidence == "low":
-        # Could not identify — ask customer to clarify
-        reply = "Kaunsa product chahiye aapko? Thoda aur clearly batayein ya product ka naam likhein 😊"
+        # No catalog item matches the image. Be honest — this product isn't in
+        # our collection — and show what IS available, instead of looping
+        # "kaunsa product chahiye" forever (which reads as the bot stalling).
+        names = ", ".join(p.name for p in products[:8])
+        reply = (
+            f"Ye exact item to humare paas nahi hai yaar 😅 "
+            f"Humare paas ye available hai: {names}. "
+            f"Inme se kuch pasand aaye toh batao, price bata deta hoon 😊"
+        )
         _append_bot_reply(conversation, reply, send_reply)
         await db.flush()
         if send_reply:
@@ -724,7 +906,7 @@ async def _handle_product_image_inner(
     if new_state:
         conv_product.state = new_state
         if new_state in TERMINAL_STATES:
-            conversation.status = "closed"
+            conversation.product_id = None
     if extra.get("agreed_price"):
         conv_product.agreed_price = extra["agreed_price"]
         conv_product.last_counter_price = extra["agreed_price"]
@@ -922,7 +1104,7 @@ async def _handle_reel_inner(
     if new_state:
         conv_product.state = new_state
         if new_state in TERMINAL_STATES:
-            conversation.status = "closed"
+            conversation.product_id = None
     if extra.get("agreed_price"):
         conv_product.agreed_price = extra["agreed_price"]
         conv_product.last_counter_price = extra["agreed_price"]
@@ -1020,9 +1202,12 @@ async def _handle_payment_screenshot_inner(
     screenshot_url = _save_payment_screenshot(img_bytes, media_type)
     await db.flush()
 
-    if conv_product is None or conv_product.payment_requested_at is None or conv_product.payment_method_id is None:
+    # The per-cycle Order (created when payment was requested) holds the method
+    # we shared + the verify-window start + cumulative amount_paid.
+    order = await _get_cycle_order(conv_product, db) if conv_product is not None else None
+    if conv_product is None or order is None or order.payment_requested_at is None or order.payment_method_id is None:
         return await _manual()
-    method = await db.get(PaymentMethod, conv_product.payment_method_id)
+    method = await db.get(PaymentMethod, order.payment_method_id)
 
     # Anti-replay: has this UTR ever been recorded?
     utr = (extracted.get("utr") or "").strip() or None
@@ -1031,12 +1216,12 @@ async def _handle_payment_screenshot_inner(
         _ex = await db.execute(select(Transaction).where(Transaction.utr_number == utr))
         utr_used = _ex.scalar_one_or_none() is not None
 
-    remaining = (conv_product.agreed_price or 0) - (conv_product.amount_paid or 0)
+    remaining = (order.amount or 0) - (order.amount_paid or 0)
     verdict = pv.evaluate_payment(
         extracted,
         method_upi_id=method.upi_id if method else None,
         method_account_name=method.account_name if method else None,
-        shared_at=conv_product.payment_requested_at,
+        shared_at=order.payment_requested_at,
         received_at=datetime.now(timezone.utc),
         remaining_due_paise=remaining,
         utr_already_used=utr_used,
@@ -1053,7 +1238,7 @@ async def _handle_payment_screenshot_inner(
         if "payee" in (verdict.reason or "").lower():
             conv_product.state = "awaiting_payment"
             await db.flush()
-            due = (conv_product.agreed_price or 0) - (conv_product.amount_paid or 0)
+            due = (order.amount or 0) - (order.amount_paid or 0)
             upi = (method.upi_id if method else "") or ""
             amt = f"₹{due // 100} " if due > 0 else ""
             await _send(
@@ -1063,47 +1248,40 @@ async def _handle_payment_screenshot_inner(
             return
         return await _manual()
 
-    # confirmed_full or partial → record the transaction against an order.
-    order = (await db.execute(
-        select(Order).where(Order.conversation_id == conversation.id,
-                            Order.product_id == conversation.product_id)
-    )).scalars().first()
-    if order is None:
-        order = Order(
-            seller_id=seller.id, conversation_id=conversation.id,
-            customer_name=conversation.customer_name or "",
-            customer_instagram_id=conversation.customer_instagram_id,
-            product_id=conversation.product_id,
-            amount=conv_product.agreed_price or verdict.amount_paise,
-            status="awaiting_payment",
-        )
-        db.add(order)
-        await db.flush()
-        db.add(OrderItem(
-            order_id=order.id, conversation_product_id=conv_product.id,
-            quantity=conv_product.quantity or 1,
-            unit_price=conv_product.agreed_price or verdict.amount_paise,
-        ))
-
+    # confirmed_full or partial → record the transaction against the cycle order.
     db.add(Transaction(
         seller_id=seller.id, order_id=order.id, utr_number=verdict.utr,
         amount=verdict.amount_paise, sender_name=extracted.get("payee_name"),
         timestamp=verdict.payment_dt or datetime.now(timezone.utc),
         verified_by="ocr_auto", screenshot_url=screenshot_url,
     ))
-    conv_product.amount_paid = (conv_product.amount_paid or 0) + verdict.amount_paise
+    order.amount_paid = (order.amount_paid or 0) + verdict.amount_paise
     await db.flush()
 
     if verdict.outcome == pv.PARTIAL:
-        still_due = (conv_product.agreed_price or 0) - conv_product.amount_paid
+        still_due = (order.amount or 0) - order.amount_paid
         conv_product.state = "awaiting_payment"
         await _send(f"₹{verdict.amount_paise // 100} mil gaya ✅ Bas ₹{still_due // 100} aur bhej do, fir order pakka 🙏")
         return
 
-    # confirmed_full
+    # confirmed_full — collect the delivery address next. The conversation stays
+    # alive (permanent thread); the cycle isn't fully done until we have the
+    # address, so the CP goes to awaiting_address (NOT terminal) and product_id
+    # is kept so the next message routes back to this order.
     order.status = "payment_confirmed"
-    conv_product.state = "payment_confirmed"
-    conversation.status = "closed"
-    await _sweep_inquiry_to_not_interested(conversation.id, db)
+    # A bundle order has several line items — mark every other product paid; the
+    # focused CP drives the single address step for the whole order.
+    _oi_rows = (await db.execute(
+        select(OrderItem).where(OrderItem.order_id == order.id)
+    )).scalars().all()
+    for _oi in _oi_rows:
+        if _oi.conversation_product_id != conv_product.id:
+            _sib = await db.get(ConversationProduct, _oi.conversation_product_id)
+            if _sib is not None:
+                _sib.state = "payment_confirmed"
+    conv_product.state = "awaiting_address"
     await db.flush()
-    await _send("Payment confirm ho gaya 🎉 Aapka order aage badha diya hai, jaldi dispatch karenge!")
+    await _send(
+        "Payment confirm ho gaya 🎉 Delivery ke liye apna pura address (naam, "
+        "address, pincode aur phone number) bhej dijiye 🙏"
+    )

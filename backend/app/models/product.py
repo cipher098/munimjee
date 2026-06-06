@@ -32,6 +32,5 @@ class Product(Base):
     seller = relationship("Seller", back_populates="products")
     category = relationship("ProductCategory", back_populates="products")
     conversations = relationship("Conversation", back_populates="product")
-    orders = relationship("Order", back_populates="product")
     tag_values = relationship("ProductTagValue", back_populates="product", cascade="all, delete-orphan")
     alerts = relationship("SellerAlert", back_populates="product")

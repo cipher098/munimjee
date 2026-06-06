@@ -1,6 +1,12 @@
 """
-Celery task: expire stale conversations that have had no activity for 24 hours.
-Runs every 2 hours via Beat. Closes eligible active conversations.
+Celery task: drop the negotiation focus on stale conversations that have had no
+activity for 24 hours. Runs every 2 hours via Beat.
+
+Conversations are permanent now (no status) — instead of closing them, we clear
+the current-focus pointer (product_id) and any quiet-window flags so a stalled
+negotiation doesn't keep the thread "stuck" on a half-finished product. The
+customer's next message is then handled fresh (returning_customer if they have
+past orders), with full history intact.
 """
 from app.workers.async_runner import run_async
 import logging
@@ -29,7 +35,7 @@ async def _expire_stale() -> None:
     async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(Conversation).where(
-                Conversation.status == "active",
+                Conversation.product_id.isnot(None),
                 Conversation.updated_at < cutoff,
             )
         )
@@ -40,7 +46,9 @@ async def _expire_stale() -> None:
             return
 
         for conv in stale:
-            conv.status = "closed"
+            conv.product_id = None
+            conv.nudge_state = None
+            conv.disengage_paused_until = None
 
         await db.commit()
-        logger.info("expire_stale: closed %d stale conversations", len(stale))
+        logger.info("expire_stale: cleared focus on %d stale conversations", len(stale))
