@@ -36,8 +36,10 @@ def test_counter_sets_last_shown_price():
     assert extra.get("last_counter_price") == 1100_00
 
 
-def test_accept_sets_last_shown_price():
-    """Accepting at ₹1050 must lock the display ceiling at ₹1050."""
+def test_accept_sets_agreed_price():
+    """Accepting at ₹1050 sets the focused product's per-unit agreed price. (The
+    display ceiling / last_shown is applied when the order is built — see
+    _build_deal_order.)"""
     decision = {"action": "accept", "price": 1050_00, "customer_intent": "hot"}
     new_state, extra = _derive_state_from_decision(
         decision, _conv(), _product(),
@@ -46,26 +48,26 @@ def test_accept_sets_last_shown_price():
         current_state="negotiating",
     )
     assert new_state == "awaiting_payment"
-    assert extra.get("last_shown_price") == 1050_00
     assert extra.get("agreed_price") == 1050_00
 
 
-def test_bulk_discount_sets_last_shown_price():
-    """Bulk pricing also locks the per-piece ceiling."""
+def test_bulk_discount_sets_agreed_price():
+    """Bulk per-piece price is floor-clamped and set as the focused agreed price;
+    quantity now flows via decision deal_items, not extra."""
     decision = {
         "action": "bulk_discount",
         "price": 1050_00,
         "bulk_quantity": 5,
         "customer_intent": "bulk",
     }
-    _, extra = _derive_state_from_decision(
+    new_state, extra = _derive_state_from_decision(
         decision, _conv(), _product(),
         effective_negotiation_round=0,
         effective_last_counter_price=None,
         current_state="product_inquiry",
     )
-    assert extra.get("last_shown_price") == 1050_00
-    assert extra.get("bulk_quantity") == 5
+    assert new_state == "awaiting_payment"
+    assert extra.get("agreed_price") == 1050_00
 
 
 def test_hold_firm_does_not_set_last_shown_price():

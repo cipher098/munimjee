@@ -16,16 +16,21 @@ class Order(Base):
     customer_name = Column(String, nullable=False)
     customer_instagram_id = Column(String, nullable=False)
     customer_address = Column(Text, nullable=True)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
-    amount = Column(Integer, nullable=False)          # in paise
+    # No product_id: an order is a deal of one-or-more products — the products live
+    # on its OrderItems (conversation_product_id → ConversationProduct.product_id).
+    amount = Column(Integer, nullable=False)          # in paise — total due for this order
     status = Column(String, nullable=False, default="payment_confirmed")
-    # Statuses: payment_confirmed | delivery_queue | packed | dispatched | delivered
+    # Statuses: awaiting_payment | payment_confirmed | delivery_queue | packed | dispatched | delivered
+    # Payment facts (moved here from ConversationProduct — the Order is the
+    # per-purchase-cycle payment container, created when payment starts):
+    amount_paid = Column(Integer, nullable=False, default=0)   # paise — cumulative verified payments
+    payment_method_id = Column(UUID(as_uuid=True), ForeignKey("payment_methods.id"), nullable=True)  # method we shared
+    payment_requested_at = Column(DateTime(timezone=True), nullable=True)  # when we shared the QR (verify-window start)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     seller = relationship("Seller", back_populates="orders")
     conversation = relationship("Conversation", back_populates="orders")
-    product = relationship("Product", back_populates="orders")
     delivery_updates = relationship("DeliveryUpdate", back_populates="order")
     transactions = relationship("Transaction", back_populates="order")
     items = relationship("OrderItem", back_populates="order")

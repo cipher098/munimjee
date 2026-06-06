@@ -24,6 +24,22 @@ def _clean_reply(text: str) -> str:
     return text.replace("—", "").strip()
 
 
+def _per_product_unit_price(cp, product) -> int:
+    """The per-product negotiated unit price for a bundle line item.
+
+    A bundle counter/accept writes the combined TOTAL into the focused product's
+    last_counter/last_shown, so any candidate ABOVE this product's listed price is
+    a polluted bundle total — reject it and fall back to listed. We never quote a
+    single product above its listed price, so this is safe. Clamp to floor."""
+    listed = product.listed_price or 0
+    unit = listed
+    for cand in (cp.agreed_price, cp.last_counter_price, cp.last_shown_price):
+        if cand and (not listed or cand <= listed):
+            unit = cand
+            break
+    return max(int(unit), product.floor_price or 0)
+
+
 # Re-export from seller_defaults so the auth router can seed brand-new sellers
 # without importing the full bot stack. Single source of truth lives there.
 from app.seller_defaults import DEFAULT_PERSONA  # noqa: E402,F401
@@ -295,9 +311,83 @@ async def generate_bot_reply(
     _FULL_HIST_CAP = 200
     full_history = (conversation.messages or [])[-_FULL_HIST_CAP:]
     decision_history = full_history
-    effective_state = conv_product.state if conv_product is not None else "greeting"
+
+    # Past-orders summary (returning-customer context) — keyed on the customer,
+    # so it spans the whole persistent thread regardless of which cycle/order.
+    # Product names come from each order's line items (orders are multi-product).
+    from app.models.order import Order, OrderItem
+    _po_orders = (await db.execute(
+        select(Order.id, Order.amount, Order.created_at, Order.status)
+        .where(
+            Order.seller_id == seller.id,
+            Order.customer_instagram_id == conversation.customer_instagram_id,
+            Order.status != "awaiting_payment",
+        )
+        .order_by(Order.created_at.desc())
+        .limit(5)
+    )).all()
+    _past_orders = []
+    for _oid, _amount, _created, _status in _po_orders:
+        _names = (await db.execute(
+            select(Product.name)
+            .select_from(OrderItem)
+            .join(ConversationProduct, OrderItem.conversation_product_id == ConversationProduct.id)
+            .join(Product, ConversationProduct.product_id == Product.id)
+            .where(OrderItem.order_id == _oid)
+        )).scalars().all()
+        _label = ", ".join(_names) if _names else "order"
+        _past_orders.append(
+            f"{_label} — ₹{(_amount or 0) // 100} — "
+            f"{_created.date().isoformat() if _created else '?'} — {_status}"
+        )
+    past_orders_summary = "; ".join(_past_orders) if _past_orders else "none"
+    has_past_orders = bool(_past_orders)
+
+    # Previously-negotiated price for THIS product with THIS customer, so the bot
+    # can honor it on a repeat buy when reminded. Grounded in the recorded value
+    # (last purchase's unit_price; fallback to a prior cycle's agreed_price) —
+    # never a figure the customer asserts.
+    previous_price_paise = None
+    if product:
+        _pp_res = await db.execute(
+            select(OrderItem.unit_price)
+            .join(Order, OrderItem.order_id == Order.id)
+            .join(ConversationProduct, OrderItem.conversation_product_id == ConversationProduct.id)
+            .where(
+                Order.seller_id == seller.id,
+                Order.customer_instagram_id == conversation.customer_instagram_id,
+                ConversationProduct.product_id == product.id,
+                Order.status != "awaiting_payment",
+            )
+            .order_by(Order.created_at.desc())
+            .limit(1)
+        )
+        _pp_row = _pp_res.first()
+        previous_price_paise = _pp_row[0] if _pp_row else None
+        if previous_price_paise is None:
+            _ag_res = await db.execute(
+                select(ConversationProduct.agreed_price)
+                .where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == product.id,
+                    ConversationProduct.agreed_price.isnot(None),
+                )
+                .order_by(ConversationProduct.created_at.desc())
+                .limit(1)
+            )
+            _ag_row = _ag_res.first()
+            previous_price_paise = _ag_row[0] if _ag_row else None
+
+    if conv_product is not None:
+        effective_state = conv_product.state
+    elif has_past_orders:
+        effective_state = "returning_customer"
+    else:
+        effective_state = "greeting"
     decision = await llm_provider.resolve_and_call("decide", seller, {
         "state": effective_state,
+        "past_orders_summary": past_orders_summary,
+        "previous_price_paise": previous_price_paise,
         "customer_message": customer_message,
         "negotiation_round": effective_negotiation_round,
         "listed_price": product.listed_price if product else None,
@@ -356,7 +446,61 @@ async def generate_bot_reply(
         effective_last_counter_price=effective_last_counter_price,
         inquiry_products=other_inquiry_products,
         current_state=effective_state,
+        previous_price_paise=previous_price_paise,
     )
+
+    # Accept / bulk → rebuild the order from the customer's CURRENT full agreed combo.
+    # The model declares it in decision["deal_items"] = [{product_id, quantity}, ...]
+    # (re-declared each time the combo changes). Code owns prices + total:
+    #   - bulk_discount: the focused product's per-piece price = the model's offered
+    #     price, floor-clamped (it's a NEW per-piece discount, not yet on the CP);
+    #   - everything else: each product's already-negotiated price via
+    #     _per_product_unit_price (floor-safe, rejects bundle-total pollution).
+    # The order total = Σ(unit×qty), and decision["price"] is set to it so the reply
+    # quotes the SAME number the order will charge.
+    if new_state == "awaiting_payment" and decision.get("action") in ("accept", "bulk_discount"):
+        from app.bot.conversation import _get_or_create_conv_product
+        _items = decision.get("deal_items") or []
+        if not _items and conversation.product_id:
+            # Fallback: model didn't declare items → single focused product.
+            _items = [{
+                "product_id": str(conversation.product_id),
+                "quantity": (conv_product.quantity if conv_product is not None else 1) or 1,
+            }]
+        # CRITICAL: for a MULTI-item deal the model's price is the TOTAL, not any
+        # single unit — so price EVERY product (including the focused one) by its
+        # OWN negotiated/listed price via _per_product_unit_price. Only for a
+        # single-item deal (or bulk_discount, one product × qty) is decision.price
+        # the focused product's per-unit/per-piece price → use derive's agreed_price.
+        _multi = len(_items) > 1
+        _focus_unit = extra.get("agreed_price")
+        deal_lines: list[dict] = []
+        for _it in _items:
+            _pid = str(_it.get("product_id") or "")
+            if not _pid:
+                continue
+            _p = (await db.execute(select(Product).where(Product.id == _pid))).scalar_one_or_none()
+            if not _p:
+                continue
+            _cp = await _get_or_create_conv_product(conversation.id, _pid, db)
+            if (not _multi) and _pid == str(conversation.product_id) and _focus_unit:
+                _unit = _focus_unit
+            else:
+                _unit = _per_product_unit_price(_cp, _p)
+            try:
+                _qty = max(1, int(_it.get("quantity") or _cp.quantity or 1))
+            except (TypeError, ValueError):
+                _qty = _cp.quantity or 1
+            deal_lines.append({"product_id": _pid, "unit_price_paise": _unit, "quantity": _qty})
+        if deal_lines:
+            extra["deal_lines"] = deal_lines
+            _total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
+            decision["price"] = _total  # reply quotes this; order.amount will equal it
+            logger.info(
+                "Deal lines: %s → total ₹%d",
+                [(l["product_id"][:8], l["quantity"], l["unit_price_paise"] // 100) for l in deal_lines],
+                _total // 100,
+            )
 
     # Compute code-enforced price breakdowns — used for show_multi_price and
     # as a safe reference when customer explicitly asks for per-product breakdown.
@@ -489,6 +633,8 @@ async def generate_bot_reply(
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products
         ) if other_inquiry_products else 0,
+        "past_orders_summary": past_orders_summary,
+        "previous_price_paise": previous_price_paise,
     }
 
     # Step 2: factory picks the reply provider (per-seller preference, falling
@@ -550,6 +696,7 @@ def _derive_state_from_decision(
     effective_last_counter_price: int | None = None,
     inquiry_products: list[dict] | None = None,
     current_state: str | None = None,
+    previous_price_paise: int | None = None,
 ) -> tuple[str | None, dict]:
     """Maps Claude's action to a state transition and extra data.
 
@@ -578,15 +725,15 @@ def _derive_state_from_decision(
 
     # ── Sticky-state guard ───────────────────────────────────────────────
     # Once a deal is agreed (awaiting_payment), don't let the model regress us
-    # back to negotiating / product_inquiry just because it picked hold_firm
-    # or show_product on a follow-up question. Only escalate and not_interested
-    # are legitimate exits from the locked state.
+    # back to negotiating just because it picked hold_firm/counter/show_product on
+    # a follow-up question.
     #
-    # The bot's REPLY still happens normally — we only neutralize the state
-    # transition and price-mutating extras. The agreed_price_locked
-    # intervention rule already steers the model toward not-reopening; this
-    # guard catches the cases where it slips through anyway.
-    _PAYMENT_LOCKED_NEUTRALIZE = {"hold_firm", "counter", "accept", "bulk_discount", "show_product"}
+    # accept / bulk_discount are NOT neutralized: the customer can legitimately
+    # MODIFY a not-yet-paid deal (add/remove products, change quantities), and the
+    # order must be rebuilt from the new combo. This is safe — line prices are
+    # computed by code per-product (the model can't lower anything), so a stray
+    # re-accept of the same combo just rebuilds the same order.
+    _PAYMENT_LOCKED_NEUTRALIZE = {"hold_firm", "counter", "show_product"}
     if current_state == "awaiting_payment" and action in _PAYMENT_LOCKED_NEUTRALIZE:
         # Allow switching to a DIFFERENT product — the customer changed their mind
         # and wants another item; don't trap them in the agreed deal. Only
@@ -614,6 +761,21 @@ def _derive_state_from_decision(
 
     def _clamp_to_floors(price: int) -> int:
         """Raise price to the highest applicable floor: single-product or bundle."""
+        # Returning-customer loyalty: honor a recorded prior price for this
+        # product even if it's below the current floor — but only down to that
+        # recorded value (a fabricated lower "last time" price still clamps to
+        # floor, since previous_price_paise is the real number on record).
+        if (
+            previous_price_paise
+            and price
+            and price < (floor_price or 0)
+            and price >= previous_price_paise
+        ):
+            logger.info(
+                "HONOR PRIOR PRICE: keeping %d (prior=%d) below floor %s for returning customer",
+                price, previous_price_paise, floor_price,
+            )
+            return price
         # Single-product floor
         if floor_price and price < floor_price:
             logger.warning(
@@ -634,23 +796,31 @@ def _derive_state_from_decision(
         return price
 
     if action == "accept":
-        price = decision.get("price") or 0
-        price = _clamp_to_floors(price)
-        decision["price"] = price
-        # If clamping pushed us above what customer offered, revert to hold_firm
-        original_price = decision.get("price", 0)
-        if floor_price and original_price and original_price < floor_price:
-            logger.warning(
-                "FLOOR GUARD: accept %d below floor %d — overriding to hold_firm",
-                original_price, floor_price,
-            )
-            action = "hold_firm"
-            decision["action"] = "hold_firm"
-        else:
-            extra["agreed_price"] = price
-            extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
-            extra["last_shown_price"] = price    # customer-facing ceiling
+        # Focused product's per-unit price: floor-safe (SINGLE-product floor only —
+        # never the sum-of-inquiry-floors bundle clamp, which caused the ₹3200 bug),
+        # honoring a recorded prior price below floor for returning customers. The
+        # caller builds the order lines: focused unit = this extra["agreed_price"],
+        # other products = their own negotiated price; total + decision["price"] set
+        # by the caller.
+        _items = decision.get("deal_items") or []
+        if len(_items) > 1:
+            # Multi-item deal: the model's price is the TOTAL, not a per-unit. Do NOT
+            # stamp it onto the focused product — every line is priced per-product by
+            # the caller (_per_product_unit_price). No agreed_price extra here.
             return "awaiting_payment", extra
+        # Single product: model price is the per-unit. Floor-clamp (honor a recorded
+        # prior price below floor for returning customers).
+        price = decision.get("price") or 0
+        _honoring = bool(
+            previous_price_paise and price and price >= previous_price_paise
+            and floor_price and price < floor_price
+        )
+        if not _honoring and floor_price and price and price < floor_price:
+            logger.warning("FLOOR GUARD: accept %d below floor %d — clamping to floor", price, floor_price)
+            price = floor_price
+        decision["price"] = price
+        extra["agreed_price"] = price
+        return "awaiting_payment", extra
 
     if action == "counter":
         price = decision.get("price") or 0
@@ -686,17 +856,26 @@ def _derive_state_from_decision(
         return "negotiating", extra
 
     if action == "bulk_discount":
+        # ONE product × quantity — the focused product's per-piece price, floor-clamped
+        # to THIS product's floor only (never the bundle clamp). The caller builds the
+        # line (qty from deal_items) and the total.
         price = decision.get("price") or 0
-        price = _clamp_to_floors(price)
+        if floor_price and price and price < floor_price:
+            logger.warning("FLOOR GUARD: bulk per-piece %d below floor %d — clamping", price, floor_price)
+            price = floor_price
         decision["price"] = price
         extra["agreed_price"] = price
-        extra["last_counter_price"] = price  # lock in — can never go lower if renegotiated
-        extra["last_shown_price"] = price    # customer-facing ceiling
-        extra["bulk_quantity"] = decision.get("bulk_quantity")
         return "awaiting_payment", extra
 
     if action == "request_payment":
         return "awaiting_payment", extra
+
+    if action == "save_address":
+        # Customer provided their delivery address while awaiting_address. The
+        # caller writes the raw message to Order.customer_address; the cycle is
+        # now fully done (payment_confirmed is terminal → focus is cleared).
+        extra["save_address"] = True
+        return "payment_confirmed", extra
 
     if action == "escalate":
         return "manual_review", extra
@@ -728,6 +907,17 @@ def _derive_state_from_decision(
     if action == "show_multi_price":
         extra["product_ids"] = decision.get("product_ids") or []
         return None, extra  # no state change
+
+    if action == "show_products":
+        # Customer wants to SEE photos of several specific products ("teeno bhej
+        # do"). The caller sends one photo of each; no single focus is set.
+        extra["show_product_ids"] = decision.get("product_ids") or []
+        return None, extra  # no state change
+
+    if action == "out_of_catalog":
+        # Customer asked for an item we don't carry — reply lists the catalog.
+        # No product is locked; no state change.
+        return None, extra
 
     if action == "show_product":
         product_id = decision.get("product_id")

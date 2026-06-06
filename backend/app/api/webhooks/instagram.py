@@ -248,14 +248,13 @@ async def _handle_echo_event(
         # Echo for a page we don't manage — nothing to do.
         return
 
-    # Find the active conversation with this customer. Echoes only matter when
-    # there's an existing thread; if there isn't one, it was a seller-initiated
-    # outbound that we never tracked — ignore.
+    # Find the (single, permanent) conversation with this customer. Echoes only
+    # matter when there's an existing thread; if there isn't one, it was a
+    # seller-initiated outbound to someone who never messaged us — ignore.
     result = await db.execute(
         select(Conversation).where(
             Conversation.seller_id == seller.id,
             Conversation.customer_instagram_id == customer_ig_id,
-            Conversation.status == "active",
         )
     )
     conversation = result.scalar_one_or_none()
@@ -296,41 +295,49 @@ async def _get_or_create_conversation(
     customer_instagram_id: str,
     db: AsyncSession,
 ) -> Conversation:
-    result = await db.execute(
-        select(Conversation).where(
-            Conversation.seller_id == seller.id,
-            Conversation.customer_instagram_id == customer_instagram_id,
-            Conversation.status == "active",
-        )
-    )
-    conversation = result.scalar_one_or_none()
+    # One permanent conversation per (seller, customer) — the customer thread.
+    # No status: it's never closed, so we just fetch it or create it once.
+    # Capture seller_id as a plain value: db.rollback() (in the race path below)
+    # EXPIRES every ORM object, so any later read of `seller.id` would trigger a
+    # lazy refresh in a sync context → MissingGreenlet. Never touch the ORM
+    # object after a rollback without refreshing it first.
+    seller_id = seller.id
 
-    if not conversation:
-        try:
-            conversation = Conversation(
-                seller_id=seller.id,
-                customer_instagram_id=customer_instagram_id,
-                messages=[],
-            )
+    def _q():
+        return select(Conversation).where(
+            Conversation.seller_id == seller_id,
+            Conversation.customer_instagram_id == customer_instagram_id,
+        )
+
+    def _new() -> Conversation:
+        return Conversation(
+            seller_id=seller_id,
+            customer_instagram_id=customer_instagram_id,
+            messages=[],
+        )
+
+    conversation = (await db.execute(_q())).scalar_one_or_none()
+    if conversation:
+        return conversation
+
+    try:
+        conversation = _new()
+        db.add(conversation)
+        await db.flush()
+        logger.info("New conversation %s for seller %s with customer %s",
+                    conversation.id, seller_id, customer_instagram_id)
+        return conversation
+    except IntegrityError:
+        # Another worker inserted concurrently — roll back and fetch theirs.
+        await db.rollback()
+        await db.refresh(seller)  # un-expire so the caller can keep using it
+        conversation = (await db.execute(_q())).scalar_one_or_none()
+        if conversation is None:
+            # Mutual-rollback race (both workers rolled back) — insert again.
+            conversation = _new()
             db.add(conversation)
             await db.flush()
-            logger.info(
-                "New conversation %s for seller %s with customer %s",
-                conversation.id, seller.id, customer_instagram_id,
-            )
-        except IntegrityError:
-            # Another worker inserted concurrently — roll back and fetch theirs
-            await db.rollback()
-            result = await db.execute(
-                select(Conversation).where(
-                    Conversation.seller_id == seller.id,
-                    Conversation.customer_instagram_id == customer_instagram_id,
-                    Conversation.status == "active",
-                )
-            )
-            conversation = result.scalar_one()
-
-    return conversation
+        return conversation
 
 
 import re as _re

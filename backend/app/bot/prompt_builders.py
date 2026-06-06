@@ -118,6 +118,9 @@ async def build_decide_prompt(context: dict) -> str:
     last_shown = context.get("last_shown_price")
     last_shown_str = f"{last_shown} paise (₹{last_shown // 100})" if last_shown else "none yet"
 
+    prev_price = context.get("previous_price_paise")
+    prev_price_str = f"₹{prev_price // 100}" if prev_price else "none"
+
     decision_template = await prompt_store.get("decide")
     return decision_template.format(
         state=context.get("state", ""),
@@ -134,6 +137,8 @@ async def build_decide_prompt(context: dict) -> str:
         seller_channels=json.dumps(context.get("seller_channels", []), ensure_ascii=False),
         product_variants=json.dumps(context.get("product_variants", []), ensure_ascii=False),
         active_variant_label=context.get("active_variant_label") or "none",
+        past_orders=context.get("past_orders_summary") or "none",
+        previous_price=prev_price_str,
     )
 
 
@@ -230,6 +235,18 @@ async def build_reply_prompt(context: dict) -> str:
         ", ".join(_fmt_inquiry(p) for p in other_inquiry) if other_inquiry else "none"
     )
 
+    prev_price = context.get("previous_price_paise")
+    prev_price_str = f"₹{prev_price // 100}" if prev_price else "none"
+
+    avail = context.get("available_products") or []
+    available_products_str = (
+        ", ".join(
+            f"{p['name']} (₹{p['listed_price_paise'] // 100})"
+            for p in avail if p.get("name")
+        )
+        if avail else "none"
+    )
+
     reply_template = await prompt_store.get("generate_reply")
     return reply_template.format(
         persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
@@ -256,4 +273,7 @@ async def build_reply_prompt(context: dict) -> str:
         multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",
         bundle_breakdown=context.get("bundle_breakdown") or "N/A",
         inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
+        past_orders=context.get("past_orders_summary") or "none",
+        previous_price=prev_price_str,
+        available_products_str=available_products_str,
     )

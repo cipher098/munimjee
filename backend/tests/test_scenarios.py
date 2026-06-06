@@ -93,7 +93,6 @@ async def seeded(db_session, scenario: dict):
         customer_instagram_id=f"test-customer-{uuid.uuid4().hex[:8]}",
         customer_name="TestCustomer",
         customer_gender="male",  # avoid the gender-inference LLM call
-        status="active",
         product_id=first_product.id if first_product else None,
         messages=[],
     )

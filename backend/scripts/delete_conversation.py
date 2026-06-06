@@ -58,7 +58,7 @@ async def _resolve_conversation_id(session, args) -> str | None:
         return str(row[0]) if row else None
 
     # locate by customer instagram id
-    sql = "SELECT id, seller_id, customer_name, status, created_at FROM conversations WHERE customer_instagram_id = :cust"
+    sql = "SELECT id, seller_id, customer_name, created_at FROM conversations WHERE customer_instagram_id = :cust"
     params = {"cust": args.customer}
     if args.seller:
         sql += " AND seller_id = :seller"
@@ -69,7 +69,7 @@ async def _resolve_conversation_id(session, args) -> str | None:
     if len(rows) > 1:
         print(f"Multiple conversations match customer {args.customer!r} — pass --id to pick one:")
         for r in rows:
-            print(f"  id={r[0]} seller={r[1]} name={r[2]!r} status={r[3]} created={r[4]}")
+            print(f"  id={r[0]} seller={r[1]} name={r[2]!r} created={r[3]}")
         return None
     return str(rows[0][0])
 
@@ -91,10 +91,10 @@ async def main():
 
         # Show a one-line summary of the conversation.
         meta = (await session.execute(text(
-            "SELECT seller_id, customer_instagram_id, customer_name, status, created_at "
+            "SELECT seller_id, customer_instagram_id, customer_name, created_at "
             "FROM conversations WHERE id = :cid"), {"cid": cid})).first()
         print(f"\nConversation {cid}")
-        print(f"  seller={meta[0]} customer_ig={meta[1]} name={meta[2]!r} status={meta[3]} created={meta[4]}")
+        print(f"  seller={meta[0]} customer_ig={meta[1]} name={meta[2]!r} created={meta[3]}")
 
         # Count rows each step would remove.
         print("\nRows that " + ("WILL be deleted:" if args.yes else "WOULD be deleted (dry run):"))

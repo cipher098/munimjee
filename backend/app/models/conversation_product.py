@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -9,9 +9,12 @@ from app.database import Base
 
 class ConversationProduct(Base):
     __tablename__ = "conversation_products"
-    __table_args__ = (
-        UniqueConstraint("conversation_id", "product_id", name="uq_conv_product"),
-    )
+    # NOT unique per (conversation, product): a customer can buy the same product
+    # more than once in the persistent thread. Each purchase cycle is its own row
+    # (immutable cycles). The active cycle is the non-terminal row; finished rows
+    # remain as history. See _get_or_create_conv_product (get-active-or-create).
+    # Payment facts (amount_paid, payment_method, payment_requested_at) live on
+    # Order, not here — this row is the funnel/negotiation record only.
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False)
@@ -30,11 +33,6 @@ class ConversationProduct(Base):
     # cycles only that variant's photo list.
     active_variant_label = Column(String, nullable=True)
     pending_tag_id = Column(UUID(as_uuid=True), ForeignKey("category_tags.id"), nullable=True)
-
-    # Payment tracking (UPI screenshot verification).
-    amount_paid = Column(Integer, nullable=False, default=0)   # paise — cumulative verified payments
-    payment_method_id = Column(UUID(as_uuid=True), ForeignKey("payment_methods.id"), nullable=True)  # method we shared
-    payment_requested_at = Column(DateTime(timezone=True), nullable=True)  # when we shared the QR (verify-window start)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

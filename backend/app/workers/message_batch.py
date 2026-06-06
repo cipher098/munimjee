@@ -1,8 +1,9 @@
 """
 Celery task: process a batch of messages from the same customer that arrived within
-a 15-second debounce window.  Each incoming webhook event is queued in Redis;
-a delayed task fires after 15 s of silence and processes them all, sending exactly
-one bot reply.
+an 8-second debounce window.  Each incoming webhook event is queued in Redis;
+a delayed task fires after 8 s of silence and processes them all, sending exactly
+one bot reply. (Set BATCH_WINDOW_SECONDS = 0 to disable batching and reply to every
+message immediately — but rapid bursts like "Hey" + "I want X" then get two replies.)
 """
 from app.workers.async_runner import run_async
 from datetime import datetime, timedelta, timezone
@@ -15,7 +16,7 @@ from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-BATCH_WINDOW_SECONDS = 0
+BATCH_WINDOW_SECONDS = 5
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 
@@ -183,45 +184,113 @@ def pop_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
     return [json.loads(item) for item in raw_list]
 
 
+def peek_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
+    """Read queued events WITHOUT removing them. They stay in Redis (the durable
+    store) until trim_processed_events() is called after a successful commit, so a
+    crash/retry re-reads and reprocesses them instead of losing them."""
+    key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
+    r = _redis()
+    raw_list = r.lrange(key, 0, -1) or []
+    return [json.loads(item) for item in raw_list]
+
+
+def trim_processed_events(page_id: str, customer_ig_id: str, count: int) -> None:
+    """Drop the first `count` events (the ones just processed), keeping anything
+    that arrived during processing. Call ONLY after the DB transaction committed."""
+    if count <= 0:
+        return
+    key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
+    _redis().ltrim(key, count, -1)
+
+
+def drop_all_events(page_id: str, customer_ig_id: str) -> None:
+    """Dead-letter: discard the whole queue (used when a batch can't ever succeed)."""
+    _redis().delete(f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}")
+
+
 # ---------------------------------------------------------------------------
 # Celery task
 # ---------------------------------------------------------------------------
 
-@celery_app.task(name="app.workers.message_batch.process_message_batch")
-def process_message_batch(page_id: str, customer_ig_id: str) -> None:
-    run_async(_process_batch(page_id, customer_ig_id))
+_MAX_BATCH_RETRIES = 3
+
+
+@celery_app.task(
+    name="app.workers.message_batch.process_message_batch",
+    bind=True,
+    acks_late=True,  # redeliver on worker loss; events stay in Redis until success
+)
+def process_message_batch(self, page_id: str, customer_ig_id: str) -> None:
+    try:
+        run_async(_process_batch(page_id, customer_ig_id))
+    except Exception as exc:
+        if self.request.retries >= _MAX_BATCH_RETRIES:
+            # Poison batch — drop it so it can't block the conversation forever.
+            logger.error(
+                "process_message_batch dead-letter for %s:%s after %d retries: %s",
+                page_id, customer_ig_id, self.request.retries, exc,
+            )
+            try:
+                drop_all_events(page_id, customer_ig_id)
+            except Exception:
+                logger.exception("dead-letter drop failed for %s:%s", page_id, customer_ig_id)
+            return
+        # Transient failure — retry; events are still in Redis (not trimmed).
+        raise self.retry(exc=exc, countdown=min(2 ** self.request.retries, 30))
+
+
+def _record_customer_entries(conversation, events) -> None:
+    """Append the batch's customer text turns to history, deduped by mid so a
+    retry/redelivery doesn't duplicate them (idempotent)."""
+    existing = {m.get("mid") for m in (conversation.messages or []) if m.get("mid")}
+    new_entries = [
+        e for e in extract_customer_text_entries(events)
+        if not e.get("mid") or e["mid"] not in existing
+    ]
+    if new_entries:
+        conversation.messages = list(conversation.messages or []) + new_entries
 
 
 async def _process_batch(page_id: str, customer_ig_id: str) -> None:
-    from app.models.seller import Seller
-    from app.models.conversation import Conversation
-    from sqlalchemy import select
-
-    events = pop_all_events(page_id, customer_ig_id)
+    # Read WITHOUT removing — events stay in Redis (the durable store) until we
+    # successfully commit, so a crash/retry reprocesses them instead of losing them.
+    events = peek_all_events(page_id, customer_ig_id)
     if not events:
         logger.info("message_batch: no events for %s:%s — skipping", page_id, customer_ig_id)
         return
 
     logger.info("message_batch: processing %d events for %s:%s", len(events), page_id, customer_ig_id)
 
+    consumed = await _consume_batch(page_id, customer_ig_id)
+    # Reached only if _consume_batch returned normally → its transaction committed.
+    # Trim the events we consumed; anything that arrived meanwhile survives.
+    trim_processed_events(page_id, customer_ig_id, consumed)
+
+
+async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
+    """Process the queued events in ONE transaction; return how many leading
+    events were consumed (to trim after commit). Raises on failure so the task
+    retries with the events still in Redis."""
+    from app.models.seller import Seller
+    from sqlalchemy import select
     from app.database import worker_session
+    from app.config import settings as _settings
 
     async with worker_session() as db:
-        # Load seller
         result = await db.execute(
             select(Seller).where(Seller.instagram_page_id == page_id, Seller.is_active == True)
         )
         seller = result.scalar_one_or_none()
         if not seller:
-            logger.warning("message_batch: no seller for page_id %s", page_id)
-            return
+            logger.warning("message_batch: no seller for page_id %s — dropping queue", page_id)
+            drop_all_events(page_id, customer_ig_id)
+            return 0
 
-        # Get or create conversation
         from app.api.webhooks.instagram import _get_or_create_conversation
         conversation = await _get_or_create_conversation(seller, customer_ig_id, db)
         await db.flush()
 
-        # Fetch customer name once — only on new conversations where name is not yet known
+        # Fetch customer name once (before the lock — not idempotency-critical).
         if not conversation.customer_name:
             try:
                 from app.integrations.instagram import InstagramClient
@@ -235,89 +304,71 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             except Exception as exc:
                 logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
 
-        if conversation.status == "closed":
-            logger.info("message_batch: conversation %s is closed — skipping", conversation.id)
-            return
+        # Serialize the whole consume for this conversation (vs concurrent batch
+        # tasks + the takeover-resume wake). The pg advisory xact lock is held
+        # until this transaction commits, so the peek + trim are race-free.
+        await _lock_conversation(db, conversation.id)
+        await db.refresh(conversation)
 
-        # Customer disengagement: if the bot already acked a "bye"/"ok" and
-        # the quiet window hasn't elapsed, stay silent. A re-engagement signal
-        # (buying-intent keyword, 2+ digit token, or question mark) clears the
-        # pause immediately so we don't miss a hot lead.
-        from app.config import settings as _settings
+        # Authoritative read under the lock — a concurrent task may have already
+        # consumed (and trimmed) some of what we peeked before locking.
+        events = peek_all_events(page_id, customer_ig_id)
+        if not events:
+            return 0
+        consumed = len(events)
+
+        # Idempotency guard: if every text msg in this batch is already in history
+        # AND there's no trailing unanswered customer turn, a prior committed run
+        # already handled + answered it (we're a retry/redelivery) — skip, trim.
+        batch_mids = {e.get("mid") for e in events if e.get("type") == "text" and e.get("mid")}
+        hist = conversation.messages or []
+        hist_mids = {m.get("mid") for m in hist if m.get("mid")}
+        if batch_mids and batch_mids <= hist_mids and not unanswered_customer_messages(hist):
+            logger.info("message_batch: %s already processed+answered — skipping (idempotent)", conversation.id)
+            return consumed
+
+        # Customer disengagement pause.
         if is_bot_paused_for_disengage(conversation.disengage_paused_until):
             text_events = [e for e in events if e.get("type") == "text"]
             if any(is_reengagement_signal(e.get("text")) for e in text_events):
-                logger.info(
-                    "message_batch: conversation %s disengage pause cleared by re-engagement signal",
-                    conversation.id,
-                )
+                logger.info("message_batch: %s disengage pause cleared by re-engagement signal", conversation.id)
                 conversation.disengage_paused_until = None
-                await db.commit()
+                await db.flush()
                 # fall through to normal processing
             else:
-                new_entries = extract_customer_text_entries(events)
-                if new_entries:
-                    msgs = list(conversation.messages or [])
-                    msgs.extend(new_entries)
-                    conversation.messages = msgs
-                    await db.commit()
-                logger.info(
-                    "message_batch: conversation %s disengage-muted (resume at %s) — recorded %d msg(s)",
-                    conversation.id, conversation.disengage_paused_until.isoformat(),
-                    len(new_entries),
-                )
-                return
+                _record_customer_entries(conversation, events)
+                await db.flush()
+                logger.info("message_batch: %s disengage-muted (resume at %s) — recorded customer msg(s)",
+                            conversation.id, conversation.disengage_paused_until.isoformat())
+                return consumed
 
-        # Manual seller takeover: if the seller recently replied from the IG
-        # inbox, stay silent until the auto-resume window elapses. We still
-        # record customer text messages to conversation history so the bot has
-        # the full context when it resumes — only reply generation is skipped.
+        # Manual seller takeover pause — record customer messages, don't reply.
         if is_bot_paused_for_manual_takeover(
-            conversation.last_seller_manual_reply_at,
-            _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+            conversation.last_seller_manual_reply_at, _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
         ):
-            elapsed = datetime.now(timezone.utc) - conversation.last_seller_manual_reply_at
-            new_entries = extract_customer_text_entries(events)
-            if new_entries:
-                msgs = list(conversation.messages or [])
-                msgs.extend(new_entries)
-                conversation.messages = msgs
-                await db.commit()
-            logger.info(
-                "message_batch: conversation %s paused (seller manual reply %.1fm ago, window %dm) — recorded %d customer msg(s) without replying",
-                conversation.id, elapsed.total_seconds() / 60,
-                _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
-                len(new_entries),
-            )
-            return
+            _record_customer_entries(conversation, events)
+            await db.flush()
+            logger.info("message_batch: %s paused (seller manual takeover) — recorded customer msg(s) without replying", conversation.id)
+            return consumed
 
-        # Check active conv_product state
+        # waiting_for_tag — record customer messages, don't reply.
         if conversation.product_id:
             from app.models.conversation_product import ConversationProduct
             cp_result = await db.execute(
                 select(ConversationProduct).where(
                     ConversationProduct.conversation_id == conversation.id,
                     ConversationProduct.product_id == conversation.product_id,
-                )
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
             )
-            active_cp = cp_result.scalar_one_or_none()
+            active_cp = cp_result.scalars().first()
             if active_cp and active_cp.state == "waiting_for_tag":
-                logger.info(
-                    "message_batch: conversation %s waiting for seller tag — skipping",
-                    conversation.id,
-                )
-                return
-
-        # Serialize the reply against a concurrent takeover-resume wake for this
-        # same conversation, then refresh so we reply on top of any reply it just
-        # committed (prevents double replies).
-        await _lock_conversation(db, conversation.id)
-        await db.refresh(conversation)
-        if conversation.status == "closed":
-            logger.info("message_batch: conversation %s closed after lock — skipping", conversation.id)
-            return
+                logger.info("message_batch: %s waiting for seller tag — recording without reply", conversation.id)
+                _record_customer_entries(conversation, events)
+                await db.flush()
+                return consumed
 
         await _process_events(events, conversation, seller, db)
+        return consumed
 
 
 async def _process_events(events: list, conversation, seller, db) -> None:
@@ -416,9 +467,11 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                     ref_product_id = ref.get("product_id")
                     current_product_id = str(conversation.product_id) if conversation.product_id else None
 
-                    if ref_product_id and current_product_id and ref_product_id != current_product_id:
-                        # Customer is replying to a message about a different product —
-                        # switch the conversation to that product so the answer is correct.
+                    if ref_product_id and ref_product_id != current_product_id:
+                        # Customer is replying to a message about a specific product
+                        # (and it isn't already the focus — including when there is
+                        # no focus yet, e.g. after a multi-photo send) — switch the
+                        # conversation to that product so the answer is correct.
                         from app.models.product import Product as _Product
                         from sqlalchemy import select as _select
                         r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id))
@@ -442,7 +495,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                     logger.info("reply_to mid=%s not found in history", event["reply_to_mid"])
 
             ig_match = _IG_URL_RE.search(text)
-            if ig_match and conversation.status == "active":
+            if ig_match:
                 await handle_reel(conversation, seller, ig_match.group(0), db, send_reply=False)
             else:
                 text_parts.append(text)
@@ -495,7 +548,6 @@ async def _scan_resume_paused_conversations() -> None:
     async with worker_session() as db:
         result = await db.execute(
             select(Conversation.id).where(
-                Conversation.status == "active",
                 Conversation.last_seller_manual_reply_at.isnot(None),
                 Conversation.last_seller_manual_reply_at < threshold,
                 # Skip conversations still in a disengage pause — waking them
@@ -530,10 +582,6 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
         conversation = result.scalar_one_or_none()
         if not conversation:
             logger.info("wake_paused_conversation: conversation %s not found — skip", conversation_id)
-            return
-
-        if conversation.status == "closed":
-            logger.info("wake_paused_conversation: conversation %s closed — skip", conversation_id)
             return
 
         if is_bot_paused_for_manual_takeover(
