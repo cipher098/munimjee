@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-south-1"
     S3_BUCKET_NAME: str = "sellerbot-uploads"
 
+    # FIFO queue the ingress Lambda enqueues Instagram webhook events to; drained
+    # by app.workers.sqs_consumer. Empty in local/dev (the FastAPI webhook route
+    # handles events inline there).
+    SQS_QUEUE_URL: str = ""
+
     PUBLIC_BASE_URL: str = ""  # e.g. https://abc123.ngrok.io — used to build public image URLs for Meta
 
     WHATSAPP_API_URL: str = ""

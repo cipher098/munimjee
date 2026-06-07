@@ -32,7 +32,7 @@ agents:
   decide:
     description: Negotiation action chooser — returns JSON action + price + intent.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 350
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -40,7 +40,7 @@ agents:
   generate_reply:
     description: Hinglish reply writer driven by decide()'s chosen action.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -48,7 +48,7 @@ agents:
   intent_classifier:
     description: Pre-decide sentiment/intent/repeated-dissatisfaction classifier.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-haiku-4-5-20251001
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -56,7 +56,7 @@ agents:
   generate_product_description:
     description: Catalog-onboarding helper — image -> short description.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -64,7 +64,7 @@ agents:
   describe_product_image:
     description: Stage 1 vision pass on a customer-sent product image.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 150
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -72,7 +72,7 @@ agents:
   extract_payment_details:
     description: Vision — extract UPI payment fields (payee, amount, datetime, UTR) from a screenshot.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 300
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -80,7 +80,7 @@ agents:
   classify_image_type:
     description: Vision — is a customer image a payment receipt or a product?
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 5
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -88,7 +88,7 @@ agents:
   match_product_by_description:
     description: Stage 2 catalog match — text-only.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 150
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -96,7 +96,7 @@ agents:
   suggest_category:
     description: One-shot category + tag suggestions during onboarding.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 400
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -104,7 +104,7 @@ agents:
   suggest_tags_for_category:
     description: Bulk tag suggestions for a known category.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 600
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -112,7 +112,7 @@ agents:
   extract_feature_query:
     description: Detects if customer message is a product-feature question and which tag it maps to.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 200
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
@@ -120,7 +120,7 @@ agents:
   extract_persona:
     description: Onboarding-time analyzer of seller conversation samples -> persona JSON.
     provider: gemini
-    model: gemini-2.5-flash-lite
+    model: claude-sonnet-4-20250514
     max_tokens: 4000
     fallback_provider: anthropic
     fallback_model: claude-haiku-4-5-20251001
