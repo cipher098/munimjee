@@ -20,10 +20,12 @@ def _conv():
     return SimpleNamespace(id="c1", product_id="p1")
 
 
-@pytest.mark.parametrize("locking_action", ["hold_firm", "counter", "show_product"])
+@pytest.mark.parametrize("locking_action", ["hold_firm", "show_product"])
 def test_awaiting_payment_lock_blocks_state_regression(locking_action):
-    """Negotiation actions (hold_firm/counter) and same-product show_product must be
-    neutralized to a no-op once the deal is locked — no re-opening on a follow-up."""
+    """hold_firm and same-product show_product must be neutralized to a no-op once the
+    deal is locked — no re-opening on a follow-up. (counter is price-direction-dependent
+    now: a downward counter is honored — see test_awaiting_payment_honors_downward_counter
+    — while a non-lowering counter is still neutralized.)"""
     decision = {"action": locking_action, "price": 900_00, "customer_intent": "warm"}
     new_state, extra = _derive_state_from_decision(
         decision,
@@ -52,6 +54,37 @@ def test_awaiting_payment_allows_deal_modification(modify_action):
         current_state="awaiting_payment",
     )
     assert new_state == "awaiting_payment"
+
+
+def test_awaiting_payment_honors_downward_counter():
+    """A counter BELOW the locked price in awaiting_payment is a genuine further discount —
+    it's rewritten to an accept at the new (floor-safe) price so the order rebuilds DOWN.
+    Fixes: bot said '1100 final' but kept charging the locked 1150."""
+    decision = {"action": "counter", "price": 1100_00, "customer_intent": "warm"}
+    new_state, extra = _derive_state_from_decision(
+        decision,
+        _conv(),
+        _product(listed=1200_00, floor=1000_00),
+        effective_negotiation_round=3,
+        effective_last_counter_price=1150_00,
+        current_state="awaiting_payment",
+    )
+    assert new_state == "awaiting_payment"
+    assert decision["action"] == "accept"
+    assert extra["agreed_price"] == 1100_00
+
+
+def test_awaiting_payment_neutralizes_non_lowering_counter():
+    """A counter at/above the locked price in awaiting_payment is still neutralized —
+    the deal can't be re-opened upward by a stray counter."""
+    decision = {"action": "counter", "price": 1200_00, "customer_intent": "warm"}
+    new_state, _ = _derive_state_from_decision(
+        decision, _conv(), _product(listed=1200_00, floor=1000_00),
+        effective_negotiation_round=3,
+        effective_last_counter_price=1150_00,
+        current_state="awaiting_payment",
+    )
+    assert new_state is None  # neutralized, stays locked
 
 
 def test_awaiting_payment_lock_allows_escalate():

@@ -917,6 +917,28 @@ def _derive_state_from_decision(
     # order must be rebuilt from the new combo. This is safe — line prices are
     # computed by code per-product (the model can't lower anything), so a stray
     # re-accept of the same combo just rebuilds the same order.
+    # Exception: a counter in awaiting_payment that LOWERS the price is a genuine
+    # further discount the customer asked for ("1100 kardo final" after a 1150 lock).
+    # Lowering is always safe (floor-guarded, customer-favorable), so honor it by
+    # re-accepting at the new price → the order rebuilds DOWN. Only counters that hold
+    # or raise the price are neutralized below. This fixes the bug where the bot said
+    # "1100 final" but kept charging the locked 1150 (the counter was neutralized).
+    if (
+        current_state == "awaiting_payment"
+        and action == "counter"
+        and (decision.get("price") or 0)
+        and effective_last_counter_price
+        and (decision.get("price") or 0) < effective_last_counter_price
+    ):
+        _new = max(decision["price"], floor_price or 0)
+        logger.info(
+            "STATE LOCK: honoring downward counter in awaiting_payment %d → %d (re-accept)",
+            effective_last_counter_price, _new,
+        )
+        decision["action"] = "accept"
+        decision["price"] = _new
+        action = "accept"
+
     _PAYMENT_LOCKED_NEUTRALIZE = {"hold_firm", "counter", "show_product"}
     if current_state == "awaiting_payment" and action in _PAYMENT_LOCKED_NEUTRALIZE:
         # Allow switching to a DIFFERENT product — the customer changed their mind
