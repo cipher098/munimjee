@@ -84,7 +84,10 @@ def test_default_persona_and_policies_are_safe_defaults():
     assert DEFAULT_POLICIES["exchange_days"] == 0
     assert "upi" in DEFAULT_POLICIES["payment_modes"]
     assert DEFAULT_PERSONA["negotiation_firmness"] == "medium"
-    assert "yaar" in DEFAULT_PERSONA["common_expressions"]
+    # Respectful, non-pushy default voice: "ji" not the over-familiar "yaar", minimal emoji.
+    assert "ji" in DEFAULT_PERSONA["common_expressions"]
+    assert "yaar" not in DEFAULT_PERSONA["common_expressions"]
+    assert DEFAULT_PERSONA["emoji_usage"] == "minimal"
 
 
 def test_callback_rejects_non_business_ig_account():

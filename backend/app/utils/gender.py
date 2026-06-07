@@ -77,7 +77,9 @@ def guess_gender(full_name: str) -> str:
 
 
 def address_term(gender: str) -> str:
-    return "madam" if gender == "female" else "yaar"
+    # "ji" is warm, respectful and gender-neutral; avoids the over-familiar "yaar"
+    # (customers found "yaar madam" jarring) and never "bhai".
+    return "madam" if gender == "female" else "ji"
 
 
 async def guess_gender_ai(full_name: str) -> str:
