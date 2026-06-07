@@ -120,5 +120,18 @@ async def resolve_manual_action(action_id: str, seller_id: str = Depends(current
     if ma.status != "resolved":
         ma.status = "resolved"
         ma.resolved_at = datetime.now(timezone.utc)
+        # Mark everything so far as handled: append a seller boundary so the customer
+        # messages that triggered/accumulated during the manual action are no longer
+        # "unanswered" and the bot won't re-escalate the same (now-handled) request on the
+        # customer's next message.
+        conv = await db.get(Conversation, ma.conversation_id)
+        if conv is not None:
+            msgs = list(conv.messages or [])
+            msgs.append({
+                "role": "seller_manual",
+                "content": f"[Seller resolved the {ma.kind.replace('_', ' ')} request manually]",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            conv.messages = msgs
         await db.flush()
     return {"id": str(ma.id), "status": ma.status}
