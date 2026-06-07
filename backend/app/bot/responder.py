@@ -521,9 +521,9 @@ async def generate_bot_reply(
                 select(ConversationProduct).where(
                     ConversationProduct.conversation_id == conversation.id,
                     ConversationProduct.product_id == pid,
-                )
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
             )
-            cp = cp_res.scalar_one_or_none()
+            cp = cp_res.scalars().first()
             ceiling = None
             if cp:
                 ceiling = cp.last_shown_price or cp.last_counter_price
@@ -580,9 +580,9 @@ async def generate_bot_reply(
                 select(ConversationProduct).where(
                     ConversationProduct.conversation_id == conversation.id,
                     ConversationProduct.product_id == switched_product_id,
-                )
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
             )
-            new_cp = new_cp_res.scalar_one_or_none()
+            new_cp = new_cp_res.scalars().first()
             effective_last_counter_price = new_cp.last_counter_price if new_cp else None
             effective_last_shown_price = new_cp.last_shown_price if new_cp else None
             price_state_source = "conv_product" if new_cp else "none"

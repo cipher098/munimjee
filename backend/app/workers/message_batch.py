@@ -16,7 +16,7 @@ from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-BATCH_WINDOW_SECONDS = 5
+BATCH_WINDOW_SECONDS = 20
 _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 
@@ -351,7 +351,12 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
             logger.info("message_batch: %s paused (seller manual takeover) — recorded customer msg(s) without replying", conversation.id)
             return consumed
 
-        # waiting_for_tag — record customer messages, don't reply.
+        # waiting_for_tag: the bot paused because it couldn't answer a feature
+        # question and pinged the seller. But the customer has sent a NEW message
+        # (often about a different product) — don't keep the WHOLE conversation
+        # muted waiting on the seller. Release the pause and process; if they re-ask
+        # the same unanswerable feature, the responder re-pauses for that turn only.
+        # The open seller alert stays so the seller can still fill the tag.
         if conversation.product_id:
             from app.models.conversation_product import ConversationProduct
             cp_result = await db.execute(
@@ -362,10 +367,10 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
             )
             active_cp = cp_result.scalars().first()
             if active_cp and active_cp.state == "waiting_for_tag":
-                logger.info("message_batch: %s waiting for seller tag — recording without reply", conversation.id)
-                _record_customer_entries(conversation, events)
+                logger.info("message_batch: %s releasing waiting_for_tag to process new message", conversation.id)
+                active_cp.state = "product_inquiry"
+                active_cp.pending_tag_id = None
                 await db.flush()
-                return consumed
 
         await _process_events(events, conversation, seller, db)
         return consumed
@@ -400,9 +405,9 @@ async def _process_events(events: list, conversation, seller, db) -> None:
             select(_CP).where(
                 _CP.conversation_id == conversation.id,
                 _CP.product_id == conversation.product_id,
-            )
+            ).order_by(_CP.created_at.desc()).limit(1)
         )
-        _cp = _cp_res.scalar_one_or_none()
+        _cp = _cp_res.scalars().first()
         if _cp:
             _active_cp_state = _cp.state
 

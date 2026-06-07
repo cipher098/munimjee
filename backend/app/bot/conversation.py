@@ -661,9 +661,9 @@ async def _advance_conversation_inner(
             select(ConversationProduct).where(
                 ConversationProduct.conversation_id == conversation.id,
                 ConversationProduct.product_id == rid,
-            )
+            ).order_by(ConversationProduct.created_at.desc()).limit(1)
         )
-        _rej_cp = _rej_res.scalar_one_or_none()
+        _rej_cp = _rej_res.scalars().first()
         if _rej_cp and _rej_cp.state not in TERMINAL_STATES:
             _rej_cp.state = "not_interested"
             logger.info("Marked product %s as not_interested (customer dismissed)", rid)
