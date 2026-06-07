@@ -624,33 +624,9 @@ async def generate_bot_reply(
                 _price_ceiling(_g["cp"], _g["product"]),
                 label=f"deal {_g['product'].name}",
             )
-        # Consolidate the customer's WHOLE unpaid cart: merge in every other product
-        # already finalized-but-unpaid (its own awaiting_payment, nothing-paid order) so
-        # the quoted total — and the order _build_deal_order builds — covers everything,
-        # not just the product just accepted. Without this, finalizing a 2nd product
-        # quotes only that product and leaves the 1st as a stranded separate order.
-        from app.models.order import Order as _Order, OrderItem as _OItem
-        _deal_pids = {str(l["product_id"]) for l in deal_lines}
-        _others = (await db.execute(
-            select(_OItem, ConversationProduct)
-            .join(_Order, _OItem.order_id == _Order.id)
-            .join(ConversationProduct, _OItem.conversation_product_id == ConversationProduct.id)
-            .where(
-                _Order.conversation_id == conversation.id,
-                _Order.status == "awaiting_payment",
-                _Order.amount_paid == 0,
-            )
-        )).all()
-        for _oi, _ocp in _others:
-            _opid = str(_ocp.product_id)
-            if _opid in _deal_pids:
-                continue
-            _deal_pids.add(_opid)
-            deal_lines.append({
-                "product_id": _opid,
-                "unit_price_paise": _ocp.agreed_price or _ocp.last_counter_price or _oi.unit_price,
-                "quantity": _ocp.quantity or _oi.quantity or 1,
-            })
+        # The order covers ONLY what the customer just finalized (deal_lines), so it matches
+        # the price the bot confirms. We do NOT silently merge other unpaid items — instead
+        # they're surfaced as OTHER PENDING ITEMS (below) and the bot ASKS whether to add them.
         if deal_lines:
             extra["deal_lines"] = deal_lines
             _total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
@@ -661,6 +637,32 @@ async def generate_bot_reply(
                 [(l["product_id"][:8], l["quantity"], l["unit_price_paise"] // 100) for l in deal_lines],
                 _total // 100,
             )
+
+    # OTHER PENDING ITEMS — unpaid orders in this chat for products NOT part of what's being
+    # finalized this turn. Surfaced (only when finalizing) so the bot can ASK whether to add
+    # them; we never merge silently, so the order stays equal to the confirmed price.
+    other_pending_items_str = ""
+    if extra.get("deal_lines"):
+        from app.models.order import Order as _OrderM, OrderItem as _OItemM
+        _deal_now = {str(l["product_id"]) for l in extra["deal_lines"]}
+        _pend_rows = (await db.execute(
+            select(_OItemM, Product)
+            .join(_OrderM, _OItemM.order_id == _OrderM.id)
+            .join(ConversationProduct, _OItemM.conversation_product_id == ConversationProduct.id)
+            .join(Product, ConversationProduct.product_id == Product.id)
+            .where(
+                _OrderM.conversation_id == conversation.id,
+                _OrderM.status == "awaiting_payment",
+                _OrderM.amount_paid == 0,
+            )
+        )).all()
+        _seen_pend, _pend_parts = set(), []
+        for _oi, _op in _pend_rows:
+            if str(_op.id) in _deal_now or str(_op.id) in _seen_pend:
+                continue
+            _seen_pend.add(str(_op.id))
+            _pend_parts.append(f"{_op.name} ×{_oi.quantity} (₹{(_oi.unit_price * _oi.quantity) // 100})")
+        other_pending_items_str = ", ".join(_pend_parts)
 
     # Compute code-enforced price breakdowns — used for show_multi_price and
     # as a safe reference when customer explicitly asks for per-product breakdown.
@@ -918,6 +920,7 @@ async def generate_bot_reply(
         "quote_breakdown": quote_breakdown,
         "finalized_total_rupees": finalized_total_rupees,
         "amount_due_rupees": amount_due_rupees,
+        "other_pending_items": other_pending_items_str,
         "bundle_breakdown": bundle_breakdown,
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products

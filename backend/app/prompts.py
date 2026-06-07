@@ -551,6 +551,14 @@ CRITICAL — Combined queries:
 If customer asks multiple things in one message (like "warranty and price"),
 address ALL parts of their question directly. Don't ignore any part of what they asked.
 
+CRITICAL — Other pending items:
+If OTHER PENDING ITEMS is not "N/A", the customer finalized those earlier but hasn't paid,
+and they are NOT part of this order (this order's amount is only what they just finalized).
+After confirming THIS order, briefly OFFER to add them in one line — e.g. "Waise {{address_term}},
+pichla [OTHER PENDING ITEMS] bhi pending hai — wo bhi saath add kar du?". Do NOT add them to
+this order's total yourself and do NOT assume — only if the customer says yes will they be
+combined. Never silently bundle them.
+
 CRITICAL — Finalized order is the ONLY price source once payment has started:
 If STATE is "awaiting_payment" / "verifying" / "awaiting_address", the deal is LOCKED. The
 FINALIZED ORDER TOTAL and AMOUNT DUE above are code-computed and AUTHORITATIVE — quote ONLY
@@ -653,6 +661,7 @@ PRODUCTS BEING SHOWN — CODE-RESOLVED (the EXACT products whose photos are goin
 QUOTE BREAKDOWN — CODE-COMPUTED (when the customer asked the total for specific quantities, e.g. "2 X + 4 Y"; use these per-line amounts and the total VERBATIM, never add up prices yourself): {quote_breakdown}
 FINALIZED ORDER TOTAL — CODE (₹, the locked deal total once payment has started; "N/A" if not finalized): {finalized_total_rupees}
 AMOUNT DUE — CODE (₹, remaining = finalized total minus what's already paid; quote THIS as what's left to pay): {amount_due_rupees}
+OTHER PENDING ITEMS — CODE ("N/A" or items the customer finalized earlier but hasn't paid, NOT in this order; offer to add them): {other_pending_items}
 SHOW MULTI PRICE DATA — CODE-COMPUTED (use verbatim if ACTION is show_multi_price): {multi_price_breakdown}
 BUNDLE BREAKDOWN — CODE-COMPUTED (use verbatim ONLY if customer explicitly asks for per-product breakdown): {bundle_breakdown}
 BUNDLE MINIMUM TOTAL: ₹{inquiry_floor_total_rupees} (sum of inquiry product floors — total must never go below this)

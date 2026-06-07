@@ -263,61 +263,39 @@ async def _ensure_cycle_order(conversation, seller, conv_product, method, db):
 
 
 async def _build_deal_order(conversation, seller, focused_cp, deal_lines, db):
-    """Create ONE order for the customer's whole unpaid cart, with one OrderItem per
-    product (priced per-product as negotiated, with its own quantity).
+    """Create ONE order for exactly the products being finalized now (deal_lines), one
+    OrderItem per product (priced per-product as negotiated, with its own quantity).
 
-    Consolidation is twofold: (1) the new deal_lines (the product just finalized), and
-    (2) EVERY other product already finalized-but-unpaid in this conversation (its own
-    awaiting_payment, nothing-paid order). So when a customer finalizes 4 clocks and
-    later 4 deer lights, the payment request is ONE combined total — not a separate
-    order per product — and no stranded orders are left behind."""
+    The order equals the price the bot confirmed — other unpaid items are NOT merged in
+    silently (the bot asks the customer first; combining happens only when the customer
+    agrees and the model re-declares both products in deal_items). Prior unpaid orders for
+    THESE same products are dropped so re-finalizing the same combo never strands a duplicate."""
     from sqlalchemy import delete as sa_delete
     from app.models.order import Order, OrderItem
 
     method = await _get_primary_upi_method(seller.id, db)
 
-    # Harvest every OTHER finalized-but-unpaid product in this conversation and merge it
-    # into the deal as its own line, so the order covers the whole outstanding cart.
-    # deal_lines take precedence (freshest prices); other products keep their order price.
-    deal_pids = {str(l["product_id"]) for l in deal_lines}
-    other_unpaid = (await db.execute(
-        select(OrderItem, ConversationProduct)
-        .join(Order, OrderItem.order_id == Order.id)
+    # The order covers ONLY the products being finalized now (deal_lines), so it equals the
+    # price the bot confirmed. Other unpaid items are NOT silently merged — the bot asks the
+    # customer first (see OTHER PENDING ITEMS), and combining happens only when the customer
+    # agrees and the model re-declares both in deal_items. We still drop prior unpaid orders
+    # for THESE products so re-finalizing the same combo doesn't strand a duplicate.
+    deal_pids = [str(l["product_id"]) for l in deal_lines]
+    existing_ids = (await db.execute(
+        select(Order.id)
+        .join(OrderItem, OrderItem.order_id == Order.id)
         .join(ConversationProduct, OrderItem.conversation_product_id == ConversationProduct.id)
         .where(
             Order.conversation_id == conversation.id,
             Order.status == "awaiting_payment",
             Order.amount_paid == 0,
-        )
-    )).all()
-    merged_lines = list(deal_lines)
-    seen_pids = set(deal_pids)
-    for oi, cp in other_unpaid:
-        pid = str(cp.product_id)
-        if pid in seen_pids:
-            continue
-        seen_pids.add(pid)
-        merged_lines.append({
-            "product_id": pid,
-            "unit_price_paise": cp.agreed_price or cp.last_counter_price or oi.unit_price,
-            "quantity": cp.quantity or oi.quantity or 1,
-        })
-
-    # Drop ALL prior unpaid (awaiting_payment, nothing paid) orders in the conversation —
-    # everything is being rebuilt into the single consolidated order below.
-    existing_ids = (await db.execute(
-        select(Order.id).where(
-            Order.conversation_id == conversation.id,
-            Order.status == "awaiting_payment",
-            Order.amount_paid == 0,
+            ConversationProduct.product_id.in_(deal_pids),
         )
     )).scalars().all()
     for oid in set(existing_ids):
         await db.execute(sa_delete(OrderItem).where(OrderItem.order_id == oid))
         await db.execute(sa_delete(Order).where(Order.id == oid))
     await db.flush()
-
-    deal_lines = merged_lines  # build from the consolidated cart from here on
 
     from app.models.product import Product
     from app.bot.responder import enforce_unit_price, _price_ceiling

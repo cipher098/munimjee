@@ -404,9 +404,10 @@ async def test_persist_bundle_lines_ratchets_down_only(db_session):  # noqa: F81
 
 
 @pytest.mark.asyncio
-async def test_build_deal_order_consolidates_prior_unpaid_cart(db_session):  # noqa: F811
-    """Finalizing a 2nd product while a 1st is finalized-but-unpaid must produce ONE
-    combined order covering BOTH — not a separate order per product."""
+async def test_build_deal_order_does_not_merge_other_unpaid_items(db_session):  # noqa: F811
+    """Finalizing a product must NOT silently pull in a different earlier-unpaid item — the
+    order equals only what's being finalized now (the bot asks before combining). The prior
+    unpaid order stays as its own separate order."""
     from app.bot.conversation import _build_deal_order, _get_or_create_conv_product
     from app.models.order import Order, OrderItem
     from sqlalchemy import select
@@ -421,23 +422,23 @@ async def test_build_deal_order_consolidates_prior_unpaid_cart(db_session):  # n
         {"product_id": str(led.id), "unit_price_paise": 1900_00, "quantity": 4},
     ], db_session)
 
-    # Then: finalize 1 jhoomar — focus is now jhoomar, deal_lines only has jhoomar.
+    # Then: finalize 1 jhoomar only — order must be jhoomar alone, NOT led+jhoomar.
     jho_cp = await _get_or_create_conv_product(conv.id, jho.id, db_session)
     conv.product_id = jho.id
     order = await _build_deal_order(conv, seller, jho_cp, [
         {"product_id": str(jho.id), "unit_price_paise": 999_00, "quantity": 1},
     ], db_session)
 
-    # ONE order, covering BOTH products (4×1900 + 1×999).
-    orders = (await db_session.execute(
-        select(Order).where(Order.conversation_id == conv.id, Order.status == "awaiting_payment")
-    )).scalars().all()
-    assert len(orders) == 1
-    assert order.amount == 4 * 1900_00 + 999_00  # 7600_00 + 999_00
+    assert order.amount == 999_00  # jhoomar only — LED not merged in
     items = (await db_session.execute(
         select(OrderItem).where(OrderItem.order_id == order.id)
     )).scalars().all()
-    assert {oi.unit_price: oi.quantity for oi in items} == {1900_00: 4, 999_00: 1}
+    assert {oi.unit_price: oi.quantity for oi in items} == {999_00: 1}
+    # The earlier LED order still exists separately (not stranded, not merged).
+    orders = (await db_session.execute(
+        select(Order).where(Order.conversation_id == conv.id, Order.status == "awaiting_payment")
+    )).scalars().all()
+    assert len(orders) == 2
 
 
 @pytest.mark.asyncio

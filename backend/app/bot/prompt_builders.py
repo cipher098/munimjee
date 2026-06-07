@@ -275,6 +275,7 @@ async def build_reply_prompt(context: dict) -> str:
         quote_breakdown=context.get("quote_breakdown") or "N/A",
         finalized_total_rupees=context.get("finalized_total_rupees") if context.get("finalized_total_rupees") is not None else "N/A",
         amount_due_rupees=context.get("amount_due_rupees") if context.get("amount_due_rupees") is not None else "N/A",
+        other_pending_items=context.get("other_pending_items") or "N/A",
         bundle_breakdown=context.get("bundle_breakdown") or "N/A",
         inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
         past_orders=context.get("past_orders_summary") or "none",
