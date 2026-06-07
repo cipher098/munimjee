@@ -878,6 +878,18 @@ async def generate_bot_reply(
     if decision.get("action") == "show_product" and product and display_price_rupees is not None:
         quoted_lines.append({"product_id": str(product.id), "unit_price_paise": display_price_rupees * 100})
 
+    # Finalized-order context: once a deal is locked, the ORDER is the single source of truth
+    # for the price. Pass the code-computed total + remaining due so the reply quotes ONLY
+    # these and never renegotiates the finalized amount (e.g. caving to "aapne X bola tha").
+    finalized_total_rupees = None
+    amount_due_rupees = None
+    if conv_product is not None and conv_product.state in ("awaiting_payment", "verifying", "awaiting_address"):
+        from app.bot.conversation import _get_cycle_order
+        _order = await _get_cycle_order(conv_product, db)
+        if _order is not None and _order.amount:
+            finalized_total_rupees = (_order.amount or 0) // 100
+            amount_due_rupees = max(0, (_order.amount or 0) - (_order.amount_paid or 0)) // 100
+
     reply_context = {
         "decision": decision,
         "persona": persona,
@@ -904,6 +916,8 @@ async def generate_bot_reply(
         "multi_price_breakdown": multi_price_breakdown,
         "shown_products": shown_products_str,
         "quote_breakdown": quote_breakdown,
+        "finalized_total_rupees": finalized_total_rupees,
+        "amount_due_rupees": amount_due_rupees,
         "bundle_breakdown": bundle_breakdown,
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products
