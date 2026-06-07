@@ -522,7 +522,13 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
     first_time = await _get_cycle_order(conv_product, db) is None
     order = await _ensure_cycle_order(conversation, seller, conv_product, method, db)
 
-    qr_already_sent = any((m.get("content") == "[payment QR]") for m in (conversation.messages or []))
+    # Scope "QR already sent" to THIS order — in a persistent conversation a QR sent for an
+    # earlier purchase must not suppress the QR for a new order (it scrolled away long ago and
+    # the amount is different). The QR message is tagged with its order_id.
+    qr_already_sent = any(
+        m.get("content") == "[payment QR]" and m.get("order_id") == str(order.id)
+        for m in (conversation.messages or [])
+    )
     qr_sent_now = False
 
     # Payment is QR-only (we never share the raw UPI id), so a missing QR image means the
@@ -546,7 +552,7 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
             try:
                 result = await client.send_image(conversation.customer_instagram_id, qr_url)
                 msgs = list(conversation.messages or [])
-                msgs.append({"role": "bot", "content": "[payment QR]"})
+                msgs.append({"role": "bot", "content": "[payment QR]", "order_id": str(order.id)})
                 conversation.messages = msgs
                 mid = result.get("message_id")
                 if mid:
