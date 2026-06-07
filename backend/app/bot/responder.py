@@ -5,6 +5,7 @@ Hybrid AI response generation.
   Fallback — Claude generates reply if Sarvam fails.
 """
 import logging
+import re
 from typing import Any
 
 from sqlalchemy import select
@@ -19,9 +20,20 @@ from app.models.seller import Seller
 logger = logging.getLogger(__name__)
 
 
+_PHOTO_MARKER_RE = re.compile(r"\[\s*(?:product\s+)?photo\s*\]", re.IGNORECASE)
+
+
 def _clean_reply(text: str) -> str:
-    """Remove characters that should never appear in customer-facing messages."""
-    return text.replace("—", "").strip()
+    """Remove characters/markers that should never appear in customer-facing messages.
+
+    Strips em-dashes and any internal "[product photo]" / "[photo]" markers the model
+    sometimes echoes into its reply text (the actual photos are sent separately by the
+    system). Collapses the blank lines that removing leading markers leaves behind."""
+    text = _PHOTO_MARKER_RE.sub("", text)
+    text = text.replace("—", "")
+    # Collapse 3+ newlines (left by stripped marker lines) down to a paragraph break.
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def _per_product_unit_price(cp, product) -> int:

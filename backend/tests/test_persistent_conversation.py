@@ -38,6 +38,44 @@ def test_append_message_dedups_by_mid():
     assert len(conv.messages) == 3
 
 
+def test_clean_reply_strips_photo_markers():
+    """The model sometimes echoes internal [product photo] markers into its reply text;
+    these must be stripped (photos are sent separately) and blank lines collapsed."""
+    from app.bot.responder import _clean_reply
+    out = _clean_reply("[product photo]\n[product photo]\n[product photo]\n\nHaan madam! Ye sab hai 😊")
+    assert "[product photo]" not in out and "photo]" not in out
+    assert out.startswith("Haan madam!")
+    # [photo] variant and em-dash also handled.
+    assert _clean_reply("[photo] price ₹500 — final") == "price ₹500  final"
+
+
+def test_tag_last_bot_message_mid_preserves_existing_product_id():
+    """A photo message already tagged with ITS OWN product id must keep it — the mid
+    tag must not clobber it with the focused conversation.product_id (the multi-product
+    photo mis-attribution bug)."""
+    from app.bot.conversation import _tag_last_bot_message_mid
+    conv = SimpleNamespace(
+        product_id="focused-deal-product",
+        messages=[{"role": "bot", "content": "[product photo]", "product_id": "deer-light-id"}],
+    )
+    _tag_last_bot_message_mid(conv, "mid-123")
+    assert conv.messages[-1]["product_id"] == "deer-light-id"  # NOT clobbered
+    assert conv.messages[-1]["mid"] == "mid-123"
+
+
+def test_tag_last_bot_message_mid_sets_product_id_when_absent():
+    """A text reply with no product_id still gets tagged with the focused product so
+    reply_to on it resolves correctly."""
+    from app.bot.conversation import _tag_last_bot_message_mid
+    conv = SimpleNamespace(
+        product_id="focused-product",
+        messages=[{"role": "bot", "content": "Ye clock hai madam"}],
+    )
+    _tag_last_bot_message_mid(conv, "mid-456")
+    assert conv.messages[-1]["product_id"] == "focused-product"
+    assert conv.messages[-1]["mid"] == "mid-456"
+
+
 def test_record_customer_entries_dedups_by_mid():
     from app.workers.message_batch import _record_customer_entries
     conv = SimpleNamespace(messages=[{"role": "customer", "content": "hi", "mid": "m1"}])

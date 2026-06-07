@@ -121,7 +121,12 @@ def _tag_last_bot_message_mid(conversation: Conversation, mid: str) -> None:
     for i in range(len(msgs) - 1, -1, -1):
         if msgs[i].get("role") == "bot":
             update: dict = {"mid": mid}
-            if conversation.product_id:
+            # Only stamp product_id if the message doesn't already carry one. A photo
+            # message is tagged by _send_next_product_photo with ITS OWN product id;
+            # overwriting that with conversation.product_id (the focused product) would
+            # mis-attribute every photo in a multi-product send to the focused product,
+            # so a "reply to this photo" resolves to the wrong item.
+            if conversation.product_id and not msgs[i].get("product_id"):
                 update["product_id"] = str(conversation.product_id)
             msgs[i] = {**msgs[i], **update}
             conversation.messages = msgs
