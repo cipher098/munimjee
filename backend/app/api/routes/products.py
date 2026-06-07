@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dashboard_auth import verify_dashboard_cookie
+from app.api.dashboard_auth import verify_dashboard_cookie, current_seller_id
 from app.database import get_db
 from app.models.product import Product
 from app.models.seller import Seller
@@ -56,7 +56,6 @@ def _parse_variants(raw: str | None) -> list[dict] | None:
 
 @router.post("")
 async def create_product(
-    seller_id: str = Form(...),
     name: str = Form(...),
     listed_price: int = Form(..., description="Price in rupees"),
     floor_price: int = Form(..., description="Minimum acceptable price in rupees"),
@@ -68,6 +67,7 @@ async def create_product(
     variants: str | None = Form(default=None, description='JSON array of variants: [{"label": "Red", "photo_urls": [...]}]'),
     category_id: str | None = Form(default=None, description="UUID of an existing ProductCategory to assign"),
     image: UploadFile = File(...),
+    seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -196,7 +196,7 @@ async def create_product(
 
 
 @router.get("")
-async def list_products(seller_id: str, include_inactive: bool = False, db: AsyncSession = Depends(get_db)):
+async def list_products(include_inactive: bool = False, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """List products for a seller. Pass include_inactive=true to see all."""
     query = select(Product).where(Product.seller_id == seller_id)
     if not include_inactive:

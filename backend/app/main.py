@@ -9,13 +9,19 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.api.webhooks.instagram import router as instagram_webhook_router
 from app.api.routes.auth import router as auth_router
-from app.api.dashboard_auth import router as dashboard_auth_router, verify_dashboard_cookie
+from app.api.dashboard_auth import (
+    router as dashboard_auth_router,
+    verify_dashboard_cookie,
+    require_admin,
+    DashCtx,
+)
 from app.api.routes.products import router as products_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.training import router as training_router
 from app.api.routes.categories import router as categories_router
 from app.api.routes.llm_costs import router as llm_costs_router
 from app.api.routes.manual_actions import router as manual_actions_router
+from app.api.routes.admin import router as admin_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,6 +56,7 @@ app.include_router(training_router)
 app.include_router(categories_router)
 app.include_router(llm_costs_router)
 app.include_router(manual_actions_router)
+app.include_router(admin_router)
 
 
 @app.get("/health")
@@ -117,8 +124,16 @@ async def favicon():
 
 
 @app.get("/dashboard")
-async def dashboard(phone: str = Depends(verify_dashboard_cookie)):
+async def dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
+    # An admin who hasn't picked a seller to view lands on the admin home.
+    if ctx.role == "admin" and not ctx.view_seller_id:
+        return RedirectResponse(url="/dashboard/admin", status_code=303)
     return FileResponse("/app/static/dashboard.html")
+
+
+@app.get("/dashboard/admin")
+async def admin_dashboard(ctx: DashCtx = Depends(require_admin)):
+    return FileResponse("/app/static/admin.html")
 
 
 @app.get("/dashboard/products")
@@ -137,7 +152,7 @@ async def categories_dashboard(phone: str = Depends(verify_dashboard_cookie)):
 
 
 @app.get("/dashboard/llm-costs")
-async def llm_costs_dashboard(phone: str = Depends(verify_dashboard_cookie)):
+async def llm_costs_dashboard(ctx: DashCtx = Depends(require_admin)):
     return FileResponse("/app/static/llm_costs.html")
 
 

@@ -7,13 +7,12 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dashboard_auth import verify_dashboard_cookie
+from app.api.dashboard_auth import verify_dashboard_cookie, current_seller_id
 from app.database import get_db
 from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
-SELLER_ID = "ac2303e0-00f3-4470-98ca-36a8f4ae5866"
 
 router = APIRouter(
     prefix="/settings",
@@ -32,8 +31,8 @@ class PoliciesUpdate(BaseModel):
 
 
 @router.get("/policies")
-async def get_policies(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+async def get_policies(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -41,8 +40,8 @@ async def get_policies(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/policies")
-async def save_policies(body: PoliciesUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+async def save_policies(body: PoliciesUpdate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -82,8 +81,8 @@ class ChannelsUpdate(BaseModel):
 
 
 @router.get("/channels")
-async def get_channels(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+async def get_channels(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -91,9 +90,9 @@ async def get_channels(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/channels")
-async def save_channels(body: ChannelsUpdate, db: AsyncSession = Depends(get_db)):
+async def save_channels(body: ChannelsUpdate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Replace the seller's approved-channels list. Pass [] to clear."""
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -133,8 +132,8 @@ class LlmPreferencesUpdate(BaseModel):
 
 
 @router.get("/llm-preferences")
-async def get_llm_preferences(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+async def get_llm_preferences(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -142,10 +141,10 @@ async def get_llm_preferences(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/llm-preferences")
-async def save_llm_preferences(body: LlmPreferencesUpdate, db: AsyncSession = Depends(get_db)):
+async def save_llm_preferences(body: LlmPreferencesUpdate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Upsert per-seller LLM overrides. Pass `null` for either key to fall
     back to the app default from agents.yaml."""
-    result = await db.execute(select(Seller).where(Seller.id == SELLER_ID))
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
@@ -204,10 +203,10 @@ def _pm_dict(m: PaymentMethod) -> dict:
 
 
 @router.get("/payment-methods")
-async def list_payment_methods(db: AsyncSession = Depends(get_db)):
+async def list_payment_methods(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     rows = (await db.execute(
         select(PaymentMethod).where(
-            PaymentMethod.seller_id == SELLER_ID,
+            PaymentMethod.seller_id == seller_id,
             PaymentMethod.is_active == True,  # noqa: E712
         ).order_by(PaymentMethod.is_primary.desc(), PaymentMethod.created_at.asc())
     )).scalars().all()
@@ -224,7 +223,7 @@ async def upload_qr(file: UploadFile = File(...)):
 
 
 @router.post("/payment-methods")
-async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(get_db)):
+async def save_payment_method(body: PaymentMethodIn, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Create or update a UPI payment method. Setting is_primary unsets the
     primary flag on the seller's other methods in the same category."""
     # A QR is mandatory: the bot collects payment by QR only and NEVER shares the raw
@@ -240,10 +239,10 @@ async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(
         )
     if body.id:
         m = await db.get(PaymentMethod, body.id)
-        if m is None or str(m.seller_id) != SELLER_ID:
+        if m is None or str(m.seller_id) != seller_id:
             raise HTTPException(status_code=404, detail="Payment method not found")
     else:
-        m = PaymentMethod(seller_id=SELLER_ID, category=body.category)
+        m = PaymentMethod(seller_id=seller_id, category=body.category)
         db.add(m)
 
     m.category = body.category
@@ -257,7 +256,7 @@ async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(
         # Unset any existing primary in this category.
         others = (await db.execute(
             select(PaymentMethod).where(
-                PaymentMethod.seller_id == SELLER_ID,
+                PaymentMethod.seller_id == seller_id,
                 PaymentMethod.category == body.category,
                 PaymentMethod.is_primary == True,  # noqa: E712
             )
@@ -270,7 +269,7 @@ async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(
     # Ensure at least one primary exists per category.
     has_primary = (await db.execute(
         select(PaymentMethod).where(
-            PaymentMethod.seller_id == SELLER_ID,
+            PaymentMethod.seller_id == seller_id,
             PaymentMethod.category == body.category,
             PaymentMethod.is_primary == True,  # noqa: E712
             PaymentMethod.is_active == True,  # noqa: E712
@@ -280,18 +279,18 @@ async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(
         m.is_primary = True
 
     await db.commit()
-    logger.info("Saved payment method %s (primary=%s) for seller %s", m.id, m.is_primary, SELLER_ID)
+    logger.info("Saved payment method %s (primary=%s) for seller %s", m.id, m.is_primary, seller_id)
     return {"status": "saved", "payment_method": _pm_dict(m)}
 
 
 @router.post("/payment-methods/{method_id}/primary")
-async def set_primary_payment_method(method_id: str, db: AsyncSession = Depends(get_db)):
+async def set_primary_payment_method(method_id: str, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     m = await db.get(PaymentMethod, method_id)
-    if m is None or str(m.seller_id) != SELLER_ID:
+    if m is None or str(m.seller_id) != seller_id:
         raise HTTPException(status_code=404, detail="Payment method not found")
     others = (await db.execute(
         select(PaymentMethod).where(
-            PaymentMethod.seller_id == SELLER_ID, PaymentMethod.category == m.category,
+            PaymentMethod.seller_id == seller_id, PaymentMethod.category == m.category,
         )
     )).scalars().all()
     for o in others:
@@ -301,9 +300,9 @@ async def set_primary_payment_method(method_id: str, db: AsyncSession = Depends(
 
 
 @router.delete("/payment-methods/{method_id}")
-async def delete_payment_method(method_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_payment_method(method_id: str, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     m = await db.get(PaymentMethod, method_id)
-    if m is None or str(m.seller_id) != SELLER_ID:
+    if m is None or str(m.seller_id) != seller_id:
         raise HTTPException(status_code=404, detail="Payment method not found")
     m.is_active = False
     m.is_primary = False

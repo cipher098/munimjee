@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerBot — Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #222; }
+    .topbar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px;
+              display: flex; align-items: center; gap: 16px; height: 56px; }
+    .topbar h1 { font-size: 16px; font-weight: 700; }
+    .topbar nav { display: flex; gap: 4px; margin-left: auto; }
+    .topbar nav a { padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #555; }
+    .topbar nav a:hover { background: #f3f4f6; }
+    .topbar nav a.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+    .container { max-width: 920px; margin: 28px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid #f1f5f9; }
+    th { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge { background: #ef4444; color: #fff; border-radius: 999px; font-size: 11px; padding: 1px 8px; font-weight: 700; }
+    .muted { color: #9ca3af; }
+    .btn { padding: 7px 12px; background: #6366f1; color: #fff; border: none; border-radius: 7px;
+           font-size: 12px; font-weight: 600; cursor: pointer; }
+    .empty { color: #9ca3af; font-size: 13px; padding: 16px 0; }
+    .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:#f1f5f9; color:#475569; }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <h1>munimjee.ai · Admin</h1>
+  <nav>
+    <a href="/dashboard/admin" class="active">Sellers</a>
+    <a href="/dashboard/llm-costs">Costs</a>
+    <a href="/training/dashboard">Training</a>
+    <a href="/dashboard-auth/logout">Logout</a>
+  </nav>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h2>All sellers</h2>
+    <div id="list"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
+<script>
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function load() {
+  const res = await fetch('/admin/sellers');
+  if (!res.ok) { document.getElementById('list').innerHTML = '<div class="empty">Failed to load.</div>'; return; }
+  const rows = await res.json();
+  if (!rows.length) { document.getElementById('list').innerHTML = '<div class="empty">No sellers yet.</div>'; return; }
+  document.getElementById('list').innerHTML = `
+    <table>
+      <thead><tr><th>Business</th><th>Email</th><th>Phone</th><th>Status</th><th>Needs action</th><th></th></tr></thead>
+      <tbody>${rows.map(s => `
+        <tr>
+          <td><b>${esc(s.business_name || '—')}</b></td>
+          <td class="muted">${esc(s.email || '—')}</td>
+          <td class="muted">${esc(s.whatsapp_number || '—')}</td>
+          <td><span class="pill">${esc(s.onboarding_state || '')}</span>${s.is_active ? '' : ' <span class="muted">(inactive)</span>'}</td>
+          <td>${s.open_actions > 0 ? `<span class="badge">${s.open_actions}</span>` : '<span class="muted">0</span>'}</td>
+          <td><form method="POST" action="/dashboard-auth/view/${s.id}"><button class="btn" type="submit">View dashboard →</button></form></td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+load();
+</script>
+</body>
+</html>

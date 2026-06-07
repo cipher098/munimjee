@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.dashboard_auth import verify_dashboard_cookie
+from app.api.dashboard_auth import verify_dashboard_cookie, current_seller_id
 from app.database import get_db
 from app.models.category_tag import CategoryTag
 from app.models.product import Product
@@ -31,7 +31,7 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 
 class CategoryCreate(BaseModel):
-    seller_id: str
+    seller_id: str | None = None   # ignored — seller comes from the auth cookie
     name: str
 
 
@@ -52,7 +52,7 @@ class TagValueSet(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.get("")
-async def list_categories(seller_id: str, db: AsyncSession = Depends(get_db)):
+async def list_categories(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Return all categories for a seller with their tags."""
     result = await db.execute(
         select(ProductCategory)
@@ -65,13 +65,13 @@ async def list_categories(seller_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("")
-async def create_category(body: CategoryCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new product category for a seller."""
-    result = await db.execute(select(Seller).where(Seller.id == body.seller_id))
+async def create_category(body: CategoryCreate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    """Create a new product category for a seller (scoped to the logged-in seller)."""
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Seller not found")
 
-    category = ProductCategory(seller_id=body.seller_id, name=body.name)
+    category = ProductCategory(seller_id=seller_id, name=body.name)
     db.add(category)
     await db.commit()
     await db.refresh(category)
@@ -261,7 +261,7 @@ async def set_product_tag_values(
 # ---------------------------------------------------------------------------
 
 @router.get("/alerts")
-async def list_alerts(seller_id: str, db: AsyncSession = Depends(get_db)):
+async def list_alerts(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Return all unresolved seller alerts (missing tag values blocking conversations)."""
     result = await db.execute(
         select(SellerAlert)

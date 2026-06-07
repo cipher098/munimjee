@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dashboard_auth import verify_dashboard_cookie
+from app.api.dashboard_auth import verify_dashboard_cookie, require_admin
 from app.database import get_db
 from app.integrations.llm_pricing import compute_cost_usd, reload_pricing
 from app.models.llm_call_log import LLMCallLog
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/llm-costs",
     tags=["llm-costs"],
-    dependencies=[Depends(verify_dashboard_cookie)],
+    dependencies=[Depends(require_admin)],
 )
 
 
