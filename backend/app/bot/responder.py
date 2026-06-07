@@ -715,6 +715,40 @@ async def generate_bot_reply(
             _sp_parts.append(f"{p.name} ₹{display_price // 100}")
         shown_products_str = ", ".join(_sp_parts)
 
+    # QUOTE BREAKDOWN — code-computed total for a multi-item availability/quote request
+    # ("2 jhoomar + 4 clock mil jayega?") that is NOT a commitment. The model declares the
+    # items in deal_items; code owns the arithmetic so the reply never does its own math
+    # (and can't invent a discount). Order-building stays gated on accept/bulk_discount.
+    quote_breakdown = ""
+    _qitems = decision.get("deal_items") or []
+    if _qitems and decision.get("action") not in ("accept", "bulk_discount"):
+        _qparts, _qtotal = [], 0
+        for _it in _qitems:
+            _qp = (await db.execute(
+                select(Product).where(Product.id == str(_it.get("product_id") or ""))
+            )).scalar_one_or_none()
+            if not _qp:
+                continue
+            try:
+                _qq = max(1, int(_it.get("quantity") or 1))
+            except (TypeError, ValueError):
+                _qq = 1
+            _qcp = (await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == str(_qp.id),
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
+            )).scalars().first()
+            _qceil = (_qcp.last_shown_price or _qcp.last_counter_price) if _qcp else None
+            _qunit = max(_qceil or _qp.listed_price, _qp.floor_price)
+            _qline = _qunit * _qq
+            _qtotal += _qline
+            _qparts.append(f"{_qp.name} ×{_qq}: ₹{_qline // 100}")
+        if _qparts:
+            quote_breakdown = ", ".join(_qparts) + f" (total: ₹{_qtotal // 100})"
+            decision["price"] = _qtotal  # reply quotes this code-computed total
+            logger.info("Quote breakdown computed: %s", quote_breakdown)
+
     # Bundle pricing: when counter/accept covers multiple products, compute a floor-safe
     # per-product split (each product gets its floor; surplus split proportionally by
     # listed price). Each share is clamped to what we LAST SHOWED this customer for that
@@ -836,6 +870,7 @@ async def generate_bot_reply(
         "other_inquiry_products": other_inquiry_products,
         "multi_price_breakdown": multi_price_breakdown,
         "shown_products": shown_products_str,
+        "quote_breakdown": quote_breakdown,
         "bundle_breakdown": bundle_breakdown,
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products

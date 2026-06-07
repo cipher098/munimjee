@@ -272,6 +272,7 @@ async def build_reply_prompt(context: dict) -> str:
         other_inquiry_products_str=other_inquiry_str,
         multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",
         shown_products=context.get("shown_products") or "N/A",
+        quote_breakdown=context.get("quote_breakdown") or "N/A",
         bundle_breakdown=context.get("bundle_breakdown") or "N/A",
         inquiry_floor_total_rupees=context.get("inquiry_floor_total_rupees") or 0,
         past_orders=context.get("past_orders_summary") or "none",
