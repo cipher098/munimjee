@@ -603,6 +603,33 @@ async def generate_bot_reply(
                 _price_ceiling(_g["cp"], _g["product"]),
                 label=f"deal {_g['product'].name}",
             )
+        # Consolidate the customer's WHOLE unpaid cart: merge in every other product
+        # already finalized-but-unpaid (its own awaiting_payment, nothing-paid order) so
+        # the quoted total — and the order _build_deal_order builds — covers everything,
+        # not just the product just accepted. Without this, finalizing a 2nd product
+        # quotes only that product and leaves the 1st as a stranded separate order.
+        from app.models.order import Order as _Order, OrderItem as _OItem
+        _deal_pids = {str(l["product_id"]) for l in deal_lines}
+        _others = (await db.execute(
+            select(_OItem, ConversationProduct)
+            .join(_Order, _OItem.order_id == _Order.id)
+            .join(ConversationProduct, _OItem.conversation_product_id == ConversationProduct.id)
+            .where(
+                _Order.conversation_id == conversation.id,
+                _Order.status == "awaiting_payment",
+                _Order.amount_paid == 0,
+            )
+        )).all()
+        for _oi, _ocp in _others:
+            _opid = str(_ocp.product_id)
+            if _opid in _deal_pids:
+                continue
+            _deal_pids.add(_opid)
+            deal_lines.append({
+                "product_id": _opid,
+                "unit_price_paise": _ocp.agreed_price or _ocp.last_counter_price or _oi.unit_price,
+                "quantity": _ocp.quantity or _oi.quantity or 1,
+            })
         if deal_lines:
             extra["deal_lines"] = deal_lines
             _total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
@@ -618,6 +645,24 @@ async def generate_bot_reply(
     # as a safe reference when customer explicitly asks for per-product breakdown.
     multi_price_breakdown: str = ""
     bundle_breakdown: str = ""
+
+    # When a finalized deal/cart has multiple line items (combo discount, or the
+    # consolidated unpaid cart), itemize it for the reply so the bot describes the WHOLE
+    # cart ("clock ×4 + deer light ×4 = ₹5996"), not just the product just accepted.
+    _dl = extra.get("deal_lines") or []
+    if len(_dl) > 1:
+        _names: dict[str, str] = {}
+        _nres = await db.execute(
+            select(Product).where(Product.id.in_([l["product_id"] for l in _dl]))
+        )
+        for _np in _nres.scalars().all():
+            _names[str(_np.id)] = _np.name
+        _bparts = [
+            f"{_names.get(str(l['product_id']), 'item')} ×{l['quantity']}: ₹{(l['unit_price_paise'] * l['quantity']) // 100}"
+            for l in _dl
+        ]
+        _btot = sum(l["unit_price_paise"] * l["quantity"] for l in _dl)
+        bundle_breakdown = ", ".join(_bparts) + f" (total: ₹{_btot // 100})"
 
     # show_multi_price: prices come entirely from code, never from LLM.
     # Per-product ceiling = last_shown_price if set, else last_counter_price, else listed_price.
@@ -658,7 +703,7 @@ async def generate_bot_reply(
     # _persist_bundle_lines — so the bundle price is remembered focus-independently and
     # ratchets DOWN only across rounds. accept/bulk persist via deal_lines instead, so
     # here we only build the display string for them.
-    if other_inquiry_products and decision.get("action") in ("counter", "accept", "bulk_discount"):
+    if other_inquiry_products and decision.get("action") in ("counter", "accept", "bulk_discount") and not bundle_breakdown:
         total_paise = decision.get("price") or 0
         bundle_items = []
         if product:

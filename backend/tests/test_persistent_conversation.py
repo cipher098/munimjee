@@ -404,6 +404,43 @@ async def test_persist_bundle_lines_ratchets_down_only(db_session):  # noqa: F81
 
 
 @pytest.mark.asyncio
+async def test_build_deal_order_consolidates_prior_unpaid_cart(db_session):  # noqa: F811
+    """Finalizing a 2nd product while a 1st is finalized-but-unpaid must produce ONE
+    combined order covering BOTH — not a separate order per product."""
+    from app.bot.conversation import _build_deal_order, _get_or_create_conv_product
+    from app.models.order import Order, OrderItem
+    from sqlalchemy import select
+
+    seller, led, jho, conv = await _seed_two_products(db_session)
+
+    # First: finalize 4 LED clocks (its own awaiting_payment order).
+    led_cp = await _get_or_create_conv_product(conv.id, led.id, db_session)
+    led_cp.agreed_price = 1900_00
+    led_cp.quantity = 4
+    await _build_deal_order(conv, seller, led_cp, [
+        {"product_id": str(led.id), "unit_price_paise": 1900_00, "quantity": 4},
+    ], db_session)
+
+    # Then: finalize 1 jhoomar — focus is now jhoomar, deal_lines only has jhoomar.
+    jho_cp = await _get_or_create_conv_product(conv.id, jho.id, db_session)
+    conv.product_id = jho.id
+    order = await _build_deal_order(conv, seller, jho_cp, [
+        {"product_id": str(jho.id), "unit_price_paise": 999_00, "quantity": 1},
+    ], db_session)
+
+    # ONE order, covering BOTH products (4×1900 + 1×999).
+    orders = (await db_session.execute(
+        select(Order).where(Order.conversation_id == conv.id, Order.status == "awaiting_payment")
+    )).scalars().all()
+    assert len(orders) == 1
+    assert order.amount == 4 * 1900_00 + 999_00  # 7600_00 + 999_00
+    items = (await db_session.execute(
+        select(OrderItem).where(OrderItem.order_id == order.id)
+    )).scalars().all()
+    assert {oi.unit_price: oi.quantity for oi in items} == {1900_00: 4, 999_00: 1}
+
+
+@pytest.mark.asyncio
 async def test_build_deal_order_creates_per_product_line_items(db_session):  # noqa: F811
     from app.bot.conversation import _build_deal_order, _get_or_create_conv_product
     from app.models.order import Order, OrderItem
