@@ -568,19 +568,40 @@ async def generate_bot_reply(
         _multi = len(_gathered) > 1
         deal_lines: list[dict] = []
         if _multi and _action == "bulk_discount":
-            # Basket combo discount: the model's price is the discounted TOTAL for the
-            # whole basket. Distribute it across lines — clamped UP to the sum-of-floors
-            # and split proportionally by listed value, so no line falls below its floor.
-            _split_in = [
-                {
-                    "floor_paise": g["product"].floor_price or 0,
-                    "listed_paise": g["product"].listed_price or 0,
-                    "quantity": g["qty"],
-                }
-                for g in _gathered
-            ]
-            _units = _split_combo_total(_split_in, decision.get("price") or 0)
-            for g, _unit in zip(_gathered, _units):
+            # Basket combo discount, but PRESERVE items the customer already negotiated —
+            # adding a new item must not change the others' agreed prices. An item is
+            # "already negotiated" if its CP holds a price below listed; it keeps that price
+            # (_per_product_unit_price). Only genuinely-NEW items share the remaining budget
+            # (the model's combined total minus the agreed items' totals), so the combo
+            # discount lands on the fresh items, not on what was already settled.
+            def _has_negotiated(cp, p) -> bool:
+                listed = p.listed_price or 0
+                return any(
+                    c and (not listed or c < listed)
+                    for c in (cp.agreed_price, cp.last_counter_price, cp.last_shown_price)
+                ) if cp is not None else False
+
+            _agreed_total = sum(
+                _per_product_unit_price(g["cp"], g["product"]) * g["qty"]
+                for g in _gathered if _has_negotiated(g["cp"], g["product"])
+            )
+            _fresh = [g for g in _gathered if not _has_negotiated(g["cp"], g["product"])]
+            _fresh_units: dict[int, int] = {}
+            if _fresh:
+                _remainder = max(0, (decision.get("price") or 0) - _agreed_total)
+                _split_in = [
+                    {"floor_paise": g["product"].floor_price or 0,
+                     "listed_paise": g["product"].listed_price or 0,
+                     "quantity": g["qty"]}
+                    for g in _fresh
+                ]
+                _us = _split_combo_total(_split_in, _remainder)
+                _fresh_units = {id(g): u for g, u in zip(_fresh, _us)}
+            for g in _gathered:  # keep _gathered order so the price-guard zip below is valid
+                if _has_negotiated(g["cp"], g["product"]):
+                    _unit = _per_product_unit_price(g["cp"], g["product"])
+                else:
+                    _unit = _fresh_units.get(id(g)) or _per_product_unit_price(g["cp"], g["product"])
                 deal_lines.append({"product_id": g["pid"], "unit_price_paise": _unit, "quantity": g["qty"]})
         else:
             # accept (single or multi) or single-product bulk_discount: each line keeps
