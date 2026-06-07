@@ -110,23 +110,24 @@ async def _notify(delivery_update_id: str) -> None:
 
         await client.send_message(conversation.customer_instagram_id, message)
 
-        # Mark notified + update order status + close conversation
+        # Mark notified + update order status. The conversation is permanent —
+        # don't close it; just drop the focus so a follow-up is handled fresh.
         update.notified_at = datetime.now(timezone.utc)
         order.status = "dispatched"
-        conversation.status = "closed"
 
-        # Set dispatched_notified on the active conv_product if possible
+        # Set dispatched_notified on the active conv_product, then clear focus.
         if conversation.product_id:
             from app.models.conversation_product import ConversationProduct
             cp_result = await db.execute(
                 select(ConversationProduct).where(
                     ConversationProduct.conversation_id == conversation.id,
                     ConversationProduct.product_id == conversation.product_id,
-                )
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
             )
-            active_cp = cp_result.scalar_one_or_none()
+            active_cp = cp_result.scalars().first()
             if active_cp:
                 active_cp.state = "dispatched_notified"
+        conversation.product_id = None
 
         await db.commit()
 

@@ -60,3 +60,11 @@ models:
     output: 0.40
     cache_read: null
     cache_write: null
+
+  # Claude Opus 4.8 (USD/1M tokens). cache_write = 5-min write rate ($6.25);
+  # cache_read = cache hits & refreshes ($0.50). (1h cache write would be $10.)
+  claude-opus-4-8:
+    input: 5.00
+    output: 25.00
+    cache_read: 0.50
+    cache_write: 6.25

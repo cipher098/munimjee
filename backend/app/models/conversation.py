@@ -15,7 +15,10 @@ class Conversation(Base):
     customer_instagram_id = Column(String, nullable=False)
     customer_name = Column(String, nullable=True)
     customer_gender = Column(String, nullable=True)  # male | female | unknown
-    status = Column(String, nullable=False, default="active")  # active | closed
+    # The persistent customer thread has no lifecycle status — it lives forever
+    # (one per seller+customer). Purchase finality lives on Order.status /
+    # ConversationProduct.state, not here. product_id is the current-focus
+    # pointer (which product is live this turn); None = idle / no active focus.
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
     messages = Column(JSONB, default=list)            # [{role, content, timestamp}]
     # Set whenever a seller replies manually from the IG inbox (echo with novel mid).

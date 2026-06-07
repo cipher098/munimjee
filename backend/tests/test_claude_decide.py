@@ -72,6 +72,8 @@ def test_split_decision_prompt_extracts_static_and_dynamic_parts():
         seller_channels="[]",
         product_variants="[]",
         active_variant_label="none",
+        past_orders="none",
+        previous_price="none",
     )
     system, user = _split_decision_prompt(formatted)
 
