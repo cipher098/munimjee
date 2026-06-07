@@ -241,27 +241,45 @@ async def generate_bot_reply(
         except Exception as exc:
             logger.warning("Tag lookup failed: %s", exc)
 
-    # If the customer is clearly asking about a DIFFERENT product than the current focus
-    # (e.g. focus is "gold clock" but they ask "jhoomar mein installation kya scene hai"),
-    # do NOT run the feature-query tag-pause — it would pause and create a tag/alert on the
-    # WRONG product. Let the normal decide flow handle the pivot (switch product / answer).
-    _other_product_referenced = False
+    # Resolve WHICH product the feature question is about. If the customer names a different
+    # product than the focus (focus "gold clock", they ask "jhoomar mein installation"), run
+    # the feature-query against THAT product so the alert lands on the right one — not the
+    # focused product. Load its tags/values; for the focused product reuse what we already have.
+    _fq_product = product
+    _fq_tags = category_tags
+    _fq_values = product_tag_values
     if product and all_products:
         _msg_low = (customer_message or "").lower()
         def _name_words(n):
             return [w for w in (n or "").lower().split() if len(w) > 3]
         _focus_hit = any(w in _msg_low for w in _name_words(product.name))
-        _other_hit = any(
-            any(w in _msg_low for w in _name_words(p.name))
-            for p in all_products if str(p.id) != str(product.id)
-        )
-        _other_product_referenced = _other_hit and not _focus_hit
+        if not _focus_hit:
+            for _p in all_products:
+                if str(_p.id) == str(product.id) or not _p.category_id:
+                    continue
+                if any(w in _msg_low for w in _name_words(_p.name)):
+                    _fq_product = _p
+                    break
+    if _fq_product is not None and _fq_product is not product and _fq_product.category_id:
+        _ct = (await db.execute(
+            select(CategoryTag).where(CategoryTag.category_id == _fq_product.category_id)
+        )).scalars().all()
+        _fq_tags = [{"name": t.name, "display_name": t.display_name,
+                     "value_type": t.value_type, "allowed_values": t.allowed_values} for t in _ct]
+        _id_to_tag = {t.id: t for t in _ct}
+        _fq_values = {}
+        for _tv in (await db.execute(
+            select(ProductTagValue).where(ProductTagValue.product_id == _fq_product.id)
+        )).scalars().all():
+            _t = _id_to_tag.get(_tv.tag_id)
+            if _t:
+                _fq_values[_t.display_name] = _tv.value
 
-    # If product has a category and the customer seems to be asking a feature question,
-    # check if we have the answer or need to pause and notify the seller.
-    if product and product.category_id and category_tags and not _other_product_referenced:
+    # If the (referenced) product has a category and the customer seems to be asking a feature
+    # question, check if we have the answer or need to alert the seller.
+    if _fq_product and _fq_product.category_id and _fq_tags:
         try:
-            fq = await claude.extract_feature_query(customer_message, category_tags)
+            fq = await claude.extract_feature_query(customer_message, _fq_tags)
 
             # ── TAG DECISION LOG ──────────────────────────────────────────────
             logger.info(
@@ -292,7 +310,7 @@ async def generate_bot_reply(
                 if matched_name:
                     tag_result = await db.execute(
                         select(CategoryTag).where(
-                            CategoryTag.category_id == product.category_id,
+                            CategoryTag.category_id == _fq_product.category_id,
                             CategoryTag.name == matched_name,
                         )
                     )
@@ -312,7 +330,7 @@ async def generate_bot_reply(
                         )
                         new_value_type = "text"
                     matched_tag_obj = CategoryTag(
-                        category_id=product.category_id,
+                        category_id=_fq_product.category_id,
                         name=new_name,
                         display_name=new_display or new_name,
                         value_type=new_value_type,
@@ -323,28 +341,26 @@ async def generate_bot_reply(
                     logger.info(
                         "TAG CREATED: %r (display=%r, type=%s, options=%s) for category %s, product %r",
                         new_name, new_display, new_value_type, new_allowed,
-                        product.category_id, product.name,
+                        _fq_product.category_id, _fq_product.name,
                     )
 
                 if matched_tag_obj:
-                    has_value = matched_tag_obj.display_name in product_tag_values
+                    has_value = matched_tag_obj.display_name in _fq_values
                     logger.info(
                         "TAG VALUE CHECK: tag=%r  has_value=%s  known_values=%s",
                         matched_tag_obj.name, has_value,
-                        list(product_tag_values.keys()),
+                        list(_fq_values.keys()),
                     )
                     if not has_value:
-                        # Pause this product's state machine, alert seller
-                        if conv_product is not None:
-                            conv_product.state = "waiting_for_tag"
-                            conv_product.pending_tag_id = matched_tag_obj.id
-                        await db.flush()
-
-                        # Create alert only if one doesn't already exist
+                        # We don't know this spec — alert the seller for the RIGHT product and
+                        # send the customer a short holding line (no silence, no freeze). When
+                        # the seller fills the tag, the answer is pushed back to this chat
+                        # (alert-driven, even if the chat has moved on by then).
                         existing_alert = await db.execute(
                             select(SellerAlert).where(
-                                SellerAlert.product_id == product.id,
+                                SellerAlert.product_id == _fq_product.id,
                                 SellerAlert.tag_id == matched_tag_obj.id,
+                                SellerAlert.conversation_id == conversation.id,
                                 SellerAlert.resolved_at.is_(None),
                             )
                         )
@@ -352,18 +368,23 @@ async def generate_bot_reply(
                         if not alert_exists:
                             db.add(SellerAlert(
                                 seller_id=seller.id,
-                                product_id=product.id,
+                                product_id=_fq_product.id,
                                 tag_id=matched_tag_obj.id,
                                 conversation_id=conversation.id,
                             ))
                         await db.flush()
                         logger.info(
-                            "SELLER ALERT: tag=%r  product=%r  alert_already_existed=%s  "
-                            "→ conversation %s paused (waiting_for_tag)",
-                            matched_tag_obj.name, product.name, alert_exists, conversation.id,
+                            "SELLER ALERT (feature): tag=%r product=%r conv=%s existed=%s — holding msg",
+                            matched_tag_obj.name, _fq_product.name, conversation.id, alert_exists,
                         )
-                        _record_turn(action=None, new_state="waiting_for_tag", reply=None)
-                        return None, "waiting_for_tag", {}
+                        from app.utils.gender import address_term as _at, guess_gender as _gg
+                        _term = _at(conversation.customer_gender or _gg(conversation.customer_name or ""))
+                        _hold = _clean_reply(
+                            f"{matched_tag_obj.display_name} ke baare mein confirm karke bata deta hoon "
+                            f"{_term} 🙏 thoda time lagega"
+                        )
+                        _record_turn(action="feature_hold", new_state=None, reply=_hold)
+                        return _hold, None, {}
         except Exception as exc:
             logger.warning("Feature query check failed: %s — proceeding normally", exc)
 

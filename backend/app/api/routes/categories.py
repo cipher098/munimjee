@@ -218,42 +218,49 @@ async def set_product_tag_values(
 
     await db.flush()
 
-    # Resolve alerts and resume waiting conversations for the filled tags
-    resumed = 0
+    # For each filled tag, push the answer to every conversation that asked about it — driven
+    # by the OPEN ALERTS (which each carry their conversation_id), so it works even if the chat
+    # moved on. We send a contextual one-liner ("aapne X ka Y pucha tha — Z hai"), not a re-run
+    # of the last message.
+    from app.models.conversation import Conversation
+    from app.models.conversation_product import ConversationProduct
+
+    tag_meta = {}  # tag_id -> (display_name, value)
+    for item in body:
+        t = await db.get(CategoryTag, item.tag_id)
+        tag_meta[item.tag_id] = ((t.display_name if t else "detail"), item.value)
+
+    delivered = 0
     for tag_id in filled_tag_ids:
-        # Resolve unresolved alerts for this tag + product
-        alert_result = await db.execute(
+        display_name, value = tag_meta.get(tag_id, ("detail", ""))
+        alerts = (await db.execute(
             select(SellerAlert).where(
                 SellerAlert.product_id == product_id,
                 SellerAlert.tag_id == tag_id,
                 SellerAlert.resolved_at.is_(None),
             )
-        )
-        for alert in alert_result.scalars().all():
+        )).scalars().all()
+        for alert in alerts:
             alert.resolved_at = datetime.now(timezone.utc)
-
-        # Resume waiting conversations (conversations whose active conv_product is waiting for this tag)
-        from app.models.conversation import Conversation
-        from app.models.conversation_product import ConversationProduct
-        cp_result = await db.execute(
-            select(ConversationProduct).where(
-                ConversationProduct.product_id == product_id,
-                ConversationProduct.pending_tag_id == tag_id,
-                ConversationProduct.state == "waiting_for_tag",
-            )
-        )
-        waiting_cps = cp_result.scalars().all()
-        for cp in waiting_cps:
-            conv_result = await db.execute(
-                select(Conversation).where(Conversation.id == cp.conversation_id)
-            )
-            conv = conv_result.scalar_one_or_none()
-            if conv:
-                await _resume_conversation(conv, product, cp, db)
-                resumed += 1
+            conv = await db.get(Conversation, alert.conversation_id)
+            if conv is None:
+                continue
+            # clear any CP still parked waiting for this tag
+            cp = (await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conv.id,
+                    ConversationProduct.product_id == product_id,
+                    ConversationProduct.pending_tag_id == tag_id,
+                )
+            )).scalars().first()
+            if cp and cp.state == "waiting_for_tag":
+                cp.state = "product_inquiry"
+                cp.pending_tag_id = None
+            await _deliver_tag_answer(conv, product, display_name, value, db)
+            delivered += 1
 
     await db.commit()
-    return {"updated": len(filled_tag_ids), "conversations_resumed": resumed}
+    return {"updated": len(filled_tag_ids), "answers_delivered": delivered}
 
 
 # ---------------------------------------------------------------------------
@@ -312,6 +319,33 @@ def _tag_dict(t: CategoryTag) -> dict:
         "value_type": t.value_type,
         "allowed_values": t.allowed_values,
     }
+
+
+async def _deliver_tag_answer(conv, product, display_name: str, value: str, db: AsyncSession) -> None:
+    """Push the now-known spec answer to the customer with context — works even if the chat
+    moved on since they asked. Sends one contextual line and records it in history."""
+    from datetime import datetime, timezone
+    from app.models.seller import Seller
+    from app.integrations.instagram import InstagramClient
+    from app.utils.gender import address_term, guess_gender
+
+    seller = await db.get(Seller, conv.seller_id)
+    if not seller:
+        return
+    term = address_term(conv.customer_gender or guess_gender(conv.customer_name or ""))
+    text = (
+        f"Waise {term}, aapne {product.name} ke {display_name} ke baare mein pucha tha — "
+        f"{value}. Aur kuch chahiye toh batayein 😊"
+    )
+    msgs = list(conv.messages or [])
+    msgs.append({"role": "bot", "content": text, "timestamp": datetime.now(timezone.utc).isoformat()})
+    conv.messages = msgs
+    await db.flush()
+    try:
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        await client.send_message(conv.customer_instagram_id, text)
+    except Exception as exc:
+        logger.warning("Failed to deliver tag answer to conv %s: %s", conv.id, exc)
 
 
 async def _resume_conversation(conv, product, conv_product, db: AsyncSession) -> None:
