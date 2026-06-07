@@ -118,6 +118,34 @@ def is_reengagement_signal(text: str | None) -> bool:
     return True  # anything substantive → wake
 
 
+# Post-payment change requests the bot must NOT auto-handle — they go to the seller.
+# (substring match on normalized text; gated on "money already received" by the caller)
+_POST_ORDER_CHANGE = (
+    ("refund", "refund"), ("paisa wapas", "refund"), ("paise wapas", "refund"),
+    ("paise return", "refund"), ("money back", "refund"), ("paise vapas", "refund"),
+    ("cancel", "cancellation"), ("order cancel", "cancellation"), ("rad kar", "cancellation"),
+    ("radd kar", "cancellation"), ("cancel kar", "cancellation"),
+    ("exchange", "item_change"), ("badal do", "item_change"), ("badal dena", "item_change"),
+    ("badal kar", "item_change"), ("ki jagah", "item_change"), ("replace", "item_change"),
+    ("wapas le lo", "item_change"), ("return kar", "item_change"), ("change kar do", "item_change"),
+    ("doosra bhej", "item_change"), ("dusra bhej", "item_change"),
+)
+
+
+def post_order_change_kind(text: str | None) -> str | None:
+    """If the customer's text is a refund/cancellation/item-change request, return its kind
+    ('refund' | 'cancellation' | 'item_change'); else None. Caller gates this on whether a
+    payment has actually been received (so pre-payment cancels/changes stay automated)."""
+    if not text:
+        return None
+    norm = re.sub(r"[^\w\s]", " ", text.lower())
+    norm = re.sub(r"\s+", " ", norm).strip()
+    for phrase, kind in _POST_ORDER_CHANGE:
+        if phrase in norm:
+            return kind
+    return None
+
+
 def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:
     """Return the trailing run of customer turns from conversation history.
 
@@ -341,6 +369,45 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
         if batch_mids and batch_mids <= hist_mids and not unanswered_customer_messages(hist):
             logger.info("message_batch: %s already processed+answered — skipping (idempotent)", conversation.id)
             return consumed
+
+        # Post-payment change requests (refund / cancellation / item-change) are NEVER
+        # auto-handled. While an OPEN manual action exists the bot stays silent on this chat
+        # until the seller marks it resolved in the dashboard.
+        from app.models.manual_action import ManualAction as _MA
+        from app.models.order import Order as _Ord
+        _open_ma = (await db.execute(
+            select(_MA).where(_MA.conversation_id == conversation.id, _MA.status == "open").limit(1)
+        )).scalars().first()
+        if _open_ma is not None:
+            _record_customer_entries(conversation, events)
+            await db.flush()
+            logger.info("message_batch: %s muted — open manual action (%s); recorded customer msg(s)",
+                        conversation.id, _open_ma.kind)
+            return consumed
+        # Detect a NEW post-payment change request → escalate to the seller, mute the bot.
+        _texts = " ".join(e.get("text") or "" for e in events if e.get("type") == "text")
+        _kind = post_order_change_kind(_texts)
+        if _kind:
+            _paid = (await db.execute(
+                select(_Ord.id).where(
+                    _Ord.conversation_id == conversation.id, _Ord.amount_paid > 0
+                ).limit(1)
+            )).first()
+            if _paid is not None:
+                db.add(_MA(
+                    seller_id=conversation.seller_id,
+                    conversation_id=conversation.id,
+                    kind=_kind,
+                    detail=(_texts or "").strip()[:500],
+                    status="open",
+                ))
+                _record_customer_entries(conversation, events)
+                await db.flush()
+                logger.info(
+                    "message_batch: %s ESCALATED to seller (post-payment %s) — bot muted until resolved",
+                    conversation.id, _kind,
+                )
+                return consumed
 
         # Customer disengagement pause.
         if is_bot_paused_for_disengage(conversation.disengage_paused_until):

@@ -12,6 +12,7 @@ from app.models.delivery_update import DeliveryUpdate
 from app.models.transaction import Transaction
 from app.models.llm_call_log import LLMCallLog
 from app.models.payment_method import PaymentMethod
+from app.models.manual_action import ManualAction
 
 __all__ = [
     "Seller",
@@ -29,4 +30,5 @@ __all__ = [
     "Transaction",
     "LLMCallLog",
     "PaymentMethod",
+    "ManualAction",
 ]
