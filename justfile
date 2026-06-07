@@ -1,6 +1,14 @@
 # sellerbot — common dev commands
 # Run `just` to list, `just <name>` to execute.
 
+# --- Production (AWS EC2, ap-south-1) ---
+prod_host    := "ubuntu@3.109.60.26"
+prod_key     := "~/.ssh/id_ed25519"
+prod_dir     := "~/sellerbot"
+prod_compose := "docker-compose.prod.yml"
+prod_db      := "munimjee"
+prod_region  := "ap-south-1"
+
 # Default: list available commands.
 default:
     @just --list
@@ -96,3 +104,99 @@ migrate:
 cache-hits:
     @docker compose logs --tail=400 worker api 2>&1 | grep -E "Claude cache" \
       || echo "No cache hits logged yet — send a couple of messages first."
+
+# ---------------------------------------------------------------------------
+# Production deploy / ops (AWS EC2)
+# ---------------------------------------------------------------------------
+
+# Deploy local code to the production box and restart the stack.
+# rsyncs backend + prod compose + Caddyfile, then rebuilds & restarts.
+# Does NOT apply migrations. If this change includes a migration, run
+# `just prod-migrate` FIRST (updates the schema while the old app keeps serving),
+# THEN prod-deploy. NEVER syncs .env (prod secrets) or uploads/ (product images).
+prod-deploy:
+    rsync -az \
+      --exclude '.git' --exclude '__pycache__' --exclude '*.pyc' \
+      --exclude '.pytest_cache' --exclude '.env' --exclude 'uploads/' \
+      --exclude 'celerybeat-schedule' --exclude 'tests/' \
+      -e "ssh -i {{prod_key}}" \
+      backend docker-compose.prod.yml Caddyfile \
+      {{prod_host}}:{{prod_dir}}/
+    ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && sudo docker compose -f {{prod_compose}} up -d --build'
+    @echo ""
+    @echo "deployed → https://app.munimjee.in"
+
+# Show prod container status.
+prod-ps:
+    @ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && sudo docker compose -f {{prod_compose}} ps'
+
+# Tail prod logs. Optional service, e.g. `just prod-logs worker` (default: all).
+prod-logs SERVICE='':
+    ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && sudo docker compose -f {{prod_compose}} logs -f --tail=100 {{SERVICE}}'
+
+# Restart prod services without rebuilding. Optional service, e.g. `just prod-restart api`.
+prod-restart SERVICE='':
+    ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && sudo docker compose -f {{prod_compose}} restart {{SERVICE}}'
+
+# Apply migrations to the PROD (RDS) database — run this BEFORE `just prod-deploy`.
+# rsyncs code so new migration files reach the box, then runs alembic in a one-off
+# container built from the latest code, WITHOUT disturbing the running app (the old
+# app keeps serving on the migrated schema until you prod-deploy the new code).
+# Safe flow:  just prod-snapshot → just prod-migrate → just prod-deploy
+# Pass any alembic args, e.g.
+#   just prod-migrate current        (show current revision)
+#   just prod-migrate history        (list migrations)
+#   just prod-migrate "downgrade -1" (roll back one — quote multi-word args)
+prod-migrate ARGS='upgrade head':
+    rsync -az \
+      --exclude '.git' --exclude '__pycache__' --exclude '*.pyc' \
+      --exclude '.pytest_cache' --exclude '.env' --exclude 'uploads/' \
+      --exclude 'celerybeat-schedule' --exclude 'tests/' \
+      -e "ssh -i {{prod_key}}" \
+      backend docker-compose.prod.yml Caddyfile \
+      {{prod_host}}:{{prod_dir}}/
+    ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && sudo docker compose -f {{prod_compose}} run --rm --no-deps --build api alembic {{ARGS}}'
+
+# Preview what `just prod-migrate` WOULD apply — read-only, changes nothing.
+# Shows the DB's current revision, the pending migrations (with descriptions),
+# and the exact SQL that would run. Run this to be sure BEFORE prod-migrate.
+prod-migrate-plan:
+    rsync -az \
+      --exclude '.git' --exclude '__pycache__' --exclude '*.pyc' \
+      --exclude '.pytest_cache' --exclude '.env' --exclude 'uploads/' \
+      --exclude 'celerybeat-schedule' --exclude 'tests/' \
+      -e "ssh -i {{prod_key}}" \
+      backend docker-compose.prod.yml Caddyfile \
+      {{prod_host}}:{{prod_dir}}/
+    ssh -i {{prod_key}} {{prod_host}} \
+      'cd {{prod_dir}} && \
+       cur=$(sudo docker compose -f {{prod_compose}} run --rm --no-deps --build api alembic current 2>/dev/null | grep -oE "^[0-9a-zA-Z_]+" | head -1) && \
+       echo "=== current DB revision: $cur ===" && \
+       echo "" && echo "=== pending migrations (current -> head) ===" && \
+       sudo docker compose -f {{prod_compose}} run --rm --no-deps api alembic history -r "$cur:head" --verbose && \
+       echo "" && echo "=== SQL that would be applied ===" && \
+       sudo docker compose -f {{prod_compose}} run --rm --no-deps api alembic upgrade "$cur:head" --sql'
+
+# Take a manual RDS snapshot of the prod DB. Run this BEFORE risky migrations.
+# Runs from your Mac (AWS CLI admin creds). The snapshot is point-in-time; restore
+# later via the RDS console or `aws rds restore-db-instance-from-db-snapshot`.
+# Snapshots of this small DB are tiny and fit free-tier backup storage.
+prod-snapshot:
+    aws rds create-db-snapshot \
+      --region {{prod_region}} \
+      --db-instance-identifier {{prod_db}} \
+      --db-snapshot-identifier "{{prod_db}}-manual-$(date +%Y%m%d-%H%M%S)" \
+      --query 'DBSnapshot.{Snapshot:DBSnapshotIdentifier,Status:Status,Engine:Engine}' \
+      --output table
+    @echo ""
+    @echo "Snapshot started (status 'creating' → 'available' in a few min)."
+    @echo "List:    aws rds describe-db-snapshots --db-instance-identifier {{prod_db}} --snapshot-type manual --region {{prod_region}} --query 'DBSnapshots[].DBSnapshotIdentifier'"
+
+# Open a shell on the production box.
+prod-ssh:
+    ssh -i {{prod_key}} {{prod_host}}

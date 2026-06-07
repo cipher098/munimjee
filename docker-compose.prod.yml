@@ -1,0 +1,74 @@
+# Production stack for a single VPS.
+#
+# Differences from docker-compose.yml (local/dev):
+#   * No postgres service — DATABASE_URL points at managed Postgres (Neon/RDS).
+#   * No source bind-mounts, no uvicorn --reload.
+#   * api runs alembic migrations on start.
+#   * Caddy terminates HTTPS for app.munimjee.in (auto Let's Encrypt).
+#   * sqs_consumer drains the webhook ingress queue (Lambda + SQS).
+#
+# Webhook ingress is handled OFF this box by Lambda+SQS, so the api here does
+# not need to be publicly reachable for /webhooks — only the dashboard is.
+#
+# Required in backend/.env (beyond the existing app vars):
+#   DATABASE_URL=postgresql+asyncpg://...@...neon.tech/db?ssl=require
+#   PUBLIC_BASE_URL=https://app.munimjee.in
+#   SQS_QUEUE_URL=<terraform output sqs_queue_url>
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY=<terraform consumer key>
+#   AWS_REGION=ap-south-1
+
+services:
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [redis]
+    # Migrations are NOT run here — apply them explicitly with `just prod-migrate`
+    # so schema changes are always deliberate.
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [redis]
+    command: celery -A app.workers.celery_app worker --loglevel=info
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+  beat:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [redis]
+    command: celery -A app.workers.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  sqs_consumer:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [redis]
+    command: python -m app.workers.sqs_consumer
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on: [api]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  caddy_data:
+  caddy_config:
