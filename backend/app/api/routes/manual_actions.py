@@ -64,6 +64,33 @@ async def manual_action_chat(action_id: str, seller_id: str = Depends(current_se
         raise HTTPException(status_code=404, detail="Manual action not found")
     conv = await db.get(Conversation, ma.conversation_id)
     msgs = (conv.messages or []) if conv else []
+
+    # Resolve renderable image URLs so the transcript shows actual images, not just text
+    # markers: product photos via product_id, the payment QR via the seller's UPI method,
+    # and customer screenshots from the URL embedded in the marker (best-effort).
+    import re as _re
+    from app.bot.conversation import _get_primary_upi_method
+    from app.models.product import Product
+
+    pids = {m.get("product_id") for m in msgs if m.get("content") == "[product photo]" and m.get("product_id")}
+    photo_by_pid = {}
+    if pids:
+        prows = (await db.execute(select(Product).where(Product.id.in_(list(pids))))).scalars().all()
+        photo_by_pid = {str(p.id): p.photo_url for p in prows}
+    _method = await _get_primary_upi_method(ma.seller_id, db)
+    qr_url = _method.qr_code_url if _method else None
+
+    def _image_url(m: dict):
+        c = m.get("content") or ""
+        if c == "[product photo]" and m.get("product_id"):
+            return photo_by_pid.get(str(m.get("product_id")))
+        if c == "[payment QR]":
+            return qr_url
+        mm = _re.match(r"\[screenshot:\s*(\S+?)\s*\]", c)
+        if mm:
+            return mm.group(1)
+        return None
+
     return {
         "id": str(ma.id),
         "conversation_id": str(ma.conversation_id),
@@ -77,6 +104,7 @@ async def manual_action_chat(action_id: str, seller_id: str = Depends(current_se
                 "role": m.get("role"),
                 "content": m.get("content"),
                 "timestamp": m.get("timestamp"),
+                "image_url": _image_url(m),
             }
             for m in msgs
         ],
