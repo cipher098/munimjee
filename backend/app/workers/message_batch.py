@@ -66,41 +66,56 @@ def is_bot_paused_for_disengage(
     return current < disengage_paused_until
 
 
-# Customer messages containing any of these substrings (case-insensitive) lift
-# the disengage pause — they signal renewed buying intent. Intentionally broad:
-# a false positive costs one extra ack, a false negative loses a sale.
-# Note: words that commonly appear in negations ("chahiye" → "nahi chahiye",
-# "milega" → "nahi milega") are deliberately OUT — too easy to invert meaning.
-_REENGAGE_KEYWORDS = (
-    "price", "kitne", "kitna", "dam", "rate",
-    "le lunga", "le lungi", "lelo", "le do", "dedo",
-    "fix karo", "fix kar do", "confirm",
-    "yes", "haan", "accept",
-    "order", "buy", "purchase",
-    "lunga", "lungi", "leta hoon", "leti hoon",
+# A disengage pause is only meant to stop the bot pestering after a genuine drop-off
+# ("ok", "let me think", "bye"). The customer coming BACK with anything substantive — a buy
+# signal ("bhaiya kardo pack"), a price objection ("ye mehangi hai"), a question, a new
+# product — must wake the bot. Bias: a false positive costs one extra ack, a false negative
+# LOSES A SALE. So we wake on EVERYTHING except a short, pure acknowledgement/goodbye.
+_DISENGAGE_ONLY_PHRASES = {
+    "ok", "okay", "okk", "k", "kk", "kkk", "okie", "ok ji", "okay ji",
+    "hmm", "hm", "hmmm", "acha", "achha", "accha", "acha ji", "hmm ok", "ok hmm",
+    "thik", "thik hai", "theek", "theek hai", "thik h", "thik hai ji", "theek hai ji",
+    "ok thik", "ok thik hai", "thik hai bye",
+    "thanks", "thank you", "thank u", "thanx", "thnx", "ty", "tysm", "shukriya",
+    "ok thanks", "ok thank you", "thanks ji",
+    "bye", "ok bye", "byee", "ttyl", "gn", "good night", "gm", "good morning",
+    "baad mein", "baad me", "later", "abhi nahi", "abhi nhi", "abhi nahin",
+    "let me think", "sochta hoon", "sochti hoon", "soch ke", "sochke batata hoon",
+    "sochke batati hoon", "sochke batata hu", "sochke batati hu", "dekhta hoon",
+    "dekhti hoon", "dekhte hain", "dekhenge", "phir batata hoon", "phir batati hoon",
+    "kal dekhte hai", "kal dekhte hain", "kal batata hoon", "kal batati hoon",
+}
+
+# Clear refusals (substring match) — the customer is declining, not returning. Stay muted so
+# the bot doesn't re-ack a "no". (Buy/negotiation/questions are NOT here — they wake.)
+_REFUSAL_MARKERS = (
+    "nahi chahiye", "nhi chahiye", "nahi chaiye", "nhi chaiye",
+    "nahi lena", "nhi lena", "nahin lena", "nahi lunga", "nahin lunga", "nhi lunga",
+    "rehne do", "rhne do", "rehndo", "chhod do", "chod do",
+    "mat bhej", "not interested", "no thanks", "interested nahi", "nahi karna",
 )
-_REENGAGE_NUMBER_RE = re.compile(r"\d+")
-# If the customer's text contains any of these negation markers we ignore
-# keyword/number matches — likely a polite refusal ("nahi chahiye, 0 interest").
-_NEGATION_MARKERS = ("nahi", "nahin", "no thanks", "not interested", "mat ")
 
 
 def is_reengagement_signal(text: str | None) -> bool:
-    """True when the customer's text shows buying intent and the disengage
-    pause should drop. Keyword / digit / question-mark detection, gated by
-    a negation check so "nahi chahiye" stays muted."""
+    """True when the disengage pause should drop — i.e. the customer came back with anything
+    real (buy signal, price objection, question, new product…). We mute ONLY a short pure
+    acknowledgement/goodbye or a clear refusal; everything else wakes the bot (biased to
+    never miss a returning buyer — a false positive is one extra ack, a false negative loses
+    the sale)."""
     if not text:
         return False
-    lowered = text.lower()
-    if any(neg in lowered for neg in _NEGATION_MARKERS):
-        return False
-    if any(kw in lowered for kw in _REENGAGE_KEYWORDS):
-        return True
-    if _REENGAGE_NUMBER_RE.search(lowered):
-        return True
     if "?" in text:
-        return True
-    return False
+        return True  # the customer is actively asking — wake
+    # Normalize: lowercase, strip punctuation/emoji, collapse whitespace.
+    norm = re.sub(r"[^\w\s]", " ", text.lower())
+    norm = re.sub(r"\s+", " ", norm).strip()
+    if not norm:
+        return False  # emoji/punctuation-only — passive ack, stay muted
+    if norm in _DISENGAGE_ONLY_PHRASES:
+        return False  # pure ack/goodbye — stay muted
+    if any(m in norm for m in _REFUSAL_MARKERS):
+        return False  # explicit refusal — stay muted
+    return True  # anything substantive → wake
 
 
 def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:

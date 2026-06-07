@@ -44,7 +44,7 @@ def test_pause_boundary_strict_less_than():
 # is_reengagement_signal — what lifts the disengage pause
 # ---------------------------------------------------------------------------
 
-# Negative cases — these stay muted
+# Negative cases — pure acks/goodbyes and clear refusals stay muted
 @pytest.mark.parametrize("text", [
     "",
     "ok",
@@ -55,9 +55,27 @@ def test_pause_boundary_strict_less_than():
     "rehne do",
     "hmm",
     "kal dekhte hai",
+    "ok thanks",
+    "🙏",
+    "thik hai ji",
 ])
 def test_passive_drop_off_stays_muted(text):
     assert is_reengagement_signal(text) is False
+
+
+# Regression: a returning buyer / negotiation MUST wake the bot (these were wrongly muted).
+@pytest.mark.parametrize("text", [
+    "bhaiya kardo pack",
+    "pack kar do",
+    "Nhi yaar yeh toh mehangi hai",   # price objection — still negotiating
+    "thoda kam karo",
+    "2 piece bhej do",
+    "address le lo",
+    "qr bhejo",
+    "ye wala chahiye",
+])
+def test_returning_buyer_wakes(text):
+    assert is_reengagement_signal(text) is True
 
 
 def test_none_text_stays_muted():
@@ -106,8 +124,7 @@ def test_keywords_are_case_insensitive():
     assert is_reengagement_signal("LeLo") is True
 
 
-# Negation gate — words like "chahiye" / "milega" that flip on "nahi"
-# must stay muted when the negation is present.
+# Clear refusals stay muted (the customer is declining, not returning).
 @pytest.mark.parametrize("text", [
     "nahi chahiye",
     "nahi lena bhai",
@@ -115,8 +132,7 @@ def test_keywords_are_case_insensitive():
     "no thanks",
     "not interested",
     "mat bhejo",
-    "abhi nahi 100 wala",          # even with a digit, "nahi" wins
-    "kya price nahi chahiye",      # keyword + negation → still muted
+    "kya price nahi chahiye",      # refusal phrase present → still muted
 ])
-def test_negation_keeps_pause(text):
+def test_refusal_keeps_pause(text):
     assert is_reengagement_signal(text) is False
