@@ -697,6 +697,7 @@ async def generate_bot_reply(
     # Then clamp to floor so we never display below cost.
     if decision.get("action") == "show_multi_price" and extra.get("product_ids"):
         parts = []
+        _mp_total = 0
         for pid in extra["product_ids"]:
             p_res = await db.execute(select(Product).where(Product.id == pid))
             p = p_res.scalar_one_or_none()
@@ -715,12 +716,16 @@ async def generate_bot_reply(
             raw = ceiling or p.listed_price
             display_price = max(raw, p.floor_price)
             parts.append(f"{p.name}: ₹{display_price // 100}")
+            _mp_total += display_price
             quoted_lines.append({"product_id": str(pid), "unit_price_paise": display_price})
             logger.info("show_multi_price code-computed: %s = ₹%d (ceiling=%s floor=₹%d)",
                         p.name, display_price // 100,
                         f"₹{ceiling // 100}" if ceiling else "none",
                         p.floor_price // 100)
+        # Include a CODE-computed total so the reply never adds the prices up itself.
         multi_price_breakdown = " | ".join(parts)
+        if len(parts) > 1:
+            multi_price_breakdown += f"  (sabka total ₹{_mp_total // 100})"
 
     # PRODUCTS BEING SHOWN — the exact code-resolved name+price of every product whose
     # PHOTO is going out this turn (show_products / show_multi_price). The reply must name
