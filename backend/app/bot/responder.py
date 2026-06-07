@@ -693,6 +693,28 @@ async def generate_bot_reply(
                         p.floor_price // 100)
         multi_price_breakdown = " | ".join(parts)
 
+    # PRODUCTS BEING SHOWN — the exact code-resolved name+price of every product whose
+    # PHOTO is going out this turn (show_products / show_multi_price). The reply must name
+    # ONLY these, so the text can never disagree with the images sent (the model used to
+    # free-write a different product than the one it put in product_ids).
+    shown_products_str = ""
+    if extra.get("show_product_ids"):
+        _sp_parts = []
+        for pid in extra["show_product_ids"]:
+            p = (await db.execute(select(Product).where(Product.id == pid))).scalar_one_or_none()
+            if not p:
+                continue
+            cp = (await db.execute(
+                select(ConversationProduct).where(
+                    ConversationProduct.conversation_id == conversation.id,
+                    ConversationProduct.product_id == pid,
+                ).order_by(ConversationProduct.created_at.desc()).limit(1)
+            )).scalars().first()
+            ceiling = (cp.last_shown_price or cp.last_counter_price) if cp else None
+            display_price = max(ceiling or p.listed_price, p.floor_price)
+            _sp_parts.append(f"{p.name} ₹{display_price // 100}")
+        shown_products_str = ", ".join(_sp_parts)
+
     # Bundle pricing: when counter/accept covers multiple products, compute a floor-safe
     # per-product split (each product gets its floor; surplus split proportionally by
     # listed price). Each share is clamped to what we LAST SHOWED this customer for that
@@ -813,6 +835,7 @@ async def generate_bot_reply(
         "other_active_products": other_active_products,
         "other_inquiry_products": other_inquiry_products,
         "multi_price_breakdown": multi_price_breakdown,
+        "shown_products": shown_products_str,
         "bundle_breakdown": bundle_breakdown,
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products
