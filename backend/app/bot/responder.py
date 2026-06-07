@@ -1117,7 +1117,11 @@ def _derive_state_from_decision(
         return None, extra  # no state change
 
     if action == "show_multi_price":
-        extra["product_ids"] = decision.get("product_ids") or []
+        _pids = decision.get("product_ids") or []
+        extra["product_ids"] = _pids          # drives the code-computed price breakdown
+        # Always show the photos alongside the prices — customers want to SEE the items,
+        # not just read a price list. Reuses the show_product_ids image loop.
+        extra["show_product_ids"] = _pids
         return None, extra  # no state change
 
     if action == "show_products":

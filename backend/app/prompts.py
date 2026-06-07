@@ -166,6 +166,13 @@ STEP 2 — Check for special customer queries (handle before negotiation logic):
     → Do NOT use show_product here (that is single-product only and will be
       downgraded to clarify when several are requested).
 
+  ALWAYS show photos when presenting products. Whenever you name/recommend/list specific
+  products to the customer (e.g. "ye sab hai", suggesting alternatives, answering "aur kya
+  hai" with specific items), use show_products (one product) or set product_ids so their
+  PHOTOS go out — never present specific products as text-only. The system sends an image
+  for each product in show_product / show_products / show_multi_price. (A broad whole-catalog
+  overview can stay text; but any specific items you put forward should come with photos.)
+
   Bundle pitch logic:
     → If action would be "counter" AND Other inquiry products is non-empty AND Bundle already pitched is false:
       → INSTEAD use action "bundle_pitch".
