@@ -400,6 +400,22 @@ async def _persist_bundle_lines(conversation, bundle_lines, db):
     )
 
 
+async def _persist_quoted_prices(conversation, quoted_lines, db):
+    """Persist every per-product price QUOTED to the customer this turn (show_product /
+    show_multi_price / quote) to its CP's last_shown_price, DOWN-ONLY.
+
+    last_shown_price is the customer-facing ceiling and the single source of truth that all
+    later price math reads (_per_product_unit_price / _price_ceiling / quote breakdown). So
+    once a price is shown it is saved, reused next turn, and never re-quoted higher. (Real
+    negotiation moves — counter / accept / bulk_discount — persist via last_counter /
+    deal_lines and aren't routed here.)"""
+    for l in quoted_lines:
+        cp = await _get_or_create_conv_product(conversation.id, str(l["product_id"]), db)
+        unit = int(l["unit_price_paise"] or 0)
+        if unit > 0 and (cp.last_shown_price is None or unit < cp.last_shown_price):
+            cp.last_shown_price = unit
+
+
 async def _send_next_product_photo(
     conversation: Conversation,
     seller: Seller,
@@ -708,6 +724,8 @@ async def _advance_conversation_inner(
     # so the bundle price is remembered focus-independently and can never be re-quoted higher.
     if extra.get("bundle_lines"):
         await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
+    if extra.get("quoted_lines"):
+        await _persist_quoted_prices(conversation, extra["quoted_lines"], db)
 
     # Multi-product photo request ("teeno bhej do") — send the first photo of
     # each requested product. No single focus is set (customer hasn't picked one).
@@ -1023,6 +1041,8 @@ async def _handle_product_image_inner(
             conv_product.last_shown_price = new_shown
     if extra.get("bundle_lines"):
         await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
+    if extra.get("quoted_lines"):
+        await _persist_quoted_prices(conversation, extra["quoted_lines"], db)
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
@@ -1223,6 +1243,8 @@ async def _handle_reel_inner(
             conv_product.last_shown_price = new_shown
     if extra.get("bundle_lines"):
         await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
+    if extra.get("quoted_lines"):
+        await _persist_quoted_prices(conversation, extra["quoted_lines"], db)
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()

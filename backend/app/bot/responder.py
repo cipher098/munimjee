@@ -666,6 +666,11 @@ async def generate_bot_reply(
     # as a safe reference when customer explicitly asks for per-product breakdown.
     multi_price_breakdown: str = ""
     bundle_breakdown: str = ""
+    # Every per-product price we QUOTE to the customer this turn (show_product /
+    # show_multi_price / quote). These are persisted to each CP's last_shown_price
+    # (down-only) so the saved price is the single source of truth all later math reads.
+    # (counter / accept / bulk_discount already persist via last_counter / deal_lines.)
+    quoted_lines: list[dict] = []
 
     # When a finalized deal/cart has multiple line items (combo discount, or the
     # consolidated unpaid cart), itemize it for the reply so the bot describes the WHOLE
@@ -708,6 +713,7 @@ async def generate_bot_reply(
             raw = ceiling or p.listed_price
             display_price = max(raw, p.floor_price)
             parts.append(f"{p.name}: ₹{display_price // 100}")
+            quoted_lines.append({"product_id": str(pid), "unit_price_paise": display_price})
             logger.info("show_multi_price code-computed: %s = ₹%d (ceiling=%s floor=₹%d)",
                         p.name, display_price // 100,
                         f"₹{ceiling // 100}" if ceiling else "none",
@@ -765,6 +771,7 @@ async def generate_bot_reply(
             _qline = _qunit * _qq
             _qtotal += _qline
             _qparts.append(f"{_qp.name} ×{_qq}: ₹{_qline // 100}")
+            quoted_lines.append({"product_id": str(_qp.id), "unit_price_paise": _qunit})
         if _qparts:
             quote_breakdown = ", ".join(_qparts) + f" (total: ₹{_qtotal // 100})"
             decision["price"] = _qtotal  # reply quotes this code-computed total
@@ -866,6 +873,11 @@ async def generate_bot_reply(
     else:
         display_price_rupees = None
 
+    # show_product quotes a single product's display price → persist it (down-only) so the
+    # quoted number is saved and reused, not recomputed/forgotten next turn.
+    if decision.get("action") == "show_product" and product and display_price_rupees is not None:
+        quoted_lines.append({"product_id": str(product.id), "unit_price_paise": display_price_rupees * 100})
+
     reply_context = {
         "decision": decision,
         "persona": persona,
@@ -937,6 +949,11 @@ async def generate_bot_reply(
 
     if reply:
         reply = _clean_reply(reply)
+
+    # Hand the per-product prices quoted this turn to the caller, which persists them to
+    # each CP's last_shown_price (down-only) — the saved single source of truth.
+    if quoted_lines:
+        extra["quoted_lines"] = quoted_lines
 
     # Test hook: snapshot the per-turn outcome for the scenario harness.
     # No-op in production (LAST_TURN is None unless a fixture seeded it).

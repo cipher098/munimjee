@@ -441,6 +441,31 @@ async def test_build_deal_order_consolidates_prior_unpaid_cart(db_session):  # n
 
 
 @pytest.mark.asyncio
+async def test_persist_quoted_prices_saves_down_only(db_session):  # noqa: F811
+    """Every quoted price is saved to the CP's last_shown_price, down-only — so a quote is
+    remembered and never re-quoted higher next turn."""
+    from app.bot.conversation import _persist_quoted_prices, _get_or_create_conv_product
+
+    seller, led, jho, conv = await _seed_two_products(db_session)
+    led_cp = await _get_or_create_conv_product(conv.id, led.id, db_session)
+
+    # First quote saved.
+    await _persist_quoted_prices(conv, [{"product_id": str(led.id), "unit_price_paise": 1800_00}], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1800_00
+
+    # A higher quote is ignored (ceiling never rises).
+    await _persist_quoted_prices(conv, [{"product_id": str(led.id), "unit_price_paise": 1900_00}], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1800_00
+
+    # A lower quote wins.
+    await _persist_quoted_prices(conv, [{"product_id": str(led.id), "unit_price_paise": 1700_00}], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1700_00
+
+
+@pytest.mark.asyncio
 async def test_build_deal_order_creates_per_product_line_items(db_session):  # noqa: F811
     from app.bot.conversation import _build_deal_order, _get_or_create_conv_product
     from app.models.order import Order, OrderItem
