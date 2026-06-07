@@ -177,6 +177,20 @@
   </div>
 
   <div class="card">
+    <h2>Your Profile</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+      Your gender — so the bot speaks in the right form ("kar dunga" vs "kar dungi") consistently.
+    </p>
+    <label>Gender</label>
+    <select id="pf_gender" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+      <option value="male">Male (kar dunga)</option>
+      <option value="female">Female (kar dungi)</option>
+      <option value="unknown">Prefer not to say</option>
+    </select>
+    <button class="btn" id="savePfBtn" onclick="saveProfile()" style="margin-top:16px;">Save Profile</button>
+  </div>
+
+  <div class="card">
     <h2>Business Details</h2>
     <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
       Your shop address, GST number and contact phone. By default the bot keeps these private.
@@ -382,6 +396,25 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  async function loadProfile() {
+    const res = await fetch('/settings/profile');
+    if (!res.ok) return;
+    const p = await res.json();
+    document.getElementById('pf_gender').value = p.gender || 'unknown';
+  }
+
+  async function saveProfile() {
+    const btn = document.getElementById('savePfBtn');
+    btn.disabled = true;
+    const res = await fetch('/settings/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gender: document.getElementById('pf_gender').value }),
+    });
+    btn.disabled = false;
+    showToast(res.ok ? 'Profile saved' : 'Failed to save');
+  }
+
   async function loadBusinessInfo() {
     const res = await fetch('/settings/business-info');
     if (!res.ok) return;
@@ -566,6 +599,7 @@
   }
 
   load();
+  loadProfile();
   loadBusinessInfo();
   loadChannels();
   loadLlmPreferences();

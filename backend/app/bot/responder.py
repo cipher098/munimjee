@@ -972,6 +972,7 @@ async def generate_bot_reply(
         "customer_message": customer_message,
         "policies": seller.policies or {},
         "shareable_business_info": _shareable_business_info(seller),
+        "seller_gender": seller.gender if seller.gender in ("male", "female") else "male",
         "available_products": products_list,
         # Same stable-window rule as decide() — no sliding to preserve cache.
         "message_history": full_history,

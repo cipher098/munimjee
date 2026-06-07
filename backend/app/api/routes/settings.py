@@ -60,6 +60,35 @@ async def save_policies(body: PoliciesUpdate, seller_id: str = Depends(current_s
 
 
 # ---------------------------------------------------------------------------
+# Seller profile — gender (drives the bot's first-person verb forms)
+# ---------------------------------------------------------------------------
+
+class ProfileUpdate(BaseModel):
+    gender: Literal["male", "female", "unknown"] = "unknown"
+
+
+@router.get("/profile")
+async def get_profile(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    return {"gender": seller.gender or "unknown"}
+
+
+@router.post("/profile")
+async def save_profile(body: ProfileUpdate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    seller.gender = body.gender
+    await db.commit()
+    logger.info("Seller gender updated: %s", seller.gender)
+    return {"status": "saved", "gender": seller.gender}
+
+
+# ---------------------------------------------------------------------------
 # Business details (address / GST / phone) + share-with-customer toggle
 # ---------------------------------------------------------------------------
 

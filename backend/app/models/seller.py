@@ -40,6 +40,9 @@ class Seller(Base):
     #   {"address": str, "gst_number": str, "phone_number": str, "show_to_customer": bool}
     # show_to_customer=False (default) → the bot keeps declining to share these.
     business_info = Column(JSONB, nullable=True)
+    # The seller's own gender — drives the bot's FIRST-PERSON verb forms (male: "kar dunga",
+    # female: "kar dungi"). "male" | "female" | "unknown" (defaults to male voice).
+    gender = Column(String, nullable=True)
     negotiation_style = Column(String, default="medium")  # soft | medium | firm
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
