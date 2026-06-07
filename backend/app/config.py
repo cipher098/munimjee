@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     # handles events inline there).
     SQS_QUEUE_URL: str = ""
 
+    # Live-debug routing: the prod SQS consumer forwards webhook events for these
+    # seller IDs to LOCAL_WEBHOOK_URL (a developer's tunnelled local app) instead
+    # of processing them in prod, so one seller's traffic can be handled locally.
+    # All other sellers process normally. Empty list = feature off. Override via
+    # env, e.g. ROUTE_TO_LOCAL_SELLER_IDS='["<uuid>"]'.
+    ROUTE_TO_LOCAL_SELLER_IDS: List[str] = ["3d1afaac-6471-4d5b-a587-99042a6d5f6d"]
+    LOCAL_WEBHOOK_URL: str = "https://app.vouchrs.in/webhooks/instagram"
+
     PUBLIC_BASE_URL: str = ""  # e.g. https://abc123.ngrok.io — used to build public image URLs for Meta
 
     WHATSAPP_API_URL: str = ""
