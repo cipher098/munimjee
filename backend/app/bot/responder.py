@@ -530,6 +530,26 @@ async def generate_bot_reply(
         previous_price_paise=previous_price_paise,
     )
 
+    # Shipping needs name + phone + address. Don't close the order on an address that has no
+    # phone number — deterministically require a 10-digit phone before confirming. If it's
+    # missing, save what we have but stay in awaiting_address and ask for the phone (and name
+    # if we don't have one). Phone is checked in code; the model can't wave it through.
+    if decision.get("action") == "save_address":
+        _digits = re.sub(r"\D", " ", customer_message or "")
+        _has_phone = bool(re.search(r"(?<!\d)[6-9]\d{9}(?!\d)", _digits.replace(" ", "")))
+        _has_name = bool((conversation.customer_name or "").strip())
+        if not _has_phone or not _has_name:
+            _missing = []
+            if not _has_name:
+                _missing.append("naam")
+            if not _has_phone:
+                _missing.append("phone number")
+            new_state = None  # stay in awaiting_address; do NOT close the order
+            extra.pop("save_address", None)
+            extra["save_address_partial"] = True   # save what was sent, don't confirm
+            extra["address_needs"] = " aur ".join(_missing)
+            logger.info("Address incomplete — missing %s; staying awaiting_address", _missing)
+
     # Accept / bulk → rebuild the order from the customer's CURRENT full agreed combo.
     # The model declares it in decision["deal_items"] = [{product_id, quantity}, ...]
     # (re-declared each time the combo changes). Code owns prices + total:
@@ -926,6 +946,7 @@ async def generate_bot_reply(
         "finalized_total_rupees": finalized_total_rupees,
         "amount_due_rupees": amount_due_rupees,
         "other_pending_items": other_pending_items_str,
+        "address_needs": extra.get("address_needs") or "",
         "bundle_breakdown": bundle_breakdown,
         "inquiry_floor_total_rupees": sum(
             int(p.get("floor_price_rupees", 0)) for p in other_inquiry_products

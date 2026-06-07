@@ -673,6 +673,14 @@ async def _advance_conversation_inner(
         if order is not None:
             order.customer_address = customer_message
             logger.info("Saved delivery address for order %s", order.id)
+    # Incomplete address (no phone / no name): save what was sent but DO NOT confirm —
+    # the CP stays awaiting_address and the reply asks for the missing detail.
+    elif extra.get("save_address_partial") and conv_product is not None:
+        order = await _get_cycle_order(conv_product, db)
+        if order is not None:
+            _prev = (order.customer_address or "").strip()
+            order.customer_address = (f"{_prev}\n{customer_message}" if _prev else customer_message)
+            logger.info("Saved partial address for order %s (awaiting missing detail)", order.id)
 
     # Apply price-state extras to the CP BEFORE the awaiting_payment block below,
     # so the per-cycle Order is created with the correct agreed amount (not 0).
