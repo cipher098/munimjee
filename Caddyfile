@@ -1,0 +1,7 @@
+# Dashboard / app host. Caddy auto-provisions and renews a Let's Encrypt cert
+# once app.munimjee.in resolves to this box and ports 80/443 are open.
+# Webhooks are NOT served here — they go to hooks.munimjee.in (Lambda + SQS).
+
+app.munimjee.in {
+	reverse_proxy api:8000
+}
