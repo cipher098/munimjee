@@ -40,6 +40,75 @@ def _per_product_unit_price(cp, product) -> int:
     return max(int(unit), product.floor_price or 0)
 
 
+def enforce_unit_price(
+    unit_price: int,
+    floor_price: int | None,
+    ceiling_price: int | None,
+    *,
+    label: str = "",
+) -> int:
+    """Final hard guard on a per-unit price before it is persisted to an order.
+
+    Invariant enforced: floor_price <= unit_price <= ceiling_price.
+      - floor_price   = product.floor_price — cost protection, NEVER sell below it.
+      - ceiling_price = the last price already shown to this customer for this
+                        product (last_shown_price → last_counter_price → listed_price)
+                        — trust protection, NEVER charge more than we last quoted.
+
+    Clamps DOWN to the ceiling first, then UP to the floor, so the floor wins if a
+    misconfiguration ever makes floor > ceiling (cost protection takes priority).
+    Logs LOUDLY on any correction so an AI mispricing is caught, not silent. Returns
+    the safe price; pure and side-effect-free apart from logging."""
+    safe = int(unit_price or 0)
+    if ceiling_price and safe > ceiling_price:
+        logger.error(
+            "PRICE GUARD%s: unit ₹%d above last-offered ceiling ₹%d — clamping DOWN",
+            f" [{label}]" if label else "", safe // 100, ceiling_price // 100,
+        )
+        safe = ceiling_price
+    if floor_price and safe < floor_price:
+        logger.error(
+            "PRICE GUARD%s: unit ₹%d below floor ₹%d — clamping UP",
+            f" [{label}]" if label else "", safe // 100, floor_price // 100,
+        )
+        safe = floor_price
+    return safe
+
+
+def _price_ceiling(cp, product) -> int:
+    """The highest per-unit price we may still charge this customer for this product:
+    the lowest price we've already shown (last_shown_price), else the last counter,
+    else the listed price. Read this BEFORE overwriting the CP with a new deal price."""
+    return (
+        (cp.last_shown_price if cp is not None else None)
+        or (cp.last_counter_price if cp is not None else None)
+        or (product.listed_price if product is not None else 0)
+        or 0
+    )
+
+
+def _split_combo_total(lines: list[dict], combo_total_paise: int) -> list[int]:
+    """Distribute a basket combo total across lines, floor-safe per unit.
+
+    lines: dicts with keys floor_paise, listed_paise, quantity (one per product).
+    Returns a per-line UNIT price (paise). Each line is first given its floor
+    (floor×qty); the surplus above the sum-of-floors is split proportionally by
+    listed value (listed×qty). The target total is clamped UP to the sum-of-floors
+    so the basket can never be sold below cost, and each returned unit is >= that
+    product's floor."""
+    sum_floors = sum(l["floor_paise"] * l["quantity"] for l in lines)
+    target = max(int(combo_total_paise or 0), sum_floors)
+    surplus = target - sum_floors
+    sum_listed = sum(l["listed_paise"] * l["quantity"] for l in lines) or 1
+    units: list[int] = []
+    for l in lines:
+        qty = max(1, l["quantity"])
+        line_floor_total = l["floor_paise"] * qty
+        allocated = line_floor_total + int(surplus * (l["listed_paise"] * qty) / sum_listed)
+        units.append(max(l["floor_paise"], allocated // qty))
+    return units
+
+
 # Re-export from seller_defaults so the auth router can seed brand-new sellers
 # without importing the full bot stack. Single source of truth lives there.
 from app.seller_defaults import DEFAULT_PERSONA  # noqa: E402,F401
@@ -460,6 +529,7 @@ async def generate_bot_reply(
     # quotes the SAME number the order will charge.
     if new_state == "awaiting_payment" and decision.get("action") in ("accept", "bulk_discount"):
         from app.bot.conversation import _get_or_create_conv_product
+        _action = decision.get("action")
         _items = decision.get("deal_items") or []
         if not _items and conversation.product_id:
             # Fallback: model didn't declare items → single focused product.
@@ -467,14 +537,9 @@ async def generate_bot_reply(
                 "product_id": str(conversation.product_id),
                 "quantity": (conv_product.quantity if conv_product is not None else 1) or 1,
             }]
-        # CRITICAL: for a MULTI-item deal the model's price is the TOTAL, not any
-        # single unit — so price EVERY product (including the focused one) by its
-        # OWN negotiated/listed price via _per_product_unit_price. Only for a
-        # single-item deal (or bulk_discount, one product × qty) is decision.price
-        # the focused product's per-unit/per-piece price → use derive's agreed_price.
-        _multi = len(_items) > 1
         _focus_unit = extra.get("agreed_price")
-        deal_lines: list[dict] = []
+        # Gather each declared line's product + active CP + quantity once.
+        _gathered: list[dict] = []
         for _it in _items:
             _pid = str(_it.get("product_id") or "")
             if not _pid:
@@ -483,21 +548,56 @@ async def generate_bot_reply(
             if not _p:
                 continue
             _cp = await _get_or_create_conv_product(conversation.id, _pid, db)
-            if (not _multi) and _pid == str(conversation.product_id) and _focus_unit:
-                _unit = _focus_unit
-            else:
-                _unit = _per_product_unit_price(_cp, _p)
             try:
                 _qty = max(1, int(_it.get("quantity") or _cp.quantity or 1))
             except (TypeError, ValueError):
                 _qty = _cp.quantity or 1
-            deal_lines.append({"product_id": _pid, "unit_price_paise": _unit, "quantity": _qty})
+            _gathered.append({"pid": _pid, "product": _p, "cp": _cp, "qty": _qty})
+        _multi = len(_gathered) > 1
+        deal_lines: list[dict] = []
+        if _multi and _action == "bulk_discount":
+            # Basket combo discount: the model's price is the discounted TOTAL for the
+            # whole basket. Distribute it across lines — clamped UP to the sum-of-floors
+            # and split proportionally by listed value, so no line falls below its floor.
+            _split_in = [
+                {
+                    "floor_paise": g["product"].floor_price or 0,
+                    "listed_paise": g["product"].listed_price or 0,
+                    "quantity": g["qty"],
+                }
+                for g in _gathered
+            ]
+            _units = _split_combo_total(_split_in, decision.get("price") or 0)
+            for g, _unit in zip(_gathered, _units):
+                deal_lines.append({"product_id": g["pid"], "unit_price_paise": _unit, "quantity": g["qty"]})
+        else:
+            # accept (single or multi) or single-product bulk_discount: each line keeps
+            # its OWN already-negotiated per-product price. For a MULTI-item accept the
+            # model's price is the total (not a per-unit), so price EVERY product via
+            # _per_product_unit_price. Only a single-item deal uses derive's agreed_price.
+            for g in _gathered:
+                if (not _multi) and g["pid"] == str(conversation.product_id) and _focus_unit:
+                    _unit = _focus_unit
+                else:
+                    _unit = _per_product_unit_price(g["cp"], g["product"])
+                deal_lines.append({"product_id": g["pid"], "unit_price_paise": _unit, "quantity": g["qty"]})
+        # FINAL PRICE GUARD — clamp every line into [floor, last-offered] using the
+        # CP's pre-deal ceiling, so the quoted total (decision["price"]) already equals
+        # what _build_deal_order will persist. deal_lines and _gathered are parallel.
+        for _dl, _g in zip(deal_lines, _gathered):
+            _dl["unit_price_paise"] = enforce_unit_price(
+                _dl["unit_price_paise"],
+                _g["product"].floor_price,
+                _price_ceiling(_g["cp"], _g["product"]),
+                label=f"deal {_g['product'].name}",
+            )
         if deal_lines:
             extra["deal_lines"] = deal_lines
             _total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
             decision["price"] = _total  # reply quotes this; order.amount will equal it
             logger.info(
-                "Deal lines: %s → total ₹%d",
+                "Deal lines (%s): %s → total ₹%d",
+                _action,
                 [(l["product_id"][:8], l["quantity"], l["unit_price_paise"] // 100) for l in deal_lines],
                 _total // 100,
             )
@@ -536,36 +636,63 @@ async def generate_bot_reply(
                         p.floor_price // 100)
         multi_price_breakdown = " | ".join(parts)
 
-    # Bundle breakdown: when counter/accept covers multiple products, pre-compute a
-    # floor-safe per-product split so the reply model never has to do this math itself.
-    # Formula: each product gets its floor, surplus is split proportionally by listed price.
+    # Bundle pricing: when counter/accept covers multiple products, compute a floor-safe
+    # per-product split (each product gets its floor; surplus split proportionally by
+    # listed price). Each share is clamped to what we LAST SHOWED this customer for that
+    # product (enforce_unit_price) so the bundle can never be re-quoted HIGHER, and the
+    # quoted total is recomputed from the clamped shares.
+    #
+    # For a COUNTER this split is also PERSISTED per-product (extra["bundle_lines"]) — see
+    # _persist_bundle_lines — so the bundle price is remembered focus-independently and
+    # ratchets DOWN only across rounds. accept/bulk persist via deal_lines instead, so
+    # here we only build the display string for them.
     if other_inquiry_products and decision.get("action") in ("counter", "accept", "bulk_discount"):
         total_paise = decision.get("price") or 0
         bundle_items = []
         if product:
             bundle_items.append({
+                "id": str(product.id),
                 "name": product.name,
                 "floor": product.floor_price or 0,
                 "listed": product.listed_price or 0,
+                "ceiling": effective_last_shown_price or product.listed_price or 0,
+                "qty": (conv_product.quantity if conv_product is not None else 1) or 1,
             })
         for p in other_inquiry_products:
+            _lst = int(p.get("listed_price_rupees", 0)) * 100
+            _shown = int(p["last_shown_price_rupees"]) * 100 if p.get("last_shown_price_rupees") else 0
             bundle_items.append({
+                "id": p["id"],
                 "name": p["name"],
                 "floor": int(p.get("floor_price_rupees", 0)) * 100,
-                "listed": int(p.get("listed_price_rupees", 0)) * 100,
+                "listed": _lst,
+                "ceiling": _shown or _lst,
+                "qty": 1,
             })
-        sum_floors = sum(i["floor"] for i in bundle_items)
+        sum_floors = sum(i["floor"] * i["qty"] for i in bundle_items)
         surplus = max(0, total_paise - sum_floors)
-        sum_listed = sum(i["listed"] for i in bundle_items) or 1
+        sum_listed = sum(i["listed"] * i["qty"] for i in bundle_items) or 1
+        bundle_lines = []
         parts = []
         for i in bundle_items:
-            allocated = i["floor"] + int(surplus * (i["listed"] / sum_listed))
-            # Final safety clamp — should never be needed but belt-and-suspenders
-            allocated = max(allocated, i["floor"])
-            parts.append(f"{i['name']}: ₹{allocated // 100}")
-        bundle_total = total_paise // 100
-        bundle_breakdown = ", ".join(parts) + f" (total: ₹{bundle_total})"
+            allocated_total = i["floor"] * i["qty"] + int(surplus * (i["listed"] * i["qty"]) / sum_listed)
+            unit = allocated_total // i["qty"]
+            # Never above what we last showed for this product; never below its floor.
+            unit = enforce_unit_price(unit, i["floor"], i["ceiling"], label=f"bundle {i['name']}")
+            bundle_lines.append({"product_id": i["id"], "unit_price_paise": unit, "quantity": i["qty"]})
+            parts.append(f"{i['name']}: ₹{unit // 100}")
+        bundle_total = sum(l["unit_price_paise"] * l["quantity"] for l in bundle_lines)
+        bundle_breakdown = ", ".join(parts) + f" (total: ₹{bundle_total // 100})"
         logger.info("Bundle breakdown computed: %s", bundle_breakdown)
+        if decision.get("action") == "counter":
+            # Quote the recomputed (never-higher) total and persist the per-product split.
+            decision["price"] = bundle_total
+            extra["bundle_lines"] = bundle_lines
+            # Drop the bundle-TOTAL writes the counter branch stamped on the focused CP —
+            # bundle_lines now carries each product's own clean price instead, so the
+            # focused CP no longer gets polluted with the combined total.
+            extra.pop("last_counter_price", None)
+            extra.pop("last_shown_price", None)
 
     # If Claude switched to a different product, reload it so reply text uses the correct product
     switched_product_id = decision.get("product_id")
@@ -856,6 +983,12 @@ def _derive_state_from_decision(
         return "negotiating", extra
 
     if action == "bulk_discount":
+        _items = decision.get("deal_items") or []
+        if len(_items) > 1:
+            # Basket of different products: price is the discounted TOTAL for the whole
+            # basket. The caller distributes it across lines (clamped to sum-of-floors),
+            # so do NOT single-floor-clamp it or stamp it as a per-product agreed_price.
+            return "awaiting_payment", extra
         # ONE product × quantity — the focused product's per-piece price, floor-clamped
         # to THIS product's floor only (never the bundle clamp). The caller builds the
         # line (qty from deal_items) and the total.

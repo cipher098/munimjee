@@ -77,6 +77,130 @@ def test_save_address_returns_payment_confirmed_with_flag():
 
 
 # ---------------------------------------------------------------------------
+# multi-product basket combo discount
+# ---------------------------------------------------------------------------
+
+def test_split_combo_total_clamps_to_sum_of_floors():
+    """A combo total below the sum of per-product floors is clamped UP; each
+    returned unit price stays at/above that product's floor."""
+    from app.bot.responder import _split_combo_total
+    lines = [
+        {"floor_paise": 900_00, "listed_paise": 1200_00, "quantity": 1},   # clock
+        {"floor_paise": 600_00, "listed_paise": 800_00, "quantity": 1},    # lamp
+        {"floor_paise": 1100_00, "listed_paise": 1500_00, "quantity": 1},  # watch
+    ]
+    # Ask for ₹2000 — below sum-of-floors (₹2600). Must clamp to floors.
+    units = _split_combo_total(lines, 2000_00)
+    assert units == [900_00, 600_00, 1100_00]
+    assert sum(units) == 2600_00
+
+
+def test_split_combo_total_distributes_surplus_proportionally():
+    """A combo total above sum-of-floors splits the surplus by listed value and
+    sums (within rounding) to the requested total."""
+    from app.bot.responder import _split_combo_total
+    lines = [
+        {"floor_paise": 900_00, "listed_paise": 1200_00, "quantity": 1},
+        {"floor_paise": 600_00, "listed_paise": 800_00, "quantity": 1},
+        {"floor_paise": 1100_00, "listed_paise": 1500_00, "quantity": 1},
+    ]
+    units = _split_combo_total(lines, 3100_00)
+    # Each line >= its floor, and the total is within a rupee of the ask (int split).
+    assert units[0] >= 900_00 and units[1] >= 600_00 and units[2] >= 1100_00
+    assert abs(sum(units) - 3100_00) <= 100  # <= ₹1 rounding drift across 3 lines
+
+
+def test_split_combo_total_respects_quantity():
+    """Per-unit prices honor floors even when quantities are involved."""
+    from app.bot.responder import _split_combo_total
+    lines = [
+        {"floor_paise": 900_00, "listed_paise": 1200_00, "quantity": 2},
+        {"floor_paise": 600_00, "listed_paise": 800_00, "quantity": 1},
+    ]
+    # sum-of-floors = 900*2 + 600 = 2400. Ask ₹3000 → surplus ₹600.
+    units = _split_combo_total(lines, 3000_00)
+    assert units[0] >= 900_00 and units[1] >= 600_00
+    total = units[0] * 2 + units[1] * 1
+    assert total >= 2400_00 and abs(total - 3000_00) <= 200
+
+
+def test_multi_product_bulk_discount_does_not_single_floor_clamp():
+    """A basket bulk_discount returns awaiting_payment WITHOUT stamping the total as a
+    per-product agreed_price (the caller distributes it across lines instead)."""
+    decision = {
+        "action": "bulk_discount",
+        "price": 3100_00,  # basket total, far above any single floor
+        "customer_intent": "bulk",
+        "deal_items": [
+            {"product_id": "p1", "quantity": 1},
+            {"product_id": "p2", "quantity": 1},
+        ],
+    }
+    new_state, extra = _derive_state_from_decision(
+        decision, _conv(), _product(listed=1200_00, floor=1100_00),
+    )
+    assert new_state == "awaiting_payment"
+    assert "agreed_price" not in extra  # NOT stamped as a single-product price
+
+
+def test_single_product_bulk_discount_floor_clamps_per_piece():
+    """A single-product bulk_discount still floor-clamps the per-piece price."""
+    decision = {
+        "action": "bulk_discount",
+        "price": 800_00,  # below floor
+        "customer_intent": "bulk",
+        "deal_items": [{"product_id": "p1", "quantity": 5}],
+    }
+    new_state, extra = _derive_state_from_decision(
+        decision, _conv(), _product(listed=1200_00, floor=1100_00),
+    )
+    assert new_state == "awaiting_payment"
+    assert extra["agreed_price"] == 1100_00  # clamped up to floor
+
+
+# ---------------------------------------------------------------------------
+# final price guard — enforce_unit_price
+# ---------------------------------------------------------------------------
+
+def test_enforce_unit_price_clamps_below_floor_up():
+    from app.bot.responder import enforce_unit_price
+    # ₹500 below floor ₹900 → clamps UP to 900.
+    assert enforce_unit_price(500_00, 900_00, 1200_00) == 900_00
+
+
+def test_enforce_unit_price_clamps_above_ceiling_down():
+    from app.bot.responder import enforce_unit_price
+    # ₹1300 above last-offered ceiling ₹1000 → clamps DOWN to 1000.
+    assert enforce_unit_price(1300_00, 900_00, 1000_00) == 1000_00
+
+
+def test_enforce_unit_price_within_bounds_unchanged():
+    from app.bot.responder import enforce_unit_price
+    assert enforce_unit_price(1000_00, 900_00, 1200_00) == 1000_00
+
+
+def test_enforce_unit_price_floor_wins_over_ceiling_on_misconfig():
+    from app.bot.responder import enforce_unit_price
+    # Misconfig: floor (1000) > ceiling (800). Cost protection wins → 1000.
+    assert enforce_unit_price(900_00, 1000_00, 800_00) == 1000_00
+
+
+def test_enforce_unit_price_tolerates_missing_bounds():
+    from app.bot.responder import enforce_unit_price
+    assert enforce_unit_price(1000_00, None, None) == 1000_00
+    assert enforce_unit_price(0, 900_00, 1200_00) == 900_00  # zero/None unit → floor
+
+
+def test_price_ceiling_prefers_last_shown_then_counter_then_listed():
+    from app.bot.responder import _price_ceiling
+    prod = SimpleNamespace(listed_price=1200_00)
+    assert _price_ceiling(SimpleNamespace(last_shown_price=1000_00, last_counter_price=1050_00), prod) == 1000_00
+    assert _price_ceiling(SimpleNamespace(last_shown_price=None, last_counter_price=1050_00), prod) == 1050_00
+    assert _price_ceiling(SimpleNamespace(last_shown_price=None, last_counter_price=None), prod) == 1200_00
+    assert _price_ceiling(None, prod) == 1200_00
+
+
+# ---------------------------------------------------------------------------
 # derive — prior-price honoring
 # ---------------------------------------------------------------------------
 
@@ -203,6 +327,42 @@ async def _seed_two_products(db):
     db.add(conv)
     await db.flush()
     return seller, led, jho, conv
+
+
+@pytest.mark.asyncio
+async def test_persist_bundle_lines_ratchets_down_only(db_session):  # noqa: F811
+    """A bundle counter's per-product split is written to each member's CP, and a later
+    bundle quote can only lower it — never raise it (the bundle can't be re-quoted higher)."""
+    from app.bot.conversation import _persist_bundle_lines, _get_or_create_conv_product
+
+    seller, led, jho, conv = await _seed_two_products(db_session)
+    led_cp = await _get_or_create_conv_product(conv.id, led.id, db_session)
+    jho_cp = await _get_or_create_conv_product(conv.id, jho.id, db_session)
+
+    # First bundle quote: led ₹1900, jho ₹950 → persisted to each CP.
+    await _persist_bundle_lines(conv, [
+        {"product_id": str(led.id), "unit_price_paise": 1900_00, "quantity": 1},
+        {"product_id": str(jho.id), "unit_price_paise": 950_00, "quantity": 1},
+    ], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1900_00 and led_cp.last_counter_price == 1900_00
+    assert jho_cp.last_shown_price == 950_00
+
+    # A HIGHER re-quote must be ignored (ratchet down-only) — bundle can't rise.
+    await _persist_bundle_lines(conv, [
+        {"product_id": str(led.id), "unit_price_paise": 1950_00, "quantity": 1},
+        {"product_id": str(jho.id), "unit_price_paise": 980_00, "quantity": 1},
+    ], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1900_00  # unchanged
+    assert jho_cp.last_shown_price == 950_00   # unchanged
+
+    # A LOWER re-quote wins (further discount).
+    await _persist_bundle_lines(conv, [
+        {"product_id": str(led.id), "unit_price_paise": 1850_00, "quantity": 1},
+    ], db_session)
+    await db_session.flush()
+    assert led_cp.last_shown_price == 1850_00 and led_cp.last_counter_price == 1850_00
 
 
 @pytest.mark.asyncio

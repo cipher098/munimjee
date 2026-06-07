@@ -212,6 +212,19 @@ async def _ensure_cycle_order(conversation, seller, conv_product, method, db):
     Returns the existing order if one already exists for this cycle."""
     price = conv_product.agreed_price or conv_product.last_counter_price or 0
     qty = conv_product.quantity or 1
+    # FINAL PRICE GUARD — clamp the single-product unit price into [floor, last-offered]
+    # before it becomes an order amount, so no AI/responder mistake can charge below
+    # cost or above what we last quoted.
+    from app.models.product import Product
+    from app.bot.responder import enforce_unit_price, _price_ceiling
+    _product = (await db.execute(
+        select(Product).where(Product.id == conv_product.product_id)
+    )).scalar_one_or_none()
+    if _product is not None:
+        price = enforce_unit_price(
+            price, _product.floor_price, _price_ceiling(conv_product, _product),
+            label=f"cycle {_product.name}",
+        )
     order = await _get_cycle_order(conv_product, db)
     if order is not None:
         # Heal ONLY a never-initialised amount (the order was opened before the
@@ -274,7 +287,32 @@ async def _build_deal_order(conversation, seller, focused_cp, deal_lines, db):
         await db.execute(sa_delete(Order).where(Order.id == oid))
     await db.flush()
 
-    total = sum(l["unit_price_paise"] * l["quantity"] for l in deal_lines)
+    from app.models.product import Product
+    from app.bot.responder import enforce_unit_price, _price_ceiling
+
+    # FINAL PRICE GUARD — resolve cp+product per line and clamp every unit price into
+    # [floor, last-offered] BEFORE building the order, reading the ceiling from the CP
+    # while it still holds the pre-deal value (the loop below overwrites it). This is
+    # the last line of defence: no AI/responder mistake can persist an out-of-bounds
+    # price or amount.
+    resolved: list[tuple] = []  # (line, cp, safe_unit)
+    for l in deal_lines:
+        if str(l["product_id"]) == str(focused_cp.product_id):
+            cp = focused_cp
+        else:
+            cp = await _get_or_create_conv_product(conversation.id, l["product_id"], db)
+        product = (await db.execute(
+            select(Product).where(Product.id == l["product_id"])
+        )).scalar_one_or_none()
+        safe_unit = enforce_unit_price(
+            l["unit_price_paise"],
+            product.floor_price if product else None,
+            _price_ceiling(cp, product),
+            label=f"deal {product.name if product else l['product_id']}",
+        )
+        resolved.append((l, cp, safe_unit))
+
+    total = sum(safe_unit * l["quantity"] for (l, _cp, safe_unit) in resolved)
     order = Order(
         seller_id=seller.id,
         conversation_id=conversation.id,
@@ -288,27 +326,46 @@ async def _build_deal_order(conversation, seller, focused_cp, deal_lines, db):
     )
     db.add(order)
     await db.flush()
-    for l in deal_lines:
-        if str(l["product_id"]) == str(focused_cp.product_id):
-            cp = focused_cp
-        else:
-            cp = await _get_or_create_conv_product(conversation.id, l["product_id"], db)
-        cp.agreed_price = l["unit_price_paise"]
-        cp.last_counter_price = l["unit_price_paise"]
+    for l, cp, safe_unit in resolved:
+        l["unit_price_paise"] = safe_unit  # reflect the guarded value back to the caller
+        cp.agreed_price = safe_unit
+        cp.last_counter_price = safe_unit
         # Per-product display ceiling — keep it the product's own price, not the
         # bundle total that a combined counter may have written here.
-        cp.last_shown_price = l["unit_price_paise"]
+        cp.last_shown_price = safe_unit
         cp.quantity = l["quantity"]
         cp.state = "awaiting_payment"
         db.add(OrderItem(
             order_id=order.id,
             conversation_product_id=cp.id,
             quantity=l["quantity"],
-            unit_price=l["unit_price_paise"],
+            unit_price=safe_unit,
         ))
     await db.flush()
     logger.info("Built deal order %s with %d line items (total ₹%d)", order.id, len(deal_lines), total // 100)
     return order
+
+
+async def _persist_bundle_lines(conversation, bundle_lines, db):
+    """Persist a bundle COUNTER's per-product split to each member's own CP.
+
+    This is what makes a bundle price stick across rounds: each product's negotiated
+    share is written to its CP's last_counter_price (negotiation anchor) and
+    last_shown_price (customer-facing ceiling), DOWN-ONLY. Because every member's
+    ceiling can only ratchet down, the bundle total (= Σ member × qty) can never be
+    re-quoted higher — and it's remembered per-product, so it survives even if the
+    focused product changes. No order is created and no state changes — still negotiating."""
+    for l in bundle_lines:
+        cp = await _get_or_create_conv_product(conversation.id, str(l["product_id"]), db)
+        unit = int(l["unit_price_paise"])
+        if cp.last_counter_price is None or unit < cp.last_counter_price:
+            cp.last_counter_price = unit
+        if cp.last_shown_price is None or unit < cp.last_shown_price:
+            cp.last_shown_price = unit
+    logger.info(
+        "Persisted bundle lines: %s",
+        [(str(l["product_id"])[:8], l["unit_price_paise"] // 100, l["quantity"]) for l in bundle_lines],
+    )
 
 
 async def _send_next_product_photo(
@@ -605,6 +662,11 @@ async def _advance_conversation_inner(
         _new_shown = extra["last_shown_price"]
         if conv_product.last_shown_price is None or _new_shown < conv_product.last_shown_price:
             conv_product.last_shown_price = _new_shown
+
+    # Bundle counter — persist each member's per-product share to its own CP (down-only),
+    # so the bundle price is remembered focus-independently and can never be re-quoted higher.
+    if extra.get("bundle_lines"):
+        await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
 
     # Multi-product photo request ("teeno bhej do") — send the first photo of
     # each requested product. No single focus is set (customer hasn't picked one).
@@ -918,6 +980,8 @@ async def _handle_product_image_inner(
         new_shown = extra["last_shown_price"]
         if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
             conv_product.last_shown_price = new_shown
+    if extra.get("bundle_lines"):
+        await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
@@ -1116,6 +1180,8 @@ async def _handle_reel_inner(
         new_shown = extra["last_shown_price"]
         if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
             conv_product.last_shown_price = new_shown
+    if extra.get("bundle_lines"):
+        await _persist_bundle_lines(conversation, extra["bundle_lines"], db)
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
