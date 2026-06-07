@@ -227,6 +227,17 @@ async def upload_qr(file: UploadFile = File(...)):
 async def save_payment_method(body: PaymentMethodIn, db: AsyncSession = Depends(get_db)):
     """Create or update a UPI payment method. Setting is_primary unsets the
     primary flag on the seller's other methods in the same category."""
+    # A QR is mandatory: the bot collects payment by QR only and NEVER shares the raw
+    # UPI id in chat, so a method without a QR would leave the bot unable to ask for
+    # payment. Block saving (i.e. going live) without one.
+    if not (body.qr_code_url or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "A payment QR image is required. The bot collects payment by QR only and "
+                "never shares your UPI id in chat — please upload a QR before saving."
+            ),
+        )
     if body.id:
         m = await db.get(PaymentMethod, body.id)
         if m is None or str(m.seller_id) != SELLER_ID:
