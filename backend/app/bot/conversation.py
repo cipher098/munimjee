@@ -531,6 +531,14 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
     qr_already_sent = any((m.get("content") == "[payment QR]") for m in (conversation.messages or []))
     qr_sent_now = False
 
+    # Payment is QR-only (we never share the raw UPI id), so a missing QR image means the
+    # customer cannot be given any way to pay — flag it loudly for the seller to fix.
+    if not method.qr_code_url:
+        logger.error(
+            "Seller %s UPI method %s has NO qr_code_url — cannot share payment (UPI-id text is disabled)",
+            seller.id, method.id,
+        )
+
     # (Re)send the QR image only if it hasn't gone out yet.
     if not qr_already_sent and method.qr_code_url:
         qr_url = method.qr_code_url
@@ -562,15 +570,16 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
     due_paise = (order.amount or 0) - (order.amount_paid or 0)
     amount_str = f"₹{due_paise // 100} " if due_paise > 0 else ""
     if qr_delivered:
+        # ALWAYS direct the customer to the QR — never share the raw UPI id as text.
         return (
-            f"{amount_str}ka payment is UPI pe kar do: {method.upi_id} 🙏 "
-            f"QR bhi bhej diya hai, scan karke pay kar sakte ho. "
+            f"{amount_str}ka payment QR scan karke kar do 🙏 "
             f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
         )
-    # QR couldn't be delivered — give the UPI id (works as text), don't claim a QR.
+    # QR not delivered yet (transient send failure). Do NOT fall back to the UPI id —
+    # acknowledge softly; the QR send is retried on the next turn until it succeeds.
     return (
-        f"{amount_str}ka payment is UPI id pe kar do: {method.upi_id} 🙏 "
-        f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
+        f"{amount_str}ka payment QR bhej raha hoon, ek minute 🙏 "
+        f"Mil jaate hi scan karke pay kar dena, phir screenshot bhej dena ✅"
     )
 
 
@@ -1337,11 +1346,11 @@ async def _handle_payment_screenshot_inner(
             conv_product.state = "awaiting_payment"
             await db.flush()
             due = (order.amount or 0) - (order.amount_paid or 0)
-            upi = (method.upi_id if method else "") or ""
             amt = f"₹{due // 100} " if due > 0 else ""
             await _send(
-                f"Ye payment to kisi aur UPI pe gaya lagta hai 🤔 "
-                f"Mera UPI {upi} hai — {amt} ispe pay karke screenshot bhejo na, fir turant confirm 🙏"
+                f"Ye payment to kisi aur jagah chala gaya lagta hai 🤔 "
+                f"Maine jo QR bheja hai usi pe {amt}scan karke pay karke screenshot bhejo na, "
+                f"fir turant confirm 🙏"
             )
             return
         return await _manual()
