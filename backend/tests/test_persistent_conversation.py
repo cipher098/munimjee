@@ -49,6 +49,20 @@ def test_clean_reply_strips_photo_markers():
     assert _clean_reply("[photo] price ₹500 — final") == "price ₹500  final"
 
 
+def test_wants_qr_detects_qr_requests():
+    from app.bot.conversation import _wants_qr
+    assert _wants_qr("QR bhejo")
+    assert _wants_qr("qr code phir se bhej do")
+    assert _wants_qr("scanner nahi mila")
+    assert _wants_qr("scan nahi ho raha dobara bhejo")
+    assert _wants_qr("payment kaise karu")
+    assert _wants_qr("payment link bhejo")
+    # Not a QR request:
+    assert not _wants_qr("kitne ka hai ye")
+    assert not _wants_qr("theek hai le lunga")
+    assert not _wants_qr("")
+
+
 def test_tag_last_bot_message_mid_preserves_existing_product_id():
     """A photo message already tagged with ITS OWN product id must keep it — the mid
     tag must not clobber it with the focused conversation.product_id (the multi-product

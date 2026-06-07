@@ -500,10 +500,25 @@ async def _get_primary_upi_method(seller_id, db: AsyncSession):
     return res.scalars().first()
 
 
-async def _share_primary_payment_method(conversation, seller, conv_product, db) -> str | None:
+def _wants_qr(text: str) -> bool:
+    """True if the customer is asking for the payment QR / details again (so we re-send it
+    instead of saying 'pehle bheja tha')."""
+    import re as _re
+    t = (text or "").lower()
+    if _re.search(r"\bqr\b|scanner|barcode|scan", t):
+        return True
+    if "payment" in t and _re.search(r"bhej|link|kaise|kaha|detail|de do|dedo|send", t):
+        return True
+    return False
+
+
+async def _share_primary_payment_method(conversation, seller, conv_product, db, force_qr: bool = False) -> str | None:
     """On an awaiting_payment turn: record the UPI method + window, (re)send its
     QR image if not already delivered, and return a deterministic instruction to
     append — but ONLY claim "QR bhej diya" when the image actually went out.
+
+    force_qr=True (customer explicitly asked for the QR) re-sends it even if already sent,
+    and always returns an instruction.
 
     Returns the instruction text on the first turn or when the QR is sent this
     turn; None otherwise (already set up + QR delivered, or no UPI method) so we
@@ -539,8 +554,9 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
             seller.id, method.id,
         )
 
-    # (Re)send the QR image only if it hasn't gone out yet.
-    if not qr_already_sent and method.qr_code_url:
+    # (Re)send the QR image if it hasn't gone out for this order yet, OR the customer just
+    # asked for it again (force_qr).
+    if (not qr_already_sent or force_qr) and method.qr_code_url:
         qr_url = method.qr_code_url
         if qr_url.startswith("/") and settings.PUBLIC_BASE_URL:
             qr_url = settings.PUBLIC_BASE_URL.rstrip("/") + qr_url
@@ -563,8 +579,9 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db) 
     await db.flush()
 
     qr_delivered = qr_already_sent or qr_sent_now
-    # Only speak up on the first turn, or the turn the QR finally goes out.
-    if not first_time and not qr_sent_now:
+    # Only speak up on the first turn, the turn the QR finally goes out, or when the customer
+    # explicitly asked for it (force_qr) — otherwise stay quiet to avoid spamming.
+    if not first_time and not qr_sent_now and not force_qr:
         return None
 
     due_paise = (order.amount or 0) - (order.amount_paid or 0)
@@ -763,7 +780,12 @@ async def _advance_conversation_inner(
     # new_state=None on those turns. The helper sends the QR once, retries until
     # it succeeds, and only claims "QR bhej diya" when the image actually went out.
     if conv_product is not None and conv_product.state == "awaiting_payment":
-        _pay_instr = await _share_primary_payment_method(conversation, seller, conv_product, db)
+        # If the customer explicitly asks for the QR again, force a re-send (never say
+        # "pehle bheja tha" — just send it).
+        _force_qr = _wants_qr(customer_message)
+        _pay_instr = await _share_primary_payment_method(
+            conversation, seller, conv_product, db, force_qr=_force_qr
+        )
         if _pay_instr:
             reply = f"{reply}\n\n{_pay_instr}" if reply else _pay_instr
 
