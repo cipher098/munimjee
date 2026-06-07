@@ -60,6 +60,43 @@ async def save_policies(body: PoliciesUpdate, seller_id: str = Depends(current_s
 
 
 # ---------------------------------------------------------------------------
+# Business details (address / GST / phone) + share-with-customer toggle
+# ---------------------------------------------------------------------------
+
+class BusinessInfoUpdate(BaseModel):
+    address: str = ""
+    gst_number: str = ""
+    phone_number: str = ""
+    show_to_customer: bool = False   # if True, the bot may share these when a customer asks
+
+
+@router.get("/business-info")
+async def get_business_info(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    return seller.business_info or {}
+
+
+@router.post("/business-info")
+async def save_business_info(body: BusinessInfoUpdate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Seller).where(Seller.id == seller_id))
+    seller = result.scalar_one_or_none()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    seller.business_info = {
+        "address": body.address.strip(),
+        "gst_number": body.gst_number.strip(),
+        "phone_number": body.phone_number.strip(),
+        "show_to_customer": bool(body.show_to_customer),
+    }
+    await db.commit()
+    logger.info("Seller business_info updated (show_to_customer=%s)", seller.business_info["show_to_customer"])
+    return {"status": "saved", "business_info": seller.business_info}
+
+
+# ---------------------------------------------------------------------------
 # Approved alternative channels
 # ---------------------------------------------------------------------------
 

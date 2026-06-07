@@ -36,6 +36,22 @@ def _clean_reply(text: str) -> str:
     return text.strip()
 
 
+def _shareable_business_info(seller) -> str:
+    """The seller's address / GST / phone formatted for the reply — but ONLY if the seller
+    enabled "share with customers". Otherwise "" (the bot keeps these private)."""
+    bi = getattr(seller, "business_info", None) or {}
+    if not bi.get("show_to_customer"):
+        return ""
+    parts = []
+    if bi.get("address"):
+        parts.append(f"Address: {bi['address']}")
+    if bi.get("gst_number"):
+        parts.append(f"GST: {bi['gst_number']}")
+    if bi.get("phone_number"):
+        parts.append(f"Phone: {bi['phone_number']}")
+    return " | ".join(parts)
+
+
 def _per_product_unit_price(cp, product) -> int:
     """The per-product negotiated unit price for a bundle line item.
 
@@ -955,6 +971,7 @@ async def generate_bot_reply(
         "bulk_quantity": decision.get("bulk_quantity"),
         "customer_message": customer_message,
         "policies": seller.policies or {},
+        "shareable_business_info": _shareable_business_info(seller),
         "available_products": products_list,
         # Same stable-window rule as decide() — no sliding to preserve cache.
         "message_history": full_history,

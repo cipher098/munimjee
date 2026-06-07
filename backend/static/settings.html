@@ -177,6 +177,25 @@
   </div>
 
   <div class="card">
+    <h2>Business Details</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+      Your shop address, GST number and contact phone. By default the bot keeps these private.
+      Turn on the toggle below to let the bot share them with a customer who asks.
+    </p>
+    <label>Address</label>
+    <textarea id="bi_address" rows="2" placeholder="Shop / pickup address" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;"></textarea>
+    <label style="margin-top:12px;display:block;">GST Number</label>
+    <input type="text" id="bi_gst" placeholder="e.g. 08ABCDE1234F1Z5" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+    <label style="margin-top:12px;display:block;">Phone Number</label>
+    <input type="text" id="bi_phone" placeholder="10-digit contact number" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;">
+      <input type="checkbox" id="bi_show" style="width:16px;height:16px;">
+      <span>Share these with customers if they ask</span>
+    </label>
+    <button class="btn" id="saveBiBtn" onclick="saveBusinessInfo()" style="margin-top:16px;">Save Business Details</button>
+  </div>
+
+  <div class="card">
     <h2>Allowed Alternative Channels</h2>
     <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
       If a customer says "I'm not on Instagram much, can we talk on WhatsApp?", the bot will
@@ -363,6 +382,33 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  async function loadBusinessInfo() {
+    const res = await fetch('/settings/business-info');
+    if (!res.ok) return;
+    const b = await res.json();
+    document.getElementById('bi_address').value = b.address || '';
+    document.getElementById('bi_gst').value = b.gst_number || '';
+    document.getElementById('bi_phone').value = b.phone_number || '';
+    document.getElementById('bi_show').checked = !!b.show_to_customer;
+  }
+
+  async function saveBusinessInfo() {
+    const btn = document.getElementById('saveBiBtn');
+    btn.disabled = true;
+    const res = await fetch('/settings/business-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: document.getElementById('bi_address').value,
+        gst_number: document.getElementById('bi_gst').value,
+        phone_number: document.getElementById('bi_phone').value,
+        show_to_customer: document.getElementById('bi_show').checked,
+      }),
+    });
+    btn.disabled = false;
+    showToast(res.ok ? 'Business details saved' : 'Failed to save');
+  }
+
   // ---------------------------------------------------------------
   // Allowed alternative channels
   // ---------------------------------------------------------------
@@ -520,6 +566,7 @@
   }
 
   load();
+  loadBusinessInfo();
   loadChannels();
   loadLlmPreferences();
   loadPaymentMethods();

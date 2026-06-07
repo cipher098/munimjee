@@ -268,6 +268,7 @@ async def build_reply_prompt(context: dict) -> str:
         has_more_photos=has_more_photos,
         message_history="",
         address_term=context.get("address_term", "ji"),
+        shareable_business_info=context.get("shareable_business_info") or "N/A",
         other_active_products=other_active_str,
         other_inquiry_products_str=other_inquiry_str,
         multi_price_breakdown=context.get("multi_price_breakdown") or "N/A",

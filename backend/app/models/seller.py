@@ -36,6 +36,10 @@ class Seller(Base):
     #    "reply":  {"provider": "...", "model": "..."}}
     # Either key omitted = fall back to app defaults from agents.yaml.
     llm_preferences = Column(JSONB, nullable=True)
+    # Business contact details the seller can optionally let the bot share with customers.
+    #   {"address": str, "gst_number": str, "phone_number": str, "show_to_customer": bool}
+    # show_to_customer=False (default) → the bot keeps declining to share these.
+    business_info = Column(JSONB, nullable=True)
     negotiation_style = Column(String, default="medium")  # soft | medium | firm
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
