@@ -674,6 +674,30 @@ async def _advance_conversation_inner(
         conversation, customer_message, seller, db, conv_product=conv_product
     )
 
+    # Post-order change (refund / cancellation / item-change) on a paid order → open a
+    # ManualAction for the seller and stay silent. The bot will remain muted on this chat
+    # (worker gate) until the seller resolves it in the dashboard.
+    if extra.get("manual_action_kind"):
+        from app.models.manual_action import ManualAction
+        from sqlalchemy import select as _sa_sel
+        _existing = (await db.execute(
+            _sa_sel(ManualAction).where(
+                ManualAction.conversation_id == conversation.id, ManualAction.status == "open"
+            ).limit(1)
+        )).scalars().first()
+        if _existing is None:
+            db.add(ManualAction(
+                seller_id=conversation.seller_id,
+                conversation_id=conversation.id,
+                kind=extra["manual_action_kind"],
+                detail=extra.get("manual_action_detail"),
+                status="open",
+            ))
+            logger.info("Opened manual action (%s) for conversation %s — bot muted",
+                        extra["manual_action_kind"], conversation.id)
+        await db.flush()
+        return  # bot stays silent; seller handles it
+
     if new_state == "not_interested":
         # Mark this product as rejected, then reset conversation to allow new product inquiry
         if conv_product is not None:

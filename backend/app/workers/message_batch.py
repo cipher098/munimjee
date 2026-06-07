@@ -372,9 +372,10 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
 
         # Post-payment change requests (refund / cancellation / item-change) are NEVER
         # auto-handled. While an OPEN manual action exists the bot stays silent on this chat
-        # until the seller marks it resolved in the dashboard.
+        # until the seller marks it resolved in the dashboard. (A NEW change request is
+        # detected by the decide LLM inside advance_conversation — see responder — so typos
+        # don't matter; here we only enforce the mute once one is open.)
         from app.models.manual_action import ManualAction as _MA
-        from app.models.order import Order as _Ord
         _open_ma = (await db.execute(
             select(_MA).where(_MA.conversation_id == conversation.id, _MA.status == "open").limit(1)
         )).scalars().first()
@@ -384,30 +385,6 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
             logger.info("message_batch: %s muted — open manual action (%s); recorded customer msg(s)",
                         conversation.id, _open_ma.kind)
             return consumed
-        # Detect a NEW post-payment change request → escalate to the seller, mute the bot.
-        _texts = " ".join(e.get("text") or "" for e in events if e.get("type") == "text")
-        _kind = post_order_change_kind(_texts)
-        if _kind:
-            _paid = (await db.execute(
-                select(_Ord.id).where(
-                    _Ord.conversation_id == conversation.id, _Ord.amount_paid > 0
-                ).limit(1)
-            )).first()
-            if _paid is not None:
-                db.add(_MA(
-                    seller_id=conversation.seller_id,
-                    conversation_id=conversation.id,
-                    kind=_kind,
-                    detail=(_texts or "").strip()[:500],
-                    status="open",
-                ))
-                _record_customer_entries(conversation, events)
-                await db.flush()
-                logger.info(
-                    "message_batch: %s ESCALATED to seller (post-payment %s) — bot muted until resolved",
-                    conversation.id, _kind,
-                )
-                return consumed
 
         # Customer disengagement pause.
         if is_bot_paused_for_disengage(conversation.disengage_paused_until):

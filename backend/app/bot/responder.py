@@ -530,6 +530,28 @@ async def generate_bot_reply(
         previous_price_paise=previous_price_paise,
     )
 
+    # Post-order change (refund / cancellation / item-change) — the LLM detects it by meaning
+    # (typo-proof). Once a payment has been received, the human seller handles it: stop the bot
+    # on this chat (no reply) and hand the kind+detail to the caller, which opens a
+    # ManualAction. Pre-payment changes are ignored here (normal negotiation handles them).
+    _poc = (decision.get("post_order_change") or "none").strip().lower()
+    if _poc in ("refund", "cancellation", "item_change"):
+        from app.models.order import Order as _OrderM
+        _paid = (await db.execute(
+            select(_OrderM.id).where(
+                _OrderM.conversation_id == conversation.id, _OrderM.amount_paid > 0
+            ).limit(1)
+        )).first()
+        if _paid is not None:
+            logger.info("Post-payment %s requested → escalating to seller (bot stays silent)", _poc)
+            _ma_extra = {
+                "manual_action_kind": _poc,
+                "manual_action_detail": (customer_message or "").strip()[:500],
+            }
+            _record_turn(action="manual_action", new_state=None, reply=None,
+                         extra=_ma_extra, decision=decision)
+            return None, None, _ma_extra
+
     # Shipping needs name + phone + address. Don't close the order on an address that has no
     # phone number — deterministically require a 10-digit phone before confirming. If it's
     # missing, save what we have but stay in awaiting_address and ask for the phone (and name
