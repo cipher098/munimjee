@@ -22,6 +22,38 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
+def _parse_variants(raw: str | None) -> list[dict] | None:
+    """Parse + shape-check the variants JSON. Returns None when payload is
+    missing or unusable; returns [] only when the seller explicitly cleared
+    the list with '[]'.
+
+    Each entry must be {"label": "<str>", "photo_urls": [<str>, ...]}.
+    Empty labels and entries with no photo URLs are dropped silently.
+    """
+    if raw is None:
+        return None
+    import json as _json
+    try:
+        data = _json.loads(raw)
+    except Exception:
+        return None
+    if not isinstance(data, list):
+        return None
+    cleaned: list[dict] = []
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        label = (entry.get("label") or "").strip()
+        urls = entry.get("photo_urls") or []
+        if not isinstance(urls, list):
+            continue
+        urls = [u for u in (u.strip() for u in urls if isinstance(u, str)) if u]
+        if not label or not urls:
+            continue
+        cleaned.append({"label": label, "photo_urls": urls})
+    return cleaned  # may be empty list (explicit clear)
+
+
 @router.post("")
 async def create_product(
     seller_id: str = Form(...),
@@ -33,6 +65,7 @@ async def create_product(
     stock_quantity: int | None = Form(default=None, description="Stock count, omit if not tracking"),
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs"),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs linked to this product"),
+    variants: str | None = Form(default=None, description='JSON array of variants: [{"label": "Red", "photo_urls": [...]}]'),
     category_id: str | None = Form(default=None, description="UUID of an existing ProductCategory to assign"),
     image: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -124,6 +157,8 @@ async def create_product(
     if parsed_reel_urls:
         parsed_reel_urls = await _resolve_reel_urls_to_ids(parsed_reel_urls, seller)
 
+    parsed_variants = _parse_variants(variants)
+
     product = Product(
         seller_id=seller_id,
         category_id=category_id or None,
@@ -133,6 +168,7 @@ async def create_product(
         floor_price=floor_price * 100,
         photo_url=photo_url,
         photo_urls=parsed_photo_urls,
+        variants=parsed_variants,
         reel_urls=parsed_reel_urls,
         warranty_months=warranty_months,
         stock_quantity=stock_quantity,
@@ -151,6 +187,7 @@ async def create_product(
         "floor_price_rupees": floor_price,
         "photo_url": product.photo_url,
         "photo_urls": product.photo_urls,
+        "variants": product.variants,
         "reel_urls": product.reel_urls,
         "warranty_months": product.warranty_months,
         "stock_quantity": product.stock_quantity,
@@ -177,6 +214,7 @@ async def list_products(seller_id: str, include_inactive: bool = False, db: Asyn
             "floor_price_rupees": p.floor_price // 100,
             "photo_url": p.photo_url,
             "photo_urls": p.photo_urls,
+            "variants": p.variants,
             "reel_urls": p.reel_urls,
             "warranty_months": p.warranty_months,
             "stock_quantity": p.stock_quantity,
@@ -196,6 +234,7 @@ async def update_product(
     warranty_months: int = Form(default=-1, description="Warranty in months; send 0 to clear"),
     stock_quantity: int = Form(default=-1, description="Stock quantity; send 0 to clear"),
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs; send '[]' to clear"),
+    variants: str | None = Form(default=None, description='JSON array of variants; send "[]" to clear'),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs; send '[]' to clear"),
     active: bool = Form(default=None),
     category_id: str | None = Form(default=None, description="UUID of ProductCategory; send empty string to clear"),
@@ -294,6 +333,11 @@ async def update_product(
         except Exception:
             pass
 
+    if variants is not None:
+        parsed_variants = _parse_variants(variants)
+        if parsed_variants is not None:
+            product.variants = parsed_variants or None
+
     if reel_urls is not None:
         import json as _json
         try:
@@ -322,6 +366,7 @@ async def update_product(
         "floor_price_rupees": product.floor_price // 100,
         "photo_url": product.photo_url,
         "photo_urls": product.photo_urls,
+        "variants": product.variants,
         "reel_urls": product.reel_urls,
         "warranty_months": product.warranty_months,
         "stock_quantity": product.stock_quantity,

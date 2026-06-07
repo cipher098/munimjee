@@ -1,0 +1,63 @@
+id: price_lock_consistency
+description: |
+  Regression test: once the bot quotes a lower price (counter or accept) for a
+  product, asking about that product again must NOT bring back the listed price.
+  Customer experience: "you said ₹1100 last time, why ₹1200 now?" is fatal.
+
+  Turn 1: customer asks price → bot shows listed (₹1200).
+  Turn 2: customer haggles enough times that bot counters at ₹1100.
+  Turn 3: customer goes quiet then asks "kya price tha?" — bot must say ₹1100,
+          never ₹1200. last_shown_price is locked to ₹1100 after turn 2.
+
+seller:
+  persona:
+    greeting_style: "Haan ji"
+    negotiation_firmness: medium
+    closing_phrases: ["Done"]
+    common_expressions: ["yaar"]
+    hindi_english_ratio: "60% Hindi 40% English"
+    emoji_usage: light
+    response_length: short
+    tone: casual
+  policies:
+    cod: false
+    return_days: 0
+    payment_modes: [upi]
+
+products:
+  - slug: wooden_clock
+    name: wooden wall clock
+    listed_price_paise: 120000
+    floor_price_paise: 100000
+    description: "Wooden wall clock with brass-finish gear design."
+
+turns:
+  - customer: "kya price?"
+    expect:
+      action: show_product
+      reply_must_contain: ["1200"]
+
+  - customer: "1000 lelo bhai"
+    expect:
+      # Round 1 — bot should hold firm, no counter yet.
+      reply_must_not_contain: ["1000"]
+
+  - customer: "thoda kam karo na yaar"
+    expect:
+      # Round 2 — bot may counter or hold; doesn't matter for this test.
+      reply_must_not_contain: ["999", "900"]
+
+  - customer: "1100 ka kar do final"
+    expect:
+      # Bot should counter or accept around ₹1100. Either way, last_shown
+      # ratchets DOWN to ≤1100 — quoting 1200 after this is forbidden.
+      reply_must_not_contain: ["1200"]
+
+  - customer: "ruk ek minute"
+    expect: {}
+
+  - customer: "haan toh kya price tha is wale ka?"
+    expect:
+      # THE CORE ASSERTION — bot must remember it already quoted ₹1100,
+      # NEVER revert to ₹1200 just because customer is asking price again.
+      reply_must_not_contain: ["1200"]

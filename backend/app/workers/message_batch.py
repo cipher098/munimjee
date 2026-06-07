@@ -5,8 +5,10 @@ a delayed task fires after 15 s of silence and processes them all, sending exact
 one bot reply.
 """
 from app.workers.async_runner import run_async
+from datetime import datetime, timedelta, timezone
 import json
 import logging
+import re
 
 from sqlalchemy import select
 from app.workers.celery_app import celery_app
@@ -18,9 +20,133 @@ _BATCH_KEY_PREFIX = "msg_batch:"
 _TASK_KEY_PREFIX = "msg_batch_task:"
 
 
+def is_bot_paused_for_manual_takeover(
+    last_seller_manual_reply_at: datetime | None,
+    window_minutes: int,
+    now: datetime | None = None,
+) -> bool:
+    """True when a recent seller manual reply puts the bot in takeover mode."""
+    if last_seller_manual_reply_at is None:
+        return False
+    current = now or datetime.now(timezone.utc)
+    return (current - last_seller_manual_reply_at) < timedelta(minutes=window_minutes)
+
+
+def extract_customer_text_entries(events: list[dict], now: datetime | None = None) -> list[dict]:
+    """Turn the worker's queued text events into JSONB rows for conversation.messages.
+
+    Used to preserve customer messages during a seller takeover pause — the
+    reply path is skipped, but we still want the bot to see what was said
+    once it resumes.
+    """
+    ts = (now or datetime.now(timezone.utc)).isoformat()
+    out: list[dict] = []
+    for event in events:
+        if event.get("type") != "text":
+            continue
+        text = event.get("text")
+        if not text:
+            continue
+        entry: dict = {"role": "customer", "content": text, "timestamp": ts}
+        if event.get("mid"):
+            entry["mid"] = event["mid"]
+        out.append(entry)
+    return out
+
+
+def is_bot_paused_for_disengage(
+    disengage_paused_until: datetime | None,
+    now: datetime | None = None,
+) -> bool:
+    """True when the customer-disengagement quiet window has not yet expired."""
+    if disengage_paused_until is None:
+        return False
+    current = now or datetime.now(timezone.utc)
+    return current < disengage_paused_until
+
+
+# Customer messages containing any of these substrings (case-insensitive) lift
+# the disengage pause — they signal renewed buying intent. Intentionally broad:
+# a false positive costs one extra ack, a false negative loses a sale.
+# Note: words that commonly appear in negations ("chahiye" → "nahi chahiye",
+# "milega" → "nahi milega") are deliberately OUT — too easy to invert meaning.
+_REENGAGE_KEYWORDS = (
+    "price", "kitne", "kitna", "dam", "rate",
+    "le lunga", "le lungi", "lelo", "le do", "dedo",
+    "fix karo", "fix kar do", "confirm",
+    "yes", "haan", "accept",
+    "order", "buy", "purchase",
+    "lunga", "lungi", "leta hoon", "leti hoon",
+)
+_REENGAGE_NUMBER_RE = re.compile(r"\d+")
+# If the customer's text contains any of these negation markers we ignore
+# keyword/number matches — likely a polite refusal ("nahi chahiye, 0 interest").
+_NEGATION_MARKERS = ("nahi", "nahin", "no thanks", "not interested", "mat ")
+
+
+def is_reengagement_signal(text: str | None) -> bool:
+    """True when the customer's text shows buying intent and the disengage
+    pause should drop. Keyword / digit / question-mark detection, gated by
+    a negation check so "nahi chahiye" stays muted."""
+    if not text:
+        return False
+    lowered = text.lower()
+    if any(neg in lowered for neg in _NEGATION_MARKERS):
+        return False
+    if any(kw in lowered for kw in _REENGAGE_KEYWORDS):
+        return True
+    if _REENGAGE_NUMBER_RE.search(lowered):
+        return True
+    if "?" in text:
+        return True
+    return False
+
+
+def unanswered_customer_messages(messages: list[dict] | None) -> list[dict]:
+    """Return the trailing run of customer turns from conversation history.
+
+    Walks backwards until we hit a `bot` or `seller_manual` turn — those are
+    brand-side messages, meaning anything before them has already been
+    addressed. Returns the customer turns in chronological order.
+
+    Empty when the most recent entry is brand-side (bot or seller_manual) —
+    that's the signal nothing is unanswered, so the wake-up task should no-op.
+    """
+    if not messages:
+        return []
+    out: list[dict] = []
+    for entry in reversed(messages):
+        role = entry.get("role") or ""
+        if role == "customer":
+            out.append(entry)
+            continue
+        break  # hit bot or seller_manual — stop walking back
+    return list(reversed(out))
+
+
 # ---------------------------------------------------------------------------
 # Redis helpers (sync wrappers — used from the async webhook handler)
 # ---------------------------------------------------------------------------
+
+async def _lock_conversation(db, conversation_id) -> None:
+    """Serialize all bot REPLY work for one conversation across the two paths
+    that can each send a reply — the message-batch path and the seller-takeover
+    resume scan (_wake_paused_conversation).
+
+    Without this they race: the resume scan reads conversation.messages and sees
+    the customer's message as "unanswered" before a concurrently-running batch
+    has committed its bot reply, so both reply → the customer gets two messages.
+
+    A pg advisory *xact* lock is held until the surrounding transaction commits,
+    so whoever runs second blocks here, then re-reads state (now including the
+    first reply) and skips. Keyed on the conversation id.
+    """
+    from sqlalchemy import text
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:cid))"),
+        {"cid": str(conversation_id)},
+    )
+
 
 def _redis():
     import redis as _redis_lib
@@ -113,6 +239,58 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
             logger.info("message_batch: conversation %s is closed — skipping", conversation.id)
             return
 
+        # Customer disengagement: if the bot already acked a "bye"/"ok" and
+        # the quiet window hasn't elapsed, stay silent. A re-engagement signal
+        # (buying-intent keyword, 2+ digit token, or question mark) clears the
+        # pause immediately so we don't miss a hot lead.
+        from app.config import settings as _settings
+        if is_bot_paused_for_disengage(conversation.disengage_paused_until):
+            text_events = [e for e in events if e.get("type") == "text"]
+            if any(is_reengagement_signal(e.get("text")) for e in text_events):
+                logger.info(
+                    "message_batch: conversation %s disengage pause cleared by re-engagement signal",
+                    conversation.id,
+                )
+                conversation.disengage_paused_until = None
+                await db.commit()
+                # fall through to normal processing
+            else:
+                new_entries = extract_customer_text_entries(events)
+                if new_entries:
+                    msgs = list(conversation.messages or [])
+                    msgs.extend(new_entries)
+                    conversation.messages = msgs
+                    await db.commit()
+                logger.info(
+                    "message_batch: conversation %s disengage-muted (resume at %s) — recorded %d msg(s)",
+                    conversation.id, conversation.disengage_paused_until.isoformat(),
+                    len(new_entries),
+                )
+                return
+
+        # Manual seller takeover: if the seller recently replied from the IG
+        # inbox, stay silent until the auto-resume window elapses. We still
+        # record customer text messages to conversation history so the bot has
+        # the full context when it resumes — only reply generation is skipped.
+        if is_bot_paused_for_manual_takeover(
+            conversation.last_seller_manual_reply_at,
+            _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+        ):
+            elapsed = datetime.now(timezone.utc) - conversation.last_seller_manual_reply_at
+            new_entries = extract_customer_text_entries(events)
+            if new_entries:
+                msgs = list(conversation.messages or [])
+                msgs.extend(new_entries)
+                conversation.messages = msgs
+                await db.commit()
+            logger.info(
+                "message_batch: conversation %s paused (seller manual reply %.1fm ago, window %dm) — recorded %d customer msg(s) without replying",
+                conversation.id, elapsed.total_seconds() / 60,
+                _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+                len(new_entries),
+            )
+            return
+
         # Check active conv_product state
         if conversation.product_id:
             from app.models.conversation_product import ConversationProduct
@@ -129,6 +307,15 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
                     conversation.id,
                 )
                 return
+
+        # Serialize the reply against a concurrent takeover-resume wake for this
+        # same conversation, then refresh so we reply on top of any reply it just
+        # committed (prevents double replies).
+        await _lock_conversation(db, conversation.id)
+        await db.refresh(conversation)
+        if conversation.status == "closed":
+            logger.info("message_batch: conversation %s closed after lock — skipping", conversation.id)
+            return
 
         await _process_events(events, conversation, seller, db)
 
@@ -187,12 +374,15 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                     logger.warning("Image classification failed: %s — treating as payment", exc)
                     image_class = "payment"
 
-                if image_class == "payment":
-                    await handle_payment_screenshot(conversation, seller, image_url, db)
-                    return  # payment confirmed — stop processing the batch
-                else:
-                    # Product image — customer is asking about a new product
-                    await handle_product_image(conversation, seller, image_url, db, send_reply=False)
+                # In awaiting_payment, treat ANY image as a payment-proof attempt.
+                # The verifier downgrades a non-payment / wrong payment to manual
+                # review (or tells the customer it went to the wrong UPI), so a
+                # misclassified screenshot is never silently handled as a product
+                # image (which used to re-share the QR instead of flagging it).
+                if image_class != "payment":
+                    logger.info("Image classified %r but state is awaiting_payment — verifying as payment", image_class)
+                await handle_payment_screenshot(conversation, seller, image_url, db)
+                return
             else:
                 await handle_product_image(conversation, seller, image_url, db, send_reply=False)
 
@@ -211,10 +401,12 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     from app.bot.conversation import find_message_by_mid
     text_parts = []
     reply_context_prefix = ""
+    customer_mid: str | None = None
 
     for event in events:
         if event.get("type") == "text":
             text = event["text"]
+            customer_mid = event.get("mid") or customer_mid  # keep last non-null mid
 
             # Resolve reply_to context from the first event that carries one
             if not reply_context_prefix and event.get("reply_to_mid"):
@@ -261,8 +453,131 @@ async def _process_events(events: list, conversation, seller, db) -> None:
     if text_parts:
         combined_text = reply_context_prefix + "\n".join(text_parts)
         logger.info("message_batch: combined text=%r (had_media=%s)", combined_text, has_media)
-        await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
+        await advance_conversation(conversation, seller, combined_text, db, send_reply=True, customer_mid=customer_mid)
     elif has_media:
         combined_text = reply_context_prefix + "[customer sent media]"
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
     # else: nothing actionable, no reply
+
+
+# ---------------------------------------------------------------------------
+# Proactive wake-up: when the seller takeover pause window expires AND the
+# customer is still waiting, this task fires and generates the bot reply that
+# the reactive gate (which only fires on inbound webhooks) would have missed.
+# Scheduled by _handle_echo_event in webhooks/instagram.py.
+# ---------------------------------------------------------------------------
+
+@celery_app.task(name="app.workers.message_batch.wake_paused_conversation")
+def wake_paused_conversation(conversation_id: str) -> None:
+    run_async(_wake_paused_conversation(conversation_id))
+
+
+@celery_app.task(name="app.workers.message_batch.scan_resume_paused_conversations")
+def scan_resume_paused_conversations() -> None:
+    run_async(_scan_resume_paused_conversations())
+
+
+async def _scan_resume_paused_conversations() -> None:
+    """Beat-driven scan that finds conversations whose seller-takeover pause
+    window has expired and dispatches wake_paused_conversation for each.
+
+    Replaces the fragile per-message ETA scheduling: celery countdown tasks
+    sit in worker memory and don't survive restarts, so a deploy during the
+    6h default window silently drops the wake-up. A periodic scan is
+    idempotent and survives any restart.
+    """
+    from app.models.conversation import Conversation
+    from app.database import worker_session
+    from app.config import settings as _settings
+
+    now = datetime.now(timezone.utc)
+    threshold = now - timedelta(minutes=_settings.BOT_AUTO_RESUME_AFTER_MINUTES)
+    async with worker_session() as db:
+        result = await db.execute(
+            select(Conversation.id).where(
+                Conversation.status == "active",
+                Conversation.last_seller_manual_reply_at.isnot(None),
+                Conversation.last_seller_manual_reply_at < threshold,
+                # Skip conversations still in a disengage pause — waking them
+                # would trigger Claude and immediately re-ack on a "bye" loop.
+                (Conversation.disengage_paused_until.is_(None))
+                | (Conversation.disengage_paused_until < now),
+            )
+        )
+        ids = [str(cid) for (cid,) in result.all()]
+
+    if not ids:
+        return
+
+    logger.info("scan_resume_paused_conversations: dispatching wake for %d conversation(s)", len(ids))
+    for cid in ids:
+        wake_paused_conversation.apply_async(args=[cid])
+
+
+async def _wake_paused_conversation(conversation_id: str) -> None:
+    from app.models.conversation import Conversation
+    from app.models.seller import Seller
+    from app.database import worker_session
+    from app.config import settings as _settings
+    from app.bot.conversation import advance_conversation
+
+    async with worker_session() as db:
+        # Take the per-conversation lock BEFORE reading state, so if a message
+        # batch is mid-reply we block until it commits and then see its reply
+        # (the pending re-check below will skip). Prevents double replies.
+        await _lock_conversation(db, conversation_id)
+        result = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
+        conversation = result.scalar_one_or_none()
+        if not conversation:
+            logger.info("wake_paused_conversation: conversation %s not found — skip", conversation_id)
+            return
+
+        if conversation.status == "closed":
+            logger.info("wake_paused_conversation: conversation %s closed — skip", conversation_id)
+            return
+
+        if is_bot_paused_for_manual_takeover(
+            conversation.last_seller_manual_reply_at,
+            _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+        ):
+            logger.info(
+                "wake_paused_conversation: conversation %s still paused (newer seller reply pushed timestamp) — skip",
+                conversation_id,
+            )
+            return
+
+        # Also honour the disengage pause — without this the seller-takeover
+        # scan would wake the bot during a customer-disengagement quiet window
+        # and immediately fire another acknowledge_and_close, looping every
+        # scan tick.
+        if is_bot_paused_for_disengage(conversation.disengage_paused_until):
+            logger.info(
+                "wake_paused_conversation: conversation %s disengage-paused until %s — skip",
+                conversation_id, conversation.disengage_paused_until.isoformat(),
+            )
+            return
+
+        pending = unanswered_customer_messages(conversation.messages)
+        if not pending:
+            logger.info(
+                "wake_paused_conversation: conversation %s already answered — skip",
+                conversation_id,
+            )
+            return
+
+        seller_result = await db.execute(select(Seller).where(Seller.id == conversation.seller_id))
+        seller = seller_result.scalar_one_or_none()
+        if not seller or not seller.is_active:
+            logger.info("wake_paused_conversation: seller %s inactive — skip", conversation.seller_id)
+            return
+
+        combined_text = "\n".join((e.get("content") or "").strip() for e in pending if (e.get("content") or "").strip())
+        last_mid = pending[-1].get("mid")
+        logger.info(
+            "wake_paused_conversation: conversation %s — replying to %d customer msg(s)",
+            conversation_id, len(pending),
+        )
+        await advance_conversation(
+            conversation, seller, combined_text, db,
+            send_reply=True, resume=True, customer_mid=last_mid,
+        )

@@ -18,6 +18,17 @@ class Conversation(Base):
     status = Column(String, nullable=False, default="active")  # active | closed
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
     messages = Column(JSONB, default=list)            # [{role, content, timestamp}]
+    # Set whenever a seller replies manually from the IG inbox (echo with novel mid).
+    # The batch worker treats the bot as paused while now() - this < BOT_AUTO_RESUME_AFTER_HOURS.
+    last_seller_manual_reply_at = Column(DateTime(timezone=True), nullable=True)
+    # Two-nudge follow-up state for silent customers.
+    # Shape: {"count": 0|1|2, "last_nudged_at": "<iso8601>" | null}
+    nudge_state = Column(JSONB, nullable=True)
+    # Set when the bot acks customer disengagement ("theek hai ji, koi baat nahi").
+    # While now() < this timestamp the bot stays silent — customer messages are
+    # recorded but no reply. A re-engagement signal (buying-intent keyword /
+    # number / question mark) clears it early.
+    disengage_paused_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

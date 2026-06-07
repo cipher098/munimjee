@@ -1,0 +1,169 @@
+# Intervention rules — evaluated on every decide() call.
+#
+# Each rule defines:
+#   - `when`: simple conditions matched against the context dict (state, round,
+#     customer_message, floor_price, listed_price, etc.)
+#   - `reminder`: text injected as a <system_reminder> block into the LLM call
+#     ONLY when the rule fires. Sharpens behavior for high-leverage cases without
+#     bloating the cached system prompt for every call.
+#
+# Conventions:
+#   - `customer_message_contains_any`: list of substrings (case-insensitive) any
+#     of which trigger the rule when found in the latest customer message.
+#   - `negotiation_round_eq`/`negotiation_round_gte`: int comparisons.
+#   - `state_in`: list of states; rule fires if conv_product.state matches one.
+#   - `floor_eq_listed`: bool; true means the product has no negotiation room.
+#   - `bundle_pitched_eq`: bool match against the bundle_pitched flag.
+#
+# Higher `priority` wins ties when only one rule per group is wanted. All
+# matching rules currently fire — the LLM merges them into its decision.
+
+rules:
+  - id: walkaway_threat
+    description: Customer signalling walk-away — call the bluff, don't drop price.
+    priority: 100
+    when:
+      customer_message_contains_any:
+        - "aur se le lunga"
+        - "kahi aur"
+        - "kahin aur"
+        - "rehne do"
+        - "chhod do"
+        - "chodo bhai"
+        - "jane do"
+        - "bahut zyada"
+        - "itna nahi"
+    reminder: |
+      The customer is signalling walk-away. Use action "hold_firm" — do NOT counter, do NOT engage emotionally.
+      Pick a FRESH retention angle (quality / uniqueness / value-for-money / social proof). Do not repeat what
+      was said in the most recent bot message. Sound confident, not desperate.
+
+  - id: round_zero_no_discount
+    description: First price ask — never discount on round 0.
+    priority: 90
+    when:
+      negotiation_round_eq: 0
+      customer_message_contains_any:
+        - "discount"
+        - "kam karo"
+        - "kam kar do"
+        - "thoda kam"
+        - "less karo"
+        - "final price"
+        - "best price"
+        - "kya last"
+        - "last kya"
+    reminder: |
+      This is the FIRST price ask (round 0). Always use action "hold_firm" at the listed price.
+      NEVER counter and NEVER reduce price on round 0. Justify firmly with quality/value.
+
+  - id: fixed_price_no_counter
+    description: For fixed-price products (floor == listed), counter is forbidden.
+    priority: 95
+    when:
+      floor_eq_listed: true
+    reminder: |
+      This is a FIXED-PRICE product (floor_price == listed_price). NEVER use action "counter".
+      Only action "hold_firm" is allowed for price-related turns. Do not invent discounts.
+
+  - id: agreed_price_locked
+    description: Deal already done — don't reopen the negotiation.
+    priority: 110
+    when:
+      state_in:
+        - "awaiting_payment"
+    reminder: |
+      A deal was ALREADY agreed for this product. Do NOT reopen negotiation under any circumstances.
+      Use action "hold_firm" and push the customer to complete payment. Quote ONLY the agreed price.
+      Reject any new low offer firmly but warmly.
+
+  - id: feature_question_no_close
+    description: Factual feature question — answer it cleanly, no sales push.
+    priority: 80
+    when:
+      customer_message_contains_any:
+        - "kaise chalega"
+        - "kaise kaam"
+        - "battery se chalta"
+        - "charging kaise"
+        - "size kya"
+        - "kitna bada"
+        - "weight kitna"
+        - "material kya"
+    reminder: |
+      Customer is asking a FACTUAL feature question. Answer that question ONLY using PRODUCT DESCRIPTION
+      and VERIFIED PRODUCT SPECS. Do NOT add a price mention, "order kar do", or any close after.
+      The customer is still learning. Push for close only on explicit buying signals.
+
+  - id: complaint_acknowledge
+    description: Classifier flagged a complaint — acknowledge before responding.
+    priority: 105
+    when:
+      intent_label_in:
+        - complaint
+    reminder: |
+      The intent classifier flagged this message as a COMPLAINT. Start your reply by
+      ACKNOWLEDGING the customer's concern directly and warmly before pivoting to
+      explanation or close. Do NOT minimise their feedback. Do NOT immediately push for
+      sale or payment. Example: "Sahi keh rahe ho yaar, samajh sakta hoon — ye dekho..."
+
+  - id: repeated_dissatisfaction
+    description: Customer repeating a complaint — change angle, do not repeat past response.
+    priority: 115
+    when:
+      is_repeated_dissatisfaction_eq: true
+    reminder: |
+      The classifier detected the customer is REPEATING dissatisfaction they've already
+      expressed. Do NOT repeat the same retort/pitch you used before. Pick a different
+      retention angle (e.g. switch from quality argument to social proof, or vice versa).
+      Consider lowering the temperature with a brief acknowledgment first.
+
+  - id: very_negative_sentiment_no_close
+    description: Customer is upset — don't try to close in the same breath.
+    priority: 100
+    when:
+      sentiment_in:
+        - very_negative
+    reminder: |
+      Customer sentiment is VERY NEGATIVE. Do NOT include a sales close, "order kar do",
+      price mention, or upsell in this reply. Acknowledge, de-escalate, and ask one
+      clarifying question. The close can come on the next turn after they cool down.
+
+  - id: bundle_already_pitched
+    description: Bundle already pitched once — never pitch again.
+    priority: 70
+    when:
+      bundle_pitched_eq: true
+    reminder: |
+      The bundle has already been pitched once in this conversation. Do NOT pitch it again
+      under any circumstance. Treat this turn as a normal single-product negotiation.
+
+  - id: customer_disengaged
+    description: Customer signalled passive disengagement — ack once, then close.
+    priority: 105
+    when:
+      intent_label_in:
+        - disengage
+    reminder: |
+      Customer is softly disengaging (e.g. "ok", "bye", "nahi chahiye", "let me think").
+      Do NOT pitch again. Do NOT counter. Do NOT ask another question.
+      Use action "acknowledge_and_close" — send ONE short warm acknowledgment
+      ("theek hai ji, koi baat nahi — kabhi bhi message kar dena, hum yahin hain")
+      and close the conversation. The bot will fall silent after this turn.
+
+  - id: channel_switch_request
+    description: Customer wants to move off Instagram — only suggest seller-approved channels.
+    priority: 100
+    when:
+      intent_label_in:
+        - channel_switch_request
+    reminder: |
+      The customer is asking to move the conversation off Instagram. You may ONLY suggest a
+      channel that appears in the "Seller allowed channels" list in CONTEXT.
+      - If that list is empty: politely keep the conversation on Instagram. Example:
+        "Yaar abhi sab kuch yahin Instagram pe handle karte hain — aap yahin batao kya
+         chahiye, main jaldi reply karta hoon."
+      - If the list contains the channel the customer asked for: share that specific value
+        from the list (do not invent or alter it).
+      - NEVER improvise a WhatsApp / phone / email that is not in the list, even if it
+        feels helpful.

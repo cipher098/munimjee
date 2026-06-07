@@ -1,0 +1,47 @@
+id: happy_path_accept
+description: |
+  Short happy-path negotiation that ends in `awaiting_payment`. Customer asks
+  price, pushes back, accepts a small counter, then asks payment method.
+  Validates the standard hold_firm → counter → accept transition chain and
+  that we move to awaiting_payment cleanly.
+
+seller:
+  persona:
+    greeting_style: "Haan ji"
+    negotiation_firmness: medium
+    closing_phrases: ["Done"]
+    common_expressions: ["yaar"]
+    hindi_english_ratio: "60% Hindi 40% English"
+    emoji_usage: light
+    response_length: short
+    tone: casual
+  policies:
+    cod: false
+    return_days: 0
+    payment_modes: [upi]
+
+products:
+  - slug: wooden_clock
+    name: wooden black gold clock
+    listed_price_paise: 120000
+    floor_price_paise: 110000
+    description: "Wooden wall clock with black face and gold-coloured gear design."
+
+turns:
+  - customer: "kitne ka hai?"
+    expect:
+      action: show_product
+      reply_must_contain: ["1200"]
+
+  - customer: "thoda kam karo"
+    expect:
+      # Round 0 — round_zero_no_discount intervention forces hold_firm.
+      action: hold_firm
+      fired_interventions_any_of: [round_zero_no_discount]
+
+  - customer: "1100 chalega"
+    expect:
+      # 1100 == floor, the bot should accept.
+      action: accept
+      new_state: awaiting_payment
+      reply_must_contain: ["1100"]

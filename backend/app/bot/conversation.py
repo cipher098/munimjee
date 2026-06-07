@@ -14,6 +14,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.integrations import llm_logging
 from app.models.conversation import Conversation
 from app.models.conversation_product import ConversationProduct
 from app.models.product import Product
@@ -21,7 +22,37 @@ from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _capture_llm_calls(db, *, seller_id, conversation_id, customer_message_mid=None):
+    """Capture every LLM call made during a turn and persist the cost ledger.
+
+    Brackets a top-level handler so all nested decide/reply/subagent calls
+    (including those in child asyncio tasks, e.g. the intent classifier)
+    attribute themselves to this conversation + triggering message. Rows are
+    staged on `db` and flushed even if the body raises, so failed-turn costs
+    are still recorded.
+    """
+    token = llm_logging.begin(
+        seller_id=seller_id,
+        conversation_id=conversation_id,
+        customer_message_mid=customer_message_mid,
+    )
+    try:
+        yield
+    finally:
+        try:
+            await llm_logging.persist(db)
+        finally:
+            llm_logging.end(token)
+
 TERMINAL_STATES = {"payment_confirmed", "failed", "dispatched_notified"}
+# `customer_disengaged` is NOT terminal — conversation stays active so the
+# customer's next message doesn't spawn a fresh conversation. Bot silence is
+# instead enforced by Conversation.disengage_paused_until (see worker pause gate).
 
 
 async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) -> None:
@@ -38,34 +69,24 @@ async def _sweep_inquiry_to_not_interested(conversation_id, db: AsyncSession) ->
 
 
 async def _classify_image_type(image_b64: str, media_type: str) -> str:
-    """Returns 'payment' if the image is a payment receipt/screenshot, else 'product'."""
-    import anthropic
-    from app.config import settings
-    from app.integrations.claude import MODEL
+    """Returns 'payment' if the image is a payment receipt/screenshot, else 'product'.
+    Routed to the agents.yaml-configured provider (vision) with fallback."""
+    from app.integrations import llm_provider
 
-    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-    response = await client.messages.create(
-        model=MODEL,
-        max_tokens=5,
-        messages=[{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {"type": "base64", "media_type": media_type, "data": image_b64},
-                },
-                {
-                    "type": "text",
-                    "text": (
-                        "Is this image a payment receipt or transaction confirmation screenshot "
-                        "(UPI, Paytm, PhonePe, Google Pay, bank transfer success screen, etc.)? "
-                        "Reply with exactly one word: 'payment' or 'product'."
-                    ),
-                },
-            ],
-        }],
+    prompt = (
+        "Is this image a payment receipt or transaction confirmation screenshot "
+        "(UPI, Paytm, PhonePe, Google Pay, bank transfer success screen, etc.)? "
+        "Reply with exactly one word: 'payment' or 'product'."
     )
-    result = response.content[0].text.strip().lower()
+    try:
+        result = (await llm_provider.complete_vision(
+            "classify_image_type",
+            prompt=prompt,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
+        )).strip().lower()
+    except Exception as exc:
+        logger.warning("Image-type classify failed (%s) — defaulting to 'product'", exc)
+        return "product"
     return "payment" if "payment" in result else "product"
 
 
@@ -80,13 +101,12 @@ def _detect_media_type(data: bytes) -> str:
     return "image/jpeg"  # fallback
 
 
-def _append_message(conversation: Conversation, role: str, content: str) -> None:
+def _append_message(conversation: Conversation, role: str, content: str, mid: str | None = None) -> None:
     messages = list(conversation.messages or [])
-    messages.append({
-        "role": role,
-        "content": content,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    entry: dict = {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
+    if mid:
+        entry["mid"] = mid
+    messages.append(entry)
     conversation.messages = messages
 
 
@@ -108,6 +128,26 @@ def _tag_last_bot_message_mid(conversation: Conversation, mid: str) -> None:
             msgs[i] = {**msgs[i], **update}
             conversation.messages = msgs
             return
+
+
+async def _send_and_tag(
+    conversation: Conversation,
+    client,
+    reply: str,
+    db: AsyncSession,
+) -> None:
+    """Send a text reply, capture the mid, and tag the last bot history entry."""
+    try:
+        result = await client.send_message(conversation.customer_instagram_id, reply)
+        mid = result.get("message_id")
+        if mid:
+            _tag_last_bot_message_mid(conversation, mid)
+            await db.flush()
+    except Exception as exc:
+        logger.error(
+            "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
+            conversation.id, exc,
+        )
 
 
 def find_message_by_mid(conversation: Conversation, mid: str) -> dict | None:
@@ -158,12 +198,27 @@ async def _send_next_product_photo(
     from app.config import settings
     from app.integrations.instagram import InstagramClient
 
-    # Build full photo list
-    all_photos = []
-    if product.photo_url:
-        all_photos.append(product.photo_url)
-    if product.photo_urls:
-        all_photos.extend(product.photo_urls)
+    # Build the photo list. If the customer has locked in a variant
+    # ("blue dedo") and that variant exists on the product, cycle ONLY its
+    # photos. Otherwise fall back to the flat photo_url + photo_urls list.
+    all_photos: list[str] = []
+    variant_label = conv_product.active_variant_label if conv_product else None
+    variants = product.variants or []
+    matched_variant_photos: list[str] = []
+    if variant_label and variants:
+        wanted = variant_label.strip().casefold()
+        for v in variants:
+            if (v.get("label") or "").strip().casefold() == wanted:
+                matched_variant_photos = list(v.get("photo_urls") or [])
+                break
+
+    if matched_variant_photos:
+        all_photos.extend(matched_variant_photos)
+    else:
+        if product.photo_url:
+            all_photos.append(product.photo_url)
+        if product.photo_urls:
+            all_photos.extend(product.photo_urls)
 
     if not all_photos:
         return False
@@ -184,10 +239,18 @@ async def _send_next_product_photo(
 
     client = InstagramClient(seller.instagram_token, seller.fb_page_id)
     try:
-        await client.send_image(conversation.customer_instagram_id, photo_url)
+        result = await client.send_image(conversation.customer_instagram_id, photo_url)
         logger.info("Sent product photo %d/%d for %r", idx + 1, len(all_photos), product.name)
         if conv_product:
             conv_product.photos_sent_count = idx + 1
+        # Record the image in message history so reply_to on this photo can be resolved
+        msgs = list(conversation.messages or [])
+        msgs.append({"role": "bot", "content": "[product photo]"})
+        conversation.messages = msgs
+        mid = result.get("message_id")
+        if mid:
+            _tag_last_bot_message_mid(conversation, mid)
+        await db.flush()
         return True
     except Exception as exc:
         logger.warning("Could not send product photo for %r: %s", product.name, exc)
@@ -206,6 +269,110 @@ async def _send_product_image_if_new(
     await _send_next_product_photo(conversation, seller, product, None, db)
 
 
+# ---------------------------------------------------------------------------
+# Payment (UPI) — sharing the QR + saving received screenshots
+# ---------------------------------------------------------------------------
+
+async def _get_primary_upi_method(seller_id, db: AsyncSession):
+    """The seller's primary active UPI payment method (or the oldest active one)."""
+    from app.models.payment_method import PaymentMethod
+    res = await db.execute(
+        select(PaymentMethod)
+        .where(
+            PaymentMethod.seller_id == seller_id,
+            PaymentMethod.category == "upi",
+            PaymentMethod.is_active == True,  # noqa: E712
+        )
+        .order_by(PaymentMethod.is_primary.desc(), PaymentMethod.created_at.asc())
+    )
+    return res.scalars().first()
+
+
+async def _share_primary_payment_method(conversation, seller, conv_product, db) -> str | None:
+    """On an awaiting_payment turn: record the UPI method + window, (re)send its
+    QR image if not already delivered, and return a deterministic instruction to
+    append — but ONLY claim "QR bhej diya" when the image actually went out.
+
+    Returns the instruction text on the first turn or when the QR is sent this
+    turn; None otherwise (already set up + QR delivered, or no UPI method) so we
+    don't spam the same message every turn. The QR send is retried on later turns
+    until it succeeds (heals a transient tunnel-down)."""
+    from app.config import settings
+    from app.integrations.instagram import InstagramClient
+
+    method = await _get_primary_upi_method(seller.id, db)
+    if method is None or not method.upi_id:
+        logger.warning("No active UPI payment method for seller %s — cannot share QR", seller.id)
+        return None
+
+    first_time = conv_product.payment_requested_at is None
+    if first_time:
+        conv_product.payment_method_id = method.id
+        conv_product.payment_requested_at = datetime.now(timezone.utc)
+
+    qr_already_sent = any((m.get("content") == "[payment QR]") for m in (conversation.messages or []))
+    qr_sent_now = False
+
+    # (Re)send the QR image only if it hasn't gone out yet.
+    if not qr_already_sent and method.qr_code_url:
+        qr_url = method.qr_code_url
+        if qr_url.startswith("/") and settings.PUBLIC_BASE_URL:
+            qr_url = settings.PUBLIC_BASE_URL.rstrip("/") + qr_url
+        elif qr_url.startswith("/"):
+            logger.warning("Cannot send payment QR — PUBLIC_BASE_URL not set")
+            qr_url = None
+        if qr_url:
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            try:
+                result = await client.send_image(conversation.customer_instagram_id, qr_url)
+                msgs = list(conversation.messages or [])
+                msgs.append({"role": "bot", "content": "[payment QR]"})
+                conversation.messages = msgs
+                mid = result.get("message_id")
+                if mid:
+                    _tag_last_bot_message_mid(conversation, mid)
+                qr_sent_now = True
+            except Exception as exc:
+                logger.warning("Could not send payment QR (will retry next turn): %s", exc)
+    await db.flush()
+
+    qr_delivered = qr_already_sent or qr_sent_now
+    # Only speak up on the first turn, or the turn the QR finally goes out.
+    if not first_time and not qr_sent_now:
+        return None
+
+    due_paise = (conv_product.agreed_price or conv_product.last_counter_price or 0) - (conv_product.amount_paid or 0)
+    amount_str = f"₹{due_paise // 100} " if due_paise > 0 else ""
+    if qr_delivered:
+        return (
+            f"{amount_str}ka payment is UPI pe kar do: {method.upi_id} 🙏 "
+            f"QR bhi bhej diya hai, scan karke pay kar sakte ho. "
+            f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
+        )
+    # QR couldn't be delivered — give the UPI id (works as text), don't claim a QR.
+    return (
+        f"{amount_str}ka payment is UPI id pe kar do: {method.upi_id} 🙏 "
+        f"Payment ke baad screenshot bhej dena, turant confirm kar dunga ✅"
+    )
+
+
+def _save_payment_screenshot(img_bytes: bytes, media_type: str) -> str | None:
+    """Persist a received payment screenshot under uploads for audit. Returns the
+    /uploads/... URL, or None on failure (verification still proceeds)."""
+    from pathlib import Path
+    from uuid import uuid4
+    try:
+        ext = {"image/png": ".png", "image/webp": ".webp"}.get(media_type, ".jpg")
+        d = Path("/app/uploads/payment_screenshots/received")
+        d.mkdir(parents=True, exist_ok=True)
+        fname = f"pay_{uuid4().hex}{ext}"
+        (d / fname).write_bytes(img_bytes)
+        return f"/uploads/payment_screenshots/received/{fname}"
+    except Exception as exc:
+        logger.warning("Could not save payment screenshot: %s", exc)
+        return None
+
+
 async def advance_conversation(
     conversation: Conversation,
     seller: Seller,
@@ -213,6 +380,7 @@ async def advance_conversation(
     db: AsyncSession,
     send_reply: bool = True,
     resume: bool = False,
+    customer_mid: str | None = None,
 ) -> None:
     """Main entry point: processes a customer text message and sends a bot reply.
     Pass resume=True when re-processing an already-stored customer message so it
@@ -221,8 +389,28 @@ async def advance_conversation(
     if conversation.status == "closed":
         return
 
+    async with _capture_llm_calls(
+        db,
+        seller_id=seller.id,
+        conversation_id=conversation.id,
+        customer_message_mid=customer_mid,
+    ):
+        await _advance_conversation_inner(
+            conversation, seller, customer_message, db, send_reply, resume, customer_mid
+        )
+
+
+async def _advance_conversation_inner(
+    conversation: Conversation,
+    seller: Seller,
+    customer_message: str,
+    db: AsyncSession,
+    send_reply: bool,
+    resume: bool,
+    customer_mid: str | None,
+) -> None:
     if not resume:
-        _append_message(conversation, "customer", customer_message)
+        _append_message(conversation, "customer", customer_message, mid=customer_mid)
 
     if not conversation.customer_gender and conversation.customer_name:
         from app.utils.gender import guess_gender, guess_gender_ai
@@ -258,6 +446,17 @@ async def advance_conversation(
             conversation.status = "closed"
             await _sweep_inquiry_to_not_interested(conversation.id, db)
 
+    # While awaiting_payment, ensure the QR is delivered + exact instructions are
+    # sent (UPI id + amount from DB, never the LLM). Keyed on the CURRENT state
+    # (not just the transition turn) so a failed first send is retried on later
+    # turns — the STATE LOCK keeps the state at awaiting_payment and returns
+    # new_state=None on those turns. The helper sends the QR once, retries until
+    # it succeeds, and only claims "QR bhej diya" when the image actually went out.
+    if conv_product is not None and conv_product.state == "awaiting_payment":
+        _pay_instr = await _share_primary_payment_method(conversation, seller, conv_product, db)
+        if _pay_instr:
+            reply = f"{reply}\n\n{_pay_instr}" if reply else _pay_instr
+
     # Mark explicitly rejected non-active products as not_interested
     rejected_ids = extra.get("rejected_product_ids") or []
     for rid in rejected_ids:
@@ -276,6 +475,24 @@ async def advance_conversation(
     if extra.get("bundle_pitch") and conv_product is not None:
         conv_product.bundle_pitched = True
 
+    # Variant lock-in: customer picked a specific color/size. Reset the photo
+    # counter so the next photo cycle starts from this variant's first image.
+    selected_variant = extra.get("selected_variant_label")
+    if selected_variant and conv_product is not None:
+        if conv_product.active_variant_label != selected_variant:
+            conv_product.active_variant_label = selected_variant
+            conv_product.photos_sent_count = 0
+
+    # Disengagement pause: customer said "bye"/"ok"/"nahi chahiye" and the bot
+    # is sending one warm ack. Stay quiet for CUSTOMER_DISENGAGE_PAUSE_MINUTES.
+    if extra.get("start_disengage_pause"):
+        from app.config import settings as _settings
+        from datetime import timedelta
+        conversation.disengage_paused_until = (
+            datetime.now(timezone.utc)
+            + timedelta(minutes=_settings.CUSTOMER_DISENGAGE_PAUSE_MINUTES)
+        )
+
     if extra.get("agreed_price"):
         if conv_product is not None:
             conv_product.agreed_price = extra["agreed_price"]
@@ -289,6 +506,14 @@ async def advance_conversation(
     if extra.get("last_counter_price") is not None:
         if conv_product is not None:
             conv_product.last_counter_price = extra["last_counter_price"]
+
+    # last_shown_price is a monotonic floor on customer-facing prices: it only ever
+    # ratchets DOWN. Once we've shown ₹1100, we can never quote higher; if we later
+    # quote ₹1050, the new value wins.
+    if extra.get("last_shown_price") is not None and conv_product is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
 
     new_product_id = extra.get("product_id")
     if new_product_id:
@@ -341,17 +566,7 @@ async def advance_conversation(
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            result = await client.send_message(conversation.customer_instagram_id, reply)
-            mid = result.get("message_id")
-            if mid:
-                _tag_last_bot_message_mid(conversation, mid)
-                await db.flush()
-        except Exception as exc:
-            logger.error(
-                "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
-                conversation.id, exc,
-            )
+        await _send_and_tag(conversation, client, reply, db)
 
 
 async def handle_product_image(
@@ -362,6 +577,17 @@ async def handle_product_image(
     send_reply: bool = True,
 ) -> None:
     """Customer sent an image — use Claude Vision to identify the product and start negotiation."""
+    async with _capture_llm_calls(db, seller_id=seller.id, conversation_id=conversation.id):
+        await _handle_product_image_inner(conversation, seller, image_url, db, send_reply)
+
+
+async def _handle_product_image_inner(
+    conversation: Conversation,
+    seller: Seller,
+    image_url: str,
+    db: AsyncSession,
+    send_reply: bool,
+) -> None:
     from app.integrations.claude import ClaudeClient
     from app.integrations.instagram import InstagramClient
     from app.bot.responder import generate_bot_reply, DEFAULT_PERSONA
@@ -381,10 +607,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     products_for_vision = [
@@ -413,10 +636,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception:
-                pass
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Stage 1 — Vision: describe what the customer is holding/showing
@@ -453,10 +673,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Product identified — set it on conversation
@@ -479,10 +696,7 @@ async def handle_product_image(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Send product image back to customer so they can confirm it's the right product —
@@ -518,16 +732,17 @@ async def handle_product_image(
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
         conv_product.last_counter_price = extra["last_counter_price"]
+    if extra.get("last_shown_price") is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        await _send_and_tag(conversation, client, reply, db)
 
 
 def _extract_ig_shortcode(url: str) -> str | None:
@@ -577,6 +792,21 @@ async def handle_reel(
     send_reply: bool = True,
 ) -> None:
     """Customer shared an Instagram Reel — match against product reel_urls and start sales flow."""
+    async with _capture_llm_calls(db, seller_id=seller.id, conversation_id=conversation.id):
+        await _handle_reel_inner(
+            conversation, seller, reel_url, db, reel_video_id, reel_title, send_reply
+        )
+
+
+async def _handle_reel_inner(
+    conversation: Conversation,
+    seller: Seller,
+    reel_url: str,
+    db: AsyncSession,
+    reel_video_id: str | None,
+    reel_title: str | None,
+    send_reply: bool,
+) -> None:
     from app.integrations.instagram import InstagramClient
 
     _append_message(conversation, "customer", f"[reel: {reel_url}]")
@@ -656,10 +886,7 @@ async def handle_reel(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Product matched — set on conversation
@@ -677,10 +904,7 @@ async def handle_reel(
         await db.flush()
         if send_reply:
             client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-            try:
-                await client.send_message(conversation.customer_instagram_id, reply)
-            except Exception as exc:
-                logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+            await _send_and_tag(conversation, client, reply, db)
         return
 
     # Fresh inquiry — send product photo first
@@ -706,16 +930,17 @@ async def handle_reel(
         conv_product.negotiation_round = extra["negotiation_round"]
     if extra.get("last_counter_price") is not None:
         conv_product.last_counter_price = extra["last_counter_price"]
+    if extra.get("last_shown_price") is not None:
+        new_shown = extra["last_shown_price"]
+        if conv_product.last_shown_price is None or new_shown < conv_product.last_shown_price:
+            conv_product.last_shown_price = new_shown
 
     _append_bot_reply(conversation, reply, send_reply)
     await db.flush()
 
     if send_reply:
         client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        try:
-            await client.send_message(conversation.customer_instagram_id, reply)
-        except Exception as exc:
-            logger.error("Failed to send reply in conversation %s: %s", conversation.id, exc)
+        await _send_and_tag(conversation, client, reply, db)
 
 
 async def handle_payment_screenshot(
@@ -724,19 +949,161 @@ async def handle_payment_screenshot(
     image_url: str,
     db: AsyncSession,
 ) -> None:
-    """Handles an image attachment when the conversation is in awaiting_payment."""
-    # Look up the active conv_product to set verifying state on it
+    """Wrapper — captures the vision call's cost, then verifies the screenshot."""
+    async with _capture_llm_calls(db, seller_id=seller.id, conversation_id=conversation.id):
+        await _handle_payment_screenshot_inner(conversation, seller, image_url, db)
+
+
+async def _handle_payment_screenshot_inner(
+    conversation: Conversation,
+    seller: Seller,
+    image_url: str,
+    db: AsyncSession,
+) -> None:
+    """Customer sent a payment screenshot while awaiting_payment.
+
+    Auto-verifies it (vision extract + deterministic verdict); on a clean match
+    records a Transaction and either confirms the order (cumulative ≥ agreed) or
+    asks for the remaining balance (partial). Anything ambiguous/mismatched falls
+    back to the existing manual seller-WhatsApp review — never auto-rejects.
+    """
+    from app.models.payment_method import PaymentMethod
+    from app.models.transaction import Transaction
+    from app.models.order import Order, OrderItem
+    from app.bot import payment_verification as pv
+    from app.bot.responder import send_manual_verification_ping
+    from app.integrations.instagram import InstagramClient
+
     conv_product: ConversationProduct | None = None
     if conversation.product_id:
         conv_product = await _get_or_create_conv_product(
             conversation.id, conversation.product_id, db
         )
+
+    async def _send(text: str) -> None:
+        _append_message(conversation, "bot", text)
+        await db.flush()
+        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+        await _send_and_tag(conversation, client, text, db)
+
+    async def _manual() -> None:
+        await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)
+
+    # Download + extract FIRST, so a non-payment image (e.g. the customer sharing
+    # a different product while awaiting payment) is routed to product handling
+    # instead of being mis-verified as a payment.
+    try:
+        async with httpx.AsyncClient(timeout=15) as http:
+            r = await http.get(image_url)
+            r.raise_for_status()
+        img_bytes = r.content
+        img_b64 = base64.b64encode(img_bytes).decode()
+        media_type = _detect_media_type(img_bytes)
+    except Exception as exc:
+        logger.warning("Could not download image %s: %s — handling as product", image_url, exc)
+        return await _handle_product_image_inner(conversation, seller, image_url, db, send_reply=True)
+
+    from app.integrations.claude import ClaudeClient
+    extracted = await ClaudeClient().extract_payment_details(img_b64, media_type)
+    looks_like_payment = bool(
+        extracted.get("utr") or extracted.get("amount_rupees")
+        or extracted.get("payee_upi_id") or extracted.get("payee_name")
+    )
+    if not looks_like_payment:
+        logger.info("Image in awaiting_payment has no payment fields — handling as product image")
+        return await _handle_product_image_inner(conversation, seller, image_url, db, send_reply=True)
+
+    # It IS a payment proof — record it and verify.
+    _append_message(conversation, "customer", f"[screenshot: {image_url}]")
     if conv_product is not None:
         conv_product.state = "verifying"
-    _append_message(conversation, "customer", f"[screenshot: {image_url}]")
+    screenshot_url = _save_payment_screenshot(img_bytes, media_type)
     await db.flush()
 
-    # Phase 2 will wire in OCR + UTR verification here.
-    # For Phase 1: fall back to manual review (Level 5 — owner WhatsApp ping).
-    from app.bot.responder import send_manual_verification_ping
-    await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)
+    if conv_product is None or conv_product.payment_requested_at is None or conv_product.payment_method_id is None:
+        return await _manual()
+    method = await db.get(PaymentMethod, conv_product.payment_method_id)
+
+    # Anti-replay: has this UTR ever been recorded?
+    utr = (extracted.get("utr") or "").strip() or None
+    utr_used = False
+    if utr:
+        _ex = await db.execute(select(Transaction).where(Transaction.utr_number == utr))
+        utr_used = _ex.scalar_one_or_none() is not None
+
+    remaining = (conv_product.agreed_price or 0) - (conv_product.amount_paid or 0)
+    verdict = pv.evaluate_payment(
+        extracted,
+        method_upi_id=method.upi_id if method else None,
+        method_account_name=method.account_name if method else None,
+        shared_at=conv_product.payment_requested_at,
+        received_at=datetime.now(timezone.utc),
+        remaining_due_paise=remaining,
+        utr_already_used=utr_used,
+    )
+    logger.info("Payment verdict for conv %s: %s (%s)", conversation.id, verdict.outcome, verdict.reason)
+
+    if verdict.outcome == pv.DUPLICATE:
+        await _send("Ye payment toh pehle hi mil chuka hai ✅")
+        return
+    if verdict.outcome == pv.MANUAL_REVIEW:
+        # Payee mismatch = the payment went somewhere other than our UPI. Tell the
+        # customer plainly (don't silently re-share/ping) so they can re-pay
+        # correctly. Other reasons (unreadable/unclear) → manual seller review.
+        if "payee" in (verdict.reason or "").lower():
+            conv_product.state = "awaiting_payment"
+            await db.flush()
+            due = (conv_product.agreed_price or 0) - (conv_product.amount_paid or 0)
+            upi = (method.upi_id if method else "") or ""
+            amt = f"₹{due // 100} " if due > 0 else ""
+            await _send(
+                f"Ye payment to kisi aur UPI pe gaya lagta hai 🤔 "
+                f"Mera UPI {upi} hai — {amt} ispe pay karke screenshot bhejo na, fir turant confirm 🙏"
+            )
+            return
+        return await _manual()
+
+    # confirmed_full or partial → record the transaction against an order.
+    order = (await db.execute(
+        select(Order).where(Order.conversation_id == conversation.id,
+                            Order.product_id == conversation.product_id)
+    )).scalars().first()
+    if order is None:
+        order = Order(
+            seller_id=seller.id, conversation_id=conversation.id,
+            customer_name=conversation.customer_name or "",
+            customer_instagram_id=conversation.customer_instagram_id,
+            product_id=conversation.product_id,
+            amount=conv_product.agreed_price or verdict.amount_paise,
+            status="awaiting_payment",
+        )
+        db.add(order)
+        await db.flush()
+        db.add(OrderItem(
+            order_id=order.id, conversation_product_id=conv_product.id,
+            quantity=conv_product.quantity or 1,
+            unit_price=conv_product.agreed_price or verdict.amount_paise,
+        ))
+
+    db.add(Transaction(
+        seller_id=seller.id, order_id=order.id, utr_number=verdict.utr,
+        amount=verdict.amount_paise, sender_name=extracted.get("payee_name"),
+        timestamp=verdict.payment_dt or datetime.now(timezone.utc),
+        verified_by="ocr_auto", screenshot_url=screenshot_url,
+    ))
+    conv_product.amount_paid = (conv_product.amount_paid or 0) + verdict.amount_paise
+    await db.flush()
+
+    if verdict.outcome == pv.PARTIAL:
+        still_due = (conv_product.agreed_price or 0) - conv_product.amount_paid
+        conv_product.state = "awaiting_payment"
+        await _send(f"₹{verdict.amount_paise // 100} mil gaya ✅ Bas ₹{still_due // 100} aur bhej do, fir order pakka 🙏")
+        return
+
+    # confirmed_full
+    order.status = "payment_confirmed"
+    conv_product.state = "payment_confirmed"
+    conversation.status = "closed"
+    await _sweep_inquiry_to_not_interested(conversation.id, db)
+    await db.flush()
+    await _send("Payment confirm ho gaya 🎉 Aapka order aage badha diya hai, jaldi dispatch karenge!")

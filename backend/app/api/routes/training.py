@@ -146,10 +146,28 @@ async def submit_feedback(
     PROMPTS_FILE.write_text(new_content, encoding="utf-8")
     logger.info("Prompts updated via training feedback (%s): %s", feedback_type, feedback_text[:80])
 
+    # Also push the two hot-path prompts to the DB-backed prompt store so
+    # worker/celery (which don't see uvicorn's hot-reload) pick them up
+    # within the 60-second cache window.
+    db_pushed: list[str] = []
+    try:
+        from app.bot import prompt_store
+        from app.prompts import DECISION_PROMPT as _DECISION_PROMPT_NEW
+        from app.prompts import REPLY_PROMPT as _REPLY_PROMPT_NEW
+        import importlib
+        import app.prompts as _prompts_module
+        importlib.reload(_prompts_module)
+        await prompt_store.upsert("decide", _prompts_module.DECISION_PROMPT)
+        await prompt_store.upsert("generate_reply", _prompts_module.REPLY_PROMPT)
+        db_pushed = ["decide", "generate_reply"]
+    except Exception as exc:
+        logger.warning("Failed to push updated prompts to DB store (%s) — file fallback still active", exc)
+
     return {
         "status": "updated",
         "feedback_type": feedback_type,
         "screenshot_saved": str(shot_path),
+        "db_pushed": db_pushed,
         "message": "Prompts updated. Server will reload automatically in a few seconds.",
     }
 

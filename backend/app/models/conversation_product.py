@@ -18,13 +18,23 @@ class ConversationProduct(Base):
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
 
     negotiation_round = Column(Integer, default=0)
-    last_counter_price = Column(Integer, nullable=True)   # paise — lowest price bot offered
+    last_counter_price = Column(Integer, nullable=True)   # paise — lowest price bot offered (negotiation math)
+    last_shown_price = Column(Integer, nullable=True)     # paise — customer-facing display ceiling; bot must never quote higher
     agreed_price = Column(Integer, nullable=True)         # paise — price customer accepted
     photos_sent_count = Column(Integer, default=0)        # how many photos have been sent to this customer for this product
     state = Column(String, nullable=False, default="product_inquiry")  # full state machine per product
     quantity = Column(Integer, default=1)
     bundle_pitched = Column(Boolean, nullable=False, default=False)
+    # When the customer locks in a specific variant ("blue dedo") this stores
+    # the matching Product.variants[*].label so _send_next_product_photo
+    # cycles only that variant's photo list.
+    active_variant_label = Column(String, nullable=True)
     pending_tag_id = Column(UUID(as_uuid=True), ForeignKey("category_tags.id"), nullable=True)
+
+    # Payment tracking (UPI screenshot verification).
+    amount_paid = Column(Integer, nullable=False, default=0)   # paise — cumulative verified payments
+    payment_method_id = Column(UUID(as_uuid=True), ForeignKey("payment_methods.id"), nullable=True)  # method we shared
+    payment_requested_at = Column(DateTime(timezone=True), nullable=True)  # when we shared the QR (verify-window start)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

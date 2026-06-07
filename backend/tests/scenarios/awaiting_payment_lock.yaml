@@ -1,0 +1,49 @@
+id: awaiting_payment_lock
+description: |
+  Regression test for the bug fixed in commit "fix: awaiting_payment must
+  not regress to negotiating on hold_firm". After the customer agrees to
+  ₹1100, any follow-up question (delivery, COD, etc.) must NOT transition
+  the conv_product state back to `negotiating` or reopen the agreed price.
+  The agreed_price_locked intervention should fire, and the state machine
+  should stay at `awaiting_payment`.
+
+seller:
+  persona:
+    greeting_style: "Haan ji"
+    negotiation_firmness: medium
+    closing_phrases: ["Done"]
+    common_expressions: ["yaar"]
+    hindi_english_ratio: "60% Hindi 40% English"
+    emoji_usage: light
+    response_length: short
+    tone: casual
+  policies:
+    cod: false
+    return_days: 0
+    payment_modes: [upi]
+
+products:
+  - slug: wooden_clock
+    name: wooden black gold clock
+    listed_price_paise: 120000
+    floor_price_paise: 110000
+    description: "Wooden wall clock with black face and gold-coloured gear design."
+
+turns:
+  # Get into awaiting_payment.
+  - customer: "kya price?"
+    expect:
+      action: show_product
+  - customer: "1100 lelo"
+    expect:
+      action: accept
+      new_state: awaiting_payment
+
+  # The bug: a delivery / cod follow-up regressing state back to negotiating.
+  - customer: "Acha aur kitne din mein aayega?"
+    expect:
+      # The model may pick hold_firm or engage — both fine. What MATTERS is the
+      # state lock: conv_product.state must remain awaiting_payment.
+      new_state: null   # null means "no state change" — sticky lock held
+      fired_interventions_any_of: [agreed_price_locked]
+      reply_must_not_contain: ["bargain", "discount", "kam"]

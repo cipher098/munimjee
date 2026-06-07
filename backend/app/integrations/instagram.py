@@ -1,4 +1,14 @@
-"""Instagram Graph API client — send DMs and images."""
+"""Instagram-direct API client — OAuth + send DMs/images.
+
+Uses the "Instagram API with Instagram Login" flow:
+  - OAuth: instagram.com/oauth/authorize (NOT facebook.com)
+  - Token exchange: api.instagram.com/oauth/access_token
+  - Long-lived exchange: graph.instagram.com/access_token?grant_type=ig_exchange_token
+  - Messaging: graph.instagram.com/<IG_USER_ID>/messages
+
+The old Facebook Login + Page-based flow is gone. No Facebook Page needed.
+Sellers just need a Business/Creator Instagram account.
+"""
 import logging
 
 import httpx
@@ -8,30 +18,179 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
-async def exchange_for_long_lived_token(short_lived_token: str) -> str:
-    """Exchange a short-lived token for a long-lived token (valid ~60 days)."""
+# ---------------------------------------------------------------------------
+# Outbound message-id registry (Redis)
+#
+# Instagram fires an "echo" webhook for EVERY outbound message on the seller's
+# account — both the bot's own sends and the seller typing manually in the IG
+# inbox. We must tell them apart, else the bot's own sends get recorded as
+# `seller_manual` and pause the bot on its own activity. Matching by scanning
+# conversation.messages JSONB is racy (the echo can arrive before we tag the
+# mid, and photo/duplicate sends tag unreliably), so every send registers its
+# returned message_id here the instant it succeeds. The echo handler checks
+# this first. Keyed per-mid (globally unique) with a short TTL.
+# ---------------------------------------------------------------------------
+
+_OUTBOUND_MID_TTL_SECONDS = 900  # 15 min — echoes arrive within seconds
+
+
+def _redis():
+    import redis as _redis_lib
+    return _redis_lib.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+def register_outbound_mid(mid: str | None) -> None:
+    """Record a message_id we just sent so its echo is recognized as the bot's."""
+    if not mid:
+        return
+    try:
+        _redis().set(f"outbound_mid:{mid}", "1", ex=_OUTBOUND_MID_TTL_SECONDS)
+    except Exception as exc:  # logging must never break sending
+        logger.warning("could not register outbound mid %s: %s", mid, exc)
+
+
+def is_registered_outbound_mid(mid: str | None) -> bool:
+    """True if `mid` was sent by the bot (registered via register_outbound_mid)."""
+    if not mid:
+        return False
+    try:
+        return bool(_redis().exists(f"outbound_mid:{mid}"))
+    except Exception as exc:
+        logger.warning("could not check outbound mid %s: %s", mid, exc)
+        return False
+
+# Scopes for the Instagram-direct flow. The "Manage messaging & content on
+# Instagram" use case grants these without App Review for the app's developers
+# and testers; production sellers need App Review.
+INSTAGRAM_OAUTH_SCOPES = ",".join([
+    "instagram_business_basic",
+    "instagram_business_manage_messages",
+])
+
+
+def build_oauth_authorize_url(redirect_uri: str, state: str) -> str:
+    """Build the Instagram OAuth dialog URL the seller should visit.
+
+    Goes through instagram.com (not facebook.com) — returns an IG user access
+    token bound to the IG account directly, no Page hop.
+    """
+    from urllib.parse import urlencode
+    params = {
+        "client_id": settings.INSTAGRAM_APP_ID,
+        "redirect_uri": redirect_uri,
+        "scope": INSTAGRAM_OAUTH_SCOPES,
+        "response_type": "code",
+        "state": state,
+    }
+    return f"https://www.instagram.com/oauth/authorize?{urlencode(params)}"
+
+
+async def exchange_code_for_user_token(code: str, redirect_uri: str) -> dict:
+    """Exchange the OAuth `code` for a short-lived IG user access token (~1 hour).
+
+    Returns the full response dict: {"access_token": "...", "user_id": "..."}
+    api.instagram.com expects form-encoded POST, NOT JSON, NOT GET.
+    """
     async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.get(
-            "https://graph.facebook.com/oauth/access_token",
-            params={
-                "grant_type": "fb_exchange_token",
-                "client_id": settings.META_APP_ID,
-                "client_secret": settings.META_APP_SECRET,
-                "fb_exchange_token": short_lived_token,
+        response = await client.post(
+            "https://api.instagram.com/oauth/access_token",
+            data={
+                "client_id": settings.INSTAGRAM_APP_ID,
+                "client_secret": settings.INSTAGRAM_APP_SECRET,
+                "grant_type": "authorization_code",
+                "redirect_uri": redirect_uri,
+                "code": code,
             },
         )
         if response.status_code != 200:
-            logger.error("Token exchange failed %d: %s", response.status_code, response.text)
+            logger.error("IG OAuth code exchange failed %d: %s", response.status_code, response.text)
         response.raise_for_status()
         data = response.json()
-        return data["access_token"]
+        logger.info(
+            "IG code exchange OK — user_id=%s permissions=%s token_prefix=%s",
+            data.get("user_id"),
+            data.get("permissions"),
+            str(data.get("access_token", ""))[:20],
+        )
+        return data
+
+
+async def exchange_for_long_lived_token(short_lived_token: str) -> str:
+    """Exchange a short-lived IG token for a long-lived one (~60 days)."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(
+            "https://graph.instagram.com/access_token",
+            params={
+                "grant_type": "ig_exchange_token",
+                "client_secret": settings.INSTAGRAM_APP_SECRET,
+                "access_token": short_lived_token,
+            },
+        )
+        if response.status_code != 200:
+            logger.error("IG long-lived exchange failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        return response.json()["access_token"]
+
+
+async def subscribe_ig_user_to_messages(ig_user_id: str, user_token: str) -> dict:
+    """Subscribe this IG account to the app's `messages` webhook.
+
+    App-level webhook config in the dashboard isn't enough — Meta also needs an
+    explicit per-account subscribe so it knows to fire events for this seller.
+    """
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.post(
+            f"https://graph.instagram.com/{settings.INSTAGRAM_API_VERSION}/{ig_user_id}/subscribed_apps",
+            params={
+                "subscribed_fields": "messages",
+                "access_token": user_token,
+            },
+        )
+        if response.status_code != 200:
+            logger.error("IG subscribe_apps failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        return response.json()
+
+
+async def fetch_ig_user(user_token: str) -> dict:
+    """Return the IG account that owns this token.
+
+    Endpoint: graph.instagram.com/me (NOT graph.facebook.com — that returns the
+    Facebook user and rejects the `username` field as deprecated).
+
+    Returns: {"user_id": "<numeric>", "username": "...", "name": "...", "account_type": "BUSINESS|CREATOR"}
+    """
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(
+            f"https://graph.instagram.com/{settings.INSTAGRAM_API_VERSION}/me",
+            params={
+                "fields": "user_id,username,name,account_type",
+                "access_token": user_token,
+            },
+        )
+        if response.status_code != 200:
+            logger.error("fetch_ig_user failed %d: %s", response.status_code, response.text)
+        response.raise_for_status()
+        data = response.json()
+        logger.info(
+            "fetch_ig_user: user_id=%s username=%s name=%s account_type=%s",
+            data.get("user_id"), data.get("username"), data.get("name"), data.get("account_type"),
+        )
+        return data
 
 
 class InstagramClient:
+    """Sends DMs + images via the Instagram Graph API.
+
+    Constructor signature kept the same — `fb_page_id` now holds the IG user
+    id (set by the OAuth callback). URLs hit graph.instagram.com instead of
+    graph.facebook.com.
+    """
+
     def __init__(self, ig_user_token: str, fb_page_id: str) -> None:
         self._token = ig_user_token
-        self.fb_page_id = fb_page_id
-        self._base_url = f"https://graph.facebook.com/{settings.META_API_VERSION}"
+        self.fb_page_id = fb_page_id  # actually the IG user id in the new flow
+        self._base_url = f"https://graph.instagram.com/{settings.INSTAGRAM_API_VERSION}"
 
     async def resolve_ig_url_to_media_id(self, ig_url: str) -> str | None:
         """Resolve an Instagram post/reel URL to its numeric media_id via oEmbed API."""
@@ -77,7 +236,6 @@ class InstagramClient:
                 json={
                     "recipient": {"id": recipient_id},
                     "message": {"text": text},
-                    "messaging_type": "RESPONSE",
                 },
             )
             if response.status_code != 200:
@@ -85,7 +243,9 @@ class InstagramClient:
                     "Instagram send_message failed %d: %s", response.status_code, response.text
                 )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            register_outbound_mid(data.get("message_id"))
+            return data
 
     async def send_image(self, recipient_id: str, image_url: str) -> dict:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -100,7 +260,6 @@ class InstagramClient:
                             "payload": {"url": image_url, "is_reusable": True},
                         }
                     },
-                    "messaging_type": "RESPONSE",
                 },
             )
             if response.status_code != 200:
@@ -108,4 +267,6 @@ class InstagramClient:
                     "Instagram send_image failed %d: %s", response.status_code, response.text
                 )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            register_outbound_mid(data.get("message_id"))
+            return data

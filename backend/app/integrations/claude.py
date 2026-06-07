@@ -4,223 +4,320 @@ import logging
 
 import anthropic
 
+from app.bot import agent_spec
+from app.bot import prompt_store
 from app.config import settings
-from app.prompts import (
+# Direct imports kept as in-process fallbacks; prompt_store also reaches into
+# these modules when the DB lookup misses.
+from app.prompts import (  # noqa: F401  (re-exported for training.py and tests)
     CATALOG_MATCH_PROMPT,
     DECISION_PROMPT,
     IMAGE_DESCRIBE_PROMPT,
     REPLY_PROMPT,
 )
+from app.subagent_prompts import (  # noqa: F401
+    EXTRACT_FEATURE_QUERY_PROMPT,
+    EXTRACT_PERSONA_PROMPT,
+    GENERATE_PRODUCT_DESCRIPTION_PROMPT,
+    SUGGEST_CATEGORY_PROMPT,
+    SUGGEST_TAGS_FOR_CATEGORY_PROMPT,
+)
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-20250514"
+# Backward-compat aliases — model selection now lives in agents.yaml.
+# `MODEL` is still re-exported because training.py and tests import it.
+MODEL = agent_spec.get("decide").model
+FALLBACK_MODEL = agent_spec.get("decide").fallback_model or "claude-3-5-sonnet-20241022"
 
 
-def _parse_json(text: str) -> dict:
-    """Parse JSON from Claude's response, handling code fences and prose wrappers."""
-    text = text.strip()
-    # Strip markdown code fences
-    if text.startswith("```"):
-        text = text.split("\n", 1)[-1]
-        text = text.rsplit("```", 1)[0].strip()
-    # If Claude wrapped JSON in prose, extract the first {...} block
-    start = text.find("{")
-    end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        text = text[start:end + 1]
-    return json.loads(text)
+def _to_anthropic_role(raw_role: str) -> str | None:
+    """Map sellerbot conversation roles to Anthropic API roles.
+
+    `seller_manual` is a message the seller typed themselves from the IG inbox
+    during a takeover — functionally a brand-side outbound, same as `bot`.
+    Mapping it to `assistant` keeps prompt history coherent when the bot resumes.
+    """
+    if raw_role == "customer":
+        return "user"
+    if raw_role in ("bot", "seller_manual"):
+        return "assistant"
+    return None
+
+
+def _build_decision_messages(
+    history: list[dict],
+    current_user_text: str,
+    context_block: str,
+) -> list[dict]:
+    """Build an Anthropic messages array with cache_control on the last
+    historical message so prior turns become a stable cached prefix.
+
+    `history` is conversation.messages EXCLUDING the current turn.
+    `current_user_text` is the latest customer message (will go in final user msg).
+    `context_block` is the dynamic CONTEXT string (state/round/prices) — appended
+    to the final user message so it doesn't pollute the cached prefix.
+
+    Guarantees:
+      - Coalesces consecutive same-role messages (Anthropic requires alternation).
+      - Drops leading assistant messages (first must be user).
+      - If the last historical message is user (no bot reply yet), folds it into
+        the current user message instead of placing a cache breakpoint there.
+      - Adds cache_control: ephemeral on the final historical message only when
+        that message is an assistant turn (stable boundary).
+    """
+    coalesced: list[dict] = []
+    last_role: str | None = None
+    for entry in history:
+        role = _to_anthropic_role(entry.get("role", ""))
+        if role is None:
+            continue
+        content = (entry.get("content") or "").strip()
+        if not content:
+            continue
+        if role == last_role and coalesced:
+            coalesced[-1]["content"] += "\n" + content
+        else:
+            coalesced.append({"role": role, "content": content})
+            last_role = role
+
+    # First message must be user.
+    while coalesced and coalesced[0]["role"] != "user":
+        coalesced.pop(0)
+
+    # If trailing historical message is user (bot didn't reply yet), fold it
+    # into the new user turn so we don't end up with two consecutive user msgs.
+    trailing_user_text = ""
+    if coalesced and coalesced[-1]["role"] == "user":
+        trailing_user_text = coalesced.pop()["content"] + "\n\n"
+
+    # Place cache breakpoint on the last historical (assistant) message.
+    if coalesced:
+        last_msg = coalesced[-1]
+        last_msg["content"] = [
+            {
+                "type": "text",
+                "text": last_msg["content"],
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+
+    final_user_text = f"{trailing_user_text}{current_user_text}\n\n{context_block}"
+    coalesced.append({"role": "user", "content": final_user_text})
+    return coalesced
+
+
+from app.integrations._json_utils import (  # noqa: F401  (re-export for test compatibility)
+    LLMOutputParseError,
+    parse_json_relaxed as _parse_json,
+)
+from app.integrations import llm_logging
+from app.integrations import llm_provider as _llm_provider
+# Prompt construction is shared with the Sarvam provider so the two never drift.
+from app.bot.prompt_builders import (
+    build_decide_prompt,
+    build_reply_prompt,
+    evaluate_interventions,
+    split_decide_prompt as _split_decision_prompt,
+    split_reply_prompt as _split_reply_prompt,
+)
+
+
+def _response_text(resp) -> str:
+    """Concatenate the text blocks of an Anthropic response for the cost log."""
+    try:
+        parts = [getattr(b, "text", "") for b in (resp.content or [])]
+        return "".join(p for p in parts if p)
+    except Exception:  # pragma: no cover - defensive
+        return ""
 
 
 class ClaudeClient:
     def __init__(self) -> None:
         self._client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
-    async def decide(self, context: dict) -> dict:
-        last_counter = context.get("last_counter_price")
-        last_counter_str = f"{last_counter} paise (₹{last_counter // 100})" if last_counter else "none yet"
-
-        prompt = DECISION_PROMPT.format(
-            state=context.get("state", ""),
-            customer_message=context.get("customer_message", ""),
-            listed_price=context.get("listed_price", "unknown"),
-            floor_price=context.get("floor_price", "unknown"),
-            last_counter_price=last_counter_str,
-            round_number=context.get("negotiation_round", 0),
-            message_history=json.dumps(context.get("message_history", []), ensure_ascii=False),
-            available_products=json.dumps(context.get("available_products", []), ensure_ascii=False),
-            other_inquiry_products=json.dumps(context.get("other_inquiry_products", []), ensure_ascii=False),
-            bundle_pitched=context.get("bundle_pitched", False),
-        )
-
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=350,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        text = response.content[0].text.strip()
+    async def _create(self, *, fallback_model: str | None = None, log_method: str | None = None, **kwargs):
+        """messages.create with one retry on transient API errors and a
+        model fallback when the primary model emits a content-policy refusal.
+        `fallback_model` lets callers override the global FALLBACK_MODEL on a
+        per-method basis (driven by agents.yaml). `log_method` names the
+        logical call (decide / generate_reply / subagent) for the cost
+        ledger. Logs cache hits and records the call via llm_logging."""
+        model_name = kwargs.get("model", MODEL)
         try:
-            return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON decision: %r", text)
-            return {"action": "clarify", "price": None, "reason": "parse error"}
+            try:
+                resp = await self._client.messages.create(**kwargs)
+            except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.RateLimitError) as exc:
+                logger.warning("Anthropic transient error (%s) on model %s — retrying once", type(exc).__name__, model_name)
+                resp = await self._client.messages.create(**kwargs)
 
-    async def generate_reply(self, context: dict) -> str:
-        decision = context.get("decision", {})
-        price = decision.get("price")
-        price_context = f"YOUR COUNTER OFFER IS ₹{price // 100} — quote this exact number" if price else "No price change"
-        last_counter = context.get("last_counter_price")
-        last_counter_reply_str = f"₹{last_counter // 100}" if last_counter else "none"
-
-        warranty = context.get("warranty_months")
-        warranty_str = f"{warranty} months" if warranty else "No warranty"
-
-        stock = context.get("stock_quantity")
-        if stock is None:
-            stock_str = "Not tracked"
-        elif stock == 0:
-            stock_str = "Out of stock"
-        elif stock <= 3:
-            stock_str = f"Only {stock} left"
-        else:
-            stock_str = f"{stock} in stock"
-
-        policies = context.get("policies") or {}
-        cod = policies.get("cod")
-        cod_charges = policies.get("cod_charges", 0)
-        return_days = policies.get("return_days")
-        exchange_days = policies.get("exchange_days")
-        delivery_days = policies.get("delivery_days")
-        payment_modes = policies.get("payment_modes") or []
-
-        _mode_labels = {"upi": "UPI", "bank_transfer": "Bank Transfer/NEFT", "card": "Card"}
-        mode_str = " / ".join(_mode_labels.get(m, m) for m in payment_modes) if payment_modes else None
-
-        policy_lines = []
-        if mode_str:
-            policy_lines.append(f"Accepted payment: {mode_str}")
-        if cod is True:
-            if cod_charges:
-                policy_lines.append(f"COD available with ₹{cod_charges} extra charge")
-            else:
-                policy_lines.append("COD available, no extra charge")
-        elif cod is False:
-            policy_lines.append("No COD — prepaid only")
-        if return_days:
-            policy_lines.append(f"{return_days}-day returns accepted")
-        elif return_days == 0 and "return_days" in policies:
-            policy_lines.append("No returns")
-        if exchange_days:
-            policy_lines.append(f"{exchange_days}-day exchange accepted")
-        elif exchange_days == 0 and "exchange_days" in policies:
-            policy_lines.append("No exchange")
-        if delivery_days:
-            policy_lines.append(f"Delivery in {delivery_days}")
-        policy_str = ", ".join(policy_lines) if policy_lines else "Not configured — do not mention or invent any policy; say you'll check and confirm"
-
-        total_photos = context.get("total_photos", 1)
-        has_more_photos = total_photos > 1
-
-        history = context.get("message_history", [])
-        history_str = json.dumps(history[-6:], ensure_ascii=False) if history else "[]"
-
-        product_description = context.get("product_description") or "No description available"
-        logger.warning("generate_reply: product=%r description=%r", context.get("product_name"), product_description)
-
-        tag_values = context.get("product_tag_values") or {}
-        tag_values_str = (
-            ", ".join(f"{k}: {v}" for k, v in tag_values.items()) if tag_values else "None available"
-        )
-
-        other_active = context.get("other_active_products") or []
-        other_active_str = (
-            ", ".join(p["name"] for p in other_active) if other_active else "none"
-        )
-
-        other_inquiry = context.get("other_inquiry_products") or []
-        other_inquiry_str = (
-            ", ".join(
-                f"{p['name']} listed=₹{p['listed_price_rupees']} floor=₹{p['floor_price_rupees']}"
-                for p in other_inquiry
+            if getattr(resp, "stop_reason", None) == "refusal":
+                target = fallback_model or FALLBACK_MODEL
+                logger.warning("Model %s refused — retrying with fallback %s", model_name, target)
+                kwargs["model"] = target
+                resp = await self._client.messages.create(**kwargs)
+        except Exception as exc:
+            llm_logging.record(
+                "anthropic", kwargs.get("model", model_name), log_method,
+                status="error", request=kwargs, error=f"{type(exc).__name__}: {exc}",
             )
-            if other_inquiry else "none"
-        )
+            raise
 
-        prompt = REPLY_PROMPT.format(
-            persona_json=json.dumps(context.get("persona", {}), ensure_ascii=False),
-            product_name=context.get("product_name", "the product"),
-            product_description=product_description,
-            product_tag_values=tag_values_str,
-            listed_price_rupees=context.get("listed_price_rupees", "N/A"),
-            warranty_info=warranty_str,
-            stock_info=stock_str,
-            policy_info=policy_str,
-            action=decision.get("action", "clarify"),
-            price_context=price_context,
-            last_counter_price=last_counter_reply_str,
-            customer_intent=decision.get("customer_intent", "warm"),
-            customer_message=context.get("customer_message", ""),
-            has_more_photos=has_more_photos,
-            message_history=history_str,
-            address_term=context.get("address_term", "yaar"),
-            other_active_products=other_active_str,
-            other_inquiry_products_str=other_inquiry_str,
+        used_model = kwargs.get("model", model_name)
+        usage = getattr(resp, "usage", None)
+        cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0 if usage else 0
+        cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0 if usage else 0
+        if usage is not None and (cache_read or cache_create):
+            logger.info(
+                "Claude cache: read=%d write=%d input=%d output=%d model=%s",
+                cache_read, cache_create,
+                getattr(usage, "input_tokens", 0) or 0,
+                getattr(usage, "output_tokens", 0) or 0,
+                used_model,
+            )
+        llm_logging.record(
+            "anthropic", used_model, log_method,
+            input_tokens=(getattr(usage, "input_tokens", None) if usage else None),
+            output_tokens=(getattr(usage, "output_tokens", None) if usage else None),
+            cache_read_input_tokens=cache_read,
+            cache_creation_input_tokens=cache_create,
+            request=kwargs,
+            response=_response_text(resp),
         )
+        return resp
 
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
+    async def decide(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> dict:
+        # Shared builder — same prompt Sarvam uses. customer_message/history are
+        # sent below as native Anthropic messages for prefix caching.
+        prompt = await build_decide_prompt(context)
+        system_text, context_block = _split_decision_prompt(prompt)
+
+        # Fired intervention reminders go INTO the user-side context so they stay
+        # dynamic (don't pollute the cached system prompt). Shared with Sarvam.
+        reminder_block = evaluate_interventions(context)
+        if reminder_block and context_block:
+            context_block = f"{reminder_block}\n\n{context_block}"
+
+        history = context.get("message_history") or []
+        current_user_text = context.get("customer_message", "")
+        if history and history[-1].get("role") == "customer":
+            # Standard flow: latest history entry IS the current customer turn.
+            history_for_cache = history[:-1]
+        else:
+            # No history or last entry is bot reply — use entire history as cached prefix.
+            history_for_cache = history
+
+        spec = agent_spec.get("decide")
+        effective_model = model or spec.model
+        effective_max_tokens = max_tokens or spec.max_tokens
+        if context_block:
+            messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
+            request_kwargs = dict(
+                model=effective_model,
+                max_tokens=effective_max_tokens,
+                system=[
+                    {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
+                ],
+                messages=messages,
+            )
+        else:
+            # Marker missing (training dashboard rewrote prompt structure) — degraded path.
+            logger.warning("DECISION_PROMPT missing CONTEXT/STRATEGY markers — skipping cache")
+            request_kwargs = dict(
+                model=effective_model,
+                max_tokens=effective_max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+        # NB: errors propagate to the LLM-provider factory so it can fall back
+        # to the configured fallback_provider/fallback_model. The old
+        # "return clarify on error" path swallowed failures and prevented
+        # the factory from ever firing the fallback.
+        response = await self._create(fallback_model=spec.fallback_model, log_method="decide", **request_kwargs)
+        text = response.content[0].text.strip()
+        return _parse_json(text)  # raises LLMOutputParseError on bad JSON
+
+    async def generate_reply(self, context: dict, *, model: str | None = None, max_tokens: int | None = None) -> str:
+        history = context.get("message_history") or []
+
+        # Shared builder — identical prompt + context to the Sarvam provider.
+        prompt = await build_reply_prompt(context)
+        system_text, context_block = _split_reply_prompt(prompt)
+
+        spec = agent_spec.get("generate_reply")
+        effective_model = model or spec.model
+        effective_max_tokens = max_tokens or spec.max_tokens
+        if context_block:
+            current_user_text = context.get("customer_message", "")
+            if history and history[-1].get("role") == "customer":
+                history_for_cache = history[:-1]
+            else:
+                history_for_cache = history
+            messages = _build_decision_messages(history_for_cache, current_user_text, context_block)
+            request_kwargs = dict(
+                model=effective_model,
+                max_tokens=effective_max_tokens,
+                system=[
+                    {"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}
+                ],
+                messages=messages,
+            )
+        else:
+            logger.warning("REPLY_PROMPT missing DYNAMIC CONTEXT marker — skipping cache")
+            request_kwargs = dict(
+                model=effective_model,
+                max_tokens=effective_max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+        # Propagate errors to the LLM-provider factory for fallback. Old
+        # `return ""` swallow path is gone — factory routes to fallback
+        # provider/model on exception, which is more useful than a silent ""
+        # reply that prints "BOT REPLY :" with nothing.
+        response = await self._create(fallback_model=spec.fallback_model, log_method="generate_reply", **request_kwargs)
         return response.content[0].text.strip()
 
     async def generate_product_description(self, image_url: str, product_name: str) -> str:
-        """Generate a seller-facing product description from an image for catalog use."""
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=200,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": (
-                            f"You are helping an Indian small business seller list a product called '{product_name}'.\n"
-                            "Write a short product description (2-3 sentences) based on this image.\n"
-                            "Mention: material, colour, key features, typical use.\n"
-                            "Write in simple English. No marketing fluff. Return ONLY the description text."
-                        ),
-                    },
-                    {"type": "image", "source": {"type": "url", "url": image_url}},
-                ],
-            }],
+        """Generate a seller-facing product description from an image for catalog use.
+        Routed to the agents.yaml-configured provider (vision) with fallback."""
+        template = await prompt_store.get("generate_product_description")
+        return await _llm_provider.complete_vision(
+            "generate_product_description",
+            prompt=template.format(product_name=product_name),
+            image={"kind": "url", "url": image_url},
         )
-        return response.content[0].text.strip()
 
     async def describe_product_image(self, image_b64: str, media_type: str = "image/jpeg") -> str:
         """Stage 1 — Vision only: describe what product is in the customer's image.
         Accepts base64-encoded image bytes (Instagram blocks direct URL fetching).
-        """
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=150,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": IMAGE_DESCRIBE_PROMPT},
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_b64,
-                        },
-                    },
-                ],
-            }],
+        Routed to the configured provider (vision) with fallback."""
+        template = await prompt_store.get("image_describe")
+        return await _llm_provider.complete_vision(
+            "describe_product_image",
+            prompt=template,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
         )
-        return response.content[0].text.strip()
+
+    async def extract_payment_details(self, image_b64: str, media_type: str = "image/jpeg") -> dict:
+        """Vision — extract UPI payment fields from a screenshot. Fields only; the
+        pass/fail verdict is made deterministically in app.bot.payment_verification.
+        Returns {payee_upi_id, payee_name, amount_rupees, datetime, utr, app,
+        status_text} with nulls for anything not visible. Never raises — returns
+        an all-null dict on parse failure so the verifier routes to manual review."""
+        template = await prompt_store.get("extract_payment_details")
+        text = await _llm_provider.complete_vision(
+            "extract_payment_details",
+            prompt=template,
+            image={"kind": "base64", "media_type": media_type, "data": image_b64},
+        )
+        empty = {"payee_upi_id": None, "payee_name": None, "amount_rupees": None,
+                 "datetime": None, "utr": None, "app": None, "status_text": None}
+        try:
+            parsed = _parse_json(text)
+            return {**empty, **parsed} if isinstance(parsed, dict) else empty
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON payment extraction: %r", text)
+            return empty
 
     async def match_product_by_description(
         self, description: str, products: list[dict]
@@ -236,52 +333,34 @@ class ClaudeClient:
             for p in products
         ]
 
-        prompt = CATALOG_MATCH_PROMPT.format(
+        template = await prompt_store.get("catalog_match")
+        prompt = template.format(
             description=description,
             catalog_json=json.dumps(catalog, ensure_ascii=False),
         )
 
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=150,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("match_product_by_description", user=prompt)
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON catalog match: %r", text)
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON catalog match: %r", text)
             return {"product_id": None, "confidence": "low", "reason": "parse error"}
 
     async def suggest_category(self, product_name: str, product_description: str = "") -> dict:
         """Suggest a category name and relevant tag definitions for a product.
         Returns: {category_name, tags: [{name, display_name, value_type, allowed_values}]}
         """
-        prompt = (
-            f"A seller is listing a product called '{product_name}'.\n"
-            + (f"Description: {product_description}\n" if product_description else "")
-            + "Suggest a product category name and 3-6 useful specification tags a buyer might ask about.\n"
-            "Return ONLY valid JSON, no other text:\n"
-            '{"category_name": "e.g. Wall Clock", "tags": ['
-            '{"name": "power_source", "display_name": "Power Source", "value_type": "enum", "allowed_values": ["AC Power", "Battery", "USB"]}'
-            "]}\n"
-            "Rules:\n"
-            "- category_name: short, generic product type (2-3 words max)\n"
-            "- tag name: lowercase_snake_case slug\n"
-            "- value_type: 'enum' if there are fixed choices, 'text' for free text, 'number' for measurements\n"
-            "- For enum tags, always include allowed_values. For text/number, set allowed_values to null.\n"
+        description_line = f"Description: {product_description}\n" if product_description else ""
+        template = await prompt_store.get("suggest_category")
+        prompt = template.format(
+            product_name=product_name,
+            description_line=description_line,
         )
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=400,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("suggest_category", user=prompt)
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON category suggestion: %r", text)
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON category suggestion: %r", text)
             return {"category_name": None, "tags": []}
 
     async def suggest_tags_for_category(self, category_name: str) -> list[dict]:
@@ -289,34 +368,14 @@ class ClaudeClient:
         Returns: [{name, display_name, value_type, allowed_values, suggested_value}]
         suggested_value is a typical default value the seller can confirm or change.
         """
-        prompt = (
-            f"A seller has a product category called '{category_name}'.\n"
-            "Suggest 4-8 specification tags that customers commonly ask about for this product type.\n"
-            "For each tag, also suggest a typical/common value as 'suggested_value'.\n"
-            "Return ONLY a valid JSON array, no other text:\n"
-            "[\n"
-            '  {"name": "power_source", "display_name": "Power Source", "value_type": "enum", '
-            '"allowed_values": ["AC Power", "Battery", "USB Chargeable"], "suggested_value": "AC Power"},\n'
-            '  {"name": "dial_size", "display_name": "Dial Size", "value_type": "text", '
-            '"allowed_values": null, "suggested_value": "30 cm"}\n'
-            "]\n"
-            "Rules:\n"
-            "- name: lowercase_snake_case slug\n"
-            "- value_type: 'enum' if fixed choices exist, 'text' for free input, 'number' for measurements\n"
-            "- For enum: include allowed_values list. For text/number: set allowed_values to null.\n"
-            "- suggested_value: the most common/default value for this category — can be null if unknown.\n"
-        )
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=600,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        template = await prompt_store.get("suggest_tags_for_category")
+        prompt = template.format(category_name=category_name)
+        text = await _llm_provider.complete_text("suggest_tags_for_category", user=prompt)
         try:
             result = _parse_json(text)
             return result if isinstance(result, list) else []
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON tag suggestions: %r", text)
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON tag suggestions: %r", text)
             return []
 
     async def extract_feature_query(
@@ -334,77 +393,72 @@ class ClaudeClient:
         }
         """
         tags_json = json.dumps(tags, ensure_ascii=False)
-        prompt = (
-            f"Customer message: \"{customer_message}\"\n\n"
-            f"Known product tags: {tags_json}\n\n"
-            "Is this message asking about a specific specification or feature of the CURRENT product being discussed?\n"
-            "Examples of feature questions: charging method, power source, size, material, colour, weight, display type, connectivity, whether a feature exists on THIS product\n"
-            "NOT feature questions:\n"
-            "- price, warranty, delivery, return policy, 'le lunga', 'order karna hai'\n"
-            "- Requests to see OTHER products or designs ('koi aur design hai?', 'aur kuch dikhao', 'different model hai?', 'or sample', 'aur kya hai')\n"
-            "- General browsing or switching ('ye nahi, kuch aur', 'koi doosra', 'aur options')\n"
-            "- Compliments or reactions ('accha hai', 'sundar hai', 'theek hai')\n"
-            "- Expressing DISLIKE or REJECTION of a feature value — even if a tag word appears ('yeh colour nhi chahie', 'ye size nahi chalega', 'is design mein nahi chahiye', 'aur colour hai?'). These mean the customer does not want THIS product, NOT that they are asking what the feature is.\n"
-            "- Asking if a product EXISTS in a different variant/colour/style ('koi blue green colour type hai?', 'X mein kuch hai?', 'koi aur colour hai?', 'X colour available hai?'). These are availability/browse questions — the customer wants to see a different product, not know about THIS product's specs.\n"
-            "Key test: is the customer asking WHAT THIS specific product IS or HAS? Only that is a feature question. 'Do you have X colour?' or 'Is X available?' is browsing, not a feature question.\n\n"
-            "If it IS a feature question, check if it maps to one of the known tags above.\n"
-            "If it does NOT map to a known tag, suggest a new tag. For the new tag:\n"
-            "- Choose a clear, meaningful display name (e.g. 'Second Hand' for a clock seconds hand question)\n"
-            "- Decide value_type: 'enum' if the answer has fixed options, 'text' for free text, 'number' for measurements\n"
-            "- For enum: provide the most likely allowed_values list (e.g. Yes/No questions → [\"Yes\", \"No\"])\n"
-            "- For text/number: set allowed_values to null\n\n"
-            "Return ONLY valid JSON, no other text:\n"
-            '{"is_feature_question": true/false, '
-            '"matched_tag_name": "<existing tag slug or null>", '
-            '"new_tag_name": "<snake_case slug if no match, else null>", '
-            '"new_tag_display_name": "<human label if no match, else null>", '
-            '"new_tag_value_type": "<enum|text|number if new tag, else null>", '
-            '"new_tag_allowed_values": ["option1", "option2"] or null}'
+        template = await prompt_store.get("extract_feature_query")
+        prompt = template.format(
+            customer_message=customer_message,
+            tags_json=tags_json,
         )
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        text = await _llm_provider.complete_text("extract_feature_query", user=prompt)
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON feature query: %r", text)
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON feature query: %r", text)
             return {"is_feature_question": False, "matched_tag_name": None,
                     "new_tag_name": None, "new_tag_display_name": None,
                     "new_tag_value_type": None, "new_tag_allowed_values": None}
 
     async def extract_persona(self, conversation_history: str) -> dict:
-        prompt = f"""Analyze these Instagram DM conversations from an Indian seller.
-Return ONLY valid JSON, no other text:
-{{
-  "greeting_style": "exact phrase they use e.g. 'Haan bolo' or 'Ji kya chahiye'",
-  "negotiation_firmness": "soft | medium | firm",
-  "closing_phrases": ["phrases used when deal closes"],
-  "common_expressions": ["frequent words/phrases they use"],
-  "hindi_english_ratio": "e.g. 70% Hindi 30% English",
-  "emoji_usage": "none | light | moderate | heavy",
-  "response_length": "short | medium | long",
-  "tone": "formal | casual | very_casual",
-  "sample_responses": {{
-    "greeting": "in their exact style",
-    "price_rejection": "how they say no to low offers",
-    "deal_accepted": "how they confirm a deal",
-    "payment_request": "how they ask for payment",
-    "dispatched": "how they say order is shipped"
-  }}
-}}
-Conversation history: {conversation_history}
-"""
-        response = await self._client.messages.create(
-            model=MODEL,
-            max_tokens=4000,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
+        template = await prompt_store.get("extract_persona")
+        prompt = template.format(conversation_history=conversation_history)
+        text = await _llm_provider.complete_text("extract_persona", user=prompt)
         try:
             return _parse_json(text)
-        except json.JSONDecodeError:
-            logger.error("Claude returned non-JSON persona: %r", text)
+        except LLMOutputParseError:
+            logger.error("LLM returned non-JSON persona: %r", text)
             return {}
+
+
+# ---------------------------------------------------------------------------
+# LLMProvider wrapper — exposed via app.integrations.llm_provider for the
+# factory. Subagent methods (vision, catalog, etc.) stay on ClaudeClient
+# directly; only the customer-facing decide / generate_reply go through here.
+# ---------------------------------------------------------------------------
+
+from app.integrations.llm_provider import LLMProvider as _LLMProvider  # noqa: E402
+
+
+class ClaudeProvider(_LLMProvider):
+    name = "anthropic"
+
+    def __init__(self) -> None:
+        self._client = ClaudeClient()
+
+    async def decide(self, context: dict, *, model: str, max_tokens: int) -> dict:
+        return await self._client.decide(context, model=model, max_tokens=max_tokens)
+
+    async def generate_reply(self, context: dict, *, model: str, max_tokens: int) -> str:
+        return await self._client.generate_reply(context, model=model, max_tokens=max_tokens)
+
+    async def complete_text(self, *, system: str, user: str, model: str,
+                            max_tokens: int, log_method: str | None = None) -> str:
+        kwargs = dict(model=model, max_tokens=max_tokens,
+                      messages=[{"role": "user", "content": user}])
+        if system:
+            kwargs["system"] = system
+        resp = await self._client._create(log_method=log_method, **kwargs)
+        return resp.content[0].text.strip()
+
+    async def complete_vision(self, *, prompt: str, image: dict, model: str,
+                              max_tokens: int, log_method: str | None = None) -> str:
+        if image.get("kind") == "base64":
+            source = {"type": "base64", "media_type": image["media_type"], "data": image["data"]}
+        else:
+            source = {"type": "url", "url": image["url"]}
+        resp = await self._client._create(
+            log_method=log_method, model=model, max_tokens=max_tokens,
+            messages=[{"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image", "source": source},
+            ]}],
+        )
+        return resp.content[0].text.strip()

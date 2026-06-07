@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.workers.process_statement",
         "app.workers.refresh_tokens",
         "app.workers.message_batch",
+        "app.workers.nudge",
     ],
 )
 
@@ -41,5 +42,13 @@ celery_app.conf.beat_schedule = {
     "refresh-instagram-tokens": {
         "task": "app.workers.refresh_tokens.refresh_expiring_instagram_tokens",
         "schedule": crontab(hour=10, minute=0),  # daily at 10am IST
+    },
+    "scan-resume-paused-conversations": {
+        "task": "app.workers.message_batch.scan_resume_paused_conversations",
+        "schedule": settings.RESUME_SCAN_EVERY_SECONDS,  # default 60s
+    },
+    "scan-for-nudge-candidates": {
+        "task": "app.workers.nudge.scan_for_nudge_candidates",
+        "schedule": settings.CUSTOMER_NUDGE_SCAN_EVERY_MINUTES * 60,  # default hourly
     },
 }

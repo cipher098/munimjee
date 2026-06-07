@@ -49,6 +49,7 @@
       <a href="/training/dashboard" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Training</a>
       <a href="/dashboard/categories" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Categories</a>
       <a href="/dashboard/settings" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Settings</a>
+      <a href="/dashboard/llm-costs" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Costs</a>
       <a href="/dashboard-auth/logout" style="padding:6px 12px;border-radius:6px;font-size:13px;text-decoration:none;color:#555;">Logout</a>
     </nav>
   </div>
@@ -90,6 +91,16 @@
         <label>Product Image *</label>
         <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
         <div class="preview" id="preview"><img id="previewImg" src="" alt="preview"></div>
+
+        <label>Variants (color / size)</label>
+        <textarea name="variants" rows="5" placeholder='Optional. Paste JSON, e.g.:
+[
+  {"label": "Red", "photo_urls": ["https://.../red1.jpg", "https://.../red2.jpg"]},
+  {"label": "Blue", "photo_urls": ["https://.../blue1.jpg"]}
+]'></textarea>
+        <div class="hint">When a customer asks "kya colors hain?" the bot lists these labels.
+          When they pick one ("blue dedo"), product photos cycle ONLY that variant's URLs.
+          Leave blank to use the primary image + photo_urls flat list as before.</div>
 
         <button type="submit" class="btn-primary" id="btn">Add Product</button>
       </form>
