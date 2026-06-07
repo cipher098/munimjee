@@ -241,9 +241,25 @@ async def generate_bot_reply(
         except Exception as exc:
             logger.warning("Tag lookup failed: %s", exc)
 
+    # If the customer is clearly asking about a DIFFERENT product than the current focus
+    # (e.g. focus is "gold clock" but they ask "jhoomar mein installation kya scene hai"),
+    # do NOT run the feature-query tag-pause — it would pause and create a tag/alert on the
+    # WRONG product. Let the normal decide flow handle the pivot (switch product / answer).
+    _other_product_referenced = False
+    if product and all_products:
+        _msg_low = (customer_message or "").lower()
+        def _name_words(n):
+            return [w for w in (n or "").lower().split() if len(w) > 3]
+        _focus_hit = any(w in _msg_low for w in _name_words(product.name))
+        _other_hit = any(
+            any(w in _msg_low for w in _name_words(p.name))
+            for p in all_products if str(p.id) != str(product.id)
+        )
+        _other_product_referenced = _other_hit and not _focus_hit
+
     # If product has a category and the customer seems to be asking a feature question,
     # check if we have the answer or need to pause and notify the seller.
-    if product and product.category_id and category_tags:
+    if product and product.category_id and category_tags and not _other_product_referenced:
         try:
             fq = await claude.extract_feature_query(customer_message, category_tags)
 
