@@ -6,6 +6,8 @@ States (conv_product.state):
   → verifying → payment_confirmed | failed | manual_review
   → dispatched_notified | not_interested | waiting_for_tag
 """
+from app.paths import UPLOAD_DIR as _UPLOAD_ROOT
+
 import base64
 import logging
 from datetime import datetime, timezone
@@ -603,11 +605,10 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db, 
 def _save_payment_screenshot(img_bytes: bytes, media_type: str) -> str | None:
     """Persist a received payment screenshot under uploads for audit. Returns the
     /uploads/... URL, or None on failure (verification still proceeds)."""
-    from pathlib import Path
     from uuid import uuid4
     try:
         ext = {"image/png": ".png", "image/webp": ".webp"}.get(media_type, ".jpg")
-        d = Path("/app/uploads/payment_screenshots/received")
+        d = _UPLOAD_ROOT / "payment_screenshots/received"
         d.mkdir(parents=True, exist_ok=True)
         fname = f"pay_{uuid4().hex}{ext}"
         (d / fname).write_bytes(img_bytes)

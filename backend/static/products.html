@@ -462,7 +462,8 @@
     fd.append('warranty_months', warranty === '' ? '0' : warranty);
 
     const stock = document.getElementById('edit-stock').value;
-    fd.append('stock_quantity', stock === '' ? '0' : stock);
+    if (stock === '') fd.append('clear_stock_tracking', 'true');
+    else fd.append('stock_quantity', stock);
 
     const img = document.getElementById('edit-image').files[0];
     if (img) fd.append('image', img);

@@ -7,6 +7,8 @@ Two roles:
             all sellers and "view as" any seller (a `view_seller` cookie scopes the seller
             pages to that seller).
 """
+from app.paths import STATIC_DIR as _STATIC_DIR
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -89,7 +91,7 @@ def require_admin(ctx: DashCtx = Depends(verify_dashboard_cookie)) -> DashCtx:
 
 @router.get("/login")
 async def login_page():
-    return FileResponse("/app/static/dashboard_login.html")
+    return FileResponse(_STATIC_DIR / "dashboard_login.html")
 
 
 @router.post("/login")

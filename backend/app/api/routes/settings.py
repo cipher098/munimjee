@@ -1,4 +1,6 @@
 """Seller settings — policies (COD, returns, delivery) + allowed channels."""
+from app.paths import UPLOAD_DIR as _UPLOAD_ROOT
+
 import logging
 from typing import Literal
 
@@ -247,7 +249,7 @@ from pathlib import Path as _Path
 from fastapi import File, UploadFile
 from app.models.payment_method import PaymentMethod
 
-_QR_DIR = _Path("/app/uploads/payment_screenshots/qr")
+_QR_DIR = _UPLOAD_ROOT / "payment_screenshots/qr"
 
 
 class PaymentMethodIn(BaseModel):
