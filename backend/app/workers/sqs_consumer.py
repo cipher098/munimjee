@@ -93,6 +93,12 @@ async def _forward_to_local(event: dict) -> None:
 
 async def _process_event(messaging_event: dict) -> None:
     async with worker_session() as db:
+        if messaging_event.get("type") == "instagram_comment":
+            from app.services.comment_automation import ingest_comment
+            await ingest_comment(db, messaging_event.get("account_id"), messaging_event.get("change") or {}, messaging_event.get("time"))
+            return
+        if messaging_event.get("type") == "instagram_message":
+            messaging_event = messaging_event.get("event") or {}
         if await _maybe_route_to_local(messaging_event, db):
             return
         await _handle_messaging_event(messaging_event, db)

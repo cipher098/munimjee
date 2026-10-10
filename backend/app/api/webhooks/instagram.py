@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, Query
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,27 +20,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
 # GET /webhooks/instagram — Meta webhook verification
-# ---------------------------------------------------------------------------
 
 @router.get("/webhooks/instagram")
 async def verify_webhook(
-    hub_mode: str = None,
-    hub_challenge: str = None,
-    hub_verify_token: str = None,
+    hub_mode: str = Query(default=None, alias="hub.mode"),
+    hub_challenge: str = Query(default=None, alias="hub.challenge"),
+    hub_verify_token: str = Query(default=None, alias="hub.verify_token"),
 ):
     """Meta calls this once to verify the webhook endpoint before sending events."""
-    if hub_mode == "subscribe" and hub_verify_token == settings.META_VERIFY_TOKEN:
+    if settings.META_VERIFY_TOKEN and hub_mode == "subscribe" and hub_verify_token == settings.META_VERIFY_TOKEN:
         logger.info("Instagram webhook verified successfully")
         return Response(content=hub_challenge, media_type="text/plain")
     logger.warning("Instagram webhook verification failed — bad verify token")
     raise HTTPException(status_code=403, detail="Verification failed")
 
 
-# ---------------------------------------------------------------------------
 # POST /webhooks/instagram — Receive DM events
-# ---------------------------------------------------------------------------
 
 @router.post("/webhooks/instagram")
 async def receive_webhook(
@@ -53,35 +49,31 @@ async def receive_webhook(
 
     _verify_signature(body, x_hub_signature_256)
 
-    payload: dict[str, Any] = await request.json()
-    logger.info("RAW PAYLOAD: %s", payload)
-
+    try:
+        payload = await request.json()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid webhook payload")
+    if payload.get("object") != "instagram":
+        return {"status": "ignored"}
+    from app.services.comment_automation import ingest_comment
     for entry in payload.get("entry", []):
         for messaging_event in entry.get("messaging", []):
-            sender_id = messaging_event.get("sender", {}).get("id", "?")
-            msg = messaging_event.get("message", {})
-            text = msg.get("text", "")
-            is_echo = msg.get("is_echo", False)
-            logger.info(
-                "DM event — sender=%s echo=%s text=%r full=%s",
-                sender_id, is_echo, text, messaging_event,
-            )
             await _handle_messaging_event(messaging_event, db)
+        for change in entry.get("changes", []):
+            await ingest_comment(db, entry.get("id"), change, entry.get("time"))
 
     # Always return 200 quickly — Meta will retry if we don't
     return {"status": "ok"}
 
 
-# ---------------------------------------------------------------------------
 # Signature verification
-# ---------------------------------------------------------------------------
 
 def _verify_signature(body: bytes, signature_header: str | None) -> None:
     """Validates X-Hub-Signature-256 to confirm the request is from Meta."""
     if not settings.META_WEBHOOK_SECRET:
-        # Skip in dev if secret not set
-        logger.warning("META_WEBHOOK_SECRET not set — skipping signature verification")
-        return
+        raise HTTPException(status_code=503, detail="Webhook signature verification is not configured")
 
     if not signature_header or not signature_header.startswith("sha256="):
         raise HTTPException(status_code=400, detail="Missing signature header")
@@ -94,13 +86,11 @@ def _verify_signature(body: bytes, signature_header: str | None) -> None:
 
     received = signature_header.removeprefix("sha256=")
 
-    if not hmac.compare_digest(expected, received):
+    if not received.isascii() or not hmac.compare_digest(expected, received):
         raise HTTPException(status_code=403, detail="Invalid signature")
 
 
-# ---------------------------------------------------------------------------
 # Event routing
-# ---------------------------------------------------------------------------
 
 async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
     sender_id: str = event.get("sender", {}).get("id", "")
@@ -343,23 +333,3 @@ async def _get_or_create_conversation(
 import re as _re
 
 _IG_URL_RE = _re.compile(r"https?://(?:www\.)?instagram\.com/(?:p|reel|tv)/[A-Za-z0-9_-]+")
-
-
-#  UPDATE sellers                                                                                                                                                                                                                                
-#   SET instagram_token = 'PASTE_FULL_NEW_TOKEN_HERE'                                                                                                                                                                                             
-#   WHERE instagram_id = '26686840534336341';
-# IGAArmnXUkl2RBZAFpqWkthOVhxRm1Dc3JDdXl0N0lmOU1WMnJpdVhveFE2VnVKM0NDXzdyZAUEzekNXazRtdnlFQ2JCZAUtIa24taHl1ZAGFpaWR6bW5FVGZAlVzZAGM1loV1NvcEhTQXRJdXl4MWc3YzdMb1VsUGFWenN2eWwwSUVscwZDZD
-
-
-# curl -X POST "https://graph.facebook.com/v19.0/26686840534336341/messages" \                                                                                                                                                                  
-#     -H "Content-Type: application/json" \                                                                                                                                                                                                       
-#     -d '{                                                                                                                                                                                                                                       
-#       "recipient": {"id": "957282080130744"},                                                                                                                                                                                                   
-#       "message": {"text": "Test"},                                                                                                                                                                                                              
-#       "messaging_type": "RESPONSE"                                                                                                                                                                                                              
-#     }' \                                                                                                                                                                                                                                        
-#     -d "access_token="
-
-#     curl -X POST "https://graph.facebook.com/v19.0/993227930551466/messages?access_token=IGAArmnXUkl2RBZAFpqWkthOVhxRm1Dc3JDdXl0N0lmOU1WMnJpdVhveFE2VnVKM0NDXzdyZAUEzekNXazRtdnlFQ2JCZAUtIa24taHl1ZAGFpaWR6bW5FVGZAlVzZAGM1loV1NvcEhTQXRJdXl4MWc3YzdMb1VsUGFWenN2eWwwSUVscwZDZD" \                                                                                                                                            
-#     -H "Content-Type: application/json" \                                                                                                                                                                                                       
-#     -d '{"recipient":{"id":"957282080130744"},"message":{"text":"Test"},"messaging_type":"RESPONSE"}'

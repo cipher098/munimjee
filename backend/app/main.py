@@ -26,6 +26,10 @@ from app.api.routes.commerce import seller_router as commerce_router, public_rou
 from app.api.routes.razorpay import router as razorpay_router
 from app.api.routes.private_media import router as private_media_router, PublicUploads
 
+from app.api.routes.whatsapp import router as whatsapp_router
+from app.api.webhooks.whatsapp import router as whatsapp_webhook_router
+from app.api.routes.comment_automation import router as comment_automation_router
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -64,6 +68,9 @@ app.include_router(admin_router)
 app.include_router(commerce_router)
 app.include_router(shop_router)
 app.include_router(razorpay_router)
+app.include_router(whatsapp_router)
+app.include_router(whatsapp_webhook_router)
+app.include_router(comment_automation_router)
 
 
 @app.get("/health")
@@ -90,16 +97,16 @@ async def privacy():
         "<style>body{font-family:system-ui;max-width:680px;margin:60px auto;padding:0 20px;line-height:1.6;color:#222}</style>"
         "<h1>Privacy Policy</h1>"
         "<p>SellerBot processes Instagram direct messages on behalf of sellers who have explicitly connected their Instagram account. "
-        "We store conversation history, customer Instagram IDs, and seller-configured product/pricing data in our database to operate the negotiation bot. "
+        "We store conversation history, customer Instagram IDs, comments matching seller automation rules, WhatsApp phone numbers and messages, consent records, and seller-configured product/pricing data to operate the connected services. "
         "We do not sell or share this data with third parties. Sellers can request deletion of their account and all associated data at any time by emailing support.</p>"
         "<h2>Data we collect</h2>"
         "<ul>"
         "<li>Instagram user IDs of customers who message a connected seller account</li>"
-        "<li>Direct message content (text + image URLs) needed to generate replies</li>"
+        "<li>Direct message content (text + image URLs) needed to generate replies</li><li>WhatsApp contact details, message history, delivery status and opt-in or opt-out records</li><li>Instagram comments and automation reply history</li>"
         "<li>Seller-provided product catalog, pricing, persona, and policies</li>"
         "</ul>"
         "<h2>Data we share</h2>"
-        "<p>Message content is sent to Anthropic's Claude API for natural-language response generation. Anthropic's privacy terms apply to that processing.</p>"
+        "<p>Messages and replies are exchanged with Meta when you enable connected Instagram or WhatsApp features. Instagram direct message content is sent to Anthropic's Claude API for natural-language response generation. Anthropic's privacy terms apply to that processing.</p>"
         "<h2>Contact</h2>"
         "<p>For data deletion or privacy questions, contact the seller administrator.</p>"
     )
@@ -176,3 +183,8 @@ async def storefront_page(slug: str):
 @app.get("/dashboard/commerce", include_in_schema=False)
 async def commerce_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
     return FileResponse(_STATIC_DIR / "commerce.html")
+
+
+@app.get("/dashboard/social", include_in_schema=False)
+async def social_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
+    return FileResponse(_STATIC_DIR / "social.html")

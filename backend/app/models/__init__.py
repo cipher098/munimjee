@@ -41,3 +41,7 @@ __all__ += ["RazorpayAccount"]
 
 from app.models.commerce_safeguards import OAuthState, PaymentReview
 __all__ += ["OAuthState", "PaymentReview"]
+
+from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
+from app.models.comment_automation import CommentRule, CommentEvent, CommentAction
+__all__ += ["WhatsAppAccount", "WhatsAppContact", "WhatsAppMessage", "WhatsAppTemplate", "CommentRule", "CommentEvent", "CommentAction"]

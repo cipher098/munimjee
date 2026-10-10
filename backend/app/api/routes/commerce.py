@@ -75,6 +75,8 @@ async def public_store(slug: str, db: AsyncSession = Depends(get_db)):
     store = await get_public_store(db, slug)
     data = store_json(store)
     data.pop('published')
+    from app.services.whatsapp import order_updates_available
+    data['whatsapp_updates_available'] = await order_updates_available(db, store.seller_id)
     categories = (await db.scalars(select(ProductCategory).where(ProductCategory.seller_id == store.seller_id).order_by(ProductCategory.name))).all()
     data['categories'] = [{'id': str(c.id), 'name': c.name} for c in categories]
     return data
@@ -112,6 +114,10 @@ async def checkout(slug: str, payload: CheckoutInput, response: Response, db: As
     order, replay = await create_order(db, store, payload)
     if payload.payment_method == 'razorpay' and order.total < 100:
         raise HTTPException(422, 'Online payment requires a minimum order total of ₹1')
+    if not replay and order.whatsapp_updates_opt_in:
+        from app.services.whatsapp import record_checkout_opt_in, queue_order_update
+        await record_checkout_opt_in(db, order.seller_id, order.customer['phone'], True)
+        await queue_order_update(db, order, 'placed')
     response.status_code = 200 if replay else 201
     response.headers['Cache-Control'] = 'no-store'
     return order_json(order, include_token=True)
@@ -179,6 +185,9 @@ async def transition(order_id: UUID, payload: TransitionInput, seller_id: str = 
         order.tracking_number = payload.tracking_number
         order.tracking_url = payload.tracking_url
     order.fulfillment_status = payload.status
+    if order.whatsapp_updates_opt_in:
+        from app.services.whatsapp import queue_order_update
+        await queue_order_update(db, order, payload.status)
     await db.flush()
     return order_json(order)
 

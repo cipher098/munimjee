@@ -55,7 +55,7 @@ def lambda_handler(event, context):
 
 def _handle_verify(event):
     qs = event.get("queryStringParameters") or {}
-    if qs.get("hub.mode") == "subscribe" and qs.get("hub.verify_token") == VERIFY_TOKEN:
+    if VERIFY_TOKEN and qs.get("hub.mode") == "subscribe" and qs.get("hub.verify_token") == VERIFY_TOKEN:
         logger.info("Instagram webhook verified")
         return _resp(200, qs.get("hub.challenge", ""))
     logger.warning("Webhook verification failed — bad verify token")
@@ -79,11 +79,21 @@ def _handle_event(event):
         logger.warning("Body is not valid JSON")
         return _resp(400, "bad payload")
 
+    if not isinstance(payload, dict) or payload.get("object") != "instagram":
+        return _resp(200, "ignored")
     sent = 0
     for entry in payload.get("entry", []):
         for messaging_event in entry.get("messaging", []):
             _enqueue(messaging_event)
             sent += 1
+        for change in entry.get("changes", []):
+            if change.get("field") in ("comments", "live_comments"):
+                envelope = {"type": "instagram_comment", "account_id": entry.get("id"), "time": entry.get("time"), "change": change}
+                stable = f"comment:{entry.get('id')}:{(change.get('value') or {}).get('id')}"
+                _sqs.send_message(QueueUrl=QUEUE_URL, MessageBody=json.dumps(envelope),
+                    MessageGroupId=hashlib.sha256(str(entry.get("id")).encode()).hexdigest(),
+                    MessageDeduplicationId=hashlib.sha256(stable.encode()).hexdigest())
+                sent += 1
 
     logger.info("Enqueued %d messaging event(s) to SQS", sent)
     # Always 200 fast — Meta retries on non-2xx, and the durable copy is in SQS.
@@ -138,13 +148,13 @@ def _signature_header(event) -> str | None:
 
 def _valid_signature(body: bytes, signature_header: str | None) -> bool:
     if not WEBHOOK_SECRET:
-        logger.warning("META_WEBHOOK_SECRET not set — skipping signature check")
-        return True
+        logger.error("Webhook signature verification is not configured")
+        return False
     if not signature_header or not signature_header.startswith("sha256="):
         return False
     expected = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
     received = signature_header.removeprefix("sha256=")
-    return hmac.compare_digest(expected, received)
+    return received.isascii() and hmac.compare_digest(expected, received)
 
 
 def _resp(status: int, body: str):

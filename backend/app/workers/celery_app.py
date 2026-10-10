@@ -14,6 +14,8 @@ celery_app = Celery(
         "app.workers.message_batch",
         "app.workers.nudge",
         "app.workers.commerce",
+        "app.workers.whatsapp",
+        "app.workers.comment_automation",
     ],
 )
 
@@ -28,6 +30,8 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
+    "dispatch-whatsapp-outbox": {"task": "app.workers.whatsapp.drain_outbox", "schedule": 30},
+    "dispatch-comment-replies": {"task": "app.workers.comment_automation.dispatch_pending_comments", "schedule": 30},
     "expire-commerce-reservations": {
         "task": "app.workers.commerce.expire_reservations",
         "schedule": 60,
