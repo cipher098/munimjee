@@ -5,6 +5,7 @@ Hybrid AI response generation.
   Fallback — Claude generates reply if Sarvam fails.
 """
 import logging
+from app.config import settings
 import re
 from typing import Any
 
@@ -1408,7 +1409,8 @@ async def send_manual_verification_ping(
         f"Amount: ₹{amount_rupees}\n"
         f"Customer: {conversation.customer_instagram_id}\n"
         f"Screenshot: {image_url}\n\n"
-        f"Reply *1* to confirm, *0* to reject."
+        f"Check your bank statement, then approve or reject in the dashboard: "
+        f"{settings.PUBLIC_BASE_URL.rstrip('/')}/dashboard/commerce"
     )
 
     try:

@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.workers.refresh_tokens",
         "app.workers.message_batch",
         "app.workers.nudge",
+        "app.workers.commerce",
     ],
 )
 
@@ -27,6 +28,10 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
+    "expire-commerce-reservations": {
+        "task": "app.workers.commerce.expire_reservations",
+        "schedule": 60,
+    },
     "retry-failed-notifications": {
         "task": "app.workers.notify_dispatch.retry_failed",
         "schedule": 600,  # every 10 mins

@@ -147,7 +147,7 @@
       showStep(3);
     } else if (stored && stored.instagram_oauth_url) {
       // Returning from a refresh between steps 1 and 2.
-      document.getElementById("connect-ig-btn").href = stored.instagram_oauth_url;
+      document.getElementById("connect-ig-btn").href = "/auth/instagram/oauth/start";
       showStep(2);
     } else {
       showStep(1);
@@ -174,7 +174,7 @@
         }
         localStorage.setItem("sellerbot_onboarding", JSON.stringify(data));
         localStorage.setItem("sellerbot_token", data.access_token);
-        document.getElementById("connect-ig-btn").href = data.instagram_oauth_url;
+        document.getElementById("connect-ig-btn").href = "/auth/instagram/oauth/start";
         showStep(2);
       } catch (err) {
         const el = document.getElementById("signup-error");

@@ -40,8 +40,9 @@ def test_shipped_yaml_covers_every_caller():
 def test_get_known_method_returns_yaml_values():
     spec = agent_spec.get("decide")
     assert spec.name == "decide"
-    assert spec.provider == "gemini"
-    assert spec.model.startswith("gemini-")
+    declared = yaml.safe_load(agent_spec.SPECS_PATH.read_text())["agents"]["decide"]
+    assert spec.provider == declared["provider"]
+    assert spec.model == declared["model"]
     assert spec.max_tokens > 0
     assert spec.fallback_model.startswith("claude-")  # decide falls back to Claude
 
@@ -55,13 +56,14 @@ def test_get_unknown_method_falls_back_to_defaults():
     assert spec.max_tokens > 0
 
 
-def test_intent_classifier_uses_cheap_model_with_fallback():
-    """Intent classifier is hot-path — runs on the cheap model (Gemini Flash-Lite)
-    with a Claude fallback so a provider blip never blocks the pipeline."""
+def test_intent_classifier_loads_declared_provider_and_fallback():
+    """Routing is configurable; loading must preserve the shipped declaration."""
+    declared = yaml.safe_load(agent_spec.SPECS_PATH.read_text())["agents"]["intent_classifier"]
     spec = agent_spec.get("intent_classifier")
-    assert spec.provider == "gemini"
-    assert spec.model == "gemini-2.5-flash-lite"
-    assert spec.fallback_provider == "anthropic"
+    assert spec.provider == declared["provider"]
+    assert spec.model == declared["model"]
+    assert spec.fallback_provider == declared["fallback_provider"]
+    assert spec.fallback_model == declared["fallback_model"]
 
 
 def test_reload_clears_cache(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch):

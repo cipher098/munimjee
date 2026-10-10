@@ -1,4 +1,6 @@
 """Training dashboard — upload conversation screenshot + feedback → Claude rewrites prompts."""
+from app.paths import BACKEND_DIR, STATIC_DIR as _STATIC_DIR, UPLOAD_DIR as _UPLOAD_ROOT
+
 import base64
 import logging
 import re
@@ -16,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/training", tags=["training"], dependencies=[Depends(require_admin)])
 
-PROMPTS_FILE = Path("/app/app/prompts.py")
+PROMPTS_FILE = BACKEND_DIR / "app/prompts.py"
 
-UPLOAD_DIR = Path("/app/uploads/training")
+UPLOAD_DIR = _UPLOAD_ROOT / "training"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 TRAINER_PROMPT = """You are an AI prompt engineer improving an Indian Instagram seller bot.
@@ -57,7 +59,7 @@ Rules for your edits:
 
 @router.get("/dashboard")
 async def training_dashboard():
-    return FileResponse("/app/static/training.html")
+    return FileResponse(_STATIC_DIR / "training.html")
 
 
 @router.post("/feedback")

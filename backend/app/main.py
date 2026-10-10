@@ -1,5 +1,5 @@
+from app.paths import STATIC_DIR as _STATIC_DIR, UPLOAD_DIR as _UPLOAD_ROOT
 import logging
-from pathlib import Path
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +22,9 @@ from app.api.routes.categories import router as categories_router
 from app.api.routes.llm_costs import router as llm_costs_router
 from app.api.routes.manual_actions import router as manual_actions_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.commerce import seller_router as commerce_router, public_router as shop_router
+from app.api.routes.razorpay import router as razorpay_router
+from app.api.routes.private_media import router as private_media_router, PublicUploads
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,10 +44,11 @@ app.add_middleware(
 )
 
 # Static files — uploaded product images + dashboard
-upload_dir = Path("/app/uploads")
+upload_dir = _UPLOAD_ROOT
 upload_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
-app.mount("/static", StaticFiles(directory="/app/static"), name="static")
+app.include_router(private_media_router)
+app.mount("/uploads", PublicUploads(directory=str(upload_dir)), name="uploads")
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 # Phase 1 routes
 app.include_router(instagram_webhook_router)
@@ -57,6 +61,9 @@ app.include_router(categories_router)
 app.include_router(llm_costs_router)
 app.include_router(manual_actions_router)
 app.include_router(admin_router)
+app.include_router(commerce_router)
+app.include_router(shop_router)
+app.include_router(razorpay_router)
 
 
 @app.get("/health")
@@ -70,7 +77,7 @@ async def root():
     uses HEAD, which FastAPI does NOT auto-register for GET routes. Without
     HEAD support Meta gets 405 and silently drops the App Domain on save.
     Serve onboarding.html directly so the same URL works for real sellers too."""
-    return FileResponse("/app/static/onboarding.html")
+    return FileResponse(_STATIC_DIR / "onboarding.html")
 
 
 @app.api_route("/privacy", methods=["GET", "HEAD"], include_in_schema=False)
@@ -115,7 +122,7 @@ async def terms():
 @app.api_route("/onboarding", methods=["GET", "HEAD"], include_in_schema=False)
 async def onboarding_page():
     """Self-serve seller signup + Instagram connect wizard. Public route."""
-    return FileResponse("/app/static/onboarding.html")
+    return FileResponse(_STATIC_DIR / "onboarding.html")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -128,34 +135,44 @@ async def dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
     # An admin who hasn't picked a seller to view lands on the admin home.
     if ctx.role == "admin" and not ctx.view_seller_id:
         return RedirectResponse(url="/dashboard/admin", status_code=303)
-    return FileResponse("/app/static/dashboard.html")
+    return FileResponse(_STATIC_DIR / "dashboard.html")
 
 
 @app.get("/dashboard/admin")
 async def admin_dashboard(ctx: DashCtx = Depends(require_admin)):
-    return FileResponse("/app/static/admin.html")
+    return FileResponse(_STATIC_DIR / "admin.html")
 
 
 @app.get("/dashboard/products")
 async def products_dashboard(phone: str = Depends(verify_dashboard_cookie)):
-    return FileResponse("/app/static/products.html")
+    return FileResponse(_STATIC_DIR / "products.html")
 
 
 @app.get("/dashboard/settings")
 async def settings_dashboard(phone: str = Depends(verify_dashboard_cookie)):
-    return FileResponse("/app/static/settings.html")
+    return FileResponse(_STATIC_DIR / "settings.html")
 
 
 @app.get("/dashboard/categories")
 async def categories_dashboard(phone: str = Depends(verify_dashboard_cookie)):
-    return FileResponse("/app/static/categories.html")
+    return FileResponse(_STATIC_DIR / "categories.html")
 
 
 @app.get("/dashboard/llm-costs")
 async def llm_costs_dashboard(ctx: DashCtx = Depends(require_admin)):
-    return FileResponse("/app/static/llm_costs.html")
+    return FileResponse(_STATIC_DIR / "llm_costs.html")
 
 
 @app.get("/dashboard/manual-actions")
 async def manual_actions_dashboard(phone: str = Depends(verify_dashboard_cookie)):
-    return FileResponse("/app/static/manual_actions.html")
+    return FileResponse(_STATIC_DIR / "manual_actions.html")
+
+
+@app.get("/shop/{slug}", include_in_schema=False)
+async def storefront_page(slug: str):
+    return FileResponse(_STATIC_DIR / "storefront.html", headers={"Referrer-Policy": "no-referrer"})
+
+
+@app.get("/dashboard/commerce", include_in_schema=False)
+async def commerce_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
+    return FileResponse(_STATIC_DIR / "commerce.html")

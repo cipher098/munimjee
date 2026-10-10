@@ -1,15 +1,16 @@
 """JWT auth endpoints for sellers and delivery team members."""
 import hashlib
-import hmac
+import secrets
+from uuid import UUID
 import logging
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from jose import jwt
+from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,6 +25,7 @@ from app.integrations.instagram import (
 )
 from app.models.delivery_member import DeliveryMember
 from app.models.seller import Seller
+from app.models.commerce_safeguards import OAuthState
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,44 @@ def _create_token(payload: dict) -> str:
     )
 
 
+_OAUTH_COOKIE = "instagram_oauth_browser"
+_OAUTH_TTL = 600
+
+
+def _secure_cookie(request: Request) -> bool:
+    return request.url.scheme == "https" or settings.PUBLIC_BASE_URL.startswith("https://")
+
+
+def _set_seller_session(response: Response, request: Request, token: str) -> None:
+    # A newly authenticated seller must not inherit a previous dashboard identity.
+    response.delete_cookie("dashboard_session")
+    response.delete_cookie("view_seller")
+    response.set_cookie("seller_session", token, httponly=True, secure=_secure_cookie(request),
+                        samesite="lax", max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+
+
+def _account_token(request: Request) -> str:
+    authorization = request.headers.get("authorization", "")
+    bearer = authorization[7:] if authorization.lower().startswith("bearer ") else None
+    return bearer or request.cookies.get("dashboard_session") or request.cookies.get("seller_session") or ""
+
+
+async def authenticated_seller(request: Request, db: AsyncSession = Depends(get_db)) -> Seller:
+    """Account linking never uses admin impersonation or caller-supplied seller IDs."""
+    token = _account_token(request)
+    try:
+        payload = jwt.decode(token or "", settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("role") != "seller":
+            raise ValueError("Seller login required")
+        sid = UUID(payload.get("seller_id") or payload["sub"])
+    except (JWTError, ValueError, KeyError, TypeError):
+        raise HTTPException(status_code=401, detail="Seller login required")
+    seller = await db.get(Seller, sid)
+    if seller is None or not seller.is_active:
+        raise HTTPException(status_code=401, detail="Seller login required")
+    return seller
+
+
 class SellerSignupRequest(BaseModel):
     email: EmailStr
     password: str
@@ -78,7 +118,7 @@ class SellerSignupResponse(BaseModel):
 
 
 @router.post("/seller/signup", response_model=SellerSignupResponse)
-async def seller_signup(body: SellerSignupRequest, request: Request, db: AsyncSession = Depends(get_db)):
+async def seller_signup(body: SellerSignupRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     """Create a new seller account. Instagram is connected via /oauth/start afterwards."""
     if len(body.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
@@ -105,10 +145,8 @@ async def seller_signup(body: SellerSignupRequest, request: Request, db: AsyncSe
     await db.commit()
 
     token = _create_token({"sub": str(seller.id), "role": "seller"})
-    oauth_url = build_oauth_authorize_url(
-        redirect_uri=_oauth_redirect_uri(request),
-        state=_sign_oauth_state(str(seller.id)),
-    )
+    _set_seller_session(response, request, token)
+    oauth_url = "/auth/instagram/oauth/start"
     return SellerSignupResponse(
         seller_id=str(seller.id),
         access_token=token,
@@ -134,7 +172,7 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/seller/login", response_model=TokenResponse)
-async def seller_login(body: SellerLoginRequest, db: AsyncSession = Depends(get_db)):
+async def seller_login(body: SellerLoginRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Seller).where(Seller.email == body.email))
     seller = result.scalar_one_or_none()
     if not seller or not _verify_password(body.password, seller.password_hash):
@@ -143,27 +181,35 @@ async def seller_login(body: SellerLoginRequest, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=403, detail="Account inactive")
 
     token = _create_token({"sub": str(seller.id), "role": "seller"})
+    _set_seller_session(response, request, token)
     return TokenResponse(access_token=token, role="seller")
 
 
 class ConnectInstagramRequest(BaseModel):
-    seller_id: str
+    seller_id: UUID | None = None
     short_lived_token: str
 
 
 @router.post("/seller/connect-instagram")
-async def connect_instagram(body: ConnectInstagramRequest, db: AsyncSession = Depends(get_db)):
-    """Exchange a short-lived Instagram token for a long-lived one and save it to the seller."""
-    result = await db.execute(select(Seller).where(Seller.id == body.seller_id))
-    seller = result.scalar_one_or_none()
-    if not seller:
-        raise HTTPException(status_code=404, detail="Seller not found")
+async def connect_instagram(body: ConnectInstagramRequest, seller: Seller = Depends(authenticated_seller), db: AsyncSession = Depends(get_db)):
+    """Exchange credentials only for the authenticated seller's linked account."""
+    if body.seller_id is not None and body.seller_id != seller.id:
+        raise HTTPException(status_code=403, detail="Cannot link another seller")
 
     try:
         long_lived_token = await exchange_for_long_lived_token(body.short_lived_token)
+        ig_user = await fetch_ig_user(long_lived_token)
+        ig_id = str(ig_user.get("user_id") or ig_user.get("id") or "")
+        if not ig_id or (seller.instagram_id and seller.instagram_id != ig_id):
+            raise ValueError("Token does not match linked Instagram account")
+        if (await db.execute(select(Seller.id).where(Seller.instagram_id == ig_id, Seller.id != seller.id))).first():
+            raise ValueError("Instagram account already linked")
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Token exchange failed: {exc}")
+        raise HTTPException(status_code=400, detail="Could not connect Instagram. Check the account and try again.")
 
+    seller.instagram_id = ig_id
+    seller.instagram_page_id = ig_id
+    seller.fb_page_id = ig_id
     seller.instagram_token = long_lived_token
     seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
     await db.commit()
@@ -174,7 +220,7 @@ async def connect_instagram(body: ConnectInstagramRequest, db: AsyncSession = De
 # ---------------------------------------------------------------------------
 # Instagram self-serve OAuth flow (Instagram-direct, NOT Facebook Login)
 # ---------------------------------------------------------------------------
-# Seller hits /auth/instagram/oauth/start?seller_id=...
+# Authenticated seller hits /auth/instagram/oauth/start
 #   → we 302 to instagram.com/oauth/authorize with a signed `state`.
 # Meta sends them back to /auth/instagram/oauth/callback?code=...&state=...
 #   → we verify state, exchange code → short token → long-lived token,
@@ -195,54 +241,51 @@ def _oauth_redirect_uri(request: Request) -> str:
     return f"{base}/auth/instagram/oauth/callback"
 
 
-def _sign_oauth_state(seller_id: str) -> str:
-    """Sign the seller_id so we can verify the callback came from our own start route.
+def _sign_oauth_state(seller_id: str, nonce: str | None = None) -> str:
+    return jwt.encode({"sub": seller_id, "purpose": "instagram_link", "nonce": nonce or secrets.token_urlsafe(32),
+                       "exp": datetime.now(timezone.utc) + timedelta(seconds=_OAUTH_TTL)},
+                      settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
-    Format: <seller_id>.<hex_sig>
-    Sig = HMAC-SHA256(SECRET_KEY, seller_id). Constant-time compared on verify.
-    """
-    sig = hmac.new(
-        settings.SECRET_KEY.encode(),
-        seller_id.encode(),
-        hashlib.sha256,
-    ).hexdigest()
-    return f"{seller_id}.{sig}"
+
+def _decode_oauth_state(state: str) -> dict:
+    try:
+        payload = jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("purpose") != "instagram_link" or not payload.get("nonce") or not payload.get("exp"):
+            raise ValueError("Invalid purpose")
+        return payload
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
 
 
 def _verify_oauth_state(state: str) -> str:
-    """Returns the seller_id if the state signature is valid, else raises 400."""
-    try:
-        seller_id, sig = state.rsplit(".", 1)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Malformed OAuth state")
-    expected = hmac.new(
-        settings.SECRET_KEY.encode(),
-        seller_id.encode(),
-        hashlib.sha256,
-    ).hexdigest()
-    if not hmac.compare_digest(expected, sig):
-        raise HTTPException(status_code=400, detail="Invalid OAuth state signature")
-    return seller_id
+    return _decode_oauth_state(state)["sub"]
 
 
 @router.get("/instagram/oauth/start")
-async def instagram_oauth_start(seller_id: str, request: Request, db: AsyncSession = Depends(get_db)):
-    """Kick off Facebook Login. Returns a 302 to the Meta dialog."""
-    result = await db.execute(select(Seller).where(Seller.id == seller_id))
-    seller = result.scalar_one_or_none()
-    if not seller:
-        raise HTTPException(status_code=404, detail="Seller not found")
-
-    url = build_oauth_authorize_url(
-        redirect_uri=_oauth_redirect_uri(request),
-        state=_sign_oauth_state(str(seller.id)),
-    )
-    return RedirectResponse(url=url, status_code=302)
+async def instagram_oauth_start(request: Request, seller_id: UUID | None = None,
+                                seller: Seller = Depends(authenticated_seller), db: AsyncSession = Depends(get_db)):
+    if seller_id is not None and seller_id != seller.id:
+        raise HTTPException(status_code=403, detail="Cannot link another seller")
+    nonce = secrets.token_urlsafe(32)
+    browser = secrets.token_urlsafe(32)
+    db.add(OAuthState(nonce_hash=hashlib.sha256(nonce.encode()).hexdigest(), seller_id=seller.id,
+                      browser_hash=hashlib.sha256((browser + ":" + _account_token(request)).encode()).hexdigest(),
+                      expires_at=datetime.now(timezone.utc) + timedelta(seconds=_OAUTH_TTL)))
+    await db.commit()
+    url = build_oauth_authorize_url(redirect_uri=_oauth_redirect_uri(request),
+                                    state=_sign_oauth_state(str(seller.id), nonce))
+    response = RedirectResponse(url=url, status_code=302)
+    if request.headers.get("authorization", "").lower().startswith("bearer "):
+        _set_seller_session(response, request, request.headers["authorization"][7:])
+    response.set_cookie(_OAUTH_COOKIE, browser, httponly=True, secure=_secure_cookie(request),
+                        samesite="lax", max_age=_OAUTH_TTL, path="/auth/instagram/oauth")
+    return response
 
 
 @router.get("/instagram/oauth/callback")
 async def instagram_oauth_callback(
     request: Request,
+    caller: Seller = Depends(authenticated_seller),
     db: AsyncSession = Depends(get_db),
     code: str | None = None,
     state: str | None = None,
@@ -250,20 +293,30 @@ async def instagram_oauth_callback(
     error_description: str | None = None,
 ):
     """Meta redirects the seller back here. Exchange code → token → persist → subscribe."""
-    if error:
-        logger.warning("Meta OAuth callback returned error: %s — %s", error, error_description)
-        return RedirectResponse(
-            url=f"/onboarding?error={error}",
-            status_code=302,
-        )
-    if not code or not state:
+    if not state or (not code and not error):
         raise HTTPException(status_code=400, detail="Missing code or state")
-
-    seller_id = _verify_oauth_state(state)
-    result = await db.execute(select(Seller).where(Seller.id == seller_id))
-    seller = result.scalar_one_or_none()
-    if not seller:
-        raise HTTPException(status_code=404, detail="Seller not found")
+    payload = _decode_oauth_state(state)
+    if payload.get("sub") != str(caller.id):
+        raise HTTPException(status_code=400, detail="OAuth session belongs to a different seller")
+    browser = request.cookies.get(_OAUTH_COOKIE, "")
+    now = datetime.now(timezone.utc)
+    # Atomic consumption is committed before network calls: even a failed exchange
+    # cannot reuse the nonce, across processes or with a copied browser cookie.
+    result = await db.execute(update(OAuthState).where(
+        OAuthState.nonce_hash == hashlib.sha256(payload["nonce"].encode()).hexdigest(),
+        OAuthState.seller_id == payload["sub"], OAuthState.expires_at > now,
+        OAuthState.consumed_at.is_(None),
+        OAuthState.browser_hash == hashlib.sha256((browser + ":" + _account_token(request)).encode()).hexdigest(),
+    ).values(consumed_at=now).returning(OAuthState.seller_id))
+    seller_id = result.scalar_one_or_none()
+    if seller_id is None or not browser:
+        raise HTTPException(status_code=400, detail="Invalid, expired, or already used OAuth session")
+    await db.commit()
+    seller = await db.get(Seller, seller_id)
+    if seller is None or not seller.is_active:
+        raise HTTPException(status_code=403, detail="Account inactive")
+    if error:
+        return RedirectResponse(url="/onboarding?error=authorization_declined", status_code=302)
 
     redirect_uri = _oauth_redirect_uri(request)
     try:
@@ -303,6 +356,9 @@ async def instagram_oauth_callback(
     # hits graph.instagram.com/v22.0/<ig_user_id>/messages correctly.
     # Webhooks are subscribed at the App level in Meta dashboard, not per account.
     ig_user_id = str(ig_user_id)
+    existing = (await db.execute(select(Seller.id).where(Seller.instagram_id == ig_user_id, Seller.id != seller.id))).first()
+    if existing:
+        return RedirectResponse(url="/onboarding?error=account_already_linked", status_code=302)
     seller.instagram_id = ig_user_id
     seller.instagram_page_id = ig_user_id
     seller.fb_page_id = ig_user_id
@@ -323,7 +379,9 @@ async def instagram_oauth_callback(
         "Seller %s connected Instagram (direct flow): ig_user=%s username=%s",
         seller_id, ig_user_id, ig_user.get("username"),
     )
-    return RedirectResponse(url="/onboarding?step=done", status_code=302)
+    response = RedirectResponse(url="/onboarding?step=done", status_code=302)
+    response.delete_cookie(_OAUTH_COOKIE, path="/auth/instagram/oauth")
+    return response
 
 
 @router.post("/delivery/login", response_model=TokenResponse)

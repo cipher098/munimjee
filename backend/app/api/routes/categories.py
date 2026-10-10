@@ -80,9 +80,9 @@ async def create_category(body: CategoryCreate, seller_id: str = Depends(current
 
 
 @router.post("/{category_id}/tags")
-async def add_tag(category_id: str, body: TagCreate, db: AsyncSession = Depends(get_db)):
+async def add_tag(category_id: str, body: TagCreate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Add a tag definition to a category."""
-    result = await db.execute(select(ProductCategory).where(ProductCategory.id == category_id))
+    result = await db.execute(select(ProductCategory).where(ProductCategory.id == category_id, ProductCategory.seller_id == seller_id))
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Category not found")
 
@@ -101,11 +101,14 @@ async def add_tag(category_id: str, body: TagCreate, db: AsyncSession = Depends(
 
 @router.patch("/{category_id}/tags/{tag_id}")
 async def update_tag(
-    category_id: str, tag_id: str, body: TagCreate, db: AsyncSession = Depends(get_db)
+    category_id: str, tag_id: str, body: TagCreate, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)
 ):
     """Update a tag definition."""
     result = await db.execute(
-        select(CategoryTag).where(CategoryTag.id == tag_id, CategoryTag.category_id == category_id)
+        select(CategoryTag).join(ProductCategory).where(
+            CategoryTag.id == tag_id, CategoryTag.category_id == category_id,
+            ProductCategory.seller_id == seller_id,
+        )
     )
     tag = result.scalar_one_or_none()
     if not tag:
@@ -121,9 +124,9 @@ async def update_tag(
 
 
 @router.post("/{category_id}/suggest-tags")
-async def suggest_tags(category_id: str, db: AsyncSession = Depends(get_db)):
+async def suggest_tags(category_id: str, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Ask Claude to suggest tags for this category. Returns suggestions only — does NOT save them."""
-    result = await db.execute(select(ProductCategory).where(ProductCategory.id == category_id))
+    result = await db.execute(select(ProductCategory).where(ProductCategory.id == category_id, ProductCategory.seller_id == seller_id))
     category = result.scalar_one_or_none()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -135,10 +138,13 @@ async def suggest_tags(category_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/{category_id}/tags/{tag_id}")
-async def delete_tag(category_id: str, tag_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_tag(category_id: str, tag_id: str, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Delete a tag definition (and all product values for it)."""
     result = await db.execute(
-        select(CategoryTag).where(CategoryTag.id == tag_id, CategoryTag.category_id == category_id)
+        select(CategoryTag).join(ProductCategory).where(
+            CategoryTag.id == tag_id, CategoryTag.category_id == category_id,
+            ProductCategory.seller_id == seller_id,
+        )
     )
     tag = result.scalar_one_or_none()
     if not tag:
@@ -153,9 +159,9 @@ async def delete_tag(category_id: str, tag_id: str, db: AsyncSession = Depends(g
 # ---------------------------------------------------------------------------
 
 @router.get("/product/{product_id}/tags")
-async def get_product_tags(product_id: str, db: AsyncSession = Depends(get_db)):
+async def get_product_tags(product_id: str, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
     """Return all tags for the product's category + which ones have values filled."""
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    result = await db.execute(select(Product).where(Product.id == product_id, Product.seller_id == seller_id))
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -165,7 +171,7 @@ async def get_product_tags(product_id: str, db: AsyncSession = Depends(get_db)):
 
     result = await db.execute(
         select(ProductCategory)
-        .where(ProductCategory.id == product.category_id)
+        .where(ProductCategory.id == product.category_id, ProductCategory.seller_id == seller_id)
         .options(selectinload(ProductCategory.tags))
     )
     category = result.scalar_one_or_none()
@@ -193,13 +199,25 @@ async def get_product_tags(product_id: str, db: AsyncSession = Depends(get_db)):
 async def set_product_tag_values(
     product_id: str,
     body: list[TagValueSet],
+    seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Set or update tag values for a product. Also resumes any waiting conversations."""
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    result = await db.execute(select(Product).where(Product.id == product_id, Product.seller_id == seller_id))
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Validate the complete batch before writing values or delivering any answers.
+    allowed_tags = (await db.execute(
+        select(CategoryTag).join(ProductCategory).where(
+            CategoryTag.category_id == product.category_id,
+            ProductCategory.seller_id == seller_id,
+        )
+    )).scalars().all()
+    allowed_by_id = {str(tag.id): tag for tag in allowed_tags}
+    if any(item.tag_id not in allowed_by_id for item in body):
+        raise HTTPException(status_code=404, detail="Tag not found in product category")
 
     filled_tag_ids = []
     for item in body:
@@ -227,7 +245,7 @@ async def set_product_tag_values(
 
     tag_meta = {}  # tag_id -> (display_name, value)
     for item in body:
-        t = await db.get(CategoryTag, item.tag_id)
+        t = allowed_by_id[item.tag_id]
         tag_meta[item.tag_id] = ((t.display_name if t else "detail"), item.value)
 
     delivered = 0
@@ -236,6 +254,7 @@ async def set_product_tag_values(
         alerts = (await db.execute(
             select(SellerAlert).where(
                 SellerAlert.product_id == product_id,
+                SellerAlert.seller_id == seller_id,
                 SellerAlert.tag_id == tag_id,
                 SellerAlert.resolved_at.is_(None),
             )
@@ -243,7 +262,7 @@ async def set_product_tag_values(
         for alert in alerts:
             alert.resolved_at = datetime.now(timezone.utc)
             conv = await db.get(Conversation, alert.conversation_id)
-            if conv is None:
+            if conv is None or str(conv.seller_id) != str(seller_id):
                 continue
             # clear any CP still parked waiting for this tag
             cp = (await db.execute(

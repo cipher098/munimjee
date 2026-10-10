@@ -33,7 +33,11 @@ def test_oauth_state_signature_detects_tamper():
     from fastapi import HTTPException
 
     state = _sign_oauth_state("seller-A")
-    tampered = state.replace("seller-A", "seller-B")
+    # Alter the signed payload without recomputing its signature.
+    from jose import jwt
+    payload = jwt.get_unverified_claims(state)
+    payload["sub"] = "seller-B"
+    tampered = jwt.encode(payload, "wrong-key", algorithm="HS256")
     with pytest.raises(HTTPException) as exc_info:
         _verify_oauth_state(tampered)
     assert exc_info.value.status_code == 400

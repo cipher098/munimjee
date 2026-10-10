@@ -106,6 +106,7 @@
     <a href="/dashboard">Add Product</a>
     <a href="/dashboard/products" class="active">All Products</a>
     <a href="/dashboard/categories">Categories</a>
+    <a href="/dashboard/commerce">Commerce</a>
     <a href="/dashboard/settings">Settings</a>
     <a href="/dashboard/manual-actions">Manual Actions</a>
     <a href="/dashboard-auth/logout">Logout</a>
@@ -462,7 +463,8 @@
     fd.append('warranty_months', warranty === '' ? '0' : warranty);
 
     const stock = document.getElementById('edit-stock').value;
-    fd.append('stock_quantity', stock === '' ? '0' : stock);
+    if (stock === '') fd.append('clear_stock_tracking', 'true');
+    else fd.append('stock_quantity', stock);
 
     const img = document.getElementById('edit-image').files[0];
     if (img) fd.append('image', img);

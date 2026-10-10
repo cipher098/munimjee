@@ -1,4 +1,6 @@
 """Product management — upload image, create product, auto-generate description."""
+from app.paths import UPLOAD_DIR as _UPLOAD_ROOT
+
 import logging
 import uuid
 from pathlib import Path
@@ -10,16 +12,32 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dashboard_auth import verify_dashboard_cookie, current_seller_id
 from app.database import get_db
 from app.models.product import Product
+from app.models.product_category import ProductCategory
 from app.models.seller import Seller
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/products", tags=["products"], dependencies=[Depends(verify_dashboard_cookie)])
 
-UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR = _UPLOAD_ROOT
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+
+async def _validate_category(category_id: str | None, seller_id: str, db: AsyncSession) -> None:
+    """Validate ownership before uploads, AI calls, or changes to a product."""
+    if not category_id:
+        return
+    try:
+        parsed_id = uuid.UUID(category_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid category ID")
+    result = await db.execute(select(ProductCategory.id).where(
+        ProductCategory.id == parsed_id, ProductCategory.seller_id == seller_id,
+    ))
+    if result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Category not found")
 
 
 def _parse_variants(raw: str | None) -> list[dict] | None:
@@ -57,11 +75,11 @@ def _parse_variants(raw: str | None) -> list[dict] | None:
 @router.post("")
 async def create_product(
     name: str = Form(...),
-    listed_price: int = Form(..., description="Price in rupees"),
-    floor_price: int = Form(..., description="Minimum acceptable price in rupees"),
+    listed_price: int = Form(..., ge=0, description="Price in rupees"),
+    floor_price: int = Form(..., ge=0, description="Minimum acceptable price in rupees"),
     description: str = Form(default=""),
     warranty_months: int | None = Form(default=None, description="Warranty in months, omit for no warranty"),
-    stock_quantity: int | None = Form(default=None, description="Stock count, omit if not tracking"),
+    stock_quantity: int | None = Form(default=None, ge=0, description="Stock count, omit if not tracking"),
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs"),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs linked to this product"),
     variants: str | None = Form(default=None, description='JSON array of variants: [{"label": "Red", "photo_urls": [...]}]'),
@@ -87,6 +105,8 @@ async def create_product(
     seller = result.scalar_one_or_none()
     if not seller:
         raise HTTPException(status_code=404, detail="Seller not found")
+
+    await _validate_category(category_id, seller_id, db)
 
     # Save image to disk
     ext = Path(image.filename).suffix or ".jpg"
@@ -228,24 +248,30 @@ async def list_products(include_inactive: bool = False, seller_id: str = Depends
 async def update_product(
     product_id: str,
     name: str = Form(default=None),
-    listed_price: int = Form(default=None, description="Price in rupees"),
-    floor_price: int = Form(default=None, description="Minimum acceptable price in rupees"),
+    listed_price: int = Form(default=None, ge=0, description="Price in rupees"),
+    floor_price: int = Form(default=None, ge=0, description="Minimum acceptable price in rupees"),
     description: str = Form(default=None),
     warranty_months: int = Form(default=-1, description="Warranty in months; send 0 to clear"),
-    stock_quantity: int = Form(default=-1, description="Stock quantity; send 0 to clear"),
+    stock_quantity: int = Form(default=-1, ge=-1, description="Stock quantity; 0 means sold out, -1/omitted means unchanged"),
+    clear_stock_tracking: bool = Form(default=False, description="Explicitly stop tracking stock"),
     photo_urls: str | None = Form(default=None, description="JSON array of additional photo URLs; send '[]' to clear"),
     variants: str | None = Form(default=None, description='JSON array of variants; send "[]" to clear'),
     reel_urls: str | None = Form(default=None, description="JSON array of Instagram reel URLs; send '[]' to clear"),
     active: bool = Form(default=None),
     category_id: str | None = Form(default=None, description="UUID of ProductCategory; send empty string to clear"),
     image: UploadFile = File(default=None),
+    seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Update any fields of a product. Only supplied fields are changed."""
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    result = await db.execute(select(Product).where(Product.id == product_id, Product.seller_id == seller_id))
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    await _validate_category(category_id, seller_id, db)
+    if clear_stock_tracking and stock_quantity != -1:
+        raise HTTPException(status_code=400, detail="Choose a stock quantity or disable tracking, not both")
 
     name_changed = name is not None and name != product.name
     if name is not None:
@@ -293,8 +319,10 @@ async def update_product(
     if warranty_months != -1:
         product.warranty_months = warranty_months if warranty_months > 0 else None
 
-    if stock_quantity != -1:
-        product.stock_quantity = stock_quantity if stock_quantity > 0 else None
+    if clear_stock_tracking:
+        product.stock_quantity = None
+    elif stock_quantity != -1:
+        product.stock_quantity = stock_quantity
 
     if image and image.filename:
         if image.content_type not in ALLOWED_TYPES:
