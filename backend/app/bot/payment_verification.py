@@ -1,17 +1,8 @@
-"""Deterministic verification of a UPI payment screenshot.
+"""Deterministic plausibility assessment of UPI screenshot contents.
 
-The vision subagent (`extract_payment_details`) only EXTRACTS fields; the
-pass/fail decision is made here in code — never trust the LLM for the verdict.
-
-Auto-confirm requires (per product owner):
-  - payee UPI id / account name matches the method we shared to this customer
-  - payment datetime within [QR shared → screenshot received] (+ grace)
-  - a readable UTR that has not been used before (anti-replay)
-  - amount: >= remaining due → confirm; < remaining → partial (ask remainder)
-Anything missing/ambiguous → `manual_review` (seller decides). Never auto-reject.
-
-`evaluate_payment` is pure (no DB / no I/O) so it's fully unit-testable; the
-caller supplies `utr_already_used` from a DB lookup and applies the side effects.
+This does not establish financial settlement. Legacy outcome names such as
+`confirmed_full` describe matching screenshot fields only. All evidence must
+still receive explicit seller approval or authoritative bank/provider confirmation.
 """
 from __future__ import annotations
 
@@ -36,7 +27,7 @@ MANUAL_REVIEW = "manual_review"
 @dataclass
 class Verdict:
     outcome: str                 # one of the constants above
-    amount_paise: int = 0        # verified amount to record (0 for duplicate/manual_review)
+    amount_paise: int = 0        # extracted amount for review (0 for duplicate/manual_review)
     utr: Optional[str] = None
     payment_dt: Optional[datetime] = None  # parsed, UTC
     reason: str = ""

@@ -135,3 +135,106 @@ async def resolve_manual_action(action_id: str, seller_id: str = Depends(current
             conv.messages = msgs
         await db.flush()
     return {"id": str(ma.id), "status": ma.status}
+
+
+# DM payment screenshots are evidence, never payment settlement on their own.
+from uuid import UUID
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
+from app.models.commerce_safeguards import PaymentReview
+from app.models.order import Order, OrderItem
+from app.models.transaction import Transaction
+from app.models.conversation_product import ConversationProduct
+
+
+class PaymentReviewDecision(BaseModel):
+    approved: bool
+    amount_paise: int | None = Field(default=None, gt=0)
+    reference: str | None = Field(default=None, max_length=120)
+
+
+def _review_result(review, order):
+    return {"id": str(review.id), "status": review.status,
+            "order_id": str(review.order_id) if review.order_id else None,
+            "amount_paid": order.amount_paid if order else None,
+            "order_status": order.status if order else None}
+
+
+@router.get("/payment-reviews")
+async def list_payment_reviews(seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(select(PaymentReview, Conversation, Order)
+        .join(Conversation, Conversation.id == PaymentReview.conversation_id)
+        .outerjoin(Order, Order.id == PaymentReview.order_id)
+        .where(PaymentReview.seller_id == seller_id, Conversation.seller_id == seller_id,
+               PaymentReview.status == "pending")
+        .order_by(PaymentReview.created_at.desc()))).all()
+    return [{**_review_result(r, o), "conversation_id": str(r.conversation_id),
+             "customer_name": c.customer_name or c.customer_instagram_id,
+             "screenshot_url": r.screenshot_url, "extracted": r.extracted,
+             "assessment": r.assessment, "reason": r.reason,
+             "order_amount": o.amount if o else None,
+             "created_at": r.created_at.isoformat()} for r, c, o in rows]
+
+
+@router.post("/payment-reviews/{review_id}/review")
+async def review_payment(review_id: UUID, body: PaymentReviewDecision,
+                         seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
+    review = (await db.execute(select(PaymentReview).where(
+        PaymentReview.id == review_id, PaymentReview.seller_id == seller_id).with_for_update())).scalar_one_or_none()
+    if review is None:
+        raise HTTPException(404, "Payment review not found")
+    order = None
+    if review.order_id:
+        order = (await db.execute(select(Order).where(Order.id == review.order_id,
+            Order.seller_id == seller_id).with_for_update())).scalar_one_or_none()
+    desired = "approved" if body.approved else "rejected"
+    reference = (body.reference or "").strip()
+    if review.status != "pending":
+        if review.status != desired or (body.approved and
+                (review.reference != reference or review.confirmed_amount != body.amount_paise)):
+            raise HTTPException(409, "This payment review has already been decided")
+        return _review_result(review, order)
+    if body.approved:
+        if order is None or order.status != "awaiting_payment":
+            raise HTTPException(409, "Review requires an unpaid order")
+        if not body.amount_paise or not reference:
+            raise HTTPException(422, "Enter the actual credited amount and bank transaction reference")
+        if body.amount_paise > order.amount - order.amount_paid:
+            raise HTTPException(409, "Amount exceeds the unpaid balance; reconcile excess separately")
+        # Database uniqueness prevents using a bank reference for two approvals,
+        # including concurrent requests against different orders.
+        db.add(Transaction(seller_id=order.seller_id, order_id=order.id, utr_number=reference,
+                           amount=body.amount_paise, timestamp=datetime.now(timezone.utc),
+                           verified_by="manual", screenshot_url=review.screenshot_url))
+        try:
+            await db.flush()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(409, "Bank transaction reference already recorded")
+        order.amount_paid += body.amount_paise
+        review.reference = reference
+        review.confirmed_amount = body.amount_paise
+        if order.amount_paid >= order.amount:
+            order.status = "payment_confirmed"
+    review.status = desired
+    review.reviewed_at = datetime.now(timezone.utc)
+    # Keep all bundle items held while another proof for this order is pending.
+    await db.flush()
+    other_pending = (await db.execute(select(PaymentReview.id).where(
+        PaymentReview.conversation_id == review.conversation_id,
+        PaymentReview.status == "pending").limit(1))).first()
+    if order and not other_pending:
+        items = (await db.execute(select(ConversationProduct).join(OrderItem,
+            OrderItem.conversation_product_id == ConversationProduct.id).where(
+            OrderItem.order_id == order.id))).scalars().all()
+        conv = await db.get(Conversation, review.conversation_id)
+        for cp in items:
+            cp.state = "awaiting_address" if order.status == "payment_confirmed" else "awaiting_payment"
+        if conv:
+            messages = list(conv.messages or [])
+            messages.append({"role": "seller_manual", "content":
+                f"[Seller {desired} payment evidence after checking bank statement]",
+                "timestamp": datetime.now(timezone.utc).isoformat()})
+            conv.messages = messages
+    await db.flush()
+    return _review_result(review, order)

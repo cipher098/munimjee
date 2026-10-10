@@ -5,6 +5,7 @@ from typing import List
 class Settings(BaseSettings):
     APP_ENV: str = "development"
     SECRET_KEY: str
+    PAYMENT_ENCRYPTION_KEY: str = ""  # Fernet key; required before storing gateway secrets
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     DATABASE_URL: str

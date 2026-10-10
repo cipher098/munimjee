@@ -22,6 +22,9 @@ from app.api.routes.categories import router as categories_router
 from app.api.routes.llm_costs import router as llm_costs_router
 from app.api.routes.manual_actions import router as manual_actions_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.commerce import seller_router as commerce_router, public_router as shop_router
+from app.api.routes.razorpay import router as razorpay_router
+from app.api.routes.private_media import router as private_media_router, PublicUploads
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,7 +46,8 @@ app.add_middleware(
 # Static files — uploaded product images + dashboard
 upload_dir = _UPLOAD_ROOT
 upload_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+app.include_router(private_media_router)
+app.mount("/uploads", PublicUploads(directory=str(upload_dir)), name="uploads")
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 # Phase 1 routes
@@ -57,6 +61,9 @@ app.include_router(categories_router)
 app.include_router(llm_costs_router)
 app.include_router(manual_actions_router)
 app.include_router(admin_router)
+app.include_router(commerce_router)
+app.include_router(shop_router)
+app.include_router(razorpay_router)
 
 
 @app.get("/health")
@@ -159,3 +166,13 @@ async def llm_costs_dashboard(ctx: DashCtx = Depends(require_admin)):
 @app.get("/dashboard/manual-actions")
 async def manual_actions_dashboard(phone: str = Depends(verify_dashboard_cookie)):
     return FileResponse(_STATIC_DIR / "manual_actions.html")
+
+
+@app.get("/shop/{slug}", include_in_schema=False)
+async def storefront_page(slug: str):
+    return FileResponse(_STATIC_DIR / "storefront.html", headers={"Referrer-Policy": "no-referrer"})
+
+
+@app.get("/dashboard/commerce", include_in_schema=False)
+async def commerce_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
+    return FileResponse(_STATIC_DIR / "commerce.html")

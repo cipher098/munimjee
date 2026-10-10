@@ -654,6 +654,15 @@ async def _advance_conversation_inner(
     if not resume:
         _append_message(conversation, "customer", customer_message, mid=customer_mid)
 
+    from app.models.commerce_safeguards import PaymentReview
+    pending_review = (await db.execute(select(PaymentReview.id).where(
+        PaymentReview.conversation_id == conversation.id,
+        PaymentReview.seller_id == seller.id, PaymentReview.status == "pending",
+    ).limit(1))).first()
+    if pending_review:
+        await db.flush()
+        return
+
     if not conversation.customer_gender and conversation.customer_name:
         from app.utils.gender import guess_gender, guess_gender_ai
         gender = guess_gender(conversation.customer_name)
@@ -1310,19 +1319,12 @@ async def _handle_payment_screenshot_inner(
     image_url: str,
     db: AsyncSession,
 ) -> None:
-    """Customer sent a payment screenshot while awaiting_payment.
-
-    Auto-verifies it (vision extract + deterministic verdict); on a clean match
-    records a Transaction and either confirms the order (cumulative ≥ agreed) or
-    asks for the remaining balance (partial). Anything ambiguous/mismatched falls
-    back to the existing manual seller-WhatsApp review — never auto-rejects.
-    """
+    """Extract payment evidence for seller review; OCR cannot confirm settled funds."""
     from app.models.payment_method import PaymentMethod
     from app.models.transaction import Transaction
-    from app.models.order import Order, OrderItem
+    from app.models.commerce_safeguards import PaymentReview
     from app.bot import payment_verification as pv
     from app.bot.responder import send_manual_verification_ping
-    from app.integrations.instagram import InstagramClient
 
     conv_product: ConversationProduct | None = None
     if conversation.product_id:
@@ -1330,14 +1332,20 @@ async def _handle_payment_screenshot_inner(
             conversation.id, conversation.product_id, db
         )
 
-    async def _send(text: str) -> None:
-        _append_message(conversation, "bot", text)
+    async def _manual(order=None, verdict=None) -> None:
+        # A durable queue remains actionable even when WhatsApp is disconnected.
+        db.add(PaymentReview(seller_id=seller.id, conversation_id=conversation.id,
+                             order_id=order.id if order is not None else None,
+                             screenshot_url=screenshot_url or image_url, extracted=extracted,
+                             assessment=verdict.outcome if verdict else "manual_review",
+                             reason=verdict.reason if verdict else "Missing payment context"))
+        if conv_product is not None:
+            conv_product.state = "manual_review"
         await db.flush()
-        client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-        await _send_and_tag(conversation, client, text, db)
-
-    async def _manual() -> None:
-        await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)
+        try:
+            await send_manual_verification_ping(conversation, seller, image_url, db, conv_product=conv_product)
+        except Exception:
+            logger.exception("Payment review queued but notification failed for %s", conversation.id)
 
     # Download + extract FIRST, so a non-payment image (e.g. the customer sharing
     # a different product while awaiting payment) is routed to product handling
@@ -1374,7 +1382,7 @@ async def _handle_payment_screenshot_inner(
     # we shared + the verify-window start + cumulative amount_paid.
     order = await _get_cycle_order(conv_product, db) if conv_product is not None else None
     if conv_product is None or order is None or order.payment_requested_at is None or order.payment_method_id is None:
-        return await _manual()
+        return await _manual(order)
     method = await db.get(PaymentMethod, order.payment_method_id)
 
     # Anti-replay: has this UTR ever been recorded?
@@ -1396,60 +1404,7 @@ async def _handle_payment_screenshot_inner(
     )
     logger.info("Payment verdict for conv %s: %s (%s)", conversation.id, verdict.outcome, verdict.reason)
 
-    if verdict.outcome == pv.DUPLICATE:
-        await _send("Ye payment toh pehle hi mil chuka hai ✅")
-        return
-    if verdict.outcome == pv.MANUAL_REVIEW:
-        # Payee mismatch = the payment went somewhere other than our UPI. Tell the
-        # customer plainly (don't silently re-share/ping) so they can re-pay
-        # correctly. Other reasons (unreadable/unclear) → manual seller review.
-        if "payee" in (verdict.reason or "").lower():
-            conv_product.state = "awaiting_payment"
-            await db.flush()
-            due = (order.amount or 0) - (order.amount_paid or 0)
-            amt = f"₹{due // 100} " if due > 0 else ""
-            await _send(
-                f"Ye payment to kisi aur jagah chala gaya lagta hai 🤔 "
-                f"Maine jo QR bheja hai usi pe {amt}scan karke pay karke screenshot bhejo na, "
-                f"fir turant confirm 🙏"
-            )
-            return
-        return await _manual()
-
-    # confirmed_full or partial → record the transaction against the cycle order.
-    db.add(Transaction(
-        seller_id=seller.id, order_id=order.id, utr_number=verdict.utr,
-        amount=verdict.amount_paise, sender_name=extracted.get("payee_name"),
-        timestamp=verdict.payment_dt or datetime.now(timezone.utc),
-        verified_by="ocr_auto", screenshot_url=screenshot_url,
-    ))
-    order.amount_paid = (order.amount_paid or 0) + verdict.amount_paise
-    await db.flush()
-
-    if verdict.outcome == pv.PARTIAL:
-        still_due = (order.amount or 0) - order.amount_paid
-        conv_product.state = "awaiting_payment"
-        await _send(f"₹{verdict.amount_paise // 100} mil gaya ✅ Bas ₹{still_due // 100} aur bhej do, fir order pakka 🙏")
-        return
-
-    # confirmed_full — collect the delivery address next. The conversation stays
-    # alive (permanent thread); the cycle isn't fully done until we have the
-    # address, so the CP goes to awaiting_address (NOT terminal) and product_id
-    # is kept so the next message routes back to this order.
-    order.status = "payment_confirmed"
-    # A bundle order has several line items — mark every other product paid; the
-    # focused CP drives the single address step for the whole order.
-    _oi_rows = (await db.execute(
-        select(OrderItem).where(OrderItem.order_id == order.id)
-    )).scalars().all()
-    for _oi in _oi_rows:
-        if _oi.conversation_product_id != conv_product.id:
-            _sib = await db.get(ConversationProduct, _oi.conversation_product_id)
-            if _sib is not None:
-                _sib.state = "payment_confirmed"
-    conv_product.state = "awaiting_address"
-    await db.flush()
-    await _send(
-        "Payment confirm ho gaya 🎉 Delivery ke liye apna pura address (naam, "
-        "address, pincode aur phone number) bhej dijiye 🙏"
-    )
+    # Even a perfect screenshot can be edited, reversed, or unrelated to actual
+    # settlement. Preserve the assessment for the seller, without a Transaction,
+    # amount_paid increment, address prompt, or fulfilment transition.
+    await _manual(order, verdict)

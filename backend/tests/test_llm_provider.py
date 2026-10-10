@@ -16,6 +16,7 @@ from typing import Any
 
 import pytest
 
+from app.bot import agent_spec
 from app.integrations import llm_provider
 from app.integrations._json_utils import LLMOutputParseError
 from app.integrations.llm_provider import (
@@ -64,6 +65,10 @@ def _swap_provider_registry(monkeypatch):
     monkeypatch.setattr(llm_provider, "_PROVIDERS", {}, raising=False)
     # Block lazy-registration of the real providers — tests control the registry.
     monkeypatch.setattr(llm_provider, "_ensure_providers_registered", lambda: None)
+    # Test routing against a controlled spec, independent of production model tuning.
+    monkeypatch.setattr(agent_spec, "get", lambda name: agent_spec.AgentSpec(
+        name=name, provider="anthropic", model="test-primary", max_tokens=512,
+        fallback_provider="anthropic", fallback_model="claude-3-5-sonnet-20241022"))
     yield
 
 
@@ -74,18 +79,17 @@ def _swap_provider_registry(monkeypatch):
 def test_resolve_choice_uses_app_default_when_seller_has_no_prefs():
     seller = _FakeSeller(llm_preferences=None)
     provider, model, max_tokens = resolve_choice("decide", seller)
-    # agents.yaml decide default is now gemini / gemini-2.5-flash-lite
-    assert provider == "gemini"
-    assert model.startswith("gemini-")
-    assert max_tokens > 0
+    assert provider == "anthropic"
+    assert model == "test-primary"
+    assert max_tokens == 512
 
 
 def test_resolve_choice_uses_app_default_when_seller_pref_is_for_other_key():
     """Seller overrode reply only — decide should still use app default."""
     seller = _FakeSeller(llm_preferences={"reply": {"provider": "sarvam", "model": "sarvam-30b"}})
     provider, model, _ = resolve_choice("decide", seller)
-    assert provider == "gemini"
-    assert model.startswith("gemini-")
+    assert provider == "anthropic"
+    assert model == "test-primary"
 
 
 def test_resolve_choice_honours_seller_override_for_decide():
@@ -109,12 +113,12 @@ def test_resolve_choice_ignores_seller_override_for_subagent_methods():
         # Even if (hypothetically) a key matched a subagent method, it must be ignored.
     })
     provider, _, _ = resolve_choice("intent_classifier", seller)
-    assert provider == "gemini"  # subagent stays on app default, ignoring seller pref
+    assert provider == "anthropic"  # subagent stays on app default, ignoring seller pref
 
 
 def test_resolve_choice_works_with_seller_none():
     provider, model, _ = resolve_choice("decide", None)
-    assert provider == "gemini"
+    assert provider == "anthropic"
 
 
 # ---------------------------------------------------------------------------
@@ -181,6 +185,7 @@ async def test_reraises_when_primary_and_fallback_are_the_same():
     })
     with pytest.raises(RuntimeError, match="boom"):
         await resolve_and_call("decide", seller, {})
+    assert len(only.calls) == 1
 
 
 def test_resolve_and_call_rejects_non_customer_facing_methods():

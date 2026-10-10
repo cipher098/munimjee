@@ -11,14 +11,15 @@ from app.paths import STATIC_DIR as _STATIC_DIR
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from uuid import UUID
 
-from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from jose import JWTError, jwt
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.auth import _verify_password
+from app.api.routes.auth import _verify_password, _secure_cookie
 from app.config import settings
 from app.database import get_db
 from app.models.seller import Seller
@@ -50,9 +51,10 @@ def _redirect_login() -> HTTPException:
     return HTTPException(status_code=302, headers={"Location": "/dashboard-auth/login"})
 
 
-def verify_dashboard_cookie(
+async def verify_dashboard_cookie(
     dashboard_session: str | None = Cookie(default=None),
     view_seller: str | None = Cookie(default=None),
+    db: AsyncSession = Depends(get_db),
 ) -> DashCtx:
     """Auth gate for every dashboard route. Returns the caller's role + ids."""
     if not dashboard_session:
@@ -66,6 +68,14 @@ def verify_dashboard_cookie(
     role = payload.get("role")
     if role not in ("seller", "admin"):
         raise _redirect_login()
+    if role == "seller":
+        try:
+            seller_id = UUID(payload.get("seller_id") or "")
+        except (ValueError, TypeError):
+            raise _redirect_login()
+        seller = await db.get(Seller, seller_id)
+        if seller is None or not seller.is_active:
+            raise _redirect_login()
     return DashCtx(
         role=role,
         seller_id=payload.get("seller_id"),
@@ -96,7 +106,7 @@ async def login_page():
 
 @router.post("/login")
 async def do_login(
-    response: Response,
+    request: Request,
     identifier: str = Form(...),
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -116,17 +126,21 @@ async def do_login(
     )
     seller = res.scalars().first()
     if seller and seller.password_hash and _verify_password(password, seller.password_hash):
+        if not seller.is_active:
+            raise HTTPException(status_code=403, detail="Account inactive")
         token = _make_token("seller", str(seller.id), seller.email or str(seller.id))
         resp = RedirectResponse(url="/dashboard", status_code=303)
-        resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, samesite="lax")
+        resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
         resp.delete_cookie(_VIEW_COOKIE)
         return resp
 
     # 2) Admin login — allowed phone + shared dashboard password.
-    if phone_norm in settings.DASHBOARD_ALLOWED_PHONES and password == settings.DASHBOARD_PASSWORD:
+    admin_password = settings.DASHBOARD_PASSWORD
+    configured_admin = bool(admin_password and admin_password.strip().casefold() != "changeme" and admin_password.strip())
+    if configured_admin and phone_norm in settings.DASHBOARD_ALLOWED_PHONES and password == admin_password:
         token = _make_token("admin", None, phone_norm)
         resp = RedirectResponse(url="/dashboard/admin", status_code=303)
-        resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, samesite="lax")
+        resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
         resp.delete_cookie(_VIEW_COOKIE)
         return resp
 
@@ -148,10 +162,10 @@ async def me(ctx: DashCtx = Depends(verify_dashboard_cookie), db: AsyncSession =
 
 
 @router.post("/view/{seller_id}")
-async def view_seller(seller_id: str, ctx: DashCtx = Depends(require_admin)):
+async def view_seller(seller_id: str, request: Request, ctx: DashCtx = Depends(require_admin)):
     """Admin picks a seller to view — scopes the seller pages to them."""
     resp = RedirectResponse(url="/dashboard", status_code=303)
-    resp.set_cookie(_VIEW_COOKIE, seller_id, max_age=_EXPIRE_DAYS * 86400, httponly=True, samesite="lax")
+    resp.set_cookie(_VIEW_COOKIE, seller_id, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
     return resp
 
 
@@ -167,4 +181,6 @@ async def logout():
     resp = RedirectResponse(url="/dashboard-auth/login", status_code=303)
     resp.delete_cookie(_COOKIE)
     resp.delete_cookie(_VIEW_COOKIE)
+    resp.delete_cookie("seller_session")
+    resp.delete_cookie("instagram_oauth_browser", path="/auth/instagram/oauth")
     return resp

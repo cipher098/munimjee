@@ -2,6 +2,10 @@
 
 Audited 10 October 2026 against `v0.1` at `a2222be4a9c1aac607e668b5df93cc603f37c589`.
 
+## Current implementation update
+
+The storefront/checkout increment is now implemented on this branch: public catalogue and mobile cart, COD and Razorpay integration, seller orders/customers, manual fulfilment, authenticated Instagram linking, payment-proof review and protected evidence files. See [setup, validation and remaining limits](COMMERCE_SETUP.md). The matrix below records the original audit; it is not the current implementation checklist. Full CatalogHub parity remains incomplete.
+
 ## Product target
 
 A seller should be able to publish a mobile storefront, sell from a product link or Instagram conversation, accept a real order, confirm payment, fulfil it, and keep the customer informed from one dashboard. That is the baseline before adding differentiating features.
@@ -74,7 +78,7 @@ Gate: two sellers can publish distinct stores; inactive/out-of-stock items behav
 
 Gate: price tampering fails; duplicate webhooks do not duplicate payments; simultaneous orders cannot oversell; cancelled/expired orders release stock; customer and seller see consistent status.
 
-Provider selection remains open: Razorpay + COD, Cashfree + COD, or explicit manual payment review + COD. Production setup needs the seller/provider account and webhook credentials; test mode must be visibly distinct.
+Provider selected: **Razorpay + COD**. The integration is implemented; production setup and live sandbox verification require the seller account, keys and webhook configuration. Test mode is explicitly shown.
 
 ### 3. Fulfilment and customer support
 
@@ -96,7 +100,7 @@ Gate: demonstrate the complete Instagram/WhatsApp-to-order journey using connect
 
 Differentiate with the guided clothing customization journey, measurement reuse, occasion/date-aware ordering and seller-assisted recommendations. These should use the same catalogue, order and fulfilment models rather than create a second checkout path.
 
-## Validation for this increment
+## Validation of the initial catalogue-only increment (historical)
 
 - New catalogue suite: **23 passed**. Before the fixes, **18 failed and 5 passed**.
 - Full existing + new suite: **285 passed, 6 failed, 5 skipped**. The suite is not fully green.
