@@ -63,6 +63,14 @@ async def fetch_templates(account):
     return await collection(decrypt(account.access_token), f'{account.waba_id}/message_templates', fields='name,language,status,category,components')
 
 
+async def create_template(account, *, name, language, category, components):
+    result = await graph(decrypt(account.access_token), 'POST', f'{account.waba_id}/message_templates',
+        data={'name': name, 'language': language, 'category': category, 'components': components})
+    if not result.get('id') or not all(isinstance(result.get(key), str) and result[key] for key in ('status', 'category')):
+        raise SendUncertain('Meta returned an incomplete template response; sync before submitting again')
+    return result
+
+
 async def send(account, contact, message):
     data = {'messaging_product':'whatsapp', 'recipient_type':'individual', 'to':contact.phone, 'type':message.kind, 'biz_opaque_callback_data':str(message.id)}
     if message.kind == 'template':

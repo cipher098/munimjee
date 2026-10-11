@@ -89,27 +89,13 @@ async def root():
 
 @app.api_route("/privacy", methods=["GET", "HEAD"], include_in_schema=False)
 async def privacy():
-    """Placeholder privacy policy URL — Meta requires one configured on the App,
-    and the page must respond 200 when Meta crawls it."""
-    return HTMLResponse(
-        "<!doctype html><meta charset=utf-8>"
-        "<title>SellerBot — Privacy Policy</title>"
-        "<style>body{font-family:system-ui;max-width:680px;margin:60px auto;padding:0 20px;line-height:1.6;color:#222}</style>"
-        "<h1>Privacy Policy</h1>"
-        "<p>SellerBot processes Instagram direct messages on behalf of sellers who have explicitly connected their Instagram account. "
-        "We store conversation history, customer Instagram IDs, comments matching seller automation rules, WhatsApp phone numbers and messages, consent records, and seller-configured product/pricing data to operate the connected services. "
-        "We do not sell or share this data with third parties. Sellers can request deletion of their account and all associated data at any time by emailing support.</p>"
-        "<h2>Data we collect</h2>"
-        "<ul>"
-        "<li>Instagram user IDs of customers who message a connected seller account</li>"
-        "<li>Direct message content (text + image URLs) needed to generate replies</li><li>WhatsApp contact details, message history, delivery status and opt-in or opt-out records</li><li>Instagram comments and automation reply history</li>"
-        "<li>Seller-provided product catalog, pricing, persona, and policies</li>"
-        "</ul>"
-        "<h2>Data we share</h2>"
-        "<p>Messages and replies are exchanged with Meta when you enable connected Instagram or WhatsApp features. Instagram direct message content is sent to Anthropic's Claude API for natural-language response generation. Anthropic's privacy terms apply to that processing.</p>"
-        "<h2>Contact</h2>"
-        "<p>For data deletion or privacy questions, contact the seller administrator.</p>"
-    )
+    """Use the operator's canonical policy instead of a second placeholder policy."""
+    return RedirectResponse(url="https://munimjee.in/privacy", status_code=307)
+
+
+@app.api_route("/data-deletion", methods=["GET", "HEAD"], include_in_schema=False)
+async def data_deletion():
+    return FileResponse(_STATIC_DIR / "data_deletion.html")
 
 
 @app.api_route("/terms", methods=["GET", "HEAD"], include_in_schema=False)

@@ -338,3 +338,75 @@ async def test_stop_same_second_as_checkout_consent_is_honored(wa):
     await posthook(wa,incoming('stop-after-checkout','STOP'))
     async with wa.session() as db:
         contact=await db.get(WhatsAppContact,wa.ids['contacts'][0]);assert contact.opted_out and not contact.utility_opt_in
+
+
+@pytest.mark.asyncio
+async def test_create_template_scoped_pending_duplicate_and_send_guard(wa, monkeypatch):
+    calls=[]
+    async def graph(token,method,path,*,data=None,params=None):
+        calls.append((method,path,data))
+        assert token=='token-secret-long'
+        return {'id':'meta-template-1','status':'PENDING','category':'UTILITY'}
+    monkeypatch.setattr(provider,'graph',graph)
+    payload={'name':'order_confirmation','language':'en','category':'UTILITY',
+             'body':'Hi {{1}}, your order {{2}} is confirmed.', 'examples':['Ananya','DEMO-1042'], 'footer':'Reply STOP to opt out'}
+    response=await wa.client.post('/whatsapp/templates',json=payload)
+    assert response.status_code==201,response.text
+    assert response.json()['status']=='PENDING'
+    assert calls==[('POST','200/message_templates',{'name':'order_confirmation','language':'en','category':'UTILITY','components':[
+        {'type':'BODY','text':payload['body'],'example':{'body_text':[['Ananya','DEMO-1042']]}},
+        {'type':'FOOTER','text':'Reply STOP to opt out'}]})]
+    duplicate=await wa.client.post('/whatsapp/templates',json=payload)
+    assert duplicate.status_code==409 and len(calls)==1
+    pending_send=await wa.client.post(f"/whatsapp/contacts/{wa.ids['contacts'][0]}/template",json={
+        'name':payload['name'],'language':'en','parameters':payload['examples'],'idempotency_key':str(uuid4())})
+    assert pending_send.status_code==409
+    wa.client.cookies.set('dashboard_session',_make_token('seller',str(wa.ids['sellers'][1]),'other'))
+    assert (await wa.client.get('/whatsapp/templates')).json()['items']==[]
+    assert (await wa.client.post('/whatsapp/templates',json=payload)).status_code==201
+    assert calls[-1][1]=='201/message_templates'
+
+
+@pytest.mark.asyncio
+async def test_template_create_validation_and_disconnected_account(wa,monkeypatch):
+    async def forbidden(*args,**kwargs):
+        raise AssertionError('Validation failure must not call Meta')
+    monkeypatch.setattr(provider,'graph',forbidden)
+    valid={'name':'order_confirmation','language':'en','category':'UTILITY','body':'Your order is confirmed.'}
+    invalid=[{'name':'Upper Case'},{'category':'AUTHENTICATION'},{'body':' '},{'body':'x'*1025},
+             {'body':'Hi {{2}}','examples':['A']},{'body':'Hi {{1}}','examples':[]},
+             {'body':'Hi {{name}}'},{'footer':'{{1}}'},{'examples':['extra']},
+             {'body':'Hi {{1}}','examples':[' ']}]
+    for override in invalid:
+        r=await wa.client.post('/whatsapp/templates',json={**valid,**override})
+        assert r.status_code==422,(override,r.text)
+    async with wa.session() as db:
+        account=await db.get(WhatsAppAccount,wa.ids['sellers'][0]);account.access_token=''
+    assert (await wa.client.post('/whatsapp/templates',json=valid)).status_code==409
+
+
+@pytest.mark.asyncio
+async def test_template_uncertain_creation_does_not_claim_success_or_retry(wa,monkeypatch):
+    calls=[]
+    async def graph(*args,**kwargs):
+        calls.append(1)
+        raise provider.SendUncertain('timeout')
+    monkeypatch.setattr(provider,'graph',graph)
+    payload={'name':'service_update','language':'en','category':'UTILITY','body':'Your request has been received.'}
+    r=await wa.client.post('/whatsapp/templates',json=payload)
+    assert r.status_code==504 and 'Sync templates' in r.json()['detail'] and len(calls)==1
+    assert (await wa.client.get('/whatsapp/templates')).json()['items']==[]
+    async def incomplete(*args,**kwargs): return {'id':'meta-1'}
+    monkeypatch.setattr(provider,'graph',incomplete)
+    assert (await wa.client.post('/whatsapp/templates',json=payload)).status_code==504
+
+
+@pytest.mark.asyncio
+async def test_template_create_preserves_meta_category_and_requires_auth(wa,monkeypatch):
+    async def graph(*args,**kwargs): return {'id':'meta-2','status':'PENDING','category':'MARKETING'}
+    monkeypatch.setattr(provider,'graph',graph)
+    payload={'name':'review_message','language':'en','category':'UTILITY','body':'A message for review.'}
+    r=await wa.client.post('/whatsapp/templates',json=payload)
+    assert r.status_code==201 and r.json()['category']=='MARKETING'
+    wa.client.cookies.clear()
+    assert (await wa.client.post('/whatsapp/templates',json=payload)).status_code==302

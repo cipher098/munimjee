@@ -1,7 +1,9 @@
 """Authenticated WhatsApp account, inbox, consent and automation configuration."""
 from uuid import UUID
+from typing import Literal
+import re
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,6 +78,42 @@ class Consent(BaseModel):
     utility_opt_in: bool
     marketing_opt_in: bool
     source: str = Field(min_length=5, max_length=500)
+
+
+class TemplateCreate(BaseModel):
+    name: str = Field(pattern=r'^[a-z][a-z0-9_]{0,511}$')
+    language: str = Field(pattern=r'^[a-z]{2,3}(?:_[A-Z]{2})?$')
+    category: Literal['UTILITY', 'MARKETING']
+    body: str = Field(min_length=1, max_length=1024)
+    examples: list[str] = Field(default_factory=list, max_length=20)
+    footer: str = Field(default='', max_length=60)
+
+    @model_validator(mode='after')
+    def validate_content(self):
+        self.body, self.footer = self.body.strip(), self.footer.strip()
+        if not self.body:
+            raise ValueError('Message body cannot be blank')
+        tokens = re.findall(r'\{\{([1-9][0-9]*)\}\}', self.body)
+        remainder = re.sub(r'\{\{[1-9][0-9]*\}\}', '', self.body)
+        if '{' in remainder or '}' in remainder or '{' in self.footer or '}' in self.footer:
+            raise ValueError('Use numbered body variables such as {{1}}; footers cannot contain variables')
+        numbers = sorted({int(token) for token in tokens})
+        if numbers != list(range(1, len(numbers) + 1)) or len(numbers) != len(self.examples):
+            raise ValueError('Variables must start at {{1}}, have no gaps, and have one sample per variable')
+        if any(not sample.strip() or len(sample) > 1024 or '{' in sample or '}' in sample for sample in self.examples):
+            raise ValueError('Each sample must be plain text between 1 and 1024 characters')
+        self.examples = [sample.strip() for sample in self.examples]
+        return self
+
+    def components(self):
+        body = {'type': 'BODY', 'text': self.body}
+        if self.examples:
+            body['example'] = {'body_text': [self.examples]}
+        return [body] + ([{'type': 'FOOTER', 'text': self.footer}] if self.footer else [])
+
+
+def template_json(template):
+    return {key:getattr(template,key) for key in ('name','language','status','category','components','synced_at')}
 
 
 def account_json(account):
@@ -199,7 +237,29 @@ async def reply(contact_id:UUID,payload:Reply,seller_id=Depends(current_seller_i
 @router.get('/templates')
 async def templates(seller_id=Depends(current_seller_id),db:AsyncSession=Depends(get_db)):
     rows = (await db.scalars(select(WhatsAppTemplate).where(WhatsAppTemplate.seller_id == seller_id).order_by(WhatsAppTemplate.name))).all()
-    return {'items':[{key:getattr(t,key) for key in ('name','language','status','category','components','synced_at')} for t in rows]}
+    return {'items':[template_json(t) for t in rows]}
+
+
+@router.post('/templates', status_code=201)
+async def create_template(payload:TemplateCreate,seller_id=Depends(current_seller_id),db:AsyncSession=Depends(get_db)):
+    account = await service.account_for(db, seller_id, lock=True)
+    if not account.access_token:
+        raise HTTPException(409, 'Reconnect WhatsApp before creating a template')
+    existing = await db.scalar(select(WhatsAppTemplate).where(WhatsAppTemplate.seller_id == seller_id,
+        WhatsAppTemplate.name == payload.name, WhatsAppTemplate.language == payload.language))
+    if existing:
+        raise HTTPException(409, 'This template already exists. Sync templates to check its current status')
+    components = payload.components()
+    try:
+        result = await provider.create_template(account, name=payload.name, language=payload.language,
+            category=payload.category, components=components)
+    except provider.SendUncertain:
+        raise HTTPException(504, 'Meta may have received this template. Sync templates or check WhatsApp Manager before submitting again')
+    template = WhatsAppTemplate(seller_id=seller_id, name=payload.name, language=payload.language,
+        category=result['category'], status=result['status'], components=components, synced_at=service.now())
+    db.add(template)
+    await db.flush()
+    return template_json(template)
 
 
 @router.post('/templates/sync')
