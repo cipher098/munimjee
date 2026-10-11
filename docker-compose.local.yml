@@ -1,0 +1,22 @@
+# Local-only bindings avoid conflicts with Homebrew Postgres/Redis.
+# Also expose 8001 for the existing app.vouchrs.in Cloudflare tunnel.
+# Run: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+services:
+  api:
+    ports: !override
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+  worker:
+    volumes:
+      - ./backend/uploads:/app/uploads
+  beat:
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    volumes:
+      - ./backend/uploads:/app/uploads
+  postgres:
+    ports: !override
+      - "127.0.0.1:5433:5432"
+  redis:
+    ports: !override []

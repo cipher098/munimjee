@@ -59,3 +59,7 @@ For a complete local test run, create a dedicated disposable database named `com
 - Operational dashboards, retention/backup policy, rate limits and a deployment-wide security review before a broad public launch.
 
 The Dharaa photos/content used for local browser QA are local fixtures only; they are not seeded into production or committed as real seller inventory.
+
+## WhatsApp and comment automation
+
+See [Social automation setup](SOCIAL_AUTOMATION_SETUP.md) for migrations 0036–0038, channel credentials, order-update opt-in, Meta prerequisites and live-test limitations.

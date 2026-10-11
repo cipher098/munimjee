@@ -2,3 +2,5 @@
 
 .payment-choice{display:block;font-size:12px;margin-top:22px}.payment-choice select{margin-top:6px}
 @media(max-width:600px){#checkout-form .form-grid>label:nth-child(-n+3){grid-column:1/-1}.bag-line p{overflow-wrap:anywhere}}
+
+.whatsapp-opt-in{display:flex;align-items:flex-start;gap:10px;margin:18px 0;font-size:14px}.whatsapp-opt-in[hidden]{display:none}.whatsapp-opt-in input{width:auto;flex:none;margin-top:4px}.whatsapp-opt-in small{display:block;color:var(--muted);margin-top:4px}

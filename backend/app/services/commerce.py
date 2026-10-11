@@ -103,6 +103,7 @@ class CheckoutInput(Input):
     items: list[ItemInput] = Field(min_length=1, max_length=50)
     note: str = Field(default='', max_length=2000)
     payment_method: Literal['cod', 'razorpay'] = 'cod'
+    whatsapp_updates_opt_in: bool = Field(default=False, strict=True)
 
 
 class TransitionInput(Input):
@@ -154,7 +155,11 @@ async def create_order(db, store, payload):
     acquired in stable UUID order, including against concurrent inventory edits.
     This uses aggregate product stock: variants do not have independent inventory.
     """
-    digest = hashlib.sha256(json.dumps(payload.model_dump(mode='json', exclude={'idempotency_key'}), sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    details = payload.model_dump(mode='json', exclude={'idempotency_key'})
+    # Preserve hashes for pre-opt-in checkouts; true is an intentional change.
+    if not details['whatsapp_updates_opt_in']:
+        details.pop('whatsapp_updates_opt_in')
+    digest = hashlib.sha256(json.dumps(details, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     existing = await db.scalar(select(CommerceOrder).where(CommerceOrder.seller_id == store.seller_id, CommerceOrder.idempotency_key == payload.idempotency_key))
     if existing:
         if not hmac.compare_digest(existing.request_hash, digest):
@@ -214,7 +219,7 @@ async def create_order(db, store, payload):
         idempotency_key=payload.idempotency_key, request_hash=digest,
         customer=payload.customer.model_dump(), address=payload.address.model_dump(), items=snapshots,
         note=payload.note, subtotal=subtotal, shipping_fee=store.shipping_fee, total=subtotal + store.shipping_fee,
-        currency='INR', payment_method=payload.payment_method,
+        currency='INR', payment_method=payload.payment_method, whatsapp_updates_opt_in=payload.whatsapp_updates_opt_in,
         expires_at=(datetime.now(timezone.utc) + timedelta(minutes=20)) if payload.payment_method == 'razorpay' else None)
     db.add(order)
     await db.flush()

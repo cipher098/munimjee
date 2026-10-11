@@ -54,6 +54,7 @@ class CommerceOrder(Base):
     payment_method = Column(String(20), nullable=False, default='cod')
     payment_status = Column(String(20), nullable=False, default='pending')
     fulfillment_status = Column(String(20), nullable=False, default='pending', index=True)
+    whatsapp_updates_opt_in = Column(Boolean, nullable=False, default=False, server_default='false')
     stock_released = Column(Boolean, nullable=False, default=False)
     expires_at = Column(DateTime(timezone=True), nullable=True)
     gateway_credentials = Column(JSONB, nullable=True)  # encrypted per-order key snapshot for safe account rotation

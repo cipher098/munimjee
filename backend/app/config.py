@@ -5,6 +5,10 @@ from typing import List
 class Settings(BaseSettings):
     APP_ENV: str = "development"
     SECRET_KEY: str
+    CHANNEL_ENCRYPTION_KEY: str = ""  # Fernet key for per-seller messaging secrets
+    WHATSAPP_WEBHOOK_VERIFY_TOKEN: str = ""
+    WHATSAPP_APP_SECRET: str = ""
+    WHATSAPP_GRAPH_VERSION: str = "v23.0"
     PAYMENT_ENCRYPTION_KEY: str = ""  # Fernet key; required before storing gateway secrets
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
 
@@ -58,7 +62,7 @@ class Settings(BaseSettings):
     # of processing them in prod, so one seller's traffic can be handled locally.
     # All other sellers process normally. Empty list = feature off. Override via
     # env, e.g. ROUTE_TO_LOCAL_SELLER_IDS='["<uuid>"]'.
-    ROUTE_TO_LOCAL_SELLER_IDS: List[str] = ["3d1afaac-6471-4d5b-a587-99042a6d5f6d"]
+    ROUTE_TO_LOCAL_SELLER_IDS: List[str] = []
     LOCAL_WEBHOOK_URL: str = "https://app.vouchrs.in/webhooks/instagram"
 
     PUBLIC_BASE_URL: str = ""  # e.g. https://abc123.ngrok.io — used to build public image URLs for Meta

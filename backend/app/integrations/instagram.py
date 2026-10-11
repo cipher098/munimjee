@@ -65,6 +65,7 @@ def is_registered_outbound_mid(mid: str | None) -> bool:
 INSTAGRAM_OAUTH_SCOPES = ",".join([
     "instagram_business_basic",
     "instagram_business_manage_messages",
+    "instagram_business_manage_comments",
 ])
 
 
@@ -107,10 +108,9 @@ async def exchange_code_for_user_token(code: str, redirect_uri: str) -> dict:
         response.raise_for_status()
         data = response.json()
         logger.info(
-            "IG code exchange OK — user_id=%s permissions=%s token_prefix=%s",
+            "IG code exchange OK — user_id=%s permissions=%s",
             data.get("user_id"),
             data.get("permissions"),
-            str(data.get("access_token", ""))[:20],
         )
         return data
 
@@ -133,7 +133,7 @@ async def exchange_for_long_lived_token(short_lived_token: str) -> str:
 
 
 async def subscribe_ig_user_to_messages(ig_user_id: str, user_token: str) -> dict:
-    """Subscribe this IG account to the app's `messages` webhook.
+    """Subscribe this IG account to the app's messages and comments webhooks.
 
     App-level webhook config in the dashboard isn't enough — Meta also needs an
     explicit per-account subscribe so it knows to fire events for this seller.
@@ -142,7 +142,7 @@ async def subscribe_ig_user_to_messages(ig_user_id: str, user_token: str) -> dic
         response = await client.post(
             f"https://graph.instagram.com/{settings.INSTAGRAM_API_VERSION}/{ig_user_id}/subscribed_apps",
             params={
-                "subscribed_fields": "messages",
+                "subscribed_fields": "messages,comments",
                 "access_token": user_token,
             },
         )
@@ -270,3 +270,28 @@ class InstagramClient:
             data = response.json()
             register_outbound_mid(data.get("message_id"))
             return data
+
+    async def get_comment_details(self, comment_id: str) -> dict:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(f"{self._base_url}/{comment_id}",
+                headers={"Authorization": f"Bearer {self._token}"},
+                params={"fields": "id,timestamp,parent_id"})
+            response.raise_for_status()
+            return response.json()
+
+    async def send_private_reply(self, comment_id: str, text: str) -> dict:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(f"{self._base_url}/{self.fb_page_id}/messages",
+                headers={"Authorization": f"Bearer {self._token}"},
+                json={"recipient": {"comment_id": comment_id}, "message": {"text": text}})
+            response.raise_for_status()
+            data = response.json()
+            register_outbound_mid(data.get("message_id"))
+            return data
+
+    async def reply_to_comment(self, comment_id: str, text: str) -> dict:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(f"{self._base_url}/{comment_id}/replies",
+                headers={"Authorization": f"Bearer {self._token}"}, json={"message": text})
+            response.raise_for_status()
+            return response.json()
