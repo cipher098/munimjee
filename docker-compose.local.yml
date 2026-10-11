@@ -12,6 +12,7 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads
   beat:
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
     volumes:
       - ./backend/uploads:/app/uploads
   postgres:
