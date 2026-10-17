@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "PaymentPrefill": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 100,
+          "title": "Name",
+          "type": "string"
+        },
+        "contact": {
+          "maxLength": 20,
+          "title": "Contact",
+          "type": "string"
+        },
+        "email": {
+          "maxLength": 254,
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "contact",
+        "email"
+      ],
+      "title": "PaymentPrefill",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "checkout-session.v1",
+      "default": "checkout-session.v1",
+      "enum": [
+        "checkout-session.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "order_id": {
+      "format": "uuid",
+      "title": "Order Id",
+      "type": "string"
+    },
+    "provider": {
+      "const": "razorpay",
+      "default": "razorpay",
+      "enum": [
+        "razorpay"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "provider_order_id": {
+      "maxLength": 100,
+      "pattern": "^order_[A-Za-z0-9]+$",
+      "title": "Provider Order Id",
+      "type": "string"
+    },
+    "key_id": {
+      "maxLength": 100,
+      "pattern": "^rzp_(test|live)_[A-Za-z0-9]+$",
+      "title": "Key Id",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "test",
+        "live"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "amount_minor": {
+      "maximum": 2000000000,
+      "minimum": 0,
+      "title": "Amount Minor",
+      "type": "integer"
+    },
+    "currency": {
+      "const": "INR",
+      "enum": [
+        "INR"
+      ],
+      "title": "Currency",
+      "type": "string"
+    },
+    "session_token": {
+      "maxLength": 4096,
+      "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "title": "Session Token",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "merchant_name": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Merchant Name",
+      "type": "string"
+    },
+    "prefill": {
+      "$ref": "#/$defs/PaymentPrefill"
+    },
+    "verify_url": {
+      "maxLength": 512,
+      "title": "Verify Url",
+      "type": "string"
+    },
+    "status_url": {
+      "maxLength": 512,
+      "title": "Status Url",
+      "type": "string"
+    },
+    "order_status_url": {
+      "maxLength": 512,
+      "title": "Order Status Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "order_id",
+    "provider_order_id",
+    "key_id",
+    "mode",
+    "amount_minor",
+    "currency",
+    "session_token",
+    "expires_at",
+    "merchant_name",
+    "prefill",
+    "verify_url",
+    "status_url",
+    "order_status_url"
+  ],
+  "title": "CheckoutSessionRead",
+  "type": "object"
+}

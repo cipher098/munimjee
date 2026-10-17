@@ -1,0 +1,95 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "checkout-state.v1",
+      "default": "checkout-state.v1",
+      "enum": [
+        "checkout-state.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "order_id": {
+      "format": "uuid",
+      "title": "Order Id",
+      "type": "string"
+    },
+    "amount_minor": {
+      "maximum": 2000000000,
+      "minimum": 0,
+      "title": "Amount Minor",
+      "type": "integer"
+    },
+    "currency": {
+      "const": "INR",
+      "enum": [
+        "INR"
+      ],
+      "title": "Currency",
+      "type": "string"
+    },
+    "payment_status": {
+      "enum": [
+        "pending",
+        "paid",
+        "collected",
+        "review_required",
+        "cancelled",
+        "expired"
+      ],
+      "title": "Payment Status",
+      "type": "string"
+    },
+    "fulfillment_status": {
+      "enum": [
+        "pending",
+        "confirmed",
+        "packed",
+        "shipped",
+        "delivered",
+        "cancelled"
+      ],
+      "title": "Fulfillment Status",
+      "type": "string"
+    },
+    "attempt_state": {
+      "enum": [
+        "not_started",
+        "requesting",
+        "unknown",
+        "ready"
+      ],
+      "title": "Attempt State",
+      "type": "string"
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expires At"
+    },
+    "retry_allowed": {
+      "title": "Retry Allowed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "order_id",
+    "amount_minor",
+    "currency",
+    "payment_status",
+    "fulfillment_status",
+    "attempt_state",
+    "expires_at",
+    "retry_allowed"
+  ],
+  "title": "CheckoutStateRead",
+  "type": "object"
+}
