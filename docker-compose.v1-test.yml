@@ -1,0 +1,20 @@
+# Invoke only through scripts/v1-test.py, which disables Compose .env loading.
+# No bind mounts, persistent volumes, application container or live worker.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: munimjee_test
+      POSTGRES_PASSWORD: local_test_only
+      POSTGRES_DB: munimjee_test_${TEST_LANE:?Use the isolated runner}
+    ports:
+      - 127.0.0.1:${TEST_PG_PORT:?Assign a unique lane port}:5432
+    tmpfs:
+      - /var/lib/postgresql/data
+    mem_limit: 512m
+    cpus: 1.0
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 3s
+      retries: 15

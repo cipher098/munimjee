@@ -14,7 +14,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: commerce_test
+          POSTGRES_DB: munimjee_test_ci
         ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
@@ -22,11 +22,9 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/commerce_test
-      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/commerce_test
-      SECRET_KEY: isolated-ci-placeholder-not-a-production-secret
-      META_VERIFY_TOKEN: ci-only
-      ANTHROPIC_API_KEY: sk-ant-replay-only-not-a-real-key
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/munimjee_test_ci
+      TEST_LANE: ci
+      TEST_DB_RESET: '1'
     defaults:
       run:
         working-directory: backend
@@ -34,12 +32,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
-      - name: Apply all migrations to the disposable database
-        run: python -m alembic upgrade head
+      - name: Validate the migrated database and held reset lease
+        run: python -m pytest tests/test_test_safety.py -q -ra
+      # Every DB fixture resets only the validated disposable lane, then applies
+      # actual Alembic head while holding its advisory lease through the test.
       - run: python -m pytest tests -q -ra
       - name: Check browser scripts
         run: |
