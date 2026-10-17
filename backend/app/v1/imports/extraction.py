@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 
 from pydantic import ValidationError
 
-from .contracts import DraftFacts, DraftPrice
+from .contracts import DraftFacts, DraftPrice, clean_text
 from .fetching import FetchError, FetchedSource
 
 
@@ -49,10 +49,21 @@ def extract_website(source: FetchedSource) -> tuple[tuple[str, DraftFacts], ...]
     else:
         scripts = [text]
     products: list[dict] = []
+    def unique_keys(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise FetchError("ambiguous_structured_json")
+            result[key] = value
+        return result
+
     for script in scripts:
         try:
             document = json.loads(script, parse_float=Decimal,
+                                  object_pairs_hook=unique_keys,
                                   parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        except FetchError:
+            raise
         except (ValueError, RecursionError):
             continue
         pending = list(document) if isinstance(document, list) else [document]
@@ -81,6 +92,10 @@ def extract_website(source: FetchedSource) -> tuple[tuple[str, DraftFacts], ...]
             if len(products) != 1:
                 raise FetchError("stable_product_key_required")
             key = "page-product"
+        try:
+            key = clean_text(key, limit=200)
+        except ValueError as exc:
+            raise FetchError("invalid_source_product_key") from exc
         if key in seen:
             raise FetchError("duplicate_source_product_key")
         seen.add(key)
