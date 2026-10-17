@@ -1,0 +1,40 @@
+{
+  "contract_version": "catalogue.v1",
+  "mode": "preview_foundation",
+  "business_id": "11111111-1111-4111-8111-111111111111",
+  "product_id": "22222222-2222-4222-8222-222222222222",
+  "name": "Cotton kurta",
+  "description": "Seller approved cotton kurta",
+  "category_id": null,
+  "photo_urls": [
+    "https://example.com/kurta.jpg"
+  ],
+  "readiness": "reviewed",
+  "checkout_enabled": false,
+  "skus": [
+    {
+      "options": {
+        "Color": "Red",
+        "Size": "S"
+      },
+      "price_minor": 129900,
+      "currency": "INR",
+      "stock_available": 2,
+      "active": true,
+      "sku_id": "44444444-4444-4444-8444-444444444444",
+      "product_id": "22222222-2222-4222-8222-222222222222"
+    },
+    {
+      "options": {
+        "Color": "Red",
+        "Size": "M"
+      },
+      "price_minor": 139900,
+      "currency": "INR",
+      "stock_available": 5,
+      "active": true,
+      "sku_id": "55555555-5555-4555-8555-555555555555",
+      "product_id": "22222222-2222-4222-8222-222222222222"
+    }
+  ]
+}

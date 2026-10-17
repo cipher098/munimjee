@@ -1,0 +1,24 @@
+{
+  "business_id": "11111111-1111-4111-8111-111111111111",
+  "product_id": "22222222-2222-4222-8222-222222222222",
+  "readiness": "needs_review",
+  "mapping_revision": 1,
+  "legacy_fingerprint": "084de5473b3a23df2b0f6f02f7c94b8be643cb8cb4847bd8e1198c7b70757c35",
+  "issues": [
+    "legacy_variants_require_seller_allocation"
+  ],
+  "legacy_variants": [
+    {
+      "index": 0,
+      "value": {
+        "label": "Red"
+      }
+    },
+    {
+      "index": 1,
+      "value": {
+        "label": "Red"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "expected_legacy_fingerprint": "084de5473b3a23df2b0f6f02f7c94b8be643cb8cb4847bd8e1198c7b70757c35",
+  "expected_mapping_revision": 1,
+  "seller_reviewed": true,
+  "skus": [
+    {
+      "options": {
+        "Color": "Red",
+        "Size": "S"
+      },
+      "price_minor": 129900,
+      "currency": "INR",
+      "stock_available": 2,
+      "active": true,
+      "sku_id": null,
+      "legacy_variant_index": 0
+    },
+    {
+      "options": {
+        "Color": "Red",
+        "Size": "M"
+      },
+      "price_minor": 139900,
+      "currency": "INR",
+      "stock_available": 5,
+      "active": true,
+      "sku_id": null,
+      "legacy_variant_index": 1
+    }
+  ]
+}
