@@ -168,7 +168,8 @@ async def test_expiry_then_late_capture_keeps_inventory_released(sessions, monke
     business, _, ids = await seed(sessions)
     async def gateway(*args, **kwargs):
         return None
-    monkeypatch.setattr(payments, "require_gateway", gateway)
+    from app.services import checkout_sessions
+    monkeypatch.setattr(checkout_sessions, "require_public_gateway", gateway)
     oid, _ = await place(sessions, business, checkout(ids[0], payment_method="razorpay"))
     async with sessions.begin() as db:
         order = await db.get(CommerceOrder, oid)

@@ -3,6 +3,7 @@
 Captured-payment authority remains in razorpay_payments.apply_captured_payment.
 """
 from datetime import datetime, timezone
+import re
 from fastapi import HTTPException
 from sqlalchemy import select
 from app.models.checkout_v1 import SKUPaymentAttempt
@@ -12,7 +13,8 @@ from app.services import razorpay_payments as payments
 
 def matches(order, result, expected_id=None):
     return (isinstance(result, dict) and isinstance(result.get("id"), str)
-        and result["id"].startswith("order_") and (expected_id is None or result["id"] == expected_id)
+        and re.fullmatch(r"order_[A-Za-z0-9]{1,94}", result["id"]) is not None
+        and (expected_id is None or result["id"] == expected_id)
         and type(result.get("amount")) is int and result["amount"] == order.total
         and result.get("currency") == order.currency and result.get("receipt") == str(order.id))
 
@@ -45,16 +47,26 @@ async def ensure_gateway_order(db, order, account):
         result = await payments.gateway_request(account, "POST", "orders", {
             "amount": total, "currency": currency, "receipt": str(order_id), "partial_payment": False})
     except Exception:
-        order = await db.scalar(select(CommerceOrder).where(CommerceOrder.id == order_id).with_for_update())
-        attempt = await db.get(SKUPaymentAttempt, order_id)
+        order = await db.scalar(select(CommerceOrder).where(CommerceOrder.id == order_id).with_for_update()
+            .execution_options(populate_existing=True))
+        attempt = await db.scalar(select(SKUPaymentAttempt).where(SKUPaymentAttempt.order_id == order_id)
+            .execution_options(populate_existing=True))
+        # Exact seller reconciliation may have completed while the POST was in
+        # flight. Do not overwrite its verified association with stale unknown.
+        if order.gateway_order_id and attempt.state == "ready":
+            await db.commit()
+            eligible(order)
+            return
         attempt.state = "unknown"
         await db.commit()
         raise HTTPException(409, "Payment order creation is uncertain; seller reconciliation is required")
     order = await db.scalar(select(CommerceOrder).where(CommerceOrder.id == order_id).with_for_update()
         .execution_options(populate_existing=True))
-    attempt = await db.get(SKUPaymentAttempt, order_id)
+    attempt = await db.scalar(select(SKUPaymentAttempt).where(SKUPaymentAttempt.order_id == order_id)
+        .execution_options(populate_existing=True))
     if not matches(order, result) or (order.gateway_order_id and order.gateway_order_id != result["id"]):
-        attempt.state = "unknown"
+        if not order.gateway_order_id or attempt.state != "ready":
+            attempt.state = "unknown"
         await db.commit()
         raise HTTPException(409, "Payment order response needs seller reconciliation")
     # Cancellation/expiry can proceed while the provider is working. Preserve the

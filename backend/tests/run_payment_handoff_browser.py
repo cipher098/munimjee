@@ -1,0 +1,27 @@
+"""P01 reset lease around the dedicated actual API + fake SDK Chromium checks."""
+from tests.safety import install_test_safety
+install_test_safety()
+import asyncio
+import os
+from pathlib import Path
+import sys
+from tests.isolated_database import migrated_database
+
+
+async def main():
+    root = Path(__file__).resolve().parents[2]
+    async with migrated_database():
+        server = await asyncio.create_subprocess_exec(sys.executable, '-m', 'tests.payment_handoff_browser_server', cwd=root/'backend', env=dict(os.environ))
+        try:
+            node = await asyncio.create_subprocess_exec('node', str(root/'backend/tests/browser/payment-handoff.mjs'), cwd=root, env=dict(os.environ))
+            result = await node.wait()
+            if result:
+                raise SystemExit(result)
+        finally:
+            if server.returncode is None:
+                server.terminate()
+            await server.wait()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
