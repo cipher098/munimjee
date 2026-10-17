@@ -228,9 +228,9 @@ def pop_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
 
 
 def peek_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
-    """Read queued events WITHOUT removing them. They stay in Redis (the durable
-    store) until trim_processed_events() is called after a successful commit, so a
-    crash/retry re-reads and reprocesses them instead of losing them."""
+    """Read legacy queued events without removing them. Redis retains them
+    until trim_processed_events() after commit, subject to the legacy TTL.
+    New webhook messages use the durable Instagram inbox instead."""
     key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
     r = _redis()
     raw_list = r.lrange(key, 0, -1) or []
@@ -295,7 +295,7 @@ def _record_customer_entries(conversation, events) -> None:
 
 
 async def _process_batch(page_id: str, customer_ig_id: str) -> None:
-    # Read WITHOUT removing — events stay in Redis (the durable store) until we
+    # Read WITHOUT removing — legacy events stay in Redis until we
     # successfully commit, so a crash/retry reprocesses them instead of losing them.
     events = peek_all_events(page_id, customer_ig_id)
     if not events:
@@ -329,111 +329,123 @@ async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
             drop_all_events(page_id, customer_ig_id)
             return 0
 
-        from app.api.webhooks.instagram import _get_or_create_conversation
-        conversation = await _get_or_create_conversation(seller, customer_ig_id, db)
-        await db.flush()
+        return await _consume_events(
+            db, seller, customer_ig_id, [],
+            event_loader=lambda: peek_all_events(page_id, customer_ig_id),
+        )
 
-        # Fetch customer name once (before the lock — not idempotency-critical).
-        if not conversation.customer_name:
-            try:
-                from app.integrations.instagram import InstagramClient
-                ig_client = InstagramClient(seller.instagram_token, seller.fb_page_id)
-                user_info = await ig_client.get_user_info(customer_ig_id)
-                name = user_info.get("name", "").strip()
-                if name:
-                    conversation.customer_name = name
-                    await db.flush()
-                    logger.info("Fetched customer name %r for conversation %s", name, conversation.id)
-            except Exception as exc:
-                logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
 
-        # Serialize the whole consume for this conversation (vs concurrent batch
-        # tasks + the takeover-resume wake). The pg advisory xact lock is held
-        # until this transaction commits, so the peek + trim are race-free.
-        await _lock_conversation(db, conversation.id)
-        await db.refresh(conversation)
+async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *, event_loader=None) -> int:
+    """Single policy/sending path shared by legacy Redis and durable IG ingress.
 
-        # Authoritative read under the lock — a concurrent task may have already
-        # consumed (and trimmed) some of what we peeked before locking.
-        events = peek_all_events(page_id, customer_ig_id)
-        if not events:
-            return 0
-        consumed = len(events)
+    The caller owns the transaction. The same conversation advisory lock also
+    serializes takeover resume tasks. Legacy queues are re-read under the lock.
+    """
+    from app.config import settings as _settings
+    from app.api.webhooks.instagram import _get_or_create_conversation
+    conversation = await _get_or_create_conversation(seller, customer_ig_id, db)
+    await db.flush()
 
-        # Idempotency guard: if every text msg in this batch is already in history
-        # AND there's no trailing unanswered customer turn, a prior committed run
-        # already handled + answered it (we're a retry/redelivery) — skip, trim.
-        batch_mids = {e.get("mid") for e in events if e.get("type") == "text" and e.get("mid")}
-        hist = conversation.messages or []
-        hist_mids = {m.get("mid") for m in hist if m.get("mid")}
-        if batch_mids and batch_mids <= hist_mids and not unanswered_customer_messages(hist):
-            logger.info("message_batch: %s already processed+answered — skipping (idempotent)", conversation.id)
-            return consumed
-
-        # Post-payment change requests (refund / cancellation / item-change) are NEVER
-        # auto-handled. While an OPEN manual action exists the bot stays silent on this chat
-        # until the seller marks it resolved in the dashboard. (A NEW change request is
-        # detected by the decide LLM inside advance_conversation — see responder — so typos
-        # don't matter; here we only enforce the mute once one is open.)
-        from app.models.manual_action import ManualAction as _MA
-        _open_ma = (await db.execute(
-            select(_MA).where(_MA.conversation_id == conversation.id, _MA.status == "open").limit(1)
-        )).scalars().first()
-        if _open_ma is not None:
-            _record_customer_entries(conversation, events)
-            await db.flush()
-            logger.info("message_batch: %s muted — open manual action (%s); recorded customer msg(s)",
-                        conversation.id, _open_ma.kind)
-            return consumed
-
-        # Customer disengagement pause.
-        if is_bot_paused_for_disengage(conversation.disengage_paused_until):
-            text_events = [e for e in events if e.get("type") == "text"]
-            if any(is_reengagement_signal(e.get("text")) for e in text_events):
-                logger.info("message_batch: %s disengage pause cleared by re-engagement signal", conversation.id)
-                conversation.disengage_paused_until = None
+    # Fetch customer name once (before the lock — not idempotency-critical).
+    if not conversation.customer_name:
+        try:
+            from app.integrations.instagram import InstagramClient
+            ig_client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            user_info = await ig_client.get_user_info(customer_ig_id)
+            name = user_info.get("name", "").strip()
+            if name:
+                conversation.customer_name = name
                 await db.flush()
-                # fall through to normal processing
-            else:
-                _record_customer_entries(conversation, events)
-                await db.flush()
-                logger.info("message_batch: %s disengage-muted (resume at %s) — recorded customer msg(s)",
-                            conversation.id, conversation.disengage_paused_until.isoformat())
-                return consumed
+                logger.info("Fetched customer name %r for conversation %s", name, conversation.id)
+        except Exception as exc:
+            logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
 
-        # Manual seller takeover pause — record customer messages, don't reply.
-        if is_bot_paused_for_manual_takeover(
-            conversation.last_seller_manual_reply_at, _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
-        ):
-            _record_customer_entries(conversation, events)
-            await db.flush()
-            logger.info("message_batch: %s paused (seller manual takeover) — recorded customer msg(s) without replying", conversation.id)
-            return consumed
+    # Serialize the whole consume for this conversation (vs concurrent batch
+    # tasks + the takeover-resume wake). The pg advisory xact lock is held
+    # until this transaction commits, so the peek + trim are race-free.
+    await _lock_conversation(db, conversation.id)
+    await db.refresh(conversation)
 
-        # waiting_for_tag: the bot paused because it couldn't answer a feature
-        # question and pinged the seller. But the customer has sent a NEW message
-        # (often about a different product) — don't keep the WHOLE conversation
-        # muted waiting on the seller. Release the pause and process; if they re-ask
-        # the same unanswerable feature, the responder re-pauses for that turn only.
-        # The open seller alert stays so the seller can still fill the tag.
-        if conversation.product_id:
-            from app.models.conversation_product import ConversationProduct
-            cp_result = await db.execute(
-                select(ConversationProduct).where(
-                    ConversationProduct.conversation_id == conversation.id,
-                    ConversationProduct.product_id == conversation.product_id,
-                ).order_by(ConversationProduct.created_at.desc()).limit(1)
-            )
-            active_cp = cp_result.scalars().first()
-            if active_cp and active_cp.state == "waiting_for_tag":
-                logger.info("message_batch: %s releasing waiting_for_tag to process new message", conversation.id)
-                active_cp.state = "product_inquiry"
-                active_cp.pending_tag_id = None
-                await db.flush()
+    # Authoritative read under the lock — a concurrent task may have already
+    # consumed (and trimmed) some of what we peeked before locking.
+    events = event_loader() if event_loader is not None else events
+    if not events:
+        return 0
+    consumed = len(events)
 
-        await _process_events(events, conversation, seller, db)
+    # Idempotency guard: if every text msg in this batch is already in history
+    # AND there's no trailing unanswered customer turn, a prior committed run
+    # already handled + answered it (we're a retry/redelivery) — skip, trim.
+    batch_mids = {e.get("mid") for e in events if e.get("type") == "text" and e.get("mid")}
+    hist = conversation.messages or []
+    hist_mids = {m.get("mid") for m in hist if m.get("mid")}
+    if batch_mids and batch_mids <= hist_mids and not unanswered_customer_messages(hist):
+        logger.info("message_batch: %s already processed+answered — skipping (idempotent)", conversation.id)
         return consumed
 
+    # Post-payment change requests (refund / cancellation / item-change) are NEVER
+    # auto-handled. While an OPEN manual action exists the bot stays silent on this chat
+    # until the seller marks it resolved in the dashboard. (A NEW change request is
+    # detected by the decide LLM inside advance_conversation — see responder — so typos
+    # don't matter; here we only enforce the mute once one is open.)
+    from app.models.manual_action import ManualAction as _MA
+    _open_ma = (await db.execute(
+        select(_MA).where(_MA.conversation_id == conversation.id, _MA.status == "open").limit(1)
+    )).scalars().first()
+    if _open_ma is not None:
+        _record_customer_entries(conversation, events)
+        await db.flush()
+        logger.info("message_batch: %s muted — open manual action (%s); recorded customer msg(s)",
+                    conversation.id, _open_ma.kind)
+        return consumed
+
+    # Customer disengagement pause.
+    if is_bot_paused_for_disengage(conversation.disengage_paused_until):
+        text_events = [e for e in events if e.get("type") == "text"]
+        if any(is_reengagement_signal(e.get("text")) for e in text_events):
+            logger.info("message_batch: %s disengage pause cleared by re-engagement signal", conversation.id)
+            conversation.disengage_paused_until = None
+            await db.flush()
+            # fall through to normal processing
+        else:
+            _record_customer_entries(conversation, events)
+            await db.flush()
+            logger.info("message_batch: %s disengage-muted (resume at %s) — recorded customer msg(s)",
+                        conversation.id, conversation.disengage_paused_until.isoformat())
+            return consumed
+
+    # Manual seller takeover pause — record customer messages, don't reply.
+    if is_bot_paused_for_manual_takeover(
+        conversation.last_seller_manual_reply_at, _settings.BOT_AUTO_RESUME_AFTER_MINUTES,
+    ):
+        _record_customer_entries(conversation, events)
+        await db.flush()
+        logger.info("message_batch: %s paused (seller manual takeover) — recorded customer msg(s) without replying", conversation.id)
+        return consumed
+
+    # waiting_for_tag: the bot paused because it couldn't answer a feature
+    # question and pinged the seller. But the customer has sent a NEW message
+    # (often about a different product) — don't keep the WHOLE conversation
+    # muted waiting on the seller. Release the pause and process; if they re-ask
+    # the same unanswerable feature, the responder re-pauses for that turn only.
+    # The open seller alert stays so the seller can still fill the tag.
+    if conversation.product_id:
+        from app.models.conversation_product import ConversationProduct
+        cp_result = await db.execute(
+            select(ConversationProduct).where(
+                ConversationProduct.conversation_id == conversation.id,
+                ConversationProduct.product_id == conversation.product_id,
+            ).order_by(ConversationProduct.created_at.desc()).limit(1)
+        )
+        active_cp = cp_result.scalars().first()
+        if active_cp and active_cp.state == "waiting_for_tag":
+            logger.info("message_batch: %s releasing waiting_for_tag to process new message", conversation.id)
+            active_cp.state = "product_inquiry"
+            active_cp.pending_tag_id = None
+            await db.flush()
+
+    await _process_events(events, conversation, seller, db)
+    return consumed
 
 async def _process_events(events: list, conversation, seller, db) -> None:
     """

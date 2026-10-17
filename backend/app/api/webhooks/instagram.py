@@ -13,7 +13,6 @@ from app.config import settings
 from app.database import get_db
 from app.models.conversation import Conversation
 from app.models.seller import Seller
-from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ async def receive_webhook(
         for change in entry.get("changes", []):
             await ingest_comment(db, entry.get("id"), change, entry.get("time"))
 
-    # Always return 200 quickly — Meta will retry if we don't
+    # Actionable DM receipts have committed before acknowledging Meta.
     return {"status": "ok"}
 
 
@@ -120,63 +119,19 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
     if not text and not attachments:
         return
 
-    # Verify seller exists before queuing
-    seller = await _get_seller_by_page_id(recipient_id, db)
-    if not seller:
-        logger.warning("No seller found for Instagram page ID %s", recipient_id)
-        return
-
-    # Serialize event(s) to Redis and schedule / reschedule the batch task
-    from app.workers.message_batch import enqueue_event, get_pending_task_id, set_pending_task_id, BATCH_WINDOW_SECONDS
-
-    def _queue_and_schedule(serialised: dict) -> None:
-        enqueue_event(recipient_id, sender_id, serialised)
-
-        # Revoke any previously scheduled task for this conversation
-        old_task_id = get_pending_task_id(recipient_id, sender_id)
-        if old_task_id:
-            celery_app.control.revoke(old_task_id)
-
-        # Schedule new task BATCH_WINDOW_SECONDS from now
-        from app.workers.message_batch import process_message_batch
-        result = process_message_batch.apply_async(
-            args=[recipient_id, sender_id],
-            countdown=BATCH_WINDOW_SECONDS,
-        )
-        set_pending_task_id(recipient_id, sender_id, result.id)
-        logger.info(
-            "Queued event type=%s for %s:%s, task=%s",
-            serialised.get("type"), recipient_id, sender_id, result.id,
-        )
-
-    incoming_mid: str | None = message.get("mid")
-
-    if attachments:
-        for attachment in attachments:
-            atype = attachment.get("type")
-            payload = attachment.get("payload", {})
-
-            if atype == "image":
-                image_url: str = payload.get("url", "")
-                if image_url:
-                    _queue_and_schedule({"type": "image", "image_url": image_url, "mid": incoming_mid})
-
-            elif atype in ("video", "ig_reel", "share"):
-                reel_url: str = payload.get("url", "") or payload.get("link", "")
-                if reel_url:
-                    _queue_and_schedule({
-                        "type": "reel",
-                        "reel_url": reel_url,
-                        "reel_video_id": payload.get("reel_video_id"),
-                        "reel_title": payload.get("title"),
-                        "mid": incoming_mid,
-                    })
-
-    elif text:
-        reply_to_mid: str | None = message.get("reply_to", {}).get("mid")
-        if reply_to_mid:
-            logger.info("reply_to detected: mid=%s text=%r", reply_to_mid, text)
-        _queue_and_schedule({"type": "text", "text": text, "reply_to_mid": reply_to_mid, "mid": incoming_mid})
+    from app.services.instagram_ingress import persist_message, BATCH_SECONDS
+    receipt = await persist_message(db, event)
+    if receipt is not None:
+        # The receipt is committed already. Broker outages cannot lose accepted
+        # work; the periodic recovery scanner dispatches pending DB receipts.
+        try:
+            from app.workers.instagram_ingress import process_instagram_ingress
+            process_instagram_ingress.apply_async(
+                args=[str(receipt.seller_id), receipt.account_id, receipt.customer_id],
+                countdown=BATCH_SECONDS,
+            )
+        except Exception:
+            logger.warning("Instagram ingress wake-up unavailable; durable receipt retained")
 
 
 def is_known_outbound_mid(messages: list[dict], mid: str | None) -> bool:
@@ -287,10 +242,8 @@ async def _get_or_create_conversation(
 ) -> Conversation:
     # One permanent conversation per (seller, customer) — the customer thread.
     # No status: it's never closed, so we just fetch it or create it once.
-    # Capture seller_id as a plain value: db.rollback() (in the race path below)
-    # EXPIRES every ORM object, so any later read of `seller.id` would trigger a
-    # lazy refresh in a sync context → MissingGreenlet. Never touch the ORM
-    # object after a rollback without refreshing it first.
+    # Keep creation races inside a savepoint so a uniqueness conflict cannot
+    # roll back the caller's durable receipt locks or other processing changes.
     seller_id = seller.id
 
     def _q():
@@ -311,22 +264,15 @@ async def _get_or_create_conversation(
         return conversation
 
     try:
-        conversation = _new()
-        db.add(conversation)
-        await db.flush()
-        logger.info("New conversation %s for seller %s with customer %s",
-                    conversation.id, seller_id, customer_instagram_id)
-        return conversation
-    except IntegrityError:
-        # Another worker inserted concurrently — roll back and fetch theirs.
-        await db.rollback()
-        await db.refresh(seller)  # un-expire so the caller can keep using it
-        conversation = (await db.execute(_q())).scalar_one_or_none()
-        if conversation is None:
-            # Mutual-rollback race (both workers rolled back) — insert again.
+        async with db.begin_nested():
             conversation = _new()
             db.add(conversation)
             await db.flush()
+        return conversation
+    except IntegrityError:
+        conversation = (await db.execute(_q())).scalar_one_or_none()
+        if conversation is None:
+            raise
         return conversation
 
 
