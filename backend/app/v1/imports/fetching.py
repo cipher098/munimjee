@@ -11,6 +11,8 @@ import ipaddress
 import socket
 import ssl
 import time
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from urllib.parse import parse_qsl, urljoin, urlsplit
@@ -58,9 +60,11 @@ def source_url(value: str) -> str:
     except ValueError as exc:
         raise FetchError("invalid_url") from exc
     # Tokens must not enter durable source references, logs, redirects or errors.
-    for key, _ in parse_qsl(urlsplit(normalized).query, keep_blank_values=True):
+    for key, _ in parse_qsl(urlsplit(normalized).query, keep_blank_values=True, max_num_fields=32):
         lowered = key.casefold().replace("-", "_")
-        if any(secret in lowered for secret in ("token", "secret", "password", "credential", "authorization", "api_key", "signature")):
+        if lowered in {"sig", "key", "auth", "session", "code", "state", "jwt"} or lowered.endswith("_key") or any(
+            secret in lowered for secret in ("token", "secret", "password", "credential", "authorization", "api_key", "signature", "session")
+        ):
             raise FetchError("credential_url_forbidden")
     return normalized
 
@@ -78,8 +82,27 @@ def public_ip(value: str) -> str:
     return address.compressed
 
 
+def _consume_result(future):
+    if not future.cancelled():
+        future.exception()  # Late errors are consumed without logging raw secrets.
+
+
+_DNS_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="import-dns")
+_DNS_LOCK = Lock()
+_DNS_INFLIGHT = set()
+
+
 async def system_resolver(host: str) -> tuple[str, ...]:
-    records = await asyncio.get_running_loop().getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    global _DNS_INFLIGHT
+    with _DNS_LOCK:
+        _DNS_INFLIGHT = {future for future in _DNS_INFLIGHT if not future.done()}
+        if len(_DNS_INFLIGHT) >= 4:
+            raise FetchError("resolver_busy")
+        future = _DNS_POOL.submit(socket.getaddrinfo, host, 443, type=socket.SOCK_STREAM)
+        _DNS_INFLIGHT.add(future)
+    wrapped = asyncio.wrap_future(future)
+    wrapped.add_done_callback(_consume_result)
+    records = await asyncio.shield(wrapped)
     if len(records) > 32:
         raise FetchError("too_many_dns_addresses")
     return tuple(record[4][0] for record in records)
@@ -114,16 +137,20 @@ class PinnedHTTPTransport:
     OS resolver thread. The fetch deadline still rejects its late result.
     """
 
-    def __init__(self):
-        self._inflight: set[asyncio.Task] = set()
+    _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="import-https")
+    _lock = Lock()
+    _inflight = set()
 
     async def request(self, url: str, pinned_ip: str, limits: FetchLimits) -> FetchResponse:
-        self._inflight = {task for task in self._inflight if not task.done()}
-        if len(self._inflight) >= 4:
-            raise FetchError("transport_busy")
-        task = asyncio.create_task(asyncio.to_thread(self._request, url, pinned_ip, limits))
-        self._inflight.add(task)
-        return await asyncio.shield(task)
+        with self._lock:
+            type(self)._inflight = {future for future in self._inflight if not future.done()}
+            if len(self._inflight) >= 4:
+                raise FetchError("transport_busy")
+            future = self._pool.submit(self._request, url, pinned_ip, limits)
+            self._inflight.add(future)
+        wrapped = asyncio.wrap_future(future)
+        wrapped.add_done_callback(_consume_result)
+        return await asyncio.shield(wrapped)
 
     @staticmethod
     def _request(url: str, pinned_ip: str, limits: FetchLimits) -> FetchResponse:
@@ -138,7 +165,10 @@ class PinnedHTTPTransport:
                 "Connection": "close",
             })
             response = connection.getresponse()
-            headers = {key.lower(): value for key, value in response.getheaders()}
+            raw_headers = response.getheaders()
+            if sum(len(key) + len(value) for key, value in raw_headers) > 16384:
+                raise FetchError("response_headers_too_large")
+            headers = {key.lower(): value for key, value in raw_headers}
             peer = connection.sock.getpeername()[0] if connection.sock else pinned_ip
             # Redirect bodies need not be downloaded.
             if response.status in (301, 302, 303, 307, 308):
@@ -198,6 +228,7 @@ class SafeFetcher:
             if len(self._active_resolutions) >= 4:
                 raise FetchError("resolver_busy")
             resolution = asyncio.create_task(self.resolver(host))
+            resolution.add_done_callback(_consume_result)
             self._active_resolutions.add(resolution)
             addresses = await asyncio.shield(resolution)
             if not addresses or len(addresses) > 32:
