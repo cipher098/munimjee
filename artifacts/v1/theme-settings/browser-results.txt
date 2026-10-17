@@ -1,0 +1,19 @@
+✔ three themes save and preview; publish copies only saved state; desktop/mobile stay within viewport (1074.09025ms)
+✔ lost committed response survives reload; no automatic replay; exact retry uses one receipt (351.738584ms)
+✔ stale write blocks edits until explicit reload (394.813958ms)
+✔ viewer reload and visibility remain readable without mutation access (329.186667ms)
+✔ rapid save events serialize preparation and command transmission (274.273917ms)
+✔ delayed old-session read cannot rehydrate private workspace after identity loss (509.495583ms)
+✔ session storage failure sends no command (280.176042ms)
+✔ tampered recovery fails closed without replay (190.878708ms)
+✔ delayed committed write cannot rehydrate or clear a new sign-in after fencing (388.292084ms)
+✔ delayed startup read checks the current identity before displaying draft data (256.073125ms)
+✔ rapid retry events use one in-flight replay (373.30875ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4611.215
