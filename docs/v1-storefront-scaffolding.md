@@ -114,3 +114,8 @@ Only `reviewed` snapshots enable selection in this preview; `needs_review`,
 the committed B10 reviewed/needs-review DTO examples. INR display preserves paise
 from server minor units; whole-rupee sample formatting remains concise. Real API
 fetching, publication, video media and server-authoritative checkout remain pending.
+
+Local final verification: 10 contract checks and 8 Chromium browser checks passed
+after integration corrections. Unresolved products with no SKUs show review/price
+state, not a sold-out assertion or an infinite price. Browser screenshots now use
+Playwright test output paths so reruns do not overwrite committed design evidence.

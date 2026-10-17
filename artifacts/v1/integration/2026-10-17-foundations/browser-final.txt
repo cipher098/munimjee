@@ -1,0 +1,26 @@
+
+> @munimjee/storefront-preview@0.1.0 test:browser
+> playwright test
+
+(node:3960) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[2m[WebServer] [22m(node:3998) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:3999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3999) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(node:3999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/storefront.spec.js:4:3 › editorial 1440: browse, variants, capped cart, honest checkout and keyboard close (2.6s)
+  ✓  2 tests/storefront.spec.js:4:3 › editorial 390: browse, variants, capped cart, honest checkout and keyboard close (2.0s)
+  ✓  3 tests/storefront.spec.js:4:3 › catalogue 1440: browse, variants, capped cart, honest checkout and keyboard close (1.6s)
+  ✓  4 tests/storefront.spec.js:4:3 › catalogue 390: browse, variants, capped cart, honest checkout and keyboard close (2.0s)
+  ✓  5 tests/storefront.spec.js:4:3 › video 1440: browse, variants, capped cart, honest checkout and keyboard close (2.3s)
+  ✓  6 tests/storefront.spec.js:4:3 › video 390: browse, variants, capped cart, honest checkout and keyboard close (2.0s)
+  ✓  7 tests/storefront.spec.js:41:1 › review, untracked and illustrated video states are explicit; themes share the bag (1.2s)
+  ✓  8 tests/storefront.spec.js:66:1 › all themes fit narrow phones and tablets, including open preview settings (359ms)
+
+  8 passed (15.4s)

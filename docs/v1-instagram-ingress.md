@@ -97,3 +97,13 @@ HTTP tests reject malformed nested shapes before acknowledgment. A disposable
 Redis check covers stale-prefix trimming. Provider/media/LLM/send boundaries are
 stubbed; no customer messages or live sends are used. Comments, connection UX,
 operator review UI and a durable outbound outbox remain outside this slice.
+
+## Integrated test/runtime registration
+
+Integration registers the model, worker module and 30-second recovery beat task.
+Its DB fixture now uses P01 `migrated_engine` and the held reset lease with actual
+Alembic head, rather than the standalone hardcoded worker DB URL or ORM baseline.
+P01 strips Redis opt-ins and blocks Redis networking: three real-Redis pytest
+cases remain skipped in that harness. The local integrator separately verified
+actual Redis `/0`→PostgreSQL transfer with generated keys/schema only; full
+provider/SQS/operator-review and deployed cutover acceptance remain pending.

@@ -1,0 +1,33 @@
+..................................s..................................... [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 27%]
+................s.......ss.............................................. [ 36%]
+........................................................................ [ 45%]
+............................ssss........................................ [ 54%]
+........................................................................ [ 63%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 91%]
+......................................................................   [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/test_commerce.py: 29 warnings
+tests/test_commerce_whatsapp.py: 2 warnings
+tests/test_v1_identity_db.py: 1 warning
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/httpx/_client.py:1559: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    warnings.warn(message, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] backend/tests/test_claude_decide.py:169: No cassette at /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/cassettes/decide_greeting.yaml. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:456: Coordinator-allocated TEST_REDIS_URL required
+SKIPPED [1] backend/tests/test_instagram_ingress_worker.py:155: Coordinator-allocated TEST_REDIS_URL required
+SKIPPED [1] backend/tests/test_instagram_ingress_worker.py:181: Coordinator-allocated TEST_REDIS_URL required
+SKIPPED [1] backend/tests/test_scenarios.py:180: No cassettes for scenario 'awaiting_payment_lock'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py
+SKIPPED [1] backend/tests/test_scenarios.py:180: No cassettes for scenario 'happy_path_accept'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py
+SKIPPED [1] backend/tests/test_scenarios.py:180: No cassettes for scenario 'price_lock_consistency'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py
+SKIPPED [1] backend/tests/test_scenarios.py:180: No cassettes for scenario 'walkaway_calls_bluff'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py
+782 passed, 8 skipped, 33 warnings in 121.09s (0:02:01)

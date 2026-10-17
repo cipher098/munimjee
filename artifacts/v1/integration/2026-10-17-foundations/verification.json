@@ -38,6 +38,46 @@
         "git diff --check"
       ],
       "result": "passed"
+    },
+    {
+      "scope": "Final integrated backend including social/imports/startup and actual Alembic0042",
+      "command": ".venv/bin/python -m pytest backend/tests -q -ra",
+      "passed": 782,
+      "skipped": 8,
+      "seconds": 121.09,
+      "skip_groups": {
+        "historical_missing_cassettes": 5,
+        "P01_disallowed_Redis_optin": 3
+      },
+      "log": "backend-final.txt"
+    },
+    {
+      "scope": "Final frozen-DTo storefront contract and currency/review edge cases",
+      "command": "npm --prefix frontend/storefront test",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "scope": "Final actual Chromium preview browser checks",
+      "command": "npm --prefix frontend/storefront run test:browser",
+      "passed": 8,
+      "skipped": 0,
+      "seconds": 15.4,
+      "log": "browser-final.txt",
+      "note": "Emulated viewports/keyboard interactions; not physical devices or real checkout/publication."
+    },
+    {
+      "scope": "Actual Redis\u2192PostgreSQL composition, separate from guarded pytest",
+      "result": "passed",
+      "endpoints": "Allocated local Redis /0 and a generated schema in owned disposable identity DB",
+      "observed": "4 distinct missing-mid occurrences across2customers; retry IDs stable; later identical buffer IDs fresh; stale trim retains new buffer; DB commit before trim; all held; no sends",
+      "cleanup": "Generated Redis keys and schema only removed"
+    },
+    {
+      "scope": "Final syntax/whitespace/registration",
+      "result": "passed",
+      "source_detector_findings": 0,
+      "startup_checks": 4
     }
   ],
   "missing_cassette_skips": [
@@ -48,12 +88,17 @@
     "walkaway_calls_bluff"
   ],
   "pending": [
-    "Social review fixes and actual0042 integration",
-    "Storefront frozen readiness DTO alignment",
-    "Product/provider/physical-device acceptance",
-    "PostgreSQL16 CI",
-    "Native login/invites/support and full onboarding",
-    "Parcel Desk trusted connector/order scan/update implementation"
+    "5 historical cassette checks",
+    "3 Redis pytest cases under P01 policy (separate composition proof passed)",
+    "Native login/invites/signup bridge/support and complete onboarding",
+    "Real import fetching/jobs/persistence/catalogue bridge",
+    "Real SKU checkout/payment and canonical storefront/SEO/video/publication",
+    "Live provider/SQS/operator review/cutover acceptance",
+    "Parcel Desk machine connector/order scan/update implementation",
+    "PostgreSQL16 CI and physical-device acceptance"
   ],
-  "plan_sync": "Only go-live-plan.md copied to /Users/gothi/sellerbot after plan commit; byte comparison passed; runtime application files/services untouched"
+  "plan_sync": "Only go-live-plan.md copied to /Users/gothi/sellerbot after plan commit; byte comparison passed; runtime application files/services untouched",
+  "final_backend_source_commit": "deeacab92333f4035e9256b8104c85d077bc671b",
+  "final_frontend_source_commit": "8903bb73631784ba35d564859d166fa4f679f081",
+  "milestone": "All first foundation lanes reviewed and integrated; no product/release claim."
 }
