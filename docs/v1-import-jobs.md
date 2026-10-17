@@ -31,6 +31,16 @@ catalogue.write through an import body. Shared auth dependency must be registere
 before these routes are enabled; actual native-session/CSRF composition tests
 remain an integrator gate.
 
+After obtaining the tenant lock, and at every subsequent authorization checkpoint,
+the owned service selects committed User/Membership/Business/Seller authorization
+**scalar columns** with autoflush disabled. It checks active/revoked flags and the
+fresh role/account value. This avoids stale ORM identity-map roles, revoked users
+or Instagram account IDs without expiring/overwriting unrelated dirty objects.
+The shared compatibility check also runs inside a scoped no-autoflush context.
+P01-gated two-session lock-wait regressions retain stale ORM instances deliberately
+while another session revokes/downgrades/rebinds the account. They are pending
+actual DB execution here and do not replace the shared native-session gate.
+
 Register `ImportAsset`, `ImportJob`, `ImportDraft`, `ImportAudit` centrally and
 create their additive Alembic migration after the published 0043/0044/0045 chain.
 `0046_v1_import_jobs` is a proposal for the integrator, not an assigned/released
@@ -173,7 +183,8 @@ attempt recovery/backoff, authorization cancellation checkpoints, preserved
 overrides and fetch/extraction adversarial cases. The existing 110 draft-domain
 cases remain covered. Three P01 `migrated_engine` tests exercise real concurrent
 job/review behavior and composite tenant constraints **once** the integrator
-registers the migration. They skip explicitly without an allocated test DB;
+registers the migration; six further cases exercise cached-authorization races
+against the existing identity tables. They skip explicitly without an allocated test DB;
 they do not call create_all or replace actual Alembic DDL with mock persistence.
 
 ```sh

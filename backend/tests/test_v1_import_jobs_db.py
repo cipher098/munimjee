@@ -9,11 +9,12 @@ from uuid import uuid4
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.models.imports_v1 import ImportAudit, ImportDraft, ImportJob
+from app.models.identity import Business, Membership, User
 from app.models.seller import Seller
 from app.schemas.imports_v1 import CandidateReviewWrite, ImportJobCreate
 from app.services import imports_v1 as service
@@ -108,3 +109,69 @@ async def test_migrated_composite_tenant_fk_denies_cross_business_job(sessions):
         with pytest.raises(IntegrityError):
             await db.flush()
         await db.rollback()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("change", ["user_revoked", "role_downgrade", "account_changed", "membership_revoked", "business_inactive", "seller_inactive"])
+async def test_migrated_cached_authorization_is_fresh_after_tenant_lock_wait(sessions, monkeypatch, change):
+    """Two real sessions plus strongly retained stale identity-map objects.
+
+    This regression needs only existing identity DDL; import-table tests above
+    remain gated on the integrator's additive import migration registration.
+    """
+    business_id, actor = await seed(sessions)
+    async with sessions.begin() as setup:
+        await setup.execute(update(Seller).where(Seller.id == business_id).values(instagram_page_id="old-account"))
+    async with sessions() as cached:
+        user = await cached.get(User, actor.user_id)
+        membership = await cached.scalar(select(Membership).where(Membership.business_id == business_id, Membership.user_id == actor.user_id))
+        business = await cached.get(Business, business_id)
+        seller = await cached.get(Seller, business_id)
+        await cached.commit()  # expire_on_commit=False deliberately retains stale objects.
+        seller.business_name = "Unrelated dirty local edit must remain unflushed"
+        waiting = asyncio.Event()
+        original_scalar = cached.scalar
+
+        async def observe_lock(query, *args, **kwargs):
+            if query._for_update_arg is not None:
+                waiting.set()
+            return await original_scalar(query, *args, **kwargs)
+
+        monkeypatch.setattr(cached, "scalar", observe_lock)
+        task = None
+        try:
+            async with sessions.begin() as blocking:
+                await blocking.scalar(select(Business).where(Business.id == business_id).with_for_update())
+                task = asyncio.create_task(service._access(cached, actor, business_id, write=True, lock=True))
+                await asyncio.wait_for(waiting.wait(), timeout=5)
+                if change == "user_revoked":
+                    await blocking.execute(update(User).where(User.id == actor.user_id).values(revoked_at=service.now()))
+                elif change == "role_downgrade":
+                    await blocking.execute(update(Membership).where(Membership.business_id == business_id).values(role="viewer"))
+                elif change == "membership_revoked":
+                    await blocking.execute(update(Membership).where(Membership.business_id == business_id).values(revoked_at=service.now()))
+                elif change == "business_inactive":
+                    await blocking.execute(update(Business).where(Business.id == business_id).values(is_active=False))
+                elif change == "seller_inactive":
+                    await blocking.execute(update(Seller).where(Seller.id == business_id).values(is_active=False))
+                else:
+                    await blocking.execute(update(Seller).where(Seller.id == business_id).values(instagram_page_id="new-account"))
+            if change == "account_changed":
+                snapshot = await asyncio.wait_for(task, timeout=5)
+                assert snapshot.instagram_page_id == "new-account"
+            else:
+                with pytest.raises(service.HTTPException) as denied:
+                    await asyncio.wait_for(task, timeout=5)
+                assert denied.value.status_code in (403, 404)
+            # Fresh scalar projection neither expires cached objects nor flushes
+            # an unrelated dirty seller; these are intentionally stale values.
+            assert user.revoked_at is None and membership.role == "owner"
+            assert business.is_active and seller.instagram_page_id == "old-account"
+            assert seller.business_name == "Unrelated dirty local edit must remain unflushed"
+            stored_name = await cached.scalar(select(Seller.business_name).where(Seller.id == business_id).execution_options(autoflush=False))
+            assert stored_name == "Import fixture"
+        finally:
+            if task is not None and not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+            await cached.rollback()
