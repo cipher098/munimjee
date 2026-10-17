@@ -1,0 +1,59 @@
+........................................................................ [  5%]
+........................................................................ [ 11%]
+.....s.................................................................. [ 17%]
+........................................................................ [ 23%]
+............................................
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+tests/test_commerce.py: 29 warnings
+tests/test_commerce_whatsapp.py: 2 warnings
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/httpx/_client.py:1559: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    warnings.warn(message, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/2026-10-18-wave3-final.xml -
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/selectors.py:566: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+331 passed, 1 skipped, 33 warnings in 163.48s (0:02:43)
+Exception terminating connection <AdaptedConnection <asyncpg.connection.Connection object at 0x10c506980>>
+Traceback (most recent call last):
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 374, in _close_connection
+    self._dialect.do_terminate(connection)
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 1105, in do_terminate
+    dbapi_connection.terminate()
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 878, in terminate
+    if util.concurrency.in_greenlet():
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 104, in in_greenlet
+    current = getcurrent()
+              ^^^^^^^^^^^^
+RuntimeError: greenlet is being finalized
+The garbage collector is trying to clean up non-checked-in connection <AdaptedConnection <asyncpg.connection.Connection object at 0x10c506980>>, which will be terminated.  Please ensure that SQLAlchemy pooled connections are returned to the pool explicitly, either by calling ``close()`` or by using appropriate context managers to manage their lifecycle.
+sys:1: SAWarning: The garbage collector is trying to clean up non-checked-in connection <AdaptedConnection <asyncpg.connection.Connection object at 0x10c506980>>, which will be terminated.  Please ensure that SQLAlchemy pooled connections are returned to the pool explicitly, either by calling ``close()`` or by using appropriate context managers to manage their lifecycle.
+Exception ignored in: <function BaseSubprocessTransport.__del__ at 0x106cfa2a0>
+Traceback (most recent call last):
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_subprocess.py", line 126, in __del__
+    self.close()
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_subprocess.py", line 104, in close
+    proto.pipe.close()
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/unix_events.py", line 566, in close
+    self._close(None)
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/unix_events.py", line 590, in _close
+    self._loop.call_soon(self._call_connection_lost, exc)
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 762, in call_soon
+    self._check_closed()
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 520, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Exception ignored in: <coroutine object migrate at 0x10c9f49d0>
+RuntimeError: coroutine ignored GeneratorExit
+Task was destroyed but it is pending!
+task: <Task pending name='Task-3889' coro=<Process.communicate() running at /Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/subprocess.py:200> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()]> cb=[_release_waiter(<Future pendi...ask_wakeup()]>)() at /Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/tasks.py:431]>

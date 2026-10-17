@@ -141,3 +141,57 @@ async def test_native_payment_reconcile_defers_commit_until_final_authority_chec
     async with factory() as db:
         row=await db.get(CommerceOrder,oid)
         assert row.payment_status=='pending' and row.gateway_payment_id is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('operation',['create','upload','review','cancel','retry'])
+async def test_import_mutation_rechecks_native_session_after_business_wait(api,operation):
+    from app.models.identity import Business
+    from app.models.imports_v1 import ImportAsset,ImportJob,ImportDraft
+    from tests.test_v1_import_integration import FakeFetcher
+    from app.v1.imports.runner import drain_jobs
+    client,factory=api;data=await setup(client,stock=1,publish=False)
+    bid=data['bid'];root=f'/api/v1/businesses/{bid}/imports';key=str(uuid4())
+    request={'json':{'idempotency_key':key,'source_authorized':True,'source_kind':'website','source_url':'https://shop.example.com/dress'}}
+    path=root+'/jobs';job_id=candidate_id=None;before_revision=None
+    if operation in ('review','cancel','retry'):
+        created=await client.post(path,headers=data['headers'],**request);assert created.status_code==202,created.text
+        job_id=UUID(created.json()['job_id'])
+        if operation=='review':
+            assert await drain_jobs(factory,fetcher=FakeFetcher())==1
+            candidate=(await client.get(root+'/candidates')).json()['items'][0]
+            candidate_id=UUID(candidate['candidate_id']);before_revision=candidate['revision']
+            path=root+f'/candidates/{candidate_id}/review';request={'json':{'idempotency_key':str(uuid4()),'expected_revision':before_revision,'action':'edit','overrides':[{'field':'stock','value':1}]}}
+        else:
+            path=root+f'/jobs/{job_id}/{operation}';before_revision=created.json()['revision']
+            if operation=='retry':
+                async with factory.begin() as db:await db.execute(update(ImportJob).where(ImportJob.id==job_id).values(state='failed',error_code='source_unavailable'))
+            request={'json':{'idempotency_key':str(uuid4()),'expected_revision':before_revision}}
+    elif operation=='upload':
+        path=root+f'/uploads?idempotency_key={key}&source_authorized=true'
+        request={'content':b'\x89PNG\r\n\x1a\nsynthetic'}
+    headers={**data['headers'],**({'Content-Type':'image/png'} if operation=='upload' else {})};task=None
+    try:
+        async with factory() as holder:
+            holder_pid=await holder.scalar(text('SELECT pg_backend_pid()'))
+            await holder.scalar(select(Business.id).where(Business.id==bid).with_for_update())
+            task=asyncio.create_task(client.post(path,headers=headers,**request))
+            for _ in range(200):
+                await holder.execute(text('SELECT pg_stat_clear_snapshot()'))
+                waiting=await holder.scalar(text('SELECT count(*) FROM pg_stat_activity WHERE :pid=ANY(pg_blocking_pids(pid))'),{'pid':holder_pid})
+                if waiting:break
+                await asyncio.sleep(.01)
+            assert waiting
+            await holder.execute(update(UserSession).where(UserSession.user_id.in_(select(Membership.user_id).where(Membership.business_id==bid))).values(revoked_at=datetime.now(timezone.utc)))
+            await holder.commit()
+            response=await asyncio.wait_for(task,8)
+            assert response.status_code==401,response.text
+        async with factory() as db:
+            if operation=='create':assert await db.scalar(select(func.count()).select_from(ImportJob).where(ImportJob.business_id==bid))==0
+            elif operation=='upload':assert await db.scalar(select(func.count()).select_from(ImportAsset).where(ImportAsset.business_id==bid))==0
+            elif operation=='review':assert (await db.get(ImportDraft,candidate_id)).revision==before_revision
+            else:
+                job=await db.get(ImportJob,job_id);assert job.revision==before_revision
+                assert job.state==('failed' if operation=='retry' else 'pending')
+    finally:
+        if task is not None and not task.done():task.cancel();await asyncio.gather(task,return_exceptions=True)

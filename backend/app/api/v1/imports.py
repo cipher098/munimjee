@@ -45,7 +45,10 @@ async def _call(awaitable):
 
 
 def create_router(require_v1_mutation) -> APIRouter:
-    """Mount only with app.api.v1.session.require_v1_mutation.
+    """Mount with app.api.v1.session.business_mutation("catalogue.write").
+
+    The shared transaction dependency checks the native session and capability
+    before request work and again before get_db commits, including lock/body waits.
 
     No queue dispatch occurs in a request: pending rows are the durable queue and
     recovery polling happens only after the HTTP transaction commits.
