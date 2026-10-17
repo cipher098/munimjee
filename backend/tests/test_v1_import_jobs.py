@@ -1,5 +1,6 @@
 """SQL-shape/service/route tests; fake DB evidence is not migrated evidence."""
 import asyncio
+from contextlib import nullcontext
 from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -29,6 +30,7 @@ URL = "https://shop.example.com/item"
 
 
 class FakeDB:
+    no_autoflush = nullcontext()
     def __init__(self, values=()):
         self.values = iter(values)
         self.queries, self.added = [], []
@@ -49,9 +51,45 @@ class FakeDB:
 
 @pytest.fixture
 def access(monkeypatch):
-    authorize = AsyncMock(return_value=SimpleNamespace(seller=SimpleNamespace(instagram_page_id="linked-ig")))
+    authorize = AsyncMock(return_value=SimpleNamespace(instagram_page_id="linked-ig"))
     monkeypatch.setattr(service, "require_business_access", authorize)
+    async def fresh(db, actor, business_id, capability):
+        return await authorize(db, actor, business_id, capability)
+    monkeypatch.setattr(service, "_fresh_access", fresh)
     return authorize
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role,allowed", [("owner", True), ("manager", True), ("staff", False), ("viewer", False)])
+async def test_fresh_authorization_uses_tenant_actor_scalar_columns_without_autoflush(role, allowed):
+    class SnapshotDB:
+        async def execute(self, query):
+            compiled = query.compile(dialect=postgresql.dialect())
+            assert BUSINESS in compiled.params.values() and ACTOR.user_id in compiled.params.values()
+            assert query.get_execution_options()["autoflush"] is False
+            assert [column.key for column in query.selected_columns] == ["role", "instagram_page_id"]
+            text = str(compiled)
+            for guard in ("users.is_active IS true", "users.revoked_at IS NULL", "memberships.is_active IS true",
+                          "memberships.revoked_at IS NULL", "businesses.is_active IS true", "sellers.is_active IS true"):
+                assert guard in text
+            return SimpleNamespace(one_or_none=lambda: SimpleNamespace(role=role, instagram_page_id="fresh-account"))
+    if allowed:
+        snapshot = await service._fresh_access(SnapshotDB(), ACTOR, BUSINESS, "catalogue.write")
+        assert snapshot.instagram_page_id == "fresh-account" and snapshot.role == role
+    else:
+        with pytest.raises(HTTPException) as caught:
+            await service._fresh_access(SnapshotDB(), ACTOR, BUSINESS, "catalogue.write")
+        assert caught.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_fresh_authorization_missing_or_revoked_snapshot_fails_closed():
+    class SnapshotDB:
+        async def execute(self, query):
+            return SimpleNamespace(one_or_none=lambda: None)
+    with pytest.raises(HTTPException) as caught:
+        await service._fresh_access(SnapshotDB(), ACTOR, BUSINESS, "catalogue.read")
+    assert caught.value.status_code == 404
 
 
 def job(**updates):
