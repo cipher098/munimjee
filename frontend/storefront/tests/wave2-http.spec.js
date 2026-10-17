@@ -17,7 +17,7 @@ async function setup(page){
  mountLiveStorefront({root:document.getElementById('live-app'),data:${JSON.stringify(data)},api:createStorefrontApi({slug:'synthetic',origin:location.origin,contract,timeoutMs:1000}),storage:sessionStorage});
  </script></body></html>`}));
  await page.goto('/qa-wave2-http');
- await page.getByRole('button',{name:'View Synthetic HTTP dress',exact:true}).click();
+ await page.getByRole('link',{name:'View Synthetic HTTP dress',exact:true}).click();
  const product=page.getByRole('dialog',{name:'A closer look'});
  await product.getByRole('radio',{name:/S/}).check();
  await product.getByRole('button',{name:/Add to bag/}).click();
