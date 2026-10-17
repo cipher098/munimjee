@@ -1,0 +1,50 @@
+{"files": 258, "tag": "munimjee-v1-runtime:local-20261018-wave3-af6c3e4"}
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon  2.959MB
+Step 1/15 : FROM python:3.11-slim
+ ---> e88e9763f943
+Step 2/15 : WORKDIR /app
+ ---> Using cache
+ ---> 71dd39b1078a
+Step 3/15 : ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PIP_DISABLE_PIP_VERSION_CHECK=1     V1_STOREFRONT_ASSETS_DIR=/opt/munimjee/storefront-src
+ ---> Using cache
+ ---> 52dd85234eb3
+Step 4/15 : COPY requirements.txt /app/requirements.txt
+ ---> Using cache
+ ---> 590ddc6c9583
+Step 5/15 : RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+ ---> Using cache
+ ---> fde1bf88e0a4
+Step 6/15 : COPY backend/app /app/app
+ ---> 6272f543701c
+Step 7/15 : COPY backend/alembic /app/alembic
+ ---> 2fb2cc29e58f
+Step 8/15 : COPY backend/alembic.ini /app/alembic.ini
+ ---> b1728472974d
+Step 9/15 : COPY backend/static /app/static
+ ---> 2831d9b730fe
+Step 10/15 : COPY storefront-src /opt/munimjee/storefront-src
+ ---> 7681288f6c95
+Step 11/15 : COPY runtime-manifest.json /opt/munimjee/runtime-manifest.json
+ ---> 045dc5ac0997
+Step 12/15 : RUN mkdir /app/uploads && chown 10001:10001 /app/uploads
+ ---> Running in 158a34da4f09
+ ---> Removed intermediate container 158a34da4f09
+ ---> 6484bc7ce92d
+Step 13/15 : USER 10001:10001
+ ---> Running in 81bb7b262278
+ ---> Removed intermediate container 81bb7b262278
+ ---> 34cfdbf95999
+Step 14/15 : EXPOSE 8000
+ ---> Running in f4c1878b85f5
+ ---> Removed intermediate container f4c1878b85f5
+ ---> 9411b0c66b28
+Step 15/15 : CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ ---> Running in 618a966d1cda
+ ---> Removed intermediate container 618a966d1cda
+ ---> 08e64cbdebb4
+Successfully built 08e64cbdebb4
+Successfully tagged munimjee-v1-runtime:local-20261018-wave3-af6c3e4

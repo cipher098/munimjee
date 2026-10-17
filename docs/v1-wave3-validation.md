@@ -36,8 +36,10 @@ CSRF/stock/receipts/router bootstrap behavior is local application behavior.
 Counts overlap and are not a unique end-to-end coverage total.
 
 The full checkpoint through `1ac880a` passed 1223 tests with 8 documented skips in
-363.48s. The final-source combined regression is recorded separately as
-`artifacts/v1/integration/2026-10-18-wave3-final.{xml,txt}` when complete.
+363.48s. The final-source application `dd44d89` passed **1248 tests, 8 skips and 0 failures**
+in **377.61s**, recorded separately as
+`artifacts/v1/integration/2026-10-18-wave3-final.{xml,txt}`. Skips are the same five
+missing historical cassettes and three intentionally blocked Redis cases.
 
 Open product/release gates: remote native import review/allocation bridge UI,
 persistent theme 0049 and all-theme public rendering, native payment credential
@@ -57,4 +59,12 @@ all roll back with 401. The combined mutation/import/bridge/startup rerun passed
 **64 checks** in 50.87s. The earlier final-suite attempt was deliberately
 interrupted to land this fix (331 passed/1 skip at interruption), and is preserved
 as `wave3-interrupted`; it is not a completed gate. The final-source suite/image
-are rerun after this guard change.
+were rerun after this guard change and passed; the exact image is recorded in
+`artifacts/v1/runtime-package/wave3-final-image-verification.json`.
+
+An independent worker reviewed the mounted guard's cached get_db dependency and
+FastAPI0.111 rollback ordering, then reran all five new revocation cases on its
+separate disposable payment lane: **5 passed**. No central source or database was
+used by that review. The native payment-review source and final desktop/mobile
+captures also received an independent bounded ship verdict after privacy, stale
+selection and late-auth-guard fixes; no additional fresh agent is claimed.

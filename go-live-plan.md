@@ -8,8 +8,8 @@ Wave 3 local integration now includes the atomic reviewed import-to-private-
 catalogue API bridge, the public Razorpay handoff/recovery shell and the scoped
 ParcelDesk order-first scan/link/tracking workflow. Actual app.main browser checks
 cover synthetic online payment, COD and the two-service parcel flow on migrated
-PostgreSQL 16. The full regression and refreshed runtime-image gates remain in
-progress. New flags stay off; no real provider request, paid transaction,
+PostgreSQL 16. The final-source regression passed 1248 tests with 8 documented skips, and the
+refreshed allowlisted runtime image passed all three offline modes. New flags stay off; no real provider request, paid transaction,
 customer send or production cutover is authorized or claimed.
 
 Complete native import review/allocation UI and persistent seller selection of
@@ -362,4 +362,4 @@ Rollback means a tested application switch or forward fix that preserves post-cu
 
 Execution began on 17 October 2026. P00 preserved both dirty checkouts in private local snapshots and copied reviewed application changes into integration commit e7694ff. Original checkouts and running services remain unchanged. The Mac mini dev chat is available and has GitHub push access; its Docker daemon is unresponsive and disk free space is approximately 11 GiB, so database-backed verification runs on this Mac until remote capacity is resolved.
 
-The first bounded identity, catalogue, import-domain, durable-ingress and storefront-preview foundations are integrated and code-verified in the isolated integration branch, with guarded actual migrations and fixture browser checks. Product/provider acceptance, real checkout/publication, onboarding and the Parcel Desk connector remain pending; no task is product-verified from scaffolding alone. Follow docs/v1-execution-status.md and docs/v1-contract-decisions.md for branch ownership and frozen decisions. Update this document with decisions and evidence; keep marketing claims synchronized with released features.
+The isolated integration branch now has local actual-application proof for native onboarding, catalogue/order operations, public COD and synthetic online-payment recovery, channel review and the two-service ParcelDesk scan/link workflow. The reviewed import-to-private-product API is implemented; its complete native allocation UI and persistent public theme settings remain pending. Actual migrated PostgreSQL 16, browser, failure-matrix and runtime-image evidence are recorded separately from real provider/device/release gates in docs/v1-execution-status.md and docs/v1-wave3-validation.md. Nothing is released or deployed by this local proof. Full V1 onboarding, sales console, analytics, support grants and verified customer links remain tracked scope. Keep marketing claims synchronized with released features.

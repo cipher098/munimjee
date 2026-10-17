@@ -1,0 +1,50 @@
+{"files": 258, "tag": "munimjee-v1-runtime:local-20261018-wave3-dd44d89"}
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon  2.959MB
+Step 1/15 : FROM python:3.11-slim
+ ---> e88e9763f943
+Step 2/15 : WORKDIR /app
+ ---> Using cache
+ ---> 71dd39b1078a
+Step 3/15 : ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PIP_DISABLE_PIP_VERSION_CHECK=1     V1_STOREFRONT_ASSETS_DIR=/opt/munimjee/storefront-src
+ ---> Using cache
+ ---> 52dd85234eb3
+Step 4/15 : COPY requirements.txt /app/requirements.txt
+ ---> Using cache
+ ---> 590ddc6c9583
+Step 5/15 : RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+ ---> Using cache
+ ---> fde1bf88e0a4
+Step 6/15 : COPY backend/app /app/app
+ ---> fb3422a1f07d
+Step 7/15 : COPY backend/alembic /app/alembic
+ ---> 9fa9c566cd08
+Step 8/15 : COPY backend/alembic.ini /app/alembic.ini
+ ---> 512d352f7283
+Step 9/15 : COPY backend/static /app/static
+ ---> 679af77b893e
+Step 10/15 : COPY storefront-src /opt/munimjee/storefront-src
+ ---> ed3963ed3ae5
+Step 11/15 : COPY runtime-manifest.json /opt/munimjee/runtime-manifest.json
+ ---> 83d03a0a6e88
+Step 12/15 : RUN mkdir /app/uploads && chown 10001:10001 /app/uploads
+ ---> Running in 6d76e40e065c
+ ---> Removed intermediate container 6d76e40e065c
+ ---> 8db498513ec8
+Step 13/15 : USER 10001:10001
+ ---> Running in 08533d3fa91c
+ ---> Removed intermediate container 08533d3fa91c
+ ---> bd586ffa3f8e
+Step 14/15 : EXPOSE 8000
+ ---> Running in 70e734974c66
+ ---> Removed intermediate container 70e734974c66
+ ---> d98307c4140a
+Step 15/15 : CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ ---> Running in e1ba7ddb5456
+ ---> Removed intermediate container e1ba7ddb5456
+ ---> 5b3e18ee109c
+Successfully built 5b3e18ee109c
+Successfully tagged munimjee-v1-runtime:local-20261018-wave3-dd44d89

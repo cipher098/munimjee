@@ -11,7 +11,7 @@ python3 scripts/smoke_v1_runtime.py --image munimjee-v1-runtime:your-unique-loca
 
 The builder refuses an existing image tag. It creates and removes its own temporary context; it never sends the repository root to Docker and does not depend on a shared `.dockerignore`. Build constraints are one CPU and 1,536 MiB using the legacy Docker builder, with a 15-minute timeout. The legacy builder is currently available on the verified Docker 29.7.2 host but deprecated; a host that removes it needs an explicitly resource-limited BuildKit builder before this command can claim the same limit. No daemon configuration is changed.
 
-The context contains tracked production Python modules (excluding app/scripts and backups), the two application YAML configuration files, Alembic migrations/configuration, 30 explicitly named existing static pages/modules/styles and exactly 11 operational storefront modules. New storefront or seller static dependencies must be explicitly added to these lists and to the shared bootstrap contract when needed. Fixture entrypoints, fixtures, tests, node_modules, artifacts, design files, uploads, environment files and key files do not enter the context. Symlinks, including a symlinked requirements file, fail closed. Dependency lines must be pinned index package requirements; URLs, options, nested files and local packages are rejected. Existing direct versions are retained while pytest, pytest-asyncio and vcrpy are omitted from this API runtime image. Test/smoke code is supplied only on stdin and is not packaged.
+The context contains tracked production Python modules (excluding app/scripts and backups), the two application YAML configuration files, Alembic migrations/configuration, 39 explicitly named static pages/modules/styles/scanner assets and exactly 12 operational storefront modules. New storefront or seller static dependencies must be explicitly added to these lists and to the shared bootstrap contract when needed. Fixture entrypoints, fixtures, tests, node_modules, artifacts, design files, uploads, environment files and key files do not enter the context. Symlinks, including a symlinked requirements file, fail closed. Dependency lines must be pinned index package requirements; URLs, options, nested files and local packages are rejected. Existing direct versions are retained while pytest, pytest-asyncio and vcrpy are omitted from this API runtime image. Test/smoke code is supplied only on stdin and is not packaged.
 
 The image uses Python 3.11 slim, binary wheels, no compiler/system-package installation, and UID/GID 10001. It contains API code, migrations, static web files and storefront modules at `/opt/munimjee/storefront-src`; `V1_STOREFRONT_ASSETS_DIR` points there. Credentials and DATABASE_URL are not build arguments or image environment settings. The existing application creates empty upload directories at startup; no source uploads or customer files are copied. Operational upload persistence remains a separate runtime decision.
 
@@ -36,3 +36,27 @@ Production deployment, live provider/customer sends, migrations against a real d
 The integrator reviewed the allowlist, symlink checks, pinned-index dependency guard, runtime mount, network restrictions and CID-only cleanup, with no substantive blocker. All **10 pure package tests** passed independently. A second uniquely tagged image was built from integration source `d2b73a9` (application code tested through `7675f36`): `munimjee-v1-runtime:local-20261018-integration-7675f36`, ID `sha256:040c2625ed60a24f2dce2cabd1229da85fbe58afedeed59f00c98245b81f5b02`, Docker-reported **129636999 bytes**, arm64, UID/GID **10001:10001**. It contains the final native draft-recovery assets. The final CID cleanup script reran all three offline smoke modes successfully against it; file/manifest hashes match, no DNS/network/DB attempt occurred and the created container was verified absent. Runtime files did not change in the later cleanup/test/documentation commits, so the image was not rebuilt for those changes.
 
 Integration evidence is recorded separately in `artifacts/v1/runtime-package/integration-image-verification.json`, `integration-runtime-manifest.json` and `integration-smoke.txt`. The earlier author image/source proof remains intact. Both uniquely tagged local images are retained; no existing image/container/volume was pruned. This closes local packaging only, with deployment, real data migrations, provider acceptance and other release gates still pending.
+
+## Wave3 integrated package
+
+The new image `munimjee-v1-runtime:local-20261018-wave3-dd44d89` is built from
+committed source `dd44d89f0b447423508682f995f1fc68af8c109b`. Its ID is
+`sha256:5b3e18ee109cf4228464857c9bf715f1c6e5517ba37100e9832828d4edc4f01b`,
+Docker-reported size **130113314 bytes**, arm64, UID/GID **10001:10001**. The
+allowlist now includes **258 files**, including **39 explicit static files**
+(parcel scanner JS/WASM/license included) and **12 storefront runtime modules**
+(payment handoff included). Context files total 2,752,422 bytes; Docker reported
+a 2.959 MB transfer. The earlier 233-file image remains a wave2 snapshot.
+
+Ten pure package checks passed. All three offline modes passed on this image,
+including exact current-context/image manifest equality and every runtime file's
+SHA256. The enabled mode verifies the payment module and parcel scanner/WASM/
+license are served, while fixture/test/key paths stay absent. No DNS, network,
+DB or provider attempt occurred. The created CID was removed and verified absent;
+no smoke container remains. Evidence is `artifacts/v1/runtime-package/wave3-final-*`.
+No image push/deployment, worker/provider canary, persistent upload provisioning,
+restore rehearsal or multi-architecture/CI certification is implied.
+
+The earlier wave3 `af6c3e4` image/manifest is retained separately as an interim
+checkpoint. It predates the final import-session transaction guard and is not
+the current source artifact. No existing image was overwritten or pruned.

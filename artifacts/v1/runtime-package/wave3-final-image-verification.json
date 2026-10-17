@@ -1,0 +1,19 @@
+{
+  "tag": "munimjee-v1-runtime:local-20261018-wave3-dd44d89",
+  "image_id": "sha256:5b3e18ee109cf4228464857c9bf715f1c6e5517ba37100e9832828d4edc4f01b",
+  "size_bytes": 130113314,
+  "architecture": "arm64",
+  "runtime_user": "10001:10001",
+  "source_revision": "dd44d89f0b447423508682f995f1fc68af8c109b",
+  "manifest_file_count": 258,
+  "context_bytes": 2752422,
+  "storefront_modules": 12,
+  "static_files": 39,
+  "network": "none",
+  "deployment": false,
+  "checks": "off/enabled/missing; exact current-context/image manifest and runtime-file SHA256 equality",
+  "container_removed": true,
+  "dns_attempts": 0,
+  "network_attempts": 0,
+  "package_tests_passed": 10
+}
