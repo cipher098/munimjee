@@ -78,8 +78,8 @@ try{
  await check('unavailable browser storage prevents a new draft mutation',async()=>{
   const {c,page,model}=await setup({init:()=>{Storage.prototype.setItem=function(){throw new Error('synthetic storage unavailable');};}});await page.locator('[name=hero_headline]').fill('Unsaved');await page.locator('#save').click();await expect(page.locator('#error')).toContainText('No new action was sent');assert.equal(model.posts.length,0);await c.close();
  });
- await check('identity change removes all theme command scopes and private preview',async()=>{
-  const {c,page,model}=await setup();await page.evaluate(()=>sessionStorage.setItem('munimjee.v1.theme-command:another:tenant','private synthetic command'));model.user='55555555-5555-4555-8555-555555555555';model.csrf='different-session';await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));await expect(page.locator('#workspace')).toBeHidden();
+ await check('window focus identity change removes all theme command scopes and private preview',async()=>{
+  const {c,page,model}=await setup();await page.evaluate(()=>sessionStorage.setItem('munimjee.v1.theme-command:another:tenant','private synthetic command'));model.user='55555555-5555-4555-8555-555555555555';model.csrf='different-session';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#workspace')).toBeHidden();
   assert.equal(await page.evaluate(()=>[...Array(sessionStorage.length)].map((_,i)=>sessionStorage.key(i)).filter(k=>k.startsWith('munimjee.v1.theme-command:')).length),0);await expect(page.locator('#preview')).toHaveAttribute('src','about:blank');await c.close();
  });
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
