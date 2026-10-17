@@ -74,5 +74,14 @@
       "source_note": "Owner verified stable anchors before added explicit Escape/Enter assertion"
     },
     "owner_full_followup_run": "Intentionally interrupted after14passed when root announced browserlock; this is not counted as a complete pass"
+  },
+  "latest_privacy_check": {
+    "source_commit": "86e2455e5aa91d8662982df78cb09ce08615a6fe",
+    "command": "PYTHONPATH=backend python -m pytest backend/tests/test_v1_storefront_rendering.py -q",
+    "tests": 28,
+    "passed": 28,
+    "skipped": 0,
+    "duration_seconds": 0.15,
+    "scope": "Three additional nested-private-object policy/category rejection cases; frontend unchanged from root16browserrun"
   }
 }
