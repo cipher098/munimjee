@@ -277,3 +277,33 @@ async def test_admin_impersonation_requires_separate_unimplemented_grant(client)
     c.cookies.set("view_seller",bid)
     assert (await c.get("/dashboard-auth/me")).status_code==403
     assert (await c.get("/api/v1/me")).status_code==401
+
+
+@pytest.mark.asyncio
+async def test_concurrent_profile_saves_refresh_locked_identity_map(client, monkeypatch):
+    import asyncio
+    from app.services import identity_auth as domain
+    c=client
+    owner=await signup(c)
+    bid=owner["businesses"][0]["id"]
+    original=domain.require_business_access
+    arrived=0
+    retained_access=[]
+    both_loaded=asyncio.Event()
+    async def access(*args,**kwargs):
+        nonlocal arrived
+        result=await original(*args,**kwargs)
+        # Exercise a caller that retains its authorization context/Business.
+        # The ordinary route releases clean weak ORM references before locking.
+        retained_access.append(result)
+        arrived+=1
+        if arrived==2: both_loaded.set()
+        await asyncio.wait_for(both_loaded.wait(),timeout=5)
+        return result
+    monkeypatch.setattr(domain,"require_business_access",access)
+    def body(name): return {"expected_version":0,"name":name,"business_type":"boutique","country":"IN"}
+    results=await asyncio.gather(c.put(f"/api/v1/businesses/{bid}/profile",headers=headers(c),json=body("First writer")),
+        c.put(f"/api/v1/businesses/{bid}/profile",headers=headers(c),json=body("Second writer")))
+    assert sorted(r.status_code for r in results)==[200,409]
+    saved=(await c.get(f"/api/v1/businesses/{bid}/profile")).json()
+    assert saved["version"]==1 and saved["name"] in {"First writer","Second writer"}
