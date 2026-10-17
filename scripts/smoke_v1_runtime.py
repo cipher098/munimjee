@@ -87,6 +87,22 @@ RUNNER = 'import os,subprocess,sys\n' + '\n'.join(
     for mode in ('off','enabled','missing'))
 
 
+
+def cleanup_created_container(cidfile):
+    # No cleanup by name: a failed create/name collision must never target a
+    # pre-existing container. Docker alone writes this invocation's CID file.
+    if not cidfile.exists():
+        return
+    cid=cidfile.read_text().strip()
+    if not re.fullmatch(r'[a-f0-9]{64}',cid):
+        raise RuntimeError('Invalid smoke container identity; cleanup withheld')
+    subprocess.run(['docker','rm','--force',cid],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    remaining=subprocess.run(['docker','ps','-a','--no-trunc','--filter','id='+cid,'--format','{{.ID}}'],
+                             capture_output=True,text=True,check=True)
+    if remaining.stdout.strip():
+        raise RuntimeError('Smoke container cleanup could not be verified')
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--image',required=True)
     args=parser.parse_args()
@@ -105,12 +121,13 @@ def main():
              '--entrypoint','python','-i',args.image,'-']
     with tempfile.TemporaryDirectory(prefix='munimjee-v1-smoke-context-') as temporary:
         expected=create_context(ROOT,Path(temporary)/'context')['files']
-    manifest_check="import json; assert json.load(open('/opt/munimjee/runtime-manifest.json'))['files']=="+repr(expected)+"\n"
-    try:
-        subprocess.run(command,input=manifest_check+RUNNER,text=True,check=True,timeout=90)
-    finally:
-        # Only this invocation's uniquely named container; never prune images/volumes.
-        subprocess.run(['docker','rm','--force',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        cidfile=Path(temporary)/'container.cid'
+        command[2:2]=['--cidfile',str(cidfile)]
+        manifest_check="import json; assert json.load(open('/opt/munimjee/runtime-manifest.json'))['files']=="+repr(expected)+"\n"
+        try:
+            subprocess.run(command,input=manifest_check+RUNNER,text=True,check=True,timeout=90)
+        finally:
+            cleanup_created_container(cidfile)
     info=json.loads(subprocess.run(['docker','image','inspect',args.image],capture_output=True,text=True,check=True).stdout)[0]
     print(json.dumps({'image_id':info['Id'],'size_bytes':info['Size'],'checks':'off/enabled/missing; no network or DB',
                       'container_removed':True}))

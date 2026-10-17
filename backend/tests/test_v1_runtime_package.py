@@ -63,3 +63,22 @@ def test_requirements_symlink_cannot_read_outside_the_source(source,tmp_path):
     external=tmp_path/'outside.txt';external.write_text('private-package==1.0.0\n')
     requirements=source/'backend/requirements.txt';requirements.unlink();requirements.symlink_to(external);stage(source)
     with pytest.raises(ValueError,match='symlinks'):package.create_context(source,tmp_path/'context')
+
+
+def test_smoke_cleanup_only_uses_docker_created_cid_not_a_reused_name(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT/'scripts'))
+    spec=spec_from_file_location('smoke_v1_runtime',ROOT/'scripts/smoke_v1_runtime.py')
+    smoke=module_from_spec(spec);spec.loader.exec_module(smoke)
+    calls=[]
+    def command(args,**kwargs):
+        calls.append(args);return subprocess.CompletedProcess(args,0,stdout='')
+    monkeypatch.setattr(smoke.subprocess,'run',command)
+    cidfile=tmp_path/'container.cid'
+    smoke.cleanup_created_container(cidfile);assert calls==[]
+    cidfile.write_text('pre-existing-container-name')
+    with pytest.raises(RuntimeError,match='Invalid smoke container'):smoke.cleanup_created_container(cidfile)
+    assert calls==[]
+    cid='a'*64;cidfile.write_text(cid)
+    smoke.cleanup_created_container(cidfile)
+    assert calls[0]==['docker','rm','--force',cid]
+    assert calls[1][calls[1].index('--filter')+1]=='id='+cid
