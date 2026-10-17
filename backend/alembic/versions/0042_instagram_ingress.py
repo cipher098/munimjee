@@ -3,8 +3,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = "0042"
-down_revision = "0041"
+revision = "0042_instagram_ingress"
+down_revision = "0041_v1_catalogue"
 branch_labels = None
 depends_on = None
 
