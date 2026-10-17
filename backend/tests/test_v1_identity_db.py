@@ -56,6 +56,15 @@ async def identity_db(migrated_engine):
                 with Operations.context(MigrationContext.configure(conn)):
                     migration.upgrade()
             await connection.run_sync(upgrade)
+            # Retain the 0039→0040 backfill boundary, then match current ORM
+            # fields through actual later migrations before querying users.
+            def followups(conn):
+                script = ScriptDirectory(str(MIGRATION_PATH.parents[1]))
+                with Operations.context(MigrationContext.configure(conn)):
+                    for revision in reversed(list(script.walk_revisions(base="0040_v1_identity", head="head"))):
+                        if revision.revision != "0040_v1_identity":
+                            revision.module.upgrade()
+            await connection.run_sync(followups)
             yield session, connection, one, two, inactive
             await session.close()
         finally:
@@ -142,7 +151,9 @@ async def test_api_legacy_owner_native_viewer_and_admin_denial(identity_db):
         assert me.status_code == 200
         assert me.json()["businesses"][0]["id"] == str(one.id)
         assert (await client.get(f"/api/v1/businesses/{two.id}", headers=owner_auth)).status_code == 404
-        viewer_auth = {"Authorization": "Bearer " + token(role="v1_user", purpose="v1_actor", sub=str(viewer.id))}
+        from app.services.auth_sessions import issue_session
+        viewer_token, _, _ = await issue_session(db, viewer)
+        viewer_auth = {"Authorization": "Bearer " + viewer_token}
         response = await client.get(f"/api/v1/businesses/{one.id}/readiness", headers=viewer_auth)
         assert response.status_code == 200 and response.json()["onboarding_complete"] is None
         assert "instagram_token" not in me.text and "password_hash" not in me.text
