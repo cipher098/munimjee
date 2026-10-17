@@ -59,7 +59,7 @@ async def migrated_database():
             # Revalidate immediately before the only destructive SQL path.
             if validate_test_database(os.environ) != target:
                 raise TestSafetyError("Test target changed after obtaining the lease")
-            await lease.execute(text("DROP SCHEMA public CASCADE"))
+            await lease.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
             await lease.execute(text("CREATE SCHEMA public"))
             await migrate()
             try:

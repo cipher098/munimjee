@@ -311,7 +311,7 @@ async def test_lease_spans_reset_migration_yield_and_failure_cleanup(monkeypatch
             await run()
     else:
         await run()
-    assert shared["events"][:3] == ["DROP SCHEMA public CASCADE", "CREATE SCHEMA public", "migration"]
+    assert shared["events"][:3] == ["DROP SCHEMA IF EXISTS public CASCADE", "CREATE SCHEMA public", "migration"]
     if failure != "migration":
         assert shared["events"].index("yield") < shared["events"].index("engine_disposed") < shared["events"].index("lease_closed")
     assert shared["locked"] is False
