@@ -129,6 +129,21 @@ async def test_all_three_presentations_use_identical_canonical_publication(publi
 
 
 @pytest.mark.asyncio
+async def test_seller_store_link_uses_enabled_publication_and_configured_origin(public_api, monkeypatch):
+    client,factory=public_api;data=await setup(client)
+    path=data['prefix']+'/storefront'
+    assert (await client.get(path)).json()['public_storefront_url'] is None
+    monkeypatch.setattr(settings,'V1_STOREFRONT_ENABLED',True)
+    monkeypatch.setattr(settings,'PUBLIC_BASE_URL','https://configured.example')
+    response=await client.get(path,headers={'Host':'untrusted.example'})
+    assert response.status_code==200
+    assert response.json()['public_storefront_url']=='https://configured.example/stores/'+data['slug']
+    async with factory.begin() as db:
+        (await db.get(Storefront,data['bid'])).published=False
+    assert (await client.get(path)).json()['public_storefront_url'] is None
+
+
+@pytest.mark.asyncio
 async def test_gateway_only_store_never_advertises_unimplemented_browser_payment(public_api, monkeypatch):
     client,factory=public_api;data=await setup(client)
     from app.models.razorpay import RazorpayAccount

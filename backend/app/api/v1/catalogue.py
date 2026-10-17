@@ -8,6 +8,7 @@ from app.api.v1.identity import current_actor
 from app.api.v1.session import require_v1_mutation
 from app.api.routes import commerce as legacy, razorpay as gateway
 from app.database import get_db
+from app.config import settings
 from app.models.identity import Business
 from app.models.catalogue_v1 import CatalogueSKU
 from app.models.checkout_v1 import CatalogueActivation, CatalogueStorePolicy
@@ -46,17 +47,27 @@ async def seller_product(db, business_id, product_id):
             active=s.active, legacy_variant_index=s.legacy_variant_index) for s in skus]}
 
 
+def settings_view(data):
+    if data is None:
+        return None
+    url = None
+    if settings.V1_STOREFRONT_ENABLED and data["published"]:
+        from app.v1.storefront.rendering import canonical_origin
+        url = canonical_origin(settings.PUBLIC_BASE_URL) + "/stores/" + data["slug"]
+    return {**data, "public_storefront_url": url}
+
+
 @router.get("/businesses/{business_id}/catalogue/storefront")
 async def read_settings(business_id: UUID, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.read")
-    return await legacy.read_store(str(business_id), db)
+    return settings_view(await legacy.read_store(str(business_id), db))
 
 
 @router.put("/businesses/{business_id}/catalogue/storefront")
 async def save_settings(business_id: UUID, payload: StoreInput,
         actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "business.write")
-    return await legacy.save_store(payload, str(business_id), db)
+    return settings_view(await legacy.save_store(payload, str(business_id), db))
 
 
 @router.get("/businesses/{business_id}/catalogue/checkout-policy")
