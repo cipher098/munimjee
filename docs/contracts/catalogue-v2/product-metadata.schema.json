@@ -1,0 +1,70 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "seller_reviewed": {
+      "const": true,
+      "enum": [
+        true
+      ],
+      "title": "Seller Reviewed",
+      "type": "boolean"
+    },
+    "expected_mapping_revision": {
+      "minimum": 1,
+      "title": "Expected Mapping Revision",
+      "type": "integer"
+    },
+    "name": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "maxLength": 10000,
+      "title": "Description",
+      "type": "string"
+    },
+    "category_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Category Id"
+    },
+    "photo_urls": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Photo Urls",
+      "type": "array"
+    },
+    "active": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Active"
+    }
+  },
+  "required": [
+    "seller_reviewed",
+    "expected_mapping_revision",
+    "name"
+  ],
+  "title": "ProductMetadataWrite",
+  "type": "object"
+}

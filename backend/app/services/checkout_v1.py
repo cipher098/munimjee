@@ -186,12 +186,36 @@ async def update_operational_skus(db, business_id, product_id, payload):
     await db.flush()
 
 
+async def update_product_metadata(db, business_id, product_id, payload):
+    store = await lock_store(db, business_id)
+    product, mapping, _ = await rows_for_product(db, business_id, product_id)
+    if mapping.revision != payload.expected_mapping_revision:
+        conflict("Catalogue changed; refresh before applying edits")
+    active = await is_product_activated(db, business_id, product_id)
+    if payload.active is True and not active:
+        conflict("Use explicit reconciled activation before listing this product")
+    if payload.category_id and not await db.scalar(select(ProductCategory.id).where(
+            ProductCategory.id == payload.category_id, ProductCategory.seller_id == business_id)):
+        raise HTTPException(404, "Category not found")
+    if any(not safe_url(url) for url in payload.photo_urls):
+        raise HTTPException(422, "Use approved HTTPS or upload image URLs")
+    product.name, product.description, product.category_id = payload.name, payload.description, payload.category_id
+    product.photo_url = payload.photo_urls[0] if payload.photo_urls else None
+    product.photo_urls = payload.photo_urls[1:]
+    if payload.active is not None:
+        product.active = payload.active
+    mapping.revision += 1
+    mapping.legacy_fingerprint = legacy_fingerprint(product, store.currency)
+    await db.flush()
+
+
 def public_product(product, skus, enabled):
     images = [product.photo_url] + (product.photo_urls if isinstance(product.photo_urls, list) else [])
     return ProductRead(business_id=product.seller_id, product_id=product.id, name=product.name,
         description=product.description or "", category_id=product.category_id,
         photo_urls=list(dict.fromkeys(u for raw in images if (u := safe_url(raw)))),
-        checkout_enabled=bool(enabled), skus=[SKURead(sku_id=s.id, product_id=s.product_id,
+        checkout_enabled=bool(enabled and product.active and any(s.active for s in skus)),
+        skus=[SKURead(sku_id=s.id, product_id=s.product_id,
             options=s.options, price_minor=s.price_minor, currency=s.currency,
             stock_available=s.stock_available, active=s.active) for s in skus if s.active])
 
@@ -234,7 +258,8 @@ async def create_sku_order(db, store, payload):
         CatalogueProductMapping.business_id == store.seller_id,
         CatalogueProductMapping.product_id.in_(pids)).order_by(CatalogueProductMapping.product_id).with_for_update())).all()
     locked = (await db.scalars(select(CatalogueSKU).where(CatalogueSKU.business_id == store.seller_id,
-        CatalogueSKU.id.in_(ids)).order_by(CatalogueSKU.id).with_for_update())).all()
+        CatalogueSKU.id.in_(ids)).order_by(CatalogueSKU.id).with_for_update()
+        .execution_options(populate_existing=True))).all()
     by_sku, by_product = {s.id: s for s in locked}, {p.id: p for p in products}
     snapshots, per_product = [], {}
     for item in payload.items:
@@ -288,17 +313,21 @@ async def release_sku_stock(db, order):
     if order.stock_released:
         return
     rows = (await db.scalars(select(SKUReservation).where(SKUReservation.business_id == order.seller_id,
-        SKUReservation.order_id == order.id).order_by(SKUReservation.sku_id).with_for_update())).all()
+        SKUReservation.order_id == order.id).order_by(SKUReservation.sku_id))).all()
     expected = {UUID(i["sku_id"]): i for i in order.items}
     if len(rows) != len(expected) or {r.sku_id for r in rows} != set(expected):
         conflict("SKU reservation ledger requires reconciliation")
     pids = {r.product_id for r in rows}
+    await db.scalars(select(Product).where(Product.seller_id == order.seller_id,
+        Product.id.in_(pids)).order_by(Product.id).with_for_update())
     mappings = (await db.scalars(select(CatalogueProductMapping).where(
         CatalogueProductMapping.business_id == order.seller_id,
         CatalogueProductMapping.product_id.in_(pids)).order_by(CatalogueProductMapping.product_id).with_for_update())).all()
     skus = (await db.scalars(select(CatalogueSKU).where(CatalogueSKU.business_id == order.seller_id,
         CatalogueSKU.id.in_(expected)).order_by(CatalogueSKU.id).with_for_update())).all()
     by_id = {s.id: s for s in skus}
+    rows = (await db.scalars(select(SKUReservation).where(SKUReservation.business_id == order.seller_id,
+        SKUReservation.order_id == order.id).order_by(SKUReservation.sku_id).with_for_update())).all()
     for row in rows:
         snapshot = expected[row.sku_id]
         if row.quantity != snapshot["quantity"] or row.tracked != snapshot["_stock_reserved"] or row.released:

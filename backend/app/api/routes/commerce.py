@@ -1,7 +1,7 @@
 """Public storefront API and tenant-scoped seller commerce management."""
 from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, exists
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dashboard_auth import current_seller_id
@@ -10,6 +10,7 @@ from app.models.seller import Seller
 from app.models.product import Product
 from app.models.product_category import ProductCategory
 from app.models.commerce import Storefront, CommerceOrder, CommerceCustomer
+from app.models.checkout_v1 import CatalogueActivation
 from app.services.commerce import (StoreInput, CheckoutInput, TransitionInput, product_json,
     order_json, create_order, release_stock, authorize_order, expire_pending_orders)
 
@@ -87,7 +88,9 @@ async def public_products(slug: str, q: str = Query('', max_length=200), categor
         page: int = Query(1, ge=1), page_size: int = Query(24, ge=1, le=100), db: AsyncSession = Depends(get_db)):
     store = await get_public_store(db, slug, lock=True)
     await expire_pending_orders(db, store.seller_id)
-    where = [Product.seller_id == store.seller_id, Product.active.is_(True)]
+    where = [Product.seller_id == store.seller_id, Product.active.is_(True), ~exists(select(
+        CatalogueActivation.product_id).where(CatalogueActivation.business_id == Product.seller_id,
+            CatalogueActivation.product_id == Product.id))]
     if q.strip():
         where.append(or_(Product.name.ilike('%' + q.strip() + '%'), Product.description.ilike('%' + q.strip() + '%')))
     if category_id:
@@ -102,7 +105,7 @@ async def public_product(slug: str, product_id: UUID, db: AsyncSession = Depends
     store = await get_public_store(db, slug, lock=True)
     await expire_pending_orders(db, store.seller_id)
     product = await db.scalar(select(Product).where(Product.id == product_id, Product.seller_id == store.seller_id, Product.active.is_(True)))
-    if product is None:
+    if product is None or await db.get(CatalogueActivation, (store.seller_id, product_id)) is not None:
         raise HTTPException(404, 'Product not found')
     return product_json(product)
 

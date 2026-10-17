@@ -36,6 +36,15 @@ class OperationalSKUWrite(ExplicitReview):
     skus: list[SKUWrite] = Field(min_length=1, max_length=500)
 
 
+class ProductMetadataWrite(ExplicitReview):
+    expected_mapping_revision: int = Field(strict=True, ge=1)
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=10000)
+    category_id: UUID | None = None
+    photo_urls: list[str] = Field(default_factory=list, max_length=30)
+    active: bool | None = Field(default=None, strict=True)
+
+
 class StorePolicyWrite(Contract):
     checkout_enabled: bool = Field(strict=True)
 

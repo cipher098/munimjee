@@ -191,26 +191,11 @@ async def start_payment(
             409, "Payment reservation expired; please place a new order"
         )
     if not order.gateway_order_id:
-        result = await payments.gateway_request(
-            account,
-            "POST",
-            "orders",
-            {
-                "amount": order.total,
-                "currency": order.currency,
-                "receipt": str(order.id),
-                "partial_payment": False,
-            },
-        )
-        if (
-            not str(result.get("id", "")).startswith("order_")
-            or result.get("amount") != order.total
-            or result.get("currency") != order.currency
-        ):
-            raise HTTPException(502, "Razorpay returned an inconsistent order")
-        order.gateway_credentials = payments.snapshot_account(account)
-        order.gateway_order_id = result["id"]
-        await db.commit()
+        if order.items and all(item.get('_inventory_engine') == 'sku.v1' for item in order.items):
+            from app.services.sku_payments import ensure_gateway_order
+            await ensure_gateway_order(db, order, account)
+        else:
+            await _create_legacy_gateway_order(db, order, account)
     account = payments.order_account(order, account)
     return {
         "key": account.key_id,
@@ -225,6 +210,29 @@ async def start_payment(
             "email": order.customer.get("email") or "",
         },
     }
+
+
+async def _create_legacy_gateway_order(db, order, account):
+    result = await payments.gateway_request(
+        account,
+        "POST",
+        "orders",
+        {
+            "amount": order.total,
+            "currency": order.currency,
+            "receipt": str(order.id),
+            "partial_payment": False,
+        },
+    )
+    if (
+        not str(result.get("id", "")).startswith("order_")
+        or result.get("amount") != order.total
+        or result.get("currency") != order.currency
+    ):
+        raise HTTPException(502, "Razorpay returned an inconsistent order")
+    order.gateway_credentials = payments.snapshot_account(account)
+    order.gateway_order_id = result["id"]
+    await db.commit()
 
 
 @router.post("/shop-api/{slug}/orders/{order_id}/razorpay/verify")

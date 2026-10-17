@@ -165,6 +165,9 @@ async def apply_review(db, business_id: UUID, product_id: UUID, payload: Catalog
     """Apply a complete approved snapshot. No hidden deletion or legacy mutation."""
     currency = await _currency(db, business_id)
     product = await _locked_product(db, business_id, product_id)
+    from app.services.checkout_v1 import is_product_activated
+    if await is_product_activated(db, business_id, product_id):
+        raise CatalogueConflict("Use operational SKU edits after activation; legacy stock is frozen")
     validate_review(product, business_id, currency, payload)
     mapping = await _mapping(db, business_id, product_id)
     if mapping is None:

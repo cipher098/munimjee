@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "seller_reviewed": {
+      "const": true,
+      "enum": [
+        true
+      ],
+      "title": "Seller Reviewed",
+      "type": "boolean"
+    },
+    "expected_mapping_revision": {
+      "minimum": 1,
+      "title": "Expected Mapping Revision",
+      "type": "integer"
+    },
+    "expected_legacy_fingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expected Legacy Fingerprint",
+      "type": "string"
+    }
+  },
+  "required": [
+    "seller_reviewed",
+    "expected_mapping_revision",
+    "expected_legacy_fingerprint"
+  ],
+  "title": "ActivationWrite",
+  "type": "object"
+}
