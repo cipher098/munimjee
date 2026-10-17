@@ -1,0 +1,33 @@
+{
+  "task": "D10 first domain slice",
+  "branch": "codex/v1-import-drafts",
+  "tested_source_sha": "a58414bec64da8fd0bb5186d5914b2717fe05d8a",
+  "environment": {
+    "host": "Mac mini dev",
+    "python": "3.12.14",
+    "pytest": "8.2.0",
+    "pydantic": "2.7.1"
+  },
+  "checks": [
+    {
+      "command": "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=backend .venv-imports/bin/python -m pytest -c /dev/null --noconftest -p no:cacheprovider backend/tests/test_v1_import_drafts.py -q",
+      "passed": 110,
+      "skipped": 0,
+      "failed": 0,
+      "verified_by": "remote coordinator"
+    }
+  ],
+  "boundaries": [
+    "Structured seller-supplied data only; no URL fetching, Instagram scraping, CSV file parser, AI extraction, or media processing.",
+    "No application configuration, database, API registration, persistence, auth, UI, publication, or catalogue writes.",
+    "Canonical SKU allocation and explicit untracked-stock bridge remain pending.",
+    "V1 shipping scope is existing-parcel scan/link tracking; no future courier booking adapter assigned."
+  ],
+  "review_fixes": [
+    "Reimports independently compare source identity and source-product key, alongside UUID and tenant.",
+    "Escaped unpaired Unicode surrogate and forged provenance cases covered."
+  ],
+  "note": "Evidence-only followup; tested source SHA identifies the reviewed code. Branch head may additionally include this evidence file.",
+  "review_date": "2026-10-17",
+  "timezone": "Asia/Kolkata"
+}
