@@ -19,7 +19,7 @@ from app.v1.imports.fetching import FetchError
 
 async def bounded_upload(request: Request) -> bytes:
     length = request.headers.get("content-length")
-    if length is not None and (not length.isascii() or not length.isdecimal() or int(length) > 5_000_000):
+    if length is not None and (not length.isascii() or not length.isdecimal() or len(length) > 10 or int(length) > 5_000_000):
         raise HTTPException(413, "Upload exceeds 5 MB")
     body = bytearray()
     try:

@@ -31,6 +31,10 @@ from app.api.webhooks.whatsapp import router as whatsapp_webhook_router
 from app.api.routes.comment_automation import router as comment_automation_router
 from app.api.v1.identity import router as v1_identity_router
 from app.api.v1.auth import router as v1_auth_router
+from app.api.v1.catalogue import router as v1_catalogue_router
+from app.api.v1.channel_operator import router as v1_channel_router
+from app.api.v1.imports import create_router as create_v1_import_router
+from app.api.v1.session import require_v1_mutation
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,6 +79,9 @@ app.include_router(whatsapp_webhook_router)
 app.include_router(comment_automation_router)
 app.include_router(v1_identity_router)
 app.include_router(v1_auth_router)
+app.include_router(v1_catalogue_router)
+app.include_router(v1_channel_router)
+app.include_router(create_v1_import_router(require_v1_mutation))
 
 
 @app.get("/health")
@@ -185,3 +192,14 @@ async def v1_workspace():
     from app.api.v1.auth import enabled
     enabled()
     return FileResponse(_STATIC_DIR / "v1_app.html", headers={"Cache-Control": "no-store"})
+
+
+@app.middleware("http")
+async def private_v1_cache_policy(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if (path == "/v1" or path.startswith("/v1/businesses/") or path == "/api/v1/me"
+            or path == "/api/v1/businesses" or path.startswith("/api/v1/businesses/")
+            or path.startswith("/api/v1/auth/")):
+        response.headers["Cache-Control"] = "no-store"
+    return response

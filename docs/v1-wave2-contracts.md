@@ -30,12 +30,13 @@ wave does not quietly grow into a third catalogue feature stream.
 | 0043_v1_auth | Auth/integrator | 0042_instagram_ingress |
 | 0044_v1_checkout | Catalogue | 0043_v1_auth |
 | 0045_v1_channel_operator | Social | 0044_v1_checkout |
+| 0046_v1_import_jobs | Integrator (reviewed remote D20 models) | 0045_v1_channel_operator |
 
 The integrator publishes 0043 early. A worker may build pure logic and test owned
 DDL while predecessor work is pending, but only the actual complete chain counts
 as migrated integration evidence. Do not invent predecessor files or silently
-change revision identifiers. Remote persistence migrations are reserved after
-0045 with the integrator; do not collide with local reservations.
+change revision identifiers. Remote D20 persistence is now allocated centrally as 0046. Further migrations
+require another central reservation; do not collide with this chain.
 
 ## Native actor, session and mutation contract
 

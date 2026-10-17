@@ -4,6 +4,7 @@ from typing import List
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
+    V1_IMPORTS_ENABLED: bool = False
     V1_AUTH_ENABLED: bool = False
     V1_ENFORCE_LEGACY_ACCESS: bool = False
     SECRET_KEY: str

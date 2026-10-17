@@ -57,3 +57,12 @@ __all__ += ["InstagramIngress"]
 
 from app.models.identity_auth import UserSession, BusinessInvitation, IdentityAuditEvent
 __all__ += ["UserSession", "BusinessInvitation", "IdentityAuditEvent"]
+
+from app.models.checkout_v1 import CatalogueStorePolicy, CatalogueActivation, CatalogueCreation, SKUReservation, SKUPaymentAttempt
+__all__ += ["CatalogueStorePolicy", "CatalogueActivation", "CatalogueCreation", "SKUReservation", "SKUPaymentAttempt"]
+
+from app.models.channel_operator import ChannelOperation, ChannelConnectionState, ChannelOAuthAttempt
+__all__ += ["ChannelOperation", "ChannelConnectionState", "ChannelOAuthAttempt"]
+
+from app.models.imports_v1 import ImportAsset, ImportJob, ImportDraft, ImportAudit
+__all__ += ["ImportAsset", "ImportJob", "ImportDraft", "ImportAudit"]

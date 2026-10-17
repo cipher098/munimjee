@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.workers.refresh_tokens",
         "app.workers.message_batch",
         "app.workers.instagram_ingress",
+        "app.workers.v1_imports",
         "app.workers.nudge",
         "app.workers.commerce",
         "app.workers.whatsapp",
@@ -31,6 +32,7 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
+    "v1-import-recovery": {"task": "app.workers.v1_imports.recover_import_jobs", "schedule": 30},
     "recover-instagram-ingress": {
         "task": "app.workers.instagram_ingress.recover_instagram_ingress", "schedule": 30,
     },

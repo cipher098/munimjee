@@ -23,11 +23,11 @@ async def onboarding_view(db, actor, business_id, *, available_actions=frozenset
          "reason": "Business details saved." if profile_ready else "Confirm the boutique details used by your team.", "action_url": "#profile"},
         {"id": "catalogue", "label": "Reviewed catalogue", "status": "action_required",
          "reason": f"{count} reviewed product snapshots and {sku_count} active SKUs. Current allocation and activation must be checked." if count else "Add and review your products before activating selling.",
-         "action_url": "/v1/catalogue"},
+         "action_url": f"/v1/businesses/{business_id}/catalogue"},
         {"id": "channels", "label": "Instagram and WhatsApp", "status": "pending_external",
-         "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.", "action_url": "/v1/channels"},
+         "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.", "action_url": f"/v1/businesses/{business_id}/channels"},
         {"id": "storefront", "label": "Storefront and checkout", "status": "action_required",
-         "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.", "action_url": "/v1/catalogue"},
+         "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.", "action_url": f"/v1/businesses/{business_id}/catalogue"},
     ]
     for step in steps:
         if step["action_url"] and step["action_url"].startswith("/") and step["action_url"] not in available_actions:

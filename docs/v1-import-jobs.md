@@ -1,7 +1,20 @@
 # D20 durable import jobs and review
 
-Status: bounded implementation awaiting shared registration and actual migrated
-database verification. The package provides real SQLAlchemy models, transactional
+Status: the local integrator has registered the authenticated API/models and
+applied static migration `0046_v1_import_jobs` after the actual 0043→0044→0045
+chain on disposable PostgreSQL 16. Source-foundation limits below remain explicit.
+
+Integration verification: 194 import/domain/startup checks passed, including all
+nine database cases previously pending on the remote host. The actual application
+adds four native composition/worker checks: session-bound CSRF, staff/tenant
+permissions, private no-store responses, enqueue/recovery/review persistence,
+4400-digit upload Content-Length rejection, and bounded worker-loop shutdown.
+No source-fetch or provider transport was live. Background polling is registered
+every 30 seconds but `V1_IMPORTS_ENABLED=false` by default; pending rows remain
+durable until explicitly enabled. A seller UI and approved catalogue allocation
+bridge remain incomplete.
+
+Original remote implementation boundary: The package provides real SQLAlchemy models, transactional
 services, authenticated-router factory, polling runner, pinned HTTPS transport,
 literal website extraction and original-byte upload storage. This is not a
 released import flow or a completed V03/V04 feature. The worker makes no publish,

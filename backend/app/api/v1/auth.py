@@ -122,7 +122,7 @@ async def update_profile(business_id: UUID, body: ProfileInput, actor: Actor = D
 
 @router.get("/businesses/{business_id}/onboarding")
 async def onboarding(business_id: UUID, request: Request, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
-    routes = {getattr(route, "path", "") for route in request.app.routes}
+    routes = {getattr(route, "path", "").replace("{business_id}", str(business_id)) for route in request.app.routes}
     return await onboarding_view(db, actor, business_id, available_actions=routes)
 
 
