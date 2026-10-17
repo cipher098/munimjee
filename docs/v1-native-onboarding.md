@@ -49,6 +49,10 @@ calls. Tests reset only `munimjee_test_auth_wave2` while holding its advisory le
 
 - 93 focused auth/identity/legacy commerce safeguards checks passed; the final
   route/cache/link update was followed by all 12 HTTP onboarding checks passing.
+  An additional retained-ORM-context concurrency regression passes after explicit
+  locked-row refresh; the ordinary route already released its clean weak refs.
+  Without refresh, deliberately retained contexts reproduce two successful saves;
+  with refresh, one succeeds and the other returns 409.
 - 12 real Chromium assertions pass against the actual served app and migrated DB:
   desktop/mobile signup, profile persistence and resumed login, stale-save conflict,
   CSRF denial, separate-browser viewer invitation, role-limited controls, logout

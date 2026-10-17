@@ -72,7 +72,8 @@ async def signup(db, body: SignupInput) -> User:
 
 async def save_profile(db, actor: Actor, business_id: UUID, body: ProfileInput) -> Business:
     await require_business_access(db, actor, business_id, "business.write")
-    business = await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
+    business = await db.scalar(select(Business).where(Business.id == business_id).with_for_update()
+        .execution_options(populate_existing=True))
     if business.profile_version != body.expected_version:
         raise HTTPException(status_code=409, detail="Business details changed; refresh before saving")
     business.name = body.name
