@@ -8,7 +8,7 @@ from app.config import settings
 _RUNTIME = (
     "styles.css", "live.css", "live-entry.js", "live-app.js", "live-api.js",
     "canonical-contract.js", "checkout-attempt.js", "order-status.js",
-    "components.js", "commerce.js", "theme-config.js",
+    "components.js", "commerce.js", "theme-config.js", "payment-handoff.js",
 )
 
 

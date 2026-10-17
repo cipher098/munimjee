@@ -36,6 +36,8 @@ from app.api.v1.catalogue_workspace import router as v1_catalogue_workspace_rout
 from app.api.v1.channel_operator import router as v1_channel_router
 from app.api.v1.imports import create_router as create_v1_import_router
 from app.api.v1.import_catalogue import router as v1_import_catalogue_router
+from app.api.v1.checkout_sessions import router as v1_checkout_sessions_router, configuration_router as v1_payment_configuration_router
+from app.api.v1.parcel_tracking import router as v1_parcel_router
 from app.api.v1.session import require_v1_mutation
 from app.api.v1.storefront_bootstrap import install_storefront
 
@@ -87,6 +89,9 @@ app.include_router(v1_catalogue_workspace_router)
 app.include_router(v1_channel_router)
 app.include_router(create_v1_import_router(require_v1_mutation))
 app.include_router(v1_import_catalogue_router)
+app.include_router(v1_checkout_sessions_router)
+app.include_router(v1_payment_configuration_router)
+app.include_router(v1_parcel_router)
 install_storefront(app)
 
 

@@ -69,3 +69,6 @@ __all__ += ["ImportAsset", "ImportJob", "ImportDraft", "ImportAudit"]
 
 from app.models.import_catalogue import ImportCatalogueBridge
 __all__ += ["ImportCatalogueBridge"]
+
+from app.models.parcel_tracking import ParcelConnector, OrderParcelLink, ParcelObservation, ParcelNotification, ParcelAudit
+__all__ += ["ParcelConnector", "OrderParcelLink", "ParcelObservation", "ParcelNotification", "ParcelAudit"]

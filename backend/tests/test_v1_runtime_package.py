@@ -37,7 +37,8 @@ def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_p
         path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('SYNTHETIC-DO-NOT-PACKAGE-SENTINEL')
     stage(source)
     output=tmp_path/'context';manifest=package.create_context(source,output)
-    assert len(list((output/'storefront-src').iterdir()))==11
+    assert len(list((output/'storefront-src').iterdir()))==12
+    assert (output/'storefront-src/payment-handoff.js').is_file()
     assert (output/'backend/alembic/versions/0046.py').is_file()
     assert manifest['excluded_dev_requirements']==['pytest','pytest-asyncio','vcrpy']
     assert (output/'requirements.txt').read_text()=='fastapi==0.111.0\n'

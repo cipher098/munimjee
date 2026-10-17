@@ -178,7 +178,8 @@ async def published_store(db, slug, lock=False, published=True):
 async def storefront(slug: str, db: AsyncSession = Depends(get_db)):
     await published_store(db, slug)
     data = await legacy.public_store(slug, db)
-    data["payment_options"] = await gateway.payment_options(slug, db)
+    from app.services.checkout_sessions import public_payment_options
+    data["payment_options"] = await public_payment_options(slug, db)
     policy = await db.get(CatalogueStorePolicy, (await legacy.get_public_store(db, slug)).seller_id)
     data["checkout_enabled"] = bool(policy and policy.checkout_enabled)
     data["contract_version"] = "storefront.v1"
@@ -287,7 +288,9 @@ async def reconcile_payment(business_id: UUID, order_id: UUID,
 async def order_detail(business_id: UUID, order_id: UUID,
         actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "orders.read")
-    return await legacy.order_detail(order_id, str(business_id), db)
+    data = await legacy.order_detail(order_id, str(business_id), db)
+    return {**data, "parcel_url": f"/v1/businesses/{business_id}/orders/{order_id}/parcel"
+            if settings.V1_PARCEL_ENABLED else None}
 
 
 @router.post("/businesses/{business_id}/orders/{order_id}/collect-cod")

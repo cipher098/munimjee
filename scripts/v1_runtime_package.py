@@ -15,9 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 STOREFRONT = (
     'styles.css', 'live.css', 'live-entry.js', 'live-app.js', 'live-api.js',
     'canonical-contract.js', 'checkout-attempt.js', 'order-status.js',
-    'components.js', 'commerce.js', 'theme-config.js',
+    'components.js', 'commerce.js', 'theme-config.js', 'payment-handoff.js',
 )
 STATIC = frozenset((
+    'parcel_tracking.html', 'parcel_tracking.js', 'parcel_tracking.css', 'parcel_scanner.js',
+    'parcel_barcode_reader.js', 'parcel_barcode_result.js', 'parcel_label_courier.js',
+    'parcel_scanner_LICENSE.txt', 'parcel_zxing_reader.wasm',
     'admin.html', 'catalogue_workspace.css', 'catalogue_workspace.html', 'catalogue_workspace.js',
     'categories.html', 'channel_operator.css', 'channel_operator.html', 'channel_operator.js',
     'commerce.css', 'commerce.html', 'commerce.js', 'dashboard.html', 'dashboard_login.html',

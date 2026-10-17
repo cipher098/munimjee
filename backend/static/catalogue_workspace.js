@@ -253,6 +253,8 @@
     if(data.tracking_number)box.append(el('p',`${data.carrier||'Carrier'} · ${data.tracking_number}`));
     if(data.note)box.append(el('p','Customer note: '+data.note));
     const form=el('form'),error=el('p',undefined,'error');error.setAttribute('role','alert');const actions=el('div',undefined,'order-actions');form.append(actions,error);box.append(form);
+    const parcelPath=`/v1/businesses/${businessId}/orders/${id}/parcel`;
+    if(data.parcel_url===parcelPath){const link=el('a','Link or view parcel','button');link.href=parcelPath;actions.append(link);}
     const next={pending:'confirmed',confirmed:'packed',packed:'shipped',shipped:'delivered'}[data.fulfillment_status];
     if(can('orders.write')){
       let carrier,tracking,url;

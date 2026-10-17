@@ -42,11 +42,14 @@ async def deliver_one(message_id, session_factory=worker_session):
                 # Refresh approval immediately before send; stale approvals never authorize sending.
                 await service.sync_templates(db,account)
                 template = await db.scalar(select(WhatsAppTemplate).where(WhatsAppTemplate.seller_id == seller_id,WhatsAppTemplate.name == message.payload['name'],WhatsAppTemplate.language == message.payload['language']))
-                if message.idempotency_key.startswith('order:') and (not template or template.category != 'UTILITY'):
+                if message.idempotency_key.startswith(('order:', 'parcel:')) and (not template or template.category != 'UTILITY'):
                     raise HTTPException(409,'Order updates require an approved utility template')
                 service.check_template(template,contact,message.payload.get('parameters',[]))
             elif not service.window_open(contact):
                 raise HTTPException(409,'The 24-hour reply window expired before delivery')
+            if message.idempotency_key.startswith('parcel:'):
+                from app.services.parcel_tracking import revalidate_notification
+                await revalidate_notification(db, message, contact)
             provider_id = await provider.send(account,contact,message)
             message.provider_message_id, message.status, message.error = provider_id,'accepted',None
         except provider.SendUncertain as error:

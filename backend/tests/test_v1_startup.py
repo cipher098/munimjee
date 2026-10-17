@@ -13,7 +13,8 @@ def test_all_foundation_models_are_registered():
             "catalogue_activations", "catalogue_creations", "sku_reservations", "sku_payment_attempts", "channel_operations",
             "channel_connection_states", "channel_oauth_attempts",
             "v1_import_assets", "v1_import_jobs", "v1_import_drafts", "v1_import_audits",
-            "import_catalogue_bridges"} <= set(Base.metadata.tables)
+            "import_catalogue_bridges", "v1_parcel_connectors", "v1_order_parcel_links",
+            "v1_parcel_observations", "v1_parcel_notifications", "v1_parcel_audits"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -42,7 +43,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0047_v1_import_catalogue_bridge"]
+    assert scripts.get_heads() == ["0048_v1_parcel_tracking"]
+    assert scripts.get_revision("0048_v1_parcel_tracking").down_revision == "0047_v1_import_catalogue_bridge"
     assert scripts.get_revision("0047_v1_import_catalogue_bridge").down_revision == "0046_v1_import_jobs"
     assert scripts.get_revision("0046_v1_import_jobs").down_revision == "0045_v1_channel_operator"
     assert scripts.get_revision("0045_v1_channel_operator").down_revision == "0044_v1_checkout"
@@ -51,3 +53,14 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     assert scripts.get_revision("0042_instagram_ingress").down_revision == "0041_v1_catalogue"
     assert scripts.get_revision("0041_v1_catalogue").down_revision == "0040_v1_identity"
     assert scripts.get_revision("0040_v1_identity").down_revision == "0039"
+
+
+def test_parcel_recovery_is_registered_and_default_off():
+    from app.workers.celery_app import celery_app
+    from app.workers.v1_parcels import recover_parcels
+    from app.config import settings
+    assert not settings.V1_PARCEL_ENABLED
+    assert recover_parcels() == 0
+    assert 'app.workers.v1_parcels' in celery_app.conf.include
+    assert any(item['task'] == 'app.workers.v1_parcels.recover_parcels'
+               and item['schedule'] == 30 for item in celery_app.conf.beat_schedule.values())
