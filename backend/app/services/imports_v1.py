@@ -16,13 +16,14 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from app.models.identity import Business
+from app.models.identity import Business, Membership, User
 from app.models.imports_v1 import ImportAsset, ImportAudit, ImportDraft, ImportJob
+from app.models.seller import Seller
 from app.schemas.imports_v1 import (
     CandidateReviewWrite, ImportCandidateRead, ImportJobCreate, ImportJobRead,
     JobMutation, UploadCreate, UploadRead,
 )
-from app.services.identity import Actor, require_business_access
+from app.services.identity import Actor, capabilities_for, require_business_access
 from app.v1.imports import (
     CandidateState, DraftFacts, ImportCandidate, ImportReviewError, ReviewDecision,
     SellerOverride, apply_overrides, approve, begin_review, confirm_facts,
@@ -48,13 +49,44 @@ def digest(value) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode()).hexdigest()
 
 
+@dataclass(frozen=True)
+class AccessSnapshot:
+    role: str
+    instagram_page_id: str | None
+
+
+async def _fresh_access(db, actor, business_id, capability):
+    """Read authorization scalars from PostgreSQL, never ORM-cached objects.
+
+    No autoflush/expire/populate operation may publish or overwrite unrelated
+    dirty identity state while obtaining this committed authorization snapshot.
+    Native-session validity remains the shared request dependency's authority.
+    """
+    query = select(Membership.role, Seller.instagram_page_id).select_from(User).join(
+        Membership, Membership.user_id == User.id).join(
+        Business, Business.id == Membership.business_id).join(
+        Seller, Seller.id == Business.id).where(
+        User.id == actor.user_id, User.is_active.is_(True), User.revoked_at.is_(None),
+        Business.id == business_id, Business.is_active.is_(True), Seller.is_active.is_(True),
+        Membership.is_active.is_(True), Membership.revoked_at.is_(None),
+    ).execution_options(autoflush=False)
+    row = (await db.execute(query)).one_or_none()
+    if row is None:
+        raise HTTPException(404, "Business not found")
+    if capability not in capabilities_for(row.role):
+        raise HTTPException(403, "Capability required")
+    return AccessSnapshot(row.role, row.instagram_page_id)
+
+
 async def _access(db, actor, business_id, *, write=False, lock=False):
-    access = await require_business_access(db, actor, business_id, "catalogue.write" if write else "catalogue.read")
-    if lock:
-        await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
-        # A concurrent revocation may have committed while this lock waited.
-        access = await require_business_access(db, actor, business_id, "catalogue.write" if write else "catalogue.read")
-    return access
+    capability = "catalogue.write" if write else "catalogue.read"
+    with db.no_autoflush:
+        await require_business_access(db, actor, business_id, capability)
+        if lock:
+            await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
+        # A concurrent revocation, downgrade or linked-account change may have
+        # committed while waiting; scalar projections bypass the identity map.
+        return await _fresh_access(db, actor, business_id, capability)
 
 
 async def _job(db, business_id, job_id, *, lock=False):
@@ -136,7 +168,7 @@ async def create_job(db, actor, business_id, payload: ImportJobCreate):
     if payload.source_kind == "website":
         source["url"] = payload.source_url
     elif payload.source_kind == "instagram":
-        account = access.seller.instagram_page_id
+        account = access.instagram_page_id
         if not account:
             raise ImportConflict("Connected Instagram account required")
         source.update(media_id=payload.media_id, account_id=account)
@@ -281,7 +313,7 @@ async def claim_job(db, business_id, job_id) -> JobClaim | None:
         _fail(job, "authorization_revoked")
         await db.flush()
         return None
-    if job.source["kind"] == "instagram" and access.seller.instagram_page_id != job.source["account_id"]:
+    if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
         _fail(job, "source_connection_changed")
         await db.flush()
         return None
@@ -352,7 +384,7 @@ async def check_claim(db, claim: JobClaim):
         _fail(job, "authorization_revoked")
         await db.flush()
         return False
-    if job.source["kind"] == "instagram" and access.seller.instagram_page_id != job.source["account_id"]:
+    if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
         _fail(job, "source_connection_changed")
         await db.flush()
         return False
@@ -366,7 +398,7 @@ async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
         return False  # Cancellation or a newer attempt fences late results.
     try:
         access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
-        if job.source["kind"] == "instagram" and access.seller.instagram_page_id != job.source["account_id"]:
+        if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
             error_code = "source_connection_changed"
     except HTTPException:
         error_code = "authorization_revoked"
