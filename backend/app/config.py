@@ -4,6 +4,8 @@ from typing import List
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
+    V1_AUTH_ENABLED: bool = False
+    V1_ENFORCE_LEGACY_ACCESS: bool = False
     SECRET_KEY: str
     CHANNEL_ENCRYPTION_KEY: str = ""  # Fernet key for per-seller messaging secrets
     WHATSAPP_WEBHOOK_VERIFY_TOKEN: str = ""

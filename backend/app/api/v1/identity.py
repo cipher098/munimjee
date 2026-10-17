@@ -49,8 +49,12 @@ def decode_actor_credentials(request: Request) -> tuple[str, UUID]:
 async def current_actor(request: Request, db: AsyncSession = Depends(get_db)) -> Actor:
     kind, subject = decode_actor_credentials(request)
     if kind == "legacy_owner":
+        from app.services.auth_sessions import enforce_legacy_owner_access, request_auth_token
+        claims = jwt.decode(request_auth_token(request), settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        await enforce_legacy_owner_access(db, subject, claims)
         return await resolve_legacy_owner(db, subject)
-    return await resolve_user_actor(db, subject, "v1_user")
+    from app.services.auth_sessions import native_session, request_auth_token
+    return (await native_session(db, request_auth_token(request))).actor
 
 
 def business_view(access: BusinessAccess) -> BusinessView:
