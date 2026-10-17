@@ -1,0 +1,147 @@
+{
+  "$defs": {
+    "SKUWrite": {
+      "additionalProperties": false,
+      "properties": {
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "object"
+        },
+        "price_minor": {
+          "maximum": 2000000000,
+          "minimum": 0,
+          "title": "Price Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "const": "INR",
+          "enum": [
+            "INR"
+          ],
+          "title": "Currency",
+          "type": "string"
+        },
+        "stock_available": {
+          "anyOf": [
+            {
+              "maximum": 2000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stock Available"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "sku_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sku Id"
+        },
+        "legacy_variant_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legacy Variant Index"
+        }
+      },
+      "required": [
+        "price_minor",
+        "currency",
+        "stock_available",
+        "active"
+      ],
+      "title": "SKUWrite",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "seller_reviewed": {
+      "const": true,
+      "enum": [
+        true
+      ],
+      "title": "Seller Reviewed",
+      "type": "boolean"
+    },
+    "idempotency_key": {
+      "format": "uuid",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "maxLength": 10000,
+      "title": "Description",
+      "type": "string"
+    },
+    "category_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Category Id"
+    },
+    "photo_urls": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Photo Urls",
+      "type": "array"
+    },
+    "skus": {
+      "items": {
+        "$ref": "#/$defs/SKUWrite"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Skus",
+      "type": "array"
+    }
+  },
+  "required": [
+    "seller_reviewed",
+    "idempotency_key",
+    "name",
+    "skus"
+  ],
+  "title": "ProductCreate",
+  "type": "object"
+}

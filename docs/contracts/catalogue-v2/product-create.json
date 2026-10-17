@@ -1,0 +1,23 @@
+{
+  "seller_reviewed": true,
+  "idempotency_key": "55555555-5555-4555-8555-555555555555",
+  "name": "Cotton kurta",
+  "description": "Seller approved kurta",
+  "category_id": null,
+  "photo_urls": [
+    "https://example.com/kurta.jpg"
+  ],
+  "skus": [
+    {
+      "options": {
+        "Size": "S"
+      },
+      "price_minor": 129900,
+      "currency": "INR",
+      "stock_available": 2,
+      "active": true,
+      "sku_id": null,
+      "legacy_variant_index": null
+    }
+  ]
+}

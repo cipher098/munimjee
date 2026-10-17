@@ -1,0 +1,164 @@
+{
+  "$defs": {
+    "AddressInput": {
+      "additionalProperties": false,
+      "properties": {
+        "line1": {
+          "maxLength": 200,
+          "minLength": 3,
+          "title": "Line1",
+          "type": "string"
+        },
+        "line2": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Line2",
+          "type": "string"
+        },
+        "city": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "City",
+          "type": "string"
+        },
+        "state": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "State",
+          "type": "string"
+        },
+        "postal_code": {
+          "pattern": "^[1-9][0-9]{5}$",
+          "title": "Postal Code",
+          "type": "string"
+        },
+        "country": {
+          "const": "IN",
+          "default": "IN",
+          "enum": [
+            "IN"
+          ],
+          "title": "Country",
+          "type": "string"
+        }
+      },
+      "required": [
+        "line1",
+        "city",
+        "state",
+        "postal_code"
+      ],
+      "title": "AddressInput",
+      "type": "object"
+    },
+    "CheckoutItem": {
+      "additionalProperties": false,
+      "properties": {
+        "sku_id": {
+          "format": "uuid",
+          "title": "Sku Id",
+          "type": "string"
+        },
+        "quantity": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Quantity",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sku_id",
+        "quantity"
+      ],
+      "title": "CheckoutItem",
+      "type": "object"
+    },
+    "CustomerInput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Name",
+          "type": "string"
+        },
+        "phone": {
+          "maxLength": 20,
+          "minLength": 10,
+          "title": "Phone",
+          "type": "string"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "maxLength": 254,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Email"
+        }
+      },
+      "required": [
+        "name",
+        "phone"
+      ],
+      "title": "CustomerInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "idempotency_key": {
+      "format": "uuid",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "customer": {
+      "$ref": "#/$defs/CustomerInput"
+    },
+    "address": {
+      "$ref": "#/$defs/AddressInput"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CheckoutItem"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Items",
+      "type": "array"
+    },
+    "note": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Note",
+      "type": "string"
+    },
+    "payment_method": {
+      "default": "cod",
+      "enum": [
+        "cod",
+        "razorpay"
+      ],
+      "title": "Payment Method",
+      "type": "string"
+    },
+    "whatsapp_updates_opt_in": {
+      "default": false,
+      "title": "Whatsapp Updates Opt In",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "idempotency_key",
+    "customer",
+    "address",
+    "items"
+  ],
+  "title": "CheckoutWrite",
+  "type": "object"
+}

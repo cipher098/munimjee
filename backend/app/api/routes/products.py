@@ -264,10 +264,14 @@ async def update_product(
     db: AsyncSession = Depends(get_db),
 ):
     """Update any fields of a product. Only supplied fields are changed."""
-    result = await db.execute(select(Product).where(Product.id == product_id, Product.seller_id == seller_id))
+    result = await db.execute(select(Product).where(Product.id == product_id, Product.seller_id == seller_id).with_for_update())
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    from app.services.checkout_v1 import is_product_activated
+    if await is_product_activated(db, product.seller_id, product.id):
+        raise HTTPException(status_code=409, detail="Use V1 catalogue management for this activated SKU product")
 
     await _validate_category(category_id, seller_id, db)
     if clear_stock_tracking and stock_quantity != -1:

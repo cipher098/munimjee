@@ -1,0 +1,25 @@
+{
+  "idempotency_key": "44444444-4444-4444-8444-444444444444",
+  "customer": {
+    "name": "Synthetic Buyer",
+    "phone": "+919876543210",
+    "email": "buyer@example.invalid"
+  },
+  "address": {
+    "line1": "12 Test Road",
+    "line2": "",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "postal_code": "560001",
+    "country": "IN"
+  },
+  "items": [
+    {
+      "sku_id": "33333333-3333-4333-8333-333333333333",
+      "quantity": 1
+    }
+  ],
+  "note": "",
+  "payment_method": "cod",
+  "whatsapp_updates_opt_in": false
+}

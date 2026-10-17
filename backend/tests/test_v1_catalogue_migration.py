@@ -40,7 +40,10 @@ def test_migration_schema_matches_models_and_enforces_tenant_pair(monkeypatch):
         assert {str(c.sqltext) for c in migrated.constraints if isinstance(c, sa.CheckConstraint)} == {
             str(c.sqltext) for c in orm.constraints if isinstance(c, sa.CheckConstraint)}
         assert {tuple(c.columns.keys()) for c in migrated.constraints if isinstance(c, sa.UniqueConstraint)} == {
-            tuple(c.columns.keys()) for c in orm.constraints if isinstance(c, sa.UniqueConstraint)}
+            # 0044 adds a composite key for real order reservation FKs. This
+            # comparison covers the original 0041 table shape only.
+            tuple(c.columns.keys()) for c in orm.constraints if isinstance(c, sa.UniqueConstraint)
+            and c.name != "catalogue_sku_tenant_id"}
         pairs = {tuple((e.parent.name, e.target_fullname) for e in fk.elements) for fk in migrated.foreign_key_constraints}
         assert (("business_id", "products.seller_id"), ("product_id", "products.id")) in pairs
         assert (("business_id", "businesses.id"),) in pairs

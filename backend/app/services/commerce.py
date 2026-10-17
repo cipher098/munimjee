@@ -175,6 +175,8 @@ async def create_order(db, store, payload):
     by_id = {p.id: p for p in products}
     if len(by_id) != len(ids):
         raise HTTPException(404, 'A product is no longer available')
+    from app.services.checkout_v1 import require_legacy_products
+    await require_legacy_products(db, store.seller_id, ids)
     quantities = {}
     snapshots = []
     seen = set()
@@ -230,6 +232,12 @@ async def release_stock(db, order):
     """Caller must lock the order. Repeated cancellation/expiry restores stock once."""
     if order.stock_released:
         return
+    engines = {item.get('_inventory_engine', 'legacy') for item in order.items}
+    if engines != {'legacy'}:
+        if engines != {'sku.v1'}:
+            raise HTTPException(409, 'Order inventory requires reconciliation')
+        from app.services.checkout_v1 import release_sku_stock
+        return await release_sku_stock(db, order)
     quantities = {}
     for item in order.items:
         if item.get('_stock_reserved'):

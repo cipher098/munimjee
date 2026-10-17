@@ -206,6 +206,9 @@ class FakeDB:
         self.check_query(query)
         return next(self.scalar_results)
 
+    async def get(self, model, identity):
+        return None
+
     async def scalars(self, query):
         self.check_query(query)
         return SimpleNamespace(all=lambda: self.sku_results)

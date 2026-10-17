@@ -65,9 +65,20 @@ def upgrade():
       RETURN NEW;
     END; $$ LANGUAGE plpgsql""")
     op.execute("CREATE TRIGGER catalogue_legacy_inventory_guard BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION catalogue_protect_legacy_inventory()")
+    op.execute("""CREATE FUNCTION catalogue_protect_order_snapshot() RETURNS trigger AS $$
+    BEGIN
+      IF OLD.items @> '[{"_inventory_engine":"sku.v1"}]'::jsonb
+         AND NEW.items IS DISTINCT FROM OLD.items THEN
+        RAISE EXCEPTION 'SKU order line snapshots are immutable' USING ERRCODE='23514';
+      END IF;
+      RETURN NEW;
+    END; $$ LANGUAGE plpgsql""")
+    op.execute("CREATE TRIGGER catalogue_order_snapshot_guard BEFORE UPDATE ON commerce_orders FOR EACH ROW EXECUTE FUNCTION catalogue_protect_order_snapshot()")
 
 
 def downgrade():
+    op.execute("DROP TRIGGER catalogue_order_snapshot_guard ON commerce_orders")
+    op.execute("DROP FUNCTION catalogue_protect_order_snapshot()")
     op.execute("DROP TRIGGER catalogue_legacy_inventory_guard ON products")
     op.execute("DROP FUNCTION catalogue_protect_legacy_inventory()")
     for name in ("sku_payment_attempts", "sku_reservations", "catalogue_creations", "catalogue_activations", "catalogue_store_policies"):
