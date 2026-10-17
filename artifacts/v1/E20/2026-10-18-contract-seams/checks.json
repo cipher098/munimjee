@@ -1,0 +1,61 @@
+{
+  "source_commit": "160312f4642452669b609bd7fd0c1d8617c36b2b",
+  "browser_js_source_commit": "9f775dd8b71066e822ab67da90e5e1fda0cb362c",
+  "base_commit": "7de7cd68ce700e089bcf31e357aeebb08ea08299",
+  "recorded_at_utc": "2026-10-17T18:40:14.478066+00:00",
+  "checks": [
+    {
+      "command": "npm --prefix frontend/storefront test",
+      "result": "passed",
+      "tests": 20,
+      "skipped": 0,
+      "scope": "10 preview plus 10 operational intent/adapter pure checks"
+    },
+    {
+      "command": "npm --prefix frontend/storefront run check",
+      "result": "passed",
+      "scope": "JavaScript syntax"
+    },
+    {
+      "command": "npm --prefix frontend/storefront run test:browser",
+      "result": "passed",
+      "tests": 16,
+      "skipped": 0,
+      "duration_seconds": 20.2,
+      "browser": "cached Chromium1243; Playwright1.58.2",
+      "port": 4318,
+      "scope": "8 fixture preview plus8 test-only mockHTTP live journeys"
+    },
+    {
+      "command": "PYTHONPATH=backend python -m pytest backend/tests/test_v1_storefront_rendering.py -q",
+      "result": "passed",
+      "tests": 25,
+      "skipped": 0,
+      "duration_seconds": 0.14,
+      "scope": "Injected synthetic provider, no DB; Starlette anyio deprecation warning"
+    }
+  ],
+  "pending": [
+    "Exact catalogue.v2 public/read/checkout/error schemas and canonical provider are upstream pending; canonicalContract remains null",
+    "Actual database activation, writer integration, protected order status and provider payment/physical device evidence are not completed",
+    "Docker info recheck timed out after8seconds; no restart, DB setup or unrelated runtime changes attempted"
+  ],
+  "safety": {
+    "production_actions": false,
+    "real_provider_calls": false,
+    "paid_transactions": false,
+    "old_preview_port4317_preserved": true
+  },
+  "screenshots": [
+    {
+      "path": "mock-http-mobile-checkout.png",
+      "sha256": "791fffc5ffdd94a1c07c1f33cc60206ddffae96a3ab9fdbc776d052703875254",
+      "scope": "Synthetic injected mock-HTTP journey, not real catalogue/payment integration"
+    },
+    {
+      "path": "mock-http-desktop-pending-confirmation.png",
+      "sha256": "70ddcab12f16539c024c78948171412cdef948d9fb33ae46d64c43ffed0a8552",
+      "scope": "Synthetic injected mock-HTTP journey, not real catalogue/payment integration"
+    }
+  ]
+}
