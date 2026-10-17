@@ -346,3 +346,14 @@ async def test_reauthorization_after_wait_rolls_back_on_revoked_session(setup):
     async with factory() as db:
         assert (await db.get(ImportDraft,candidate.id)).revision==1
         assert not await db.scalar(select(Product.id).where(Product.seller_id==bid))
+
+
+@pytest.mark.asyncio
+async def test_preview_exposes_disabled_creation_without_changing_unknown_facts(setup,monkeypatch):
+    factory,actor,bid,candidate=setup
+    monkeypatch.setattr(settings,'V1_IMPORT_BRIDGE_ENABLED',False)
+    async with factory() as db:
+        result=await service.preview(db,actor,bid,candidate.id)
+        assert result.state=='unsupported'
+        assert 'Import catalogue creation is not enabled' in result.issues
+        assert result.facts['stock']==4

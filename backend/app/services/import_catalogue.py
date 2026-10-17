@@ -84,6 +84,8 @@ async def preview(db, actor, business_id, candidate_id):
         ImportCatalogueBridge.business_id == business_id, ImportCatalogueBridge.candidate_id == candidate_id))
     facts = candidate.effective_facts()
     issues, allocations = [], []
+    if not settings.V1_IMPORT_BRIDGE_ENABLED:
+        issues.append('Import catalogue creation is not enabled')
     try:
         options = combinations(facts)
         allocations = [dict(options=item, stock_available=facts.stock if len(options) == 1 else None, active=True)
