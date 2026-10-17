@@ -20,10 +20,11 @@ This is a local transport seam, not deployed or provider-HTTP proof.
 - 10 separate Node SQLite/HMAC/queue checks pass, including restart-persistent
   command/nonce identities, tampered signatures/body/scopes/tenant, unowned legacy
   duplicate denial and private event-field projection.
-- 17 actual Chromium scenarios pass through production router registration:
+- 18 actual Chromium scenarios pass through production router registration:
   native signup, reviewed SKU activation/published COD order, View order → parcel
   page, real local ZXing decoding of synthetic canvas camera frames, ambiguous
-  courier manual choice, explicit label check before enrollment, real two-service
+  courier manual choice, delayed preview with focus/form mutation retaining only
+  the returned signed courier/AWB/order snapshot, explicit label check before enrollment, real two-service
   link and refreshed history, no-consent tracking, unchanged payment/dispatch,
   mobile/reload, camera-denied manual entry, postcommit response loss/reload/same
   command, wrong-command ACK retention, typed invalid-preview-only reset, general409 same-command recovery, and real same-user login replacement /
