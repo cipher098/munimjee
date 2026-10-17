@@ -45,3 +45,12 @@ catalogue_workspace.html/css, parcel_tracking.html/css and these captures: no
 incumbent design-system files were rewritten. Palette retains green #2e5141,
 ink #27302d, paper #f6f7f3; existing system type, white panels, quiet rules and
 44px controls continue. No new visual world or theme persistence is claimed.
+
+Final independent integrator source/render verdict: privacy fence and delayed
+courier-preview findings resolved in df5fc7e +8914fb0. All four required captures
+were inspected; no remaining bounded layout/UI blocker was found. The integrator
+integrated these as7f79245/f9bb87f and schedules its own two-service DB rerun on its
+separate lane. This is independent integrator review; additional fresh-agent
+capacity was unavailable. Author-verified application source is8914fb0; this
+review-record update changes documentation only. Cross-host/provider/physical
+camera gates above remain unchanged.
