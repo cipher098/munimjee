@@ -168,6 +168,7 @@ async def test_checkout_rejects_customer_price_tenant_and_invalid_quantities(api
 
 async def online_order(api, monkeypatch):
     client, factory = api
+    monkeypatch.setattr(settings, "V1_PUBLIC_PAYMENTS_ENABLED", True)
     monkeypatch.setattr(settings, "PAYMENT_ENCRYPTION_KEY", Fernet.generate_key().decode())
     bid, _, ids = await seed(factory)
     from app.models.commerce import Storefront

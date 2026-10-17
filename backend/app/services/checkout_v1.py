@@ -236,8 +236,8 @@ async def create_sku_order(db, store, payload):
     if payload.payment_method == "cod" and not store.cod_enabled:
         conflict("Cash on delivery is unavailable")
     if payload.payment_method == "razorpay":
-        from app.services.razorpay_payments import require_gateway
-        await require_gateway(db, store.seller_id)
+        from app.services.checkout_sessions import require_public_gateway
+        await require_public_gateway(db, store.seller_id)
     ids = [item.sku_id for item in payload.items]
     if len(set(ids)) != len(ids):
         raise HTTPException(422, "Combine duplicate SKU quantities")

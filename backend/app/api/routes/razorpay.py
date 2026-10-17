@@ -71,6 +71,10 @@ async def save_settings(
     seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
+    return await update_settings(body, request, seller_id, db)
+
+
+async def update_settings(body, request, seller_id, db, *, verify_connection=True):
     if not body.key_id.startswith(f"rzp_{body.mode}_"):
         raise HTTPException(422, "The key ID does not match the selected mode")
     # Serialize settings writes, including first configuration.
@@ -113,7 +117,7 @@ async def save_settings(
     if body.webhook_secret:
         account.webhook_secret = payments.encrypt(body.webhook_secret)
     # Validate the account before enabling it; a stored key alone is not a connection.
-    if body.enabled:
+    if body.enabled and verify_connection:
         await payments.gateway_request(account, "GET", "orders?count=1")
     await db.commit()
     return settings_json(account, request, seller.id)
@@ -153,7 +157,7 @@ async def payment_options(slug: str, db: AsyncSession = Depends(get_db)):
 
 async def authorized_order(db, slug, order_id, authorization):
     # Customer status/payment survives store unpublishing; capability still required.
-    store = await db.scalar(select(Storefront).where(Storefront.slug == slug))
+    store = await db.scalar(select(Storefront).where(Storefront.slug == slug).with_for_update())
     order = (
         await db.scalar(
             select(CommerceOrder)
@@ -161,6 +165,7 @@ async def authorized_order(db, slug, order_id, authorization):
                 CommerceOrder.id == order_id, CommerceOrder.seller_id == store.seller_id
             )
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if store
         else None
@@ -293,6 +298,8 @@ async def webhook(
             raise ValueError()
     except (ValueError, TypeError, KeyError, AttributeError):
         raise HTTPException(400, "Invalid payment webhook")
+    # Capture may release inventory. Match checkout/expiry: store before order.
+    await db.scalar(select(Storefront.seller_id).where(Storefront.seller_id == seller_id).with_for_update())
     order = await db.scalar(
         select(CommerceOrder)
         .where(
@@ -300,6 +307,7 @@ async def webhook(
             CommerceOrder.gateway_order_id == gateway_id,
         )
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     signing_account = payments.order_account(order, account) if order else account
     if not payments.valid_signature(
@@ -322,10 +330,12 @@ async def reconcile(
     seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
+    await db.scalar(select(Storefront.seller_id).where(Storefront.seller_id == seller_id).with_for_update())
     order = await db.scalar(
         select(CommerceOrder)
         .where(CommerceOrder.id == order_id, CommerceOrder.seller_id == seller_id)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if not order or not order.gateway_order_id:
         raise HTTPException(404, "Online order not found")
