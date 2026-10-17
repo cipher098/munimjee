@@ -67,6 +67,8 @@ def public_product(source: dict) -> dict:
     for source_sku in raw_skus:
         if not isinstance(source_sku,dict):
             raise ValueError('Invalid public SKU')
+        if source_sku.get('product_id') is not None and str(UUID(str(source_sku['product_id'])))!=product_id:
+            raise ValueError('SKU product identity mismatch')
         price = source_sku['price_minor']
         stock = source_sku['stock_available']
         if type(price) is not int or not 0 <= price <= 2_000_000_000 or (stock is not None and (type(stock) is not int or not 0 <= stock <= 2_000_000_000)) or source_sku['currency'] != 'INR' or type(source_sku['active']) is not bool:
@@ -93,7 +95,13 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
     origin = canonical_origin(origin)
     base = f'/stores/{store.slug}'
     products = [public_product(item) for item in store.products]
+    product_ids=[item['product_id'] for item in products]
+    sku_ids=[sku['sku_id'] for item in products for sku in item['skus']]
+    if len(set(product_ids))!=len(product_ids) or len(set(sku_ids))!=len(sku_ids):
+        raise ValueError('Duplicate public catalogue identity')
     categories = [{'category_id': str(UUID(str(item['category_id']))), 'name': str(item['name'])} for item in store.categories]
+    if len({item['category_id'] for item in categories})!=len(categories):
+        raise ValueError('Duplicate public category identity')
     selected = None
     if product_id:
         selected = next((item for item in products if item['product_id'] == str(product_id)), None)

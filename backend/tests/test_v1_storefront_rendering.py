@@ -100,3 +100,18 @@ def test_media_rejects_ambiguous_credentials_query_and_control_urls(url):
 def test_malformed_product_types_fail_instead_of_stringifying_private_objects(field,value):
     product=dict(snapshot().products[0]);product[field]=value
     with pytest.raises(ValueError):public_product(product)
+
+
+def test_duplicate_product_and_sku_identities_fail_closed():
+    product=snapshot().products[0]
+    with pytest.raises(ValueError):render_storefront(snapshot(products=(product,product)),'https://good.test')
+    other={**product,'product_id':'22222222-2222-4222-8222-222222222202','skus':[{**product['skus'][0],'product_id':'22222222-2222-4222-8222-222222222202'}]}
+    with pytest.raises(ValueError):render_storefront(snapshot(products=(product,other)),'https://good.test')
+
+
+def test_sku_product_identity_mismatch_and_duplicate_categories_fail_closed():
+    product=snapshot().products[0]
+    mismatched={**product,'skus':[{**product['skus'][0],'product_id':'22222222-2222-4222-8222-222222222202'}]}
+    with pytest.raises(ValueError):public_product(mismatched)
+    category={'category_id':CATEGORY,'name':'Duplicate'}
+    with pytest.raises(ValueError):render_storefront(snapshot(categories=(category,category)),'https://good.test')
