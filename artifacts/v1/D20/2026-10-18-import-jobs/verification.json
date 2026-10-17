@@ -1,0 +1,58 @@
+{
+  "task": "D20/import jobs wave2",
+  "source_sha": "68f4ba59056b81114740441a0353b591090d5327",
+  "branch": "codex/v1-import-jobs",
+  "environment": "isolated remote CPython3.12.14; P01 test-safety active; no TEST_DATABASE_URL",
+  "command": "PYTHONPATH=backend .venv-imports/bin/python -m pytest backend/tests/test_v1_import_jobs.py backend/tests/test_v1_import_jobs_fetch.py backend/tests/test_v1_import_jobs_db.py backend/tests/test_v1_import_drafts.py -q -ra -p no:cacheprovider",
+  "results": {
+    "passed": 176,
+    "skipped": 3,
+    "warnings": 3,
+    "seconds": 0.46
+  },
+  "skips": [
+    {
+      "test": "test_migrated_concurrent_job_idempotency_and_durable_recovery",
+      "reason": "P01 disposable TEST_DATABASE_URL/TEST_LANE/TEST_DB_RESET missing; import migration registration pending"
+    },
+    {
+      "test": "test_migrated_review_revision_and_reimport_preserve_seller_overrides",
+      "reason": "same actual migration/DB gate"
+    },
+    {
+      "test": "test_migrated_composite_tenant_fk_denies_cross_business_job",
+      "reason": "same actual migration/DB gate"
+    }
+  ],
+  "verified": [
+    "strict source/write contracts",
+    "same-origin redirect and per-hop all-answer DNS validation",
+    "numeric-peer TLS transport implementation with globally bounded unfinished pools",
+    "injected fake fetch/extraction tests only",
+    "streamed upload caps and SHA-stable media identity",
+    "tenant-bound SQL/locking shape with mock session",
+    "job claim/reclaim/attempt/backoff/cancel fencing",
+    "current authorization checks before read/mutation and after tenant-lock wait and before fetch/results",
+    "optimistic idempotent review audit and override-preserving reimports",
+    "router refuses missing mutation dependency and exercises injected deny dependency"
+  ],
+  "not_verified": [
+    "actual migrated import persistence, constraints or concurrency",
+    "production network/TLS/DNS/source retrieval",
+    "provider media ownership/account APIs",
+    "shared native session+CSRF composition",
+    "worker scheduling/discovery registration",
+    "seller browser/UI workflow",
+    "import-to-canonical-catalogue reviewed allocation adapter",
+    "publication or checkout"
+  ],
+  "external_effects": {
+    "live_provider_calls": false,
+    "production_env_or_credentials": false,
+    "database_connections": false,
+    "docker_or_service_restart": false,
+    "production_changes": false
+  },
+  "integration_hooks": "docs/v1-import-jobs.md; create_router(require_v1_mutation); four SQLAlchemy models and proposed post0045 migration DDL; app.v1.imports.runner.drain_jobs(sessions)",
+  "status": "code-verified bounded slice; integration/product/provider gates pending"
+}
