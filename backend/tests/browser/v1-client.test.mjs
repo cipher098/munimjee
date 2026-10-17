@@ -21,12 +21,13 @@ test('null error body produces a recoverable error with its HTTP status',async()
 });
 test('native identity transitions erase private seller drafts and preserve customer checkout recovery',async()=>{
   for(const path of ['/api/v1/auth/login','/api/v1/auth/signup','/api/v1/auth/invitations/accept','/api/v1/auth/logout','/api/v1/auth/logout-all']){
-    const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command'],['checkout:shop','customer-intent']]);
+    const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command'],['munimjee.v1.parcel-link:user:business:order:session','private-parcel-command'],['checkout:shop','customer-intent']]);
     const storage={get length(){return entries.size;},key:index=>[...entries.keys()][index],removeItem:key=>entries.delete(key)};
     const context={window:{sessionStorage:storage},fetch:async()=>({ok:true,json:async()=>({csrf_token:'new-bound-csrf'})})};
     vm.runInNewContext(source,context);
     await context.window.V1.api(path,{method:'POST'});
     assert.equal(entries.has('munimjee.v1.catalogue-draft:user:business'),false,path);
+    assert.equal(entries.has('munimjee.v1.parcel-link:user:business:order:session'),false,path);
     assert.equal(entries.get('checkout:shop'),'customer-intent');
     assert.equal(context.window.V1.csrf,'new-bound-csrf');
   }
