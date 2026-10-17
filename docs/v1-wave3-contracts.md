@@ -45,6 +45,10 @@ may reach only the explicitly hardcoded 127.0.0.1:8155 connector fixture, with
 path/origin checks and redirects forbidden; this does not relax P01 or certify
 production provider networking. Its native browser port is 8156.
 
+New rollout flags `V1_PUBLIC_PAYMENTS_ENABLED`, `V1_IMPORT_BRIDGE_ENABLED` and
+`V1_PARCEL_ENABLED` default false. Private parcel connector configuration defaults
+empty; only explicitly provisioned exact Business/instance/origin bindings exist.
+
 ## Reviewed import-to-catalogue bridge
 
 Existing job/review endpoints remain valid. Import approval alone still does not

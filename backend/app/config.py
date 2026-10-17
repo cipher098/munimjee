@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     V1_AUTH_ENABLED: bool = False
     V1_ENFORCE_LEGACY_ACCESS: bool = False
     V1_STOREFRONT_ENABLED: bool = False
+    V1_PUBLIC_PAYMENTS_ENABLED: bool = False
+    V1_IMPORT_BRIDGE_ENABLED: bool = False
+    V1_PARCEL_ENABLED: bool = False
+    V1_PARCEL_CONNECTORS_JSON: str = ""  # Private, explicitly provisioned per-Business machine bindings.
+    V1_PARCEL_ALLOWED_ORIGINS: List[str] = []
     V1_STOREFRONT_ASSETS_DIR: str = ""  # Packaged runtime JS/CSS directory; empty uses the source checkout.
     SECRET_KEY: str
     CHANNEL_ENCRYPTION_KEY: str = ""  # Fernet key for per-seller messaging secrets
