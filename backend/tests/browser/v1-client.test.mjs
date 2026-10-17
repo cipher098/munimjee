@@ -19,3 +19,33 @@ test('null error body produces a recoverable error with its HTTP status',async()
   vm.runInNewContext(source,context);
   await assert.rejects(context.window.V1.api('/unavailable'),error=>error.status===503 && /try again/.test(error.message));
 });
+test('native identity transitions erase private seller drafts and preserve customer checkout recovery',async()=>{
+  for(const path of ['/api/v1/auth/login','/api/v1/auth/signup','/api/v1/auth/invitations/accept','/api/v1/auth/logout','/api/v1/auth/logout-all']){
+    const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command'],['checkout:shop','customer-intent']]);
+    const storage={get length(){return entries.size;},key:index=>[...entries.keys()][index],removeItem:key=>entries.delete(key)};
+    const context={window:{sessionStorage:storage},fetch:async()=>({ok:true,json:async()=>({csrf_token:'new-bound-csrf'})})};
+    vm.runInNewContext(source,context);
+    await context.window.V1.api(path,{method:'POST'});
+    assert.equal(entries.has('munimjee.v1.catalogue-draft:user:business'),false,path);
+    assert.equal(entries.get('checkout:shop'),'customer-intent');
+    assert.equal(context.window.V1.csrf,'new-bound-csrf');
+  }
+});
+test('expired native identity clears private commands and old CSRF while ordinary reads retain them',async()=>{
+  const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command']]);
+  const responses=[{ok:true,data:{csrf_token:'bound'}},{ok:true,data:null},{ok:false,status:401,data:{}}];
+  const context={window:{sessionStorage:{get length(){return entries.size;},key:index=>[...entries.keys()][index],removeItem:key=>entries.delete(key)}},fetch:async()=>{const r=responses.shift();return {...r,json:async()=>r.data};}};
+  vm.runInNewContext(source,context);
+  await context.window.V1.session();
+  await context.window.V1.api('/api/v1/businesses/own/catalogue/storefront');
+  assert.equal(entries.size,1);
+  await assert.rejects(context.window.V1.session(),error=>error.status===401);
+  assert.equal(entries.size,0);
+  assert.equal(context.window.V1.csrf,null);
+});
+test('restricted storage cannot prevent a successful native logout',async()=>{
+  const window={};Object.defineProperty(window,'sessionStorage',{get(){throw new Error('storage blocked');}});
+  const context={window,fetch:async()=>({ok:true,json:async()=>({logged_out:true})})};
+  vm.runInNewContext(source,context);
+  assert.equal((await context.window.V1.api('/api/v1/auth/logout',{method:'POST'})).logged_out,true);
+});
