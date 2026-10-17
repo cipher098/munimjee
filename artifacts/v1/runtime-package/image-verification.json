@@ -1,0 +1,23 @@
+{
+  "image_id": "sha256:31fb58e1b9d5fb3825fe7dc6bd3ee2aec8d3b5ac72006c44d498316000d8c597",
+  "tag": "munimjee-v1-runtime:local-20261018-c20-530f7e3",
+  "docker_size_bytes": 129634098,
+  "architecture": "arm64",
+  "user": "10001:10001",
+  "source_revision": "530f7e389f54e67fc6bfa9ff90115c4f27fbd9b3",
+  "base_digest": "python@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce",
+  "source_context_files": 233,
+  "smoke_modes": [
+    "default_off_without_canonical_or_assets",
+    "enabled_canonical_runtime",
+    "missing_assets_fail_closed"
+  ],
+  "smoke_network": "none",
+  "smoke_cpu": 1,
+  "smoke_memory": "768m",
+  "smoke_filesystem": "read-only + ephemeral tmpfs",
+  "dns_network_attempts": 0,
+  "database_provider_calls": 0,
+  "smoke_container_removed": true,
+  "package_unit_tests_passed": 7
+}
