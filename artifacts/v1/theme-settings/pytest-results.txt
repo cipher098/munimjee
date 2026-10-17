@@ -1,0 +1,9 @@
+....................sssssssssss.                                         [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:284
+  /Users/user/Documents/ChatGPT/munimjee-wave3-themes/.venv/lib/python3.12/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee-wave3-themes/artifacts/v1/theme-settings/pytest.xml -
+21 passed, 11 skipped, 1 warning in 0.25s
