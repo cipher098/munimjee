@@ -1,0 +1,62 @@
+{
+  "task": "E10 fixture-only storefront foundation",
+  "branch": "codex/v1-storefront-scaffolding",
+  "tested_source_sha": "2330c24d9d4f3d92af3c7708831e0fd3111e3c66",
+  "review_date": "2026-10-17",
+  "timezone": "Asia/Kolkata",
+  "environment": {
+    "host": "Mac mini dev",
+    "node": "24.20.0",
+    "npm": "11.19.0",
+    "playwright": "1.58.2",
+    "browser": "cached Chromium 1243",
+    "browser_workers": 1
+  },
+  "checks": [
+    {
+      "command": "npm run check",
+      "exit_code": 0
+    },
+    {
+      "command": "npm test",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE=<cached Chromium 1243 executable> npm run test:browser",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 15.9
+    },
+    {
+      "command": "git diff e7694ff..HEAD --check",
+      "exit_code": 0
+    }
+  ],
+  "verified_by": "remote coordinator",
+  "browser_coverage": [
+    "All three themes at1440px and390px: browse, variants, sold-out state, stock cap, bag, checkout preview, removal and keyboard focus.",
+    "Additional320px and768px overflow checks with preview controls open.",
+    "Untracked versus unresolved stock, shared theme bag, injection-safe wordmark, illustrated story disclosure.",
+    "No external or non-GET requests, no JavaScript errors observed in journeys."
+  ],
+  "evidence": [
+    "frontend/storefront/design/study.png",
+    "frontend/storefront/design/editorial-desktop.png",
+    "frontend/storefront/design/editorial-mobile.png",
+    "frontend/storefront/design/catalogue-desktop.png",
+    "frontend/storefront/design/catalogue-mobile.png",
+    "frontend/storefront/design/video-desktop.png",
+    "frontend/storefront/design/video-mobile.png"
+  ],
+  "boundaries": [
+    "Fixture-only; exact backend readiness/options DTO shapes pending.",
+    "Real API, canonical SKU checkout, reservations, payment, order confirmation, SEO routes and publication unimplemented.",
+    "Illustrated sample story; no seller video footage or playback.",
+    "Shipping future scope is parcel-desk barcode scan/link existing parcel tracking, not courier booking.",
+    "Preview server loopback4317 only; no production changes or provider sends."
+  ],
+  "note": "Evidence-only followup; tested source SHA identifies reviewed code. Branch head may additionally include this evidence file."
+}
