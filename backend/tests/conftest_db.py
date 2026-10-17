@@ -1,8 +1,4 @@
-"""Fixtures for scenario tests: per-test DB schema + integration-client patches.
-
-Separated from the top-level conftest.py because the existing pure-unit tests
-(test_claude_decide, test_interventions, etc.) don't need any of this and we
-want to keep their boot time at ~0.1s.
+"""Fixtures for scenario tests: migrated disposable schema and fake clients.
 
 To use these fixtures in a test file, add at module top:
 
@@ -16,78 +12,43 @@ import pathlib
 import pytest
 import pytest_asyncio
 import vcr
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
-
-# Touching this module registers every ORM table on Base.metadata.
-import app.models  # noqa: F401
-from app.database import Base
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests.isolated_database import migrated_database
 
 
 CASSETTE_ROOT = pathlib.Path(__file__).parent / "cassettes" / "scenarios"
 
 
-def _test_db_url() -> str:
-    """Test DB URL — same Postgres instance, dedicated `sellerbot_test` database.
-
-    Honours an explicit TEST_DATABASE_URL override (useful for CI). Otherwise
-    swaps the database name on the configured DATABASE_URL so we never write
-    test rows into the dev/prod DB by accident.
-    """
-    override = os.environ.get("TEST_DATABASE_URL")
-    if override:
-        return override
-    from app.config import settings
-    base = settings.DATABASE_URL
-    # postgresql+asyncpg://user:pass@host:port/sellerbot → .../sellerbot_test
-    if "/" in base:
-        head, _, _name = base.rpartition("/")
-        return f"{head}/sellerbot_test"
-    return base
-
-
-async def _ensure_test_db_exists() -> None:
-    """CREATE DATABASE sellerbot_test if missing. Idempotent.
-
-    We connect to the default `postgres` admin DB to issue the CREATE.
-    """
-    from app.config import settings
-    admin_url = settings.DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
-    admin_engine = create_async_engine(admin_url, poolclass=NullPool, isolation_level="AUTOCOMMIT")
-    try:
-        async with admin_engine.connect() as conn:
-            result = await conn.exec_driver_sql(
-                "SELECT 1 FROM pg_database WHERE datname='sellerbot_test'"
-            )
-            if result.fetchone() is None:
-                await conn.exec_driver_sql("CREATE DATABASE sellerbot_test")
-    finally:
-        await admin_engine.dispose()
+@pytest_asyncio.fixture
+async def migrated_engine():
+    """Disposable lane schema built only by actual Alembic migrations."""
+    if not os.environ.get("TEST_DATABASE_URL"):
+        pytest.skip("DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1")
+    async with migrated_database() as engine:
+        yield engine
 
 
 @pytest_asyncio.fixture
-async def db_session() -> AsyncSession:
-    """Fresh schema per test, yielded as a single AsyncSession.
+async def db_session(migrated_engine) -> AsyncSession:
+    """Fresh migrated schema per test; the reset lease spans the whole session."""
+    engine = migrated_engine
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        yield session
+        await session.commit()
 
-    We drop + recreate all tables on every test rather than truncating to keep
-    the fixture trivially correct as the schema evolves — no fixture edits
-    needed when a new column lands.
 
-    Cost: ~80ms per test on the dev box. Fine for the dozen-or-so scenarios
-    we expect short-term.
-    """
-    await _ensure_test_db_exists()
-    engine = create_async_engine(_test_db_url(), poolclass=NullPool)
-    try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
-        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-        async with factory() as session:
-            yield session
-            await session.commit()
-    finally:
-        await engine.dispose()
+@pytest_asyncio.fixture
+async def two_sellers(db_session):
+    """Independent synthetic tenants for boundary tests; contains no live IDs."""
+    from app.models.seller import Seller
+    sellers = [
+        Seller(email=f"tenant-{index}@example.test", password_hash="unused", business_name=f"Test tenant {index}")
+        for index in (1, 2)
+    ]
+    db_session.add_all(sellers)
+    await db_session.flush()
+    return tuple(sellers)
 
 
 @pytest.fixture
@@ -140,18 +101,15 @@ def scenario_cassette():
         with scenario_cassette("walkaway_calls_bluff", turn=2):
             await advance_conversation(...)
 
-    Records under tests/cassettes/scenarios/<scenario_id>/turn_<n>.yaml.
-    Recording is gated on VCR_RECORD=1; default mode is "none" (strict replay).
+    Replays tests/cassettes/scenarios/<scenario_id>/turn_<n>.yaml.
+    Recording is forbidden; mode is always "none" (strict replay).
     """
-    record_mode = "all" if os.environ.get("VCR_RECORD") == "1" else "none"
-
     def _open(scenario_id: str, turn: int):
         scenario_dir = CASSETTE_ROOT / scenario_id
-        scenario_dir.mkdir(parents=True, exist_ok=True)
         cassette_path = scenario_dir / f"turn_{turn}.yaml"
         return vcr.use_cassette(
             str(cassette_path),
-            record_mode=record_mode,
+            record_mode="none",
             filter_headers=[
                 ("x-api-key", "REDACTED"),
                 ("anthropic-api-key", "REDACTED"),

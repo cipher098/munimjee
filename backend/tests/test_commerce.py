@@ -1,6 +1,5 @@
-"""Real HTTP/transaction tests against an isolated database ending commerce_test."""
+"""Real HTTP/transaction tests against the guarded migrated lane database."""
 import asyncio
-import os
 from uuid import uuid4, UUID
 from datetime import datetime, timedelta, timezone
 import httpx
@@ -8,9 +7,9 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
-from app.database import Base, get_db
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from app.database import get_db
+from tests.conftest_db import migrated_engine  # noqa: F401
 import app.models
 from app.models.seller import Seller
 from app.models.product import Product
@@ -21,14 +20,8 @@ from app.api.dashboard_auth import _make_token
 
 
 @pytest_asyncio.fixture
-async def commerce():
-    url = os.environ.get('TEST_DATABASE_URL')
-    if not url or not url.rsplit('/', 1)[-1].endswith('commerce_test'):
-        pytest.skip('Set TEST_DATABASE_URL to an isolated database ending commerce_test')
-    engine = create_async_engine(url, poolclass=NullPool)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+async def commerce(migrated_engine):
+    engine = migrated_engine
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with factory() as db:
         sellers = [Seller(email=f'{i}@shop.test', password_hash='unused', business_name=f'Shop {i}') for i in range(2)]
@@ -56,7 +49,6 @@ async def commerce():
     app.dependency_overrides[get_db] = session
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test') as client:
         yield client, factory, ids
-    await engine.dispose()
 
 
 def auth(ids, n=0):

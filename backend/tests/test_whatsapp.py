@@ -1,5 +1,4 @@
 """Real tenant/transaction tests with stubbed Meta transport; never sends live messages."""
-import os
 import json
 import hmac
 import hashlib
@@ -13,10 +12,10 @@ import httpx
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from sqlalchemy import select,func
-from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from tests.conftest_db import migrated_engine  # noqa: F401
 import app.models
-from app.database import Base,get_db
+from app.database import get_db
 from app.config import settings
 from app.models.seller import Seller
 from app.models.whatsapp import WhatsAppAccount,WhatsAppContact,WhatsAppMessage,WhatsAppTemplate
@@ -29,17 +28,11 @@ from app.workers.whatsapp import deliver_one,drain
 
 
 @pytest_asyncio.fixture
-async def wa(monkeypatch):
-    url=os.environ.get('TEST_DATABASE_URL','')
-    if not url.rsplit('/',1)[-1].endswith(('whatsapp_test','commerce_test')):
-        pytest.skip('Use isolated TEST_DATABASE_URL ending whatsapp_test or commerce_test')
+async def wa(monkeypatch,migrated_engine):
     monkeypatch.setattr(settings,'CHANNEL_ENCRYPTION_KEY',Fernet.generate_key().decode())
     monkeypatch.setattr(settings,'WHATSAPP_APP_SECRET','test-app-secret')
     monkeypatch.setattr(settings,'WHATSAPP_WEBHOOK_VERIFY_TOKEN','verify-secret')
-    engine=create_async_engine(url,poolclass=NullPool)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    engine=migrated_engine
     factory=async_sessionmaker(engine,expire_on_commit=False)
     @asynccontextmanager
     async def session():
@@ -65,7 +58,6 @@ async def wa(monkeypatch):
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
         client.cookies.set('dashboard_session',_make_token('seller',str(ids['sellers'][0]),'test'))
         yield SimpleNamespace(client=client,session=session,ids=ids)
-    await engine.dispose()
 
 
 def incoming(mid='wamid.in1',text='Hello',*,ago=0,phone='919876543210'):

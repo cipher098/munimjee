@@ -1,40 +1,44 @@
-"""Shared pytest fixtures.
-
-VCR is used to record real Anthropic responses once, then replay them
-in CI without an API key. To record, set:
-    VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest backend/tests -v
-To replay (default, no API key needed):
-    pytest backend/tests -v
-"""
-import os
+"""Shared pytest fixtures: isolated configuration, no outbound sends, replay only."""
 import pathlib
+import tempfile
+
+from tests.safety import install_test_safety
+
+# Must run before application imports during test collection, not in a fixture.
+install_test_safety()
+
+# Imported application modules capture UPLOAD_DIR at import time. Give this
+# pytest invocation its own directory before collection can import those modules.
+from app import paths
+
+_uploads = tempfile.TemporaryDirectory(prefix="munimjee-test-uploads-")
+paths.UPLOAD_DIR = pathlib.Path(_uploads.name)
 
 import pytest
 import vcr
 
-# Provide a placeholder API key so anthropic.AsyncAnthropic(api_key=...) does
-# not crash at construction time during replay. Real key is only needed when
-# VCR_RECORD=1.
-os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-replay-only-not-a-real-key")
+from tests.conftest_db import migrated_engine  # noqa: F401; shared fixture dependency
 
 CASSETTE_DIR = pathlib.Path(__file__).parent / "cassettes"
 
 
+def pytest_sessionfinish(session, exitstatus):
+    _uploads.cleanup()
+
+
 @pytest.fixture
 def claude_cassette():
-    """Returns a context manager that records or replays a Claude API call.
+    """Returns a context manager that strictly replays a Claude API call.
 
     Usage:
         async def test_x(claude_cassette):
             with claude_cassette("decide_basic"):
                 result = await ClaudeClient().decide({...})
     """
-    record_mode = "all" if os.environ.get("VCR_RECORD") == "1" else "none"
-
     def _open(name: str):
         return vcr.use_cassette(
             str(CASSETTE_DIR / f"{name}.yaml"),
-            record_mode=record_mode,
+            record_mode="none",
             # Strip credentials before persisting to disk.
             filter_headers=[
                 ("x-api-key", "REDACTED"),
