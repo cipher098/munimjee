@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.workers.process_statement",
         "app.workers.refresh_tokens",
         "app.workers.message_batch",
+        "app.workers.instagram_ingress",
         "app.workers.nudge",
         "app.workers.commerce",
         "app.workers.whatsapp",
@@ -30,6 +31,9 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
+    "recover-instagram-ingress": {
+        "task": "app.workers.instagram_ingress.recover_instagram_ingress", "schedule": 30,
+    },
     "dispatch-whatsapp-outbox": {"task": "app.workers.whatsapp.drain_outbox", "schedule": 30},
     "dispatch-comment-replies": {"task": "app.workers.comment_automation.dispatch_pending_comments", "schedule": 30},
     "expire-commerce-reservations": {

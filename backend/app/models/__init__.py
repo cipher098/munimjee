@@ -51,3 +51,6 @@ __all__ += ["Business", "User", "Membership"]
 
 from app.models.catalogue_v1 import CatalogueSKU, CatalogueProductMapping
 __all__ += ["CatalogueSKU", "CatalogueProductMapping"]
+
+from app.models.instagram_ingress import InstagramIngress
+__all__ += ["InstagramIngress"]

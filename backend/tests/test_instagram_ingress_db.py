@@ -1,24 +1,18 @@
 """Disposable PostgreSQL integration tests; explicit allocated test URL required.
 
-Creates/drops ONLY a randomly named schema in the coordinator-allocated database.
+Uses P01 migrated_engine with its validated disposable lane and held reset lease.
 No runtime.env, provider connections, Redis connections or live sends are used.
 """
-import importlib.util
-import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
-from alembic.migration import MigrationContext
-from alembic.operations import Operations
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.database import Base
 from app.models.conversation import Conversation
 from app.models.instagram_ingress import InstagramIngress
 from app.models.seller import Seller
@@ -26,57 +20,23 @@ from app.services.instagram_ingress import persist_message, replay_receipt
 from app.workers import instagram_ingress as worker
 from app.workers import message_batch
 
-ALLOCATED_URL = "postgresql+asyncpg://v1test:v1test-only@127.0.0.1:55441/v1_social_commerce_test"
-
-
 @pytest_asyncio.fixture
-async def sessions(monkeypatch):
-    url = os.environ.get("TEST_DATABASE_URL")
-    if url is None:
-        pytest.skip("TEST_DATABASE_URL not explicitly set; no DB accessed")
-    if url != ALLOCATED_URL or os.environ.get("DATABASE_URL") != ALLOCATED_URL:
-        pytest.fail("Refusing DB access: both URLs must exactly match the coordinator-allocated disposable DB")
-    schema = "test_ig_ingress_" + uuid4().hex
-    admin = create_async_engine(url)
-    async with admin.begin() as connection:
-        await connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-    engine = create_async_engine(url, connect_args={"server_settings": {"search_path": schema}})
-    try:
-        async with engine.begin() as connection:
-            # Exercise the actual new migration over a baseline ORM schema;
-            # the integrator separately verifies the complete 0040/0041 chain.
-            await connection.run_sync(lambda sync: Base.metadata.create_all(
-                sync, tables=[table for table in Base.metadata.sorted_tables if table.name != "instagram_ingress"],
-            ))
-            spec = importlib.util.spec_from_file_location("migration_0042", Path(__file__).parents[1] / "alembic/versions/0042_instagram_ingress.py")
-            migration = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(migration)
+async def sessions(migrated_engine, monkeypatch):
+    """Actual Alembic head under the portable P01 test-lane reset lease."""
+    factory = async_sessionmaker(migrated_engine, expire_on_commit=False)
 
-            def upgrade(sync):
-                with Operations.context(MigrationContext.configure(sync)):
-                    migration.upgrade()
-            await connection.run_sync(upgrade)
-        factory = async_sessionmaker(engine, expire_on_commit=False)
+    @asynccontextmanager
+    async def session():
+        async with factory() as db:
+            try:
+                yield db
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                raise
 
-        @asynccontextmanager
-        async def session():
-            async with factory() as db:
-                try:
-                    yield db
-                    await db.commit()
-                except Exception:
-                    await db.rollback()
-                    raise
-
-        monkeypatch.setattr(worker, "_recover_legacy_buffers", lambda: None)
-        monkeypatch.setattr(worker, "worker_session", session)
-        monkeypatch.setattr("app.database.worker_session", session)
-        yield session
-    finally:
-        await engine.dispose()
-        async with admin.begin() as connection:
-            await connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
-        await admin.dispose()
+    monkeypatch.setattr(worker, "worker_session", session)
+    yield session
 
 
 def event(mid="m1", customer="customer", account="account"):
