@@ -3,6 +3,7 @@
 Uses P01 migrated_engine with its validated disposable lane and held reset lease.
 No runtime.env, provider connections, Redis connections or live sends are used.
 """
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock
