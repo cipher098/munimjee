@@ -30,9 +30,10 @@ Confirmed response totals/currency/status/UUID are validated, and saved confirma
 
 ## Current verification
 
-- 23 pure Python SSR/router checks pass against a synthetic injected provider, without database/provider access: publication/default-provider denial, foreign selection, strict DTO/privacy, canonical-origin trust, escaping/JSON roundtrip, media URL safety and all three theme paths.
-- Seven pure JavaScript operational checks pass: uncertain exact-body/key reload, immutable ambiguous intent, definitive rejection edit recovery, post-201 storage failure, corrupt confirmation/expiry fail-closed, total/status/URL validation and absent decoder gate.
-- New live shopping UI is under browser validation; first-slice checks are not evidence of a working canonical database/API writer.
+- 25 pure Python SSR/router checks pass against a synthetic injected provider, without database/provider access: publication/default-provider denial, foreign selection, strict DTO/privacy, canonical-origin trust, escaping/JSON roundtrip, media URL safety and all three theme paths.
+- Ten pure JavaScript operational checks pass: uncertain exact-body/key reload, immutable ambiguous intent, definitive rejection edit recovery, post-201 storage failure, corrupt confirmation/expiry fail-closed, total/status/URL validation and absent decoder gate.
+- Sixteen Chromium browser checks pass: eight preserved fixture journeys and eight injected mock-HTTP operational journeys across all three themes at 390/1440px, including connection-loss/reload exact replay and definitive stock-conflict edit recovery. Twenty total JavaScript checks and syntax checks pass. These are not evidence of a working canonical database/API writer.
+- Evidence manifest and two labelled mock-HTTP screenshots: `artifacts/v1/E20/2026-10-18-contract-seams/`. Browser/JS source is `9f775dd`; additional malformed-provider identity checks are verified at `160312f`. Docker recheck timed out after eight seconds; no runtime restart or database reset was attempted.
 - The preimplementation checkout design study was inspected before these flows were implemented (`design/live-checkout-study.html/.png`).
 
 Run owned checks with `npm --prefix frontend/storefront test`, `npm --prefix frontend/storefront run check`, and `PYTHONPATH=backend python -m pytest backend/tests/test_v1_storefront_rendering.py -q` in a dependency-complete test environment. Browser test configuration defaults to 4318, overridable by `STOREFRONT_TEST_PORT`; it does not reuse the old 4317 preview.
