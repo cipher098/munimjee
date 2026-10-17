@@ -1,0 +1,36 @@
+/* Actual native HTTP + migrated DB; only worker retrieval is synthetic. */
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+const {chromium,expect}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:new URL('../../../frontend/storefront/node_modules/@playwright/test/index.mjs',import.meta.url).href);
+const base='http://127.0.0.1:4320',output=new URL('../../../artifacts/v1/import-workspace/',import.meta.url);
+await mkdir(output,{recursive:true});const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE}:{})});
+let checks=0;const errors=[];
+const context=await browser.newContext();await context.route('**/*',route=>route.request().url().startsWith(base+'/')?route.continue():route.abort());
+const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+try {
+ for(let i=0;i<40;i++){try{await page.goto(base+'/v1');break;}catch(error){if(i===39)throw error;await new Promise(r=>setTimeout(r,250));}}
+ const email=`import-${crypto.randomUUID()}@example.com`,password='synthetic-import-browser-password';
+ await page.locator('#access-form [name=business_name]').fill('Indigo Studio');await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel(/^Password/).fill(password);await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByRole('heading',{name:'Indigo Studio',exact:true}).waitFor();
+ const session=await(await page.request.get(base+'/api/v1/auth/session')).json(),bid=session.businesses[0].id,root=`/api/v1/businesses/${bid}/imports`,workspace=`/v1/businesses/${bid}/imports`,headers={Origin:base,'X-CSRF-Token':session.csrf_token};
+ assert.equal(session.auth_method,'v1_user');checks++;
+ const response=await page.goto(base+workspace);assert.equal(response.status(),200);assert.match(response.headers()['cache-control'],/no-store/);checks+=2;
+ await page.locator('#workspace').waitFor({state:'visible'});await expect(page.locator('#job-list')).toContainText('No import jobs');checks++;
+ const sent=[];let loseCreate=true;await page.route('**'+root+'/jobs',async route=>{if(route.request().method()!=='POST')return route.continue();sent.push(route.request().postDataJSON());if(loseCreate){loseCreate=false;const committed=await route.fetch();assert.equal(committed.status(),202);await route.abort('failed');}else await route.continue();});
+ await page.locator('#website-url').fill('https://shop.example.com/dress');await page.locator('#website-consent').check();await page.getByRole('button',{name:'Start website import',exact:true}).click();await expect(page.locator('#recovery-error')).not.toBeEmpty();await page.reload();await expect(page.locator('#recovery')).toBeVisible();assert.equal(sent.length,1);checks++;
+ await page.getByRole('button',{name:'Retry saved action'}).click();await expect(page.locator('#notice')).toContainText('Import request confirmed');await expect(page.locator('#recovery')).toBeHidden();assert.deepEqual(sent[0],sent[1]);checks++;
+ const jobs=await(await page.request.get(base+root+'/jobs')).json();assert.equal(jobs.length,1);assert.equal(jobs[0].state,'pending');checks+=2;
+ const processed=await page.request.post(base+`/__import_workspace_fixture/businesses/${bid}/jobs/${jobs[0].job_id}/run`,{headers});assert.equal(processed.status(),200);assert.equal((await processed.json()).processed,true);checks++;
+ await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.locator('.candidate-select').first().click();await expect(page.locator('#approval-blockers')).toContainText('stock, options');await expect(page.locator('#fact-stock')).toHaveValue('');await expect(page.locator('#options-mode')).toHaveValue('unknown');await expect(page.locator('#fact-price')).toHaveValue('1299');checks+=4;
+ await page.locator('#fact-stock').fill('3');await page.locator('#options-mode').selectOption('none');
+ const edits=[];let loseEdit=true;await page.route('**'+root+'/candidates/*/review',async route=>{edits.push(route.request().postDataJSON());if(loseEdit){loseEdit=false;const committed=await route.fetch();assert.equal(committed.status(),200);await route.abort('failed');}else await route.continue();});
+ await page.getByRole('button',{name:'Save factual changes',exact:true}).click();await expect(page.locator('#recovery-error')).not.toBeEmpty();await page.reload();await expect(page.locator('#recovery')).toBeVisible();await page.getByRole('button',{name:'Retry saved action'}).click();await expect(page.locator('#recovery')).toBeHidden();assert.deepEqual(edits[0],edits[1]);checks++;
+ await page.locator('.candidate-select').first().click();await expect(page.locator('#fact-stock')).toHaveValue('3');await expect(page.locator('#options-mode')).toHaveValue('none');checks+=2;
+ for(const box of await page.locator('#confirmations input').all())await box.check();await page.getByRole('button',{name:'Approve reviewed candidate',exact:true}).click();await expect(page.locator('#candidate-state')).toContainText('approved');await expect(page.locator('#bridge-note')).toBeVisible();checks+=2;
+ const candidate=(await(await page.request.get(base+root+'/candidates')).json()).items[0];assert.equal(candidate.candidate.extracted.stock,null);assert.equal(candidate.candidate.overrides.find(o=>o.field==='stock').value,3);assert.equal(candidate.catalogue_bridge_status,'pending_reviewed_allocation');checks+=3;
+ const storefront=await page.request.put(base+`/api/v1/businesses/${bid}/catalogue/storefront`,{headers,data:{name:'Indigo Studio',slug:'import-'+crypto.randomUUID().slice(0,12),cod_enabled:false,published:false}});assert.equal(storefront.status(),200);assert.equal((await storefront.json()).published,false);checks++;
+ const products=await page.request.get(base+`/api/v1/businesses/${bid}/catalogue/products`);assert.equal(products.status(),200);assert.equal((await products.json()).items.length,0);checks++;
+ await page.screenshot({path:new URL('native-desktop-approved.png',output).pathname,fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:new URL('native-mobile-approved.png',output).pathname,fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
+ await page.request.post(base+'/api/v1/auth/logout',{headers});await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#access-needed')).toBeVisible();checks++;
+ assert.deepEqual(errors,[]);checks++;await writeFile(new URL('native-browser-results.json',output),JSON.stringify({checks,database:'actual P01 migrated lane',worker:'synthetic protected worker hook',provider_calls:0,errors},null,2));console.log(`${checks} actual native import workspace checks passed; synthetic worker retrieval, no provider calls.`);
+} finally {await browser.close();}
