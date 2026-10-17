@@ -21,6 +21,7 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
     assert {"/api/v1/me", "/api/v1/businesses", "/api/v1/businesses/{business_id}",
             "/api/v1/businesses/{business_id}/readiness", "/api/v1/auth/session",
             "/api/v1/businesses/{business_id}/onboarding", "/v1",
+            "/v1/businesses/{business_id}/catalogue", "/v1/businesses/{business_id}/channels",
             "/api/v1/storefronts/{slug}/products",
             "/api/v1/businesses/{business_id}/catalogue/products"} <= paths
 

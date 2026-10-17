@@ -32,6 +32,7 @@ from app.api.routes.comment_automation import router as comment_automation_route
 from app.api.v1.identity import router as v1_identity_router
 from app.api.v1.auth import router as v1_auth_router
 from app.api.v1.catalogue import router as v1_catalogue_router
+from app.api.v1.catalogue_workspace import router as v1_catalogue_workspace_router
 from app.api.v1.channel_operator import router as v1_channel_router
 from app.api.v1.imports import create_router as create_v1_import_router
 from app.api.v1.session import require_v1_mutation
@@ -80,6 +81,7 @@ app.include_router(comment_automation_router)
 app.include_router(v1_identity_router)
 app.include_router(v1_auth_router)
 app.include_router(v1_catalogue_router)
+app.include_router(v1_catalogue_workspace_router)
 app.include_router(v1_channel_router)
 app.include_router(create_v1_import_router(require_v1_mutation))
 
