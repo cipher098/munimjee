@@ -6,9 +6,9 @@
   "description": "Fixture-only E10 storefront themes; no backend integration",
   "scripts": {
     "dev": "node server.mjs",
-    "test": "node --test tests/contracts.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "test:browser": "playwright test",
-    "check": "node --check src/app.js && node --check src/commerce.js && node --check src/components.js && node --check src/fixtures.js && node --check src/catalogue-adapter.js && node --check server.mjs"
+    "check": "node --check src/app.js && node --check src/commerce.js && node --check src/components.js && node --check src/fixtures.js && node --check src/catalogue-adapter.js && node --check server.mjs && node --check src/live-api.js && node --check src/live-app.js && node --check src/live-entry.js && node --check src/checkout-attempt.js"
   },
   "devDependencies": {"@playwright/test": "1.58.2"}
 }
