@@ -1,0 +1,113 @@
+{
+  "$defs": {
+    "FactField": {
+      "enum": [
+        "title",
+        "description",
+        "price",
+        "stock",
+        "options"
+      ],
+      "title": "FactField",
+      "type": "string"
+    },
+    "ImportAllocation": {
+      "additionalProperties": false,
+      "properties": {
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "maxProperties": 8,
+          "title": "Options",
+          "type": "object"
+        },
+        "stock_available": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Stock Available",
+          "type": "integer"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stock_available",
+        "active"
+      ],
+      "title": "ImportAllocation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "seller_reviewed": {
+      "const": true,
+      "enum": [
+        true
+      ],
+      "title": "Seller Reviewed",
+      "type": "boolean"
+    },
+    "idempotency_key": {
+      "format": "uuid",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "expected_revision": {
+      "minimum": 1,
+      "title": "Expected Revision",
+      "type": "integer"
+    },
+    "confirmed_fields": {
+      "items": {
+        "$ref": "#/$defs/FactField"
+      },
+      "maxItems": 5,
+      "minItems": 5,
+      "title": "Confirmed Fields",
+      "type": "array"
+    },
+    "allocations": {
+      "items": {
+        "$ref": "#/$defs/ImportAllocation"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Allocations",
+      "type": "array"
+    },
+    "photo_urls": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Photo Urls",
+      "type": "array"
+    },
+    "category_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Category Id"
+    }
+  },
+  "required": [
+    "seller_reviewed",
+    "idempotency_key",
+    "expected_revision",
+    "confirmed_fields",
+    "allocations"
+  ],
+  "title": "ImportCatalogueWrite",
+  "type": "object"
+}

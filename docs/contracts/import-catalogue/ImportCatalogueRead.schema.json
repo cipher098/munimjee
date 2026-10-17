@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "import-catalogue.v1",
+      "default": "import-catalogue.v1",
+      "enum": [
+        "import-catalogue.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "receipt_id": {
+      "format": "uuid",
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "candidate_id": {
+      "format": "uuid",
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "candidate_revision": {
+      "title": "Candidate Revision",
+      "type": "integer"
+    },
+    "product_id": {
+      "format": "uuid",
+      "title": "Product Id",
+      "type": "string"
+    },
+    "catalogue_url": {
+      "title": "Catalogue Url",
+      "type": "string"
+    },
+    "creation_mode": {
+      "const": "private_draft",
+      "default": "private_draft",
+      "enum": [
+        "private_draft"
+      ],
+      "title": "Creation Mode",
+      "type": "string"
+    },
+    "replayed": {
+      "title": "Replayed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "candidate_id",
+    "candidate_revision",
+    "product_id",
+    "catalogue_url",
+    "replayed"
+  ],
+  "title": "ImportCatalogueRead",
+  "type": "object"
+}

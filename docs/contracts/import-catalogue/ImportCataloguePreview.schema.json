@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "ImportCatalogueRead": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "import-catalogue.v1",
+          "default": "import-catalogue.v1",
+          "enum": [
+            "import-catalogue.v1"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "receipt_id": {
+          "format": "uuid",
+          "title": "Receipt Id",
+          "type": "string"
+        },
+        "candidate_id": {
+          "format": "uuid",
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "candidate_revision": {
+          "title": "Candidate Revision",
+          "type": "integer"
+        },
+        "product_id": {
+          "format": "uuid",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "catalogue_url": {
+          "title": "Catalogue Url",
+          "type": "string"
+        },
+        "creation_mode": {
+          "const": "private_draft",
+          "default": "private_draft",
+          "enum": [
+            "private_draft"
+          ],
+          "title": "Creation Mode",
+          "type": "string"
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "receipt_id",
+        "candidate_id",
+        "candidate_revision",
+        "product_id",
+        "catalogue_url",
+        "replayed"
+      ],
+      "title": "ImportCatalogueRead",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "import-catalogue-preview.v1",
+      "default": "import-catalogue-preview.v1",
+      "enum": [
+        "import-catalogue-preview.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "candidate_id": {
+      "format": "uuid",
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "candidate_revision": {
+      "title": "Candidate Revision",
+      "type": "integer"
+    },
+    "state": {
+      "enum": [
+        "needs_review",
+        "ready_for_allocation",
+        "already_created",
+        "unsupported"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "facts": {
+      "title": "Facts",
+      "type": "object"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "allocations": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Allocations",
+      "type": "array"
+    },
+    "existing": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ImportCatalogueRead"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "candidate_id",
+    "candidate_revision",
+    "state",
+    "facts",
+    "issues",
+    "allocations"
+  ],
+  "title": "ImportCataloguePreview",
+  "type": "object"
+}
