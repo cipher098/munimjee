@@ -12,7 +12,8 @@ def test_all_foundation_models_are_registered():
             "business_invitations", "identity_audit_events", "catalogue_store_policies",
             "catalogue_activations", "catalogue_creations", "sku_reservations", "sku_payment_attempts", "channel_operations",
             "channel_connection_states", "channel_oauth_attempts",
-            "v1_import_assets", "v1_import_jobs", "v1_import_drafts", "v1_import_audits"} <= set(Base.metadata.tables)
+            "v1_import_assets", "v1_import_jobs", "v1_import_drafts", "v1_import_audits",
+            "import_catalogue_bridges"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -40,7 +41,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0046_v1_import_jobs"]
+    assert scripts.get_heads() == ["0047_v1_import_catalogue_bridge"]
+    assert scripts.get_revision("0047_v1_import_catalogue_bridge").down_revision == "0046_v1_import_jobs"
     assert scripts.get_revision("0046_v1_import_jobs").down_revision == "0045_v1_channel_operator"
     assert scripts.get_revision("0045_v1_channel_operator").down_revision == "0044_v1_checkout"
     assert scripts.get_revision("0044_v1_checkout").down_revision == "0043_v1_auth"

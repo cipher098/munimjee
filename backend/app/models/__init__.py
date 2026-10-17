@@ -66,3 +66,6 @@ __all__ += ["ChannelOperation", "ChannelConnectionState", "ChannelOAuthAttempt"]
 
 from app.models.imports_v1 import ImportAsset, ImportJob, ImportDraft, ImportAudit
 __all__ += ["ImportAsset", "ImportJob", "ImportDraft", "ImportAudit"]
+
+from app.models.import_catalogue import ImportCatalogueBridge
+__all__ += ["ImportCatalogueBridge"]
