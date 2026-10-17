@@ -44,10 +44,15 @@ class BusinessAccess:
     business: Business
     membership: Membership
     seller: Seller
+    authorized_role: str | None = None
+
+    @property
+    def role(self) -> str:
+        return self.authorized_role if self.authorized_role is not None else self.membership.role
 
     @property
     def capabilities(self) -> frozenset[str]:
-        return capabilities_for(self.membership.role)
+        return capabilities_for(self.role)
 
 
 class IdentityBridgeConflict(RuntimeError):
@@ -88,10 +93,13 @@ async def backfill_legacy_owners(db: AsyncSession) -> int:
 
 
 async def resolve_user_actor(db: AsyncSession, user_id: UUID, auth_method: str) -> Actor:
-    user = await db.get(User, user_id)
-    if user is None or not user.is_active or user.revoked_at is not None:
+    # Scalar projection bypasses retained ORM state without expiring or flushing
+    # unrelated dirty identity objects while authorizing a request.
+    current = await db.scalar(select(User.id).where(User.id == user_id,
+        User.is_active.is_(True), User.revoked_at.is_(None)).execution_options(autoflush=False))
+    if current is None:
         raise HTTPException(status_code=401, detail="Active user login required")
-    return Actor(user_id=user.id, auth_method=auth_method)
+    return Actor(user_id=current, auth_method=auth_method)
 
 
 async def resolve_legacy_owner(db: AsyncSession, seller_id: UUID) -> Actor:
@@ -100,34 +108,35 @@ async def resolve_legacy_owner(db: AsyncSession, seller_id: UUID) -> Actor:
         raise HTTPException(status_code=401, detail="Active seller login required")
     uid = legacy_owner_id(seller.id)
     actor = await resolve_user_actor(db, uid, "legacy_owner")
-    user = await db.get(User, uid)
-    if user.legacy_seller_id != seller.id:
+    linked_seller = await db.scalar(select(User.legacy_seller_id).where(User.id == uid)
+        .execution_options(autoflush=False))
+    if linked_seller != seller.id:
         raise HTTPException(status_code=401, detail="Legacy owner identity unavailable")
     access = await require_business_access(db, actor, seller.id)
-    if access.membership.role != "owner":
+    if access.role != "owner":
         raise HTTPException(status_code=403, detail="Legacy owner membership required")
     return actor
 
 
 async def accessible_businesses(db: AsyncSession, actor: Actor) -> list[BusinessAccess]:
     await resolve_user_actor(db, actor.user_id, actor.auth_method)
-    rows = (await db.execute(select(Business, Membership, Seller).join(
+    rows = (await db.execute(select(Business, Membership, Seller, Membership.role).join(
         Membership, Membership.business_id == Business.id).join(Seller, Seller.id == Business.id).where(
             Membership.user_id == actor.user_id, Membership.is_active.is_(True), Membership.revoked_at.is_(None),
             Membership.role.in_(tuple(ROLE_CAPABILITIES)), Business.is_active.is_(True), Seller.is_active.is_(True)
-        ).order_by(Business.id))).all()
-    return [BusinessAccess(business, membership, seller) for business, membership, seller in rows]
+        ).order_by(Business.id).execution_options(autoflush=False))).all()
+    return [BusinessAccess(*row) for row in rows]
 
 
 async def require_business_access(db: AsyncSession, actor: Actor, business_id: UUID,
                                   capability: str = "business.read") -> BusinessAccess:
     await resolve_user_actor(db, actor.user_id, actor.auth_method)
-    row = (await db.execute(select(Business, Membership, Seller).join(
+    row = (await db.execute(select(Business, Membership, Seller, Membership.role).join(
         Membership, Membership.business_id == Business.id).join(Seller, Seller.id == Business.id).where(
             Business.id == business_id, Membership.user_id == actor.user_id,
             Membership.is_active.is_(True), Membership.revoked_at.is_(None),
             Business.is_active.is_(True), Seller.is_active.is_(True)
-        ))).one_or_none()
+        ).execution_options(autoflush=False))).one_or_none()
     if row is None:
         raise HTTPException(status_code=404, detail="Business not found")
     access = BusinessAccess(*row)

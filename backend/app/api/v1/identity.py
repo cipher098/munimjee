@@ -59,7 +59,7 @@ async def current_actor(request: Request, db: AsyncSession = Depends(get_db)) ->
 
 def business_view(access: BusinessAccess) -> BusinessView:
     return BusinessView(id=access.business.id, name=access.business.name,
-                        role=access.membership.role, capabilities=sorted(access.capabilities))
+                        role=access.role, capabilities=sorted(access.capabilities))
 
 
 @router.get("/me", response_model=MeView)

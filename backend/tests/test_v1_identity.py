@@ -94,10 +94,8 @@ def test_deterministic_ids_do_not_link_distinct_sellers():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("user", [None, SimpleNamespace(is_active=False, revoked_at=None),
-                                  SimpleNamespace(is_active=True, revoked_at=datetime.now(timezone.utc))])
-async def test_revoked_or_missing_user_cannot_resolve_actor(user):
-    db = SimpleNamespace(get=AsyncMock(return_value=user))
+async def test_missing_current_user_cannot_resolve_actor():
+    db = SimpleNamespace(scalar=AsyncMock(return_value=None))
     with pytest.raises(HTTPException) as exc:
         await resolve_user_actor(db, uuid4(), "v1_user")
     assert exc.value.status_code == 401

@@ -60,19 +60,24 @@ async def native_session(db, token: str) -> NativeSession:
     claims = decode_native_token(token)
     actor = await resolve_user_actor(db, UUID(claims["sub"]), "v1_user")
     user = await db.get(User, actor.user_id)
-    session = await db.get(UserSession, UUID(claims["sid"]))
-    if (session is None or session.user_id != user.id or session.revoked_at is not None
-            or session.expires_at <= now_utc() or session.auth_version != user.auth_version):
+    session = await db.scalar(select(UserSession).join(User, User.id == UserSession.user_id).where(
+        UserSession.id == UUID(claims["sid"]), UserSession.user_id == actor.user_id,
+        UserSession.revoked_at.is_(None), UserSession.expires_at > now_utc(),
+        UserSession.auth_version == User.auth_version, User.is_active.is_(True),
+        User.revoked_at.is_(None)).execution_options(autoflush=False))
+    if session is None:
         raise HTTPException(status_code=401, detail="Session expired or revoked")
     return NativeSession(actor, user, session)
 
 
 async def issue_session(db, user: User) -> tuple[str, str, UserSession]:
-    if not user.is_active or user.revoked_at is not None:
+    version = await db.scalar(select(User.auth_version).where(User.id == user.id,
+        User.is_active.is_(True), User.revoked_at.is_(None)).execution_options(autoflush=False))
+    if version is None:
         raise HTTPException(status_code=401, detail="Active user login required")
     csrf = secrets.token_urlsafe(32)
     expires = now_utc() + timedelta(days=SESSION_DAYS)
-    session = UserSession(id=uuid4(), user_id=user.id, auth_version=user.auth_version,
+    session = UserSession(id=uuid4(), user_id=user.id, auth_version=version,
                           csrf_digest=secret_digest(csrf), expires_at=expires)
     db.add(session)
     await db.flush()
@@ -111,8 +116,12 @@ async def revoke_browser_session(db, request: Request) -> None:
 
 
 async def revoke_all_sessions(db, user: User) -> None:
-    user.auth_version += 1
-    user.legacy_revoked_before = now_utc()
+    from sqlalchemy.orm.attributes import set_committed_value
+    current = (await db.execute(update(User).where(User.id == user.id).values(
+        auth_version=User.auth_version + 1, legacy_revoked_before=now_utc()).returning(
+        User.auth_version, User.legacy_revoked_before).execution_options(synchronize_session=False))).one()
+    set_committed_value(user, "auth_version", current.auth_version)
+    set_committed_value(user, "legacy_revoked_before", current.legacy_revoked_before)
     await db.execute(update(UserSession).where(UserSession.user_id == user.id,
         UserSession.revoked_at.is_(None)).values(revoked_at=now_utc()))
     await db.flush()
@@ -122,8 +131,8 @@ async def enforce_legacy_owner_access(db, seller_id: UUID, claims: dict) -> None
     if not settings.V1_ENFORCE_LEGACY_ACCESS:
         return
     actor = await resolve_legacy_owner(db, seller_id)
-    user = await db.get(User, actor.user_id)
-    cutoff = user.legacy_revoked_before
+    cutoff = await db.scalar(select(User.legacy_revoked_before).where(User.id == actor.user_id)
+        .execution_options(autoflush=False))
     issued = claims.get("iat")
     if cutoff is not None and (type(issued) not in (int, float) or not isfinite(issued)
                               or issued < cutoff.timestamp() or issued > now_utc().timestamp() + 5):

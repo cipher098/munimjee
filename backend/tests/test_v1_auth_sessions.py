@@ -117,3 +117,43 @@ def test_login_rejects_explicit_foreign_origin():
     with pytest.raises(HTTPException) as denied:
         check_login_origin(request(origin="https://evil.invalid"))
     assert denied.value.status_code == 403
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',['session_revoked','session_expired','user_version'])
+async def test_native_session_ignores_retained_orm_authority_after_other_commit(db,migrated_engine,change):
+    from sqlalchemy import update
+    user,token,_,session=await user_and_session(db)
+    await db.commit()
+    sessions=async_sessionmaker(migrated_engine,expire_on_commit=False)
+    async with sessions.begin() as other:
+        if change=='user_version':
+            await other.execute(update(User).where(User.id==user.id).values(auth_version=User.auth_version+1))
+        else:
+            values={'revoked_at':now_utc()} if change=='session_revoked' else {'expires_at':now_utc()-timedelta(seconds=1)}
+            await other.execute(update(UserSession).where(UserSession.id==session.id).values(**values))
+    # Strong references deliberately remain stale; the database authorizes.
+    assert session.revoked_at is None and user.auth_version==0
+    with pytest.raises(HTTPException) as denied:
+        await native_session(db,token)
+    assert denied.value.status_code==401
+
+
+@pytest.mark.asyncio
+async def test_legacy_revocation_cutoff_uses_current_database_not_cached_user(db,migrated_engine,monkeypatch):
+    from sqlalchemy import update
+    monkeypatch.setattr(settings,'V1_ENFORCE_LEGACY_ACCESS',True)
+    seller=Seller(id=uuid4(),email='cached-owner@example.test',password_hash='synthetic',is_active=True)
+    db.add(seller)
+    await db.flush()
+    await ensure_legacy_owner_bridge(db,seller)
+    user=await db.get(User,legacy_owner_id(seller.id))
+    await db.commit()
+    old={'iat':now_utc().timestamp()-10}
+    sessions=async_sessionmaker(migrated_engine,expire_on_commit=False)
+    async with sessions.begin() as other:
+        await other.execute(update(User).where(User.id==user.id).values(legacy_revoked_before=now_utc()))
+    assert user.legacy_revoked_before is None
+    with pytest.raises(HTTPException) as denied:
+        await enforce_legacy_owner_access(db,seller.id,old)
+    assert denied.value.status_code==401
