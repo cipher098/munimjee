@@ -26,13 +26,15 @@ The existing 13-feature vision remains the longer-term roadmap. V1 is a complete
 | V06 | Orders and customer CRM | Conversations, customer identities, order history, payment state, fulfilment, seller notes, tracking and cancellation handling. Identity links need a verified basis. |
 | V07 | Self-service Instagram and WhatsApp | Official supported connection flows, account selection, permission/readiness checks, test, reconnect and disconnect. Expired access and incomplete provider setup have actionable states. |
 | V08 | Catalogue-aware messaging and comments | Linked reel/post/product context, product questions, comment actions, human takeover, pause/resume and unresolved-product queue. Replies use approved facts; uncertainty triggers clarification or handoff. |
-| V09 | Delivery integration | One courier integration with shipment creation, tracking reconciliation and permitted customer updates. Duplicate callbacks, failures and out-of-order events are handled. A manually entered tracking URL alone does not complete this item. |
+| V09 | Parcel tracking and customer updates | From an authorized order, seller scans an existing parcel barcode, confirms courier/AWB and order association, then the existing Parcel Desk tracking integration supplies reconciled updates for permitted customer notifications. Duplicate scans, failures and out-of-order events are handled. New courier APIs and shipment booking are excluded from V1. |
 | V10 | Basic analytics | Visits, product views, enquiries, checkout starts, placed/paid/cancelled orders, revenue, conversion and automation outcomes. Show attribution limitations and exclude test activity. |
 | V11 | Sales onboarding console | Per-seller readiness, assigned sales owner, import issues, connection status, last successful test and publish checklist. Seller controls access to their connected accounts. |
 | V12 | Search visibility and migration | Search-readable product pages, canonical URLs, metadata, sitemap and redirects for supported legacy URLs. Migration reconciliation and rollback rehearsed before moving an existing store. |
 | V13 | International pilot support | If Dharaa is migrated in V1, support its confirmed destination countries and required address, payment, currency-display and shipping behavior before cutover. Global rollout is limited to explicitly supported destinations. |
 
 V13 is a Dharaa migration gate, not permission to claim worldwide support. Confirm its real requirements early. If international capabilities are not ready, retain the existing international purchasing route or defer that seller's migration; do not silently narrow their business.
+
+The owner updated V09 on 17 October 2026: reuse the existing Parcel Desk project through a tenant-safe adapter, rather than build courier booking or a new courier API integration. Barcode values identify parcel candidates, not the correct order. Start from an authorized order, display the detected AWB/courier, require seller confirmation and preserve an audited association. A scan outside order context may suggest eligible orders but must never silently match by phone, customer name or barcode alone. Unknown carrier, multiple labels, camera denial and unsupported formats need explicit selection/manual entry. Existing tracking lookup behavior may be reused; no delivery/update success is inferred from a refresh request alone. See docs/v1-parcel-desk-integration.md for verified source limitations and the proposed adapter boundary.
 
 Website defaults use the platform subdomain. Custom domains are supported only after DNS, certificate and routing workflows pass their own checks; no launch claim should imply unimplemented domain automation.
 
@@ -68,7 +70,7 @@ Research snapshot: 17 October 2026. The following reflects public vendor claims 
 | Virtual try-on | TailorTalk labels it beta | Research, not a release dependency. |
 | AI website editing and broader marketing operator | CatalogHub promotes these; social publishing is marked coming soon | Keep on roadmap; do not copy every marketing promise into V1. |
 
-Integrated shipping and selected international commerce are pulled into V1 where the supported launch workflow requires them. They must not be counted as delivered merely because the UI displays a tracking field or a currency selector.
+Existing-parcel tracking and selected international commerce are included where the supported launch workflow requires them. Shipment booking and new courier API integrations are excluded from V1 by the owner’s 17 October scope change. Tracking must not be counted as delivered merely because the UI displays a tracking field or a currency selector.
 
 CatalogHub's Dharaa case study reports existing search traffic and roughly half of recent orders shipping abroad. These vendor-reported figures justify validating international and SEO migration requirements early; they are not independently verified business metrics.
 
@@ -93,7 +95,7 @@ Primary sources:
 | 3 WhatsApp automation | Included, bounded by catalogue/policies and human handoff |
 | 4 Wholesale enquiry verification | Later: business evidence, seller decision, wholesale quotes |
 | 5 Premium website with payments | Included |
-| 6 Automatic delivery updates | Included for the supported courier and channels |
+| 6 Automatic delivery updates | Included through existing Parcel Desk tracking for confirmed order/parcel associations and permitted channels; booking excluded |
 | 7 Global presence | Search visibility plus selected international destinations; not unrestricted worldwide commerce |
 | 8 Organic reach optimization | SEO and basic measurement now; recommendations/experiments later |
 | 9 Digital marketing | Later |
@@ -144,7 +146,7 @@ Contract owners agree on versioned schemas, examples and error responses for:
 | Import jobs | Source authorization, progress, checkpoints, draft changes, review decisions and cancellation |
 | Customer/conversation | Channel identifiers, linked identities, consent, product context, takeover and message pagination |
 | Order/payment | Idempotency, order lines, totals, payment attempts, fulfilment, cancellation and refund-required states |
-| Shipment | Carrier adapter, booking reference, tracking events, reconciliation and customer-update events |
+| Shipment | Order-scoped confirmed parcel association, normalized courier/AWB, trusted Parcel Desk adapter, tracking events, reconciliation and customer-update idempotency; no booking |
 | Analytics | Event IDs, timestamps, tenant, source, test exclusion and precise metric definitions |
 | Website | Theme configuration, preview/publish state, public field allowlist and canonical URL rules |
 
@@ -159,7 +161,7 @@ Target capacity is three implementation workers on this Mac and three on the Mac
 | A | This Mac | Business/user/customer foundation, seller onboarding, sales console, CRM and analytics UI |
 | B | This Mac | Catalogue/SKUs, inventory, unified order/payment core and domestic/international checkout |
 | C | This Mac | Instagram/WhatsApp account connections, inbox, durable channel events, rules and catalogue-aware replies |
-| D | Mac mini | Website/media import and catalogue review; then courier integration and event ingestion |
+| D | Mac mini | Website/media import and catalogue review; then existing Parcel Desk adapter, barcode association and tracking updates |
 | E | Mac mini | Shared frontend components, three storefront themes, real catalogue/checkout wiring and SEO routes |
 | F | Mac mini | Isolated environments, contract/regression/migration tests, browser acceptance and evidence review |
 | Integrator | This chat / designated integration checkout | Contract decisions, shared-file changes, migration ordering, branch integration and release gates |
@@ -173,7 +175,7 @@ Feature owners implement their feature screens using E's shared UI components. E
 | P00 Preserve baseline | Integrator | None | Inspect both existing checkouts, preserve valuable uncommitted work, record source SHA and baseline failures. Do not reset the running setup or copy secrets into Git. |
 | P01 Establish isolated runtimes | F | P00 | One environment per task on both hosts: worktree, ports, DB, Redis namespace/instance, queues, uploads and disposable fixtures. Safe reset guard demonstrated. |
 | P02 Freeze initial contracts | Integrator with A/B/C/D/E | P00 | Entity/API/event schemas, module ownership, representative fixtures, migration strategy and acceptance cases. |
-| P03 Resolve external dependencies | Integrator with account owner | P00 | Current Meta app access, supported onboarding flows, authorized test accounts, Razorpay test account, courier test path and Dharaa destination requirements. Independent development continues if these are pending. |
+| P03 Resolve external dependencies | Integrator with account owner | P00 | Current Meta app access, supported onboarding flows, authorized test accounts, Razorpay test account, Parcel Desk machine-access/tenant boundaries and authorized tracking test path, and Dharaa destination requirements. Independent development continues if these are pending. |
 
 P01, P02 and P03 can proceed concurrently after P00. UI prototypes and contract fixtures may start while provider access is pending; they are not integrated completion.
 
@@ -197,11 +199,11 @@ Tasks begin when their own dependencies pass; no need to wait for the entire pre
 | A20 Onboarding and sales console | A | A10, connection/import contracts | Fresh seller checklist; audited sales assistance; visible blockers and resumability |
 | B20 Checkout and payment | B | B10, A10 customer contract | Canonical orders, COD/Razorpay, retries, cancellation, uncertain attempts and protected status |
 | C20 Inbox and automation | C | C10, B10, A10 | Product context, comment/DM rules, previews, takeover, unresolved mapping and guarded resume |
-| D20 Shipping | D | B20 order contract, C10 delivery contract | One carrier, booking, tracking reconciliation and customer-update outbox |
+| D20 Parcel tracking | D | B20 order contract, C10 delivery contract, P03 adapter trust | Order-context barcode scan with seller confirmation, tenant-safe existing Parcel Desk integration, tracking reconciliation and idempotent customer-update outbox |
 | E20 Real storefront integration | E | E10, B10, B20 | All three themes use real APIs; browsing to purchase; URLs and indexing validated |
 | F20 Cross-module verification | F | Completed slices | Independent tests on integrated source SHA; failures routed to owners |
 
-D can build the carrier adapter against fixtures before B20 is merged. E can wire read-only catalogue pages before checkout is ready. C can verify inbound/context flows before outbound live access is available.
+D can build the Parcel Desk adapter and confirmed association contract against fixtures before B20 is merged. E can wire read-only catalogue pages before checkout is ready. C can verify inbound/context flows before outbound live access is available.
 
 ### Build wave three and release candidate
 
@@ -210,7 +212,7 @@ D can build the carrier adapter against fixtures before B20 is merged. E can wir
 | A30 CRM and analytics | A | A10, B20, C20, shared event schema | Unified seller view and metrics reconciled to source orders/events |
 | B30 International pilot and migration | B | B20, D20, P03 | Supported destinations, address/shipping/payment rules, ledger reconciliation and migration rehearsal |
 | C30 Provider canaries | C with integrator | P03, C20 | Actual account connection and inbound/outbound/comment evidence; reconnect/revocation behavior |
-| D30 Import/courier recovery | D | D10, D20 | Restart, rate-limit, partial import, carrier timeout and status ordering checks |
+| D30 Import/tracking recovery | D | D10, D20 | Restart, rate-limit, partial import, tracker timeout, duplicate association and status ordering checks |
 | E30 Usability and SEO migration | E | E20, source URL inventory | Mobile checks, theme parity, redirects, metadata, accessible critical controls |
 | F30 Full product verification | F | Integrated release candidate | Entire acceptance matrix, provider evidence, load/restart checks and release report |
 
@@ -273,11 +275,11 @@ UI automation is serialized per browser session. Different hosts can run indepen
 | Unknown reel | Enquiry enters the queue; linking and eligible resume sends the correct product response once; ineligible cases show the reason. |
 | Product context switch | A second product reference updates context; an ambiguous message is clarified rather than answered about an unrelated item. |
 | Messaging policy | Paused/disconnected/opted-out recipients are not sent messages; closed-window behavior follows the configured current provider rules. Boundary timing can use controlled fixtures; live delivery is verified separately. |
-| Courier and updates | Actual provider sandbox/authorized test booking, tracking callback or polling, and customer update succeed. Duplicate/out-of-order events do not regress delivery status. |
+| Parcel association and updates | Seller opens the correct order, scans its existing parcel barcode, confirms courier/AWB and association, then an authorized existing-tracker lookup and permitted customer update succeed. Ambiguous/unknown couriers require selection or manual fallback. Cross-seller association is denied; duplicate scans/notifications and out-of-order updates cannot duplicate or regress state. No booking test is required in V1. |
 | Order privacy and history | Customer order link authorizes only its order; seller sees consistent messages, history and fulfilment state. |
 | Analytics reconciliation | Known test dataset produces exact defined totals; test activity is excluded from seller production metrics; unknown attribution remains unknown. |
 | Disconnect/reconnect | Revoked access becomes visible, queued actions respect state, and reconnection cannot attach another seller's account. |
-| Import/worker restart | Interrupted work resumes or reports a recoverable state without duplicate products, messages, payments or shipment bookings. |
+| Import/worker restart | Interrupted work resumes or reports a recoverable state without duplicate products, messages, payments, parcel associations or tracking notifications. |
 | Search and migration | Supported old URLs redirect to correct products; canonical/meta/sitemap content is correct; existing order links still work. |
 | International pilot | For every supported launch destination, address acceptance, delivery eligibility, charges, payment currency and confirmation are tested. Unsupported destinations are explicit. |
 | Backup and rollback | Restore a sanitized backup in an isolated environment; reconcile IDs, totals, reservations and pending actions; demonstrate safe application rollback/forward fix. |
@@ -303,7 +305,7 @@ Resolve these early, while independent development runs:
 - Meta app's actual permission/access status, business onboarding eligibility and supported Instagram/WhatsApp signup flow. Historical approvals are not assumed current or sufficient.
 - Seller-owned test Instagram account/media, WhatsApp account/number and specifically authorized message recipients.
 - Razorpay test credentials, webhook access and approved production account when launch requires it.
-- Courier choice, credentials, sandbox capabilities, serviceable destinations and any authorized test shipment budget.
+- Parcel Desk connector trust and machine access, tenant/order ownership, supported existing carriers, actual refresh schedule for the selected deployment, authorized synthetic parcel/order fixtures and recipient permission. No courier booking credentials or shipment-purchase budget are required in V1.
 - Seller permission to import media/catalogue, publish policies and connect accounts; Dharaa's real migration requirements.
 - Production hosting, domain ownership, secret provisioning, backup destination and operational owner.
 
@@ -318,7 +320,7 @@ No unsolicited real-customer messages or ad spend. Live canaries use explicitly 
 | G0 Baseline | Source preserved, known failures recorded, host setup verified and no secrets committed |
 | G1 Parallel readiness | Contracts frozen, ownership assigned, isolated environments and safe reset tests pass |
 | G2 Functional integration | Every in-scope module works against real application APIs and migrated schema; no contract placeholders |
-| G3 Provider readiness | Actual Meta connections/messages/comments, Razorpay test checkout and courier canaries pass for supported scope |
+| G3 Provider readiness | Actual Meta connections/messages/comments, Razorpay test checkout and authorized existing-parcel tracking/update canaries pass for supported scope |
 | G4 Product readiness | Full acceptance matrix passes on the integrated release candidate; all three themes and sales-assisted/self-service onboarding verified |
 | G5 Pilot readiness | Pilot scope/limits documented; migration/restore rehearsed; alerts, usage limits, support runbooks and deployment rollback prepared |
 | G6 Production cutover | Owner approval, provider production readiness, final backup and controlled rollout; production smoke checks and reconciliation pass |

@@ -1,21 +1,16 @@
 """Opt-in PostgreSQL checks against Alembic, never ORM create_all/drop_all.
 
-Requires the coordinator's dedicated disposable DB and real identity dependency.
-This module intentionally refuses any other URL before migrations or connection.
+Uses P01 migrated_engine and its validated disposable lane/reset lease.
+No hardcoded worker URL or application DATABASE_URL fallback is permitted.
 """
 import asyncio
-import os
-from pathlib import Path
 from uuid import uuid4
 
-from alembic import command
-from alembic.config import Config
 import pytest
 import pytest_asyncio
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.models.catalogue_v1 import CatalogueSKU
 from app.models.commerce import CommerceCustomer, CommerceOrder, Storefront
@@ -27,38 +22,10 @@ from app.services.catalogue_v1 import (
 )
 
 
-SAFE_URL = "postgresql+asyncpg://v1test:v1test-only@127.0.0.1:55441/v1_catalogue_commerce_test"
-pytestmark = pytest.mark.skipif(os.environ.get("V1_CATALOGUE_DB_TESTS") != "1", reason="Dedicated DB opt-in required")
-
-
-def require_disposable_database():
-    if os.environ.get("DATABASE_URL") != SAFE_URL or os.environ.get("TEST_DATABASE_URL") != SAFE_URL:
-        raise RuntimeError("Refusing DB checks: exact coordinator-allocated disposable URLs required")
-    from app.config import settings
-    if settings.DATABASE_URL != SAFE_URL:
-        raise RuntimeError("Refusing DB checks: imported application settings target another database")
-
-
-@pytest.fixture(scope="module", autouse=True)
-def migrated_schema():
-    if os.environ.get("V1_CATALOGUE_DB_TESTS") != "1":
-        return
-    require_disposable_database()
-    # Real Business metadata is required by catalogue FK resolution during flush.
-    # Integration registers this centrally; standalone worktree copies are local-only.
-    from app.models.identity import Business  # noqa: F401
-    backend = Path(__file__).resolve().parents[1]
-    config = Config(str(backend / "alembic.ini"))
-    config.set_main_option("script_location", str(backend / "alembic"))
-    command.upgrade(config, "0041_v1_catalogue")
-
-
 @pytest_asyncio.fixture
-async def sessions(migrated_schema):
-    require_disposable_database()
-    engine = create_async_engine(SAFE_URL, poolclass=NullPool)
-    yield async_sessionmaker(engine, expire_on_commit=False)
-    await engine.dispose()
+async def sessions(migrated_engine):
+    """Portable P01 lane: actual Alembic head under the shared reset lease."""
+    yield async_sessionmaker(migrated_engine, expire_on_commit=False)
 
 
 async def seed(sessions, variants=None, stock=7, pending=False):

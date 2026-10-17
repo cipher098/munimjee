@@ -88,6 +88,10 @@ private catalogue values, contact identifiers and internal notes. Readiness has
 are explicitly `not_evaluated`; legacy `onboarding_state=active` does not prove V1
 readiness.
 
+## Compatibility limits before native login rollout
+
+V1 revocation and membership downgrade apply to V1 authorization. Existing legacy seller/dashboard routes continue to authorize through Seller activity; they do not read V1 memberships. Do not describe a V1 membership change as revoking every legacy session. Native login rollout also requires consistent session cleanup: legacy login/logout currently does not clear a future v1_session cookie, and credential precedence differs across legacy/V1 routes. Invitation/native login and app-wide session transition remain pending integration work.
+
 ## Integrator-owned registration
 
 Add to `backend/app/models/__init__.py`:
@@ -122,8 +126,10 @@ Database cases verify repeated migration/service backfills, preserved revocation
 and downgrades, inactive tenants/users, unique/FK/role constraints, identical
 unverified phones remaining separate users, two-tenant access, native viewer API
 responses, denied admin impersonation and explicit bridging for new sellers.
-Tests require `V1_IDENTITY_TEST_DATABASE_URL` to exactly match the coordinator's
-allocated disposable test URL; they never target configured `DATABASE_URL`.
+The integrated fixtures now use the shared P01 `migrated_engine` and `tests.safety`
+validation with `TEST_DATABASE_URL`, `TEST_LANE` and `TEST_DB_RESET=1`. They accept
+only the exact disposable `munimjee_test_<lane>` database on numeric loopback,
+block provider networking, and hold the shared reset lease.
 Each generated schema and its data disappear when its transaction rolls back.
 
 Run from the worktree with synthetic settings and `PYTHONPATH=backend`:
@@ -132,7 +138,7 @@ Run from the worktree with synthetic settings and `PYTHONPATH=backend`:
 .venv/bin/python -m pytest backend/tests/test_v1_identity.py backend/tests/test_v1_identity_db.py -q
 ```
 
-Without the allocated database environment variable, the eight DB checks skip;
+Without an explicit P01 disposable lane, the eight DB checks skip;
 that is not a database validation pass. Existing Pydantic class-config and HTTPX
 per-request cookie deprecation warnings remain. Integrator router/model registration
 and independently rerunning the full integrated migration chain remain required.

@@ -135,3 +135,11 @@ writer migration and reconciliation pass against migrated schema.
 
 The Alembic downgrade is development schema teardown. Production rollback must
 preserve new transactions; dropping SKU/mapping tables is not a cutover rollback.
+
+## Integrated test lane
+
+The integrated DB fixture uses P01 `migrated_engine`, actual Alembic head and the
+shared reset lease. Configure `TEST_DATABASE_URL`, `TEST_LANE` and `TEST_DB_RESET=1`
+using the literal loopback `munimjee_test_<lane>` policy. Standalone hardcoded
+catalogue database/opt-in switches are superseded in integration; missing DB opt-in
+skips DB checks and is not a validation pass.

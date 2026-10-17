@@ -48,3 +48,6 @@ __all__ += ["WhatsAppAccount", "WhatsAppContact", "WhatsAppMessage", "WhatsAppTe
 
 from app.models.identity import Business, User, Membership
 __all__ += ["Business", "User", "Membership"]
+
+from app.models.catalogue_v1 import CatalogueSKU, CatalogueProductMapping
+__all__ += ["CatalogueSKU", "CatalogueProductMapping"]

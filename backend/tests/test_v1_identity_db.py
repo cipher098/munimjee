@@ -1,10 +1,9 @@
 """Opt-in domain-migration checks in a rollback-only, randomly named schema.
 
-Only V1_IDENTITY_TEST_DATABASE_URL is used; DATABASE_URL is never a test target.
-The coordinator must explicitly allocate a disposable local PostgreSQL test DB.
+P01 validates an explicit disposable lane and holds its reset lease.
+The identity-specific baseline/backfill check uses an extra rollback-only schema.
 """
 import importlib.util
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -16,7 +15,7 @@ from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.identity import router
 from app.database import get_db
 from app.models.identity import Business, Membership, User
@@ -33,43 +32,35 @@ spec.loader.exec_module(migration)
 
 
 @pytest_asyncio.fixture
-async def identity_db():
-    target = os.environ.get("V1_IDENTITY_TEST_DATABASE_URL")
-    if not target:
-        pytest.skip("Coordinator-allocated V1_IDENTITY_TEST_DATABASE_URL is required")
-    if target != "postgresql+asyncpg://v1test:v1test-only@127.0.0.1:55441/v1_identity_commerce_test":
-        pytest.fail("Identity tests require the exact coordinator-allocated disposable database")
-    engine = create_async_engine(target)
+async def identity_db(migrated_engine):
+    engine = migrated_engine
     schema = "v1_identity_" + uuid4().hex
-    try:
-        async with engine.connect() as connection:
-            transaction = await connection.begin()
-            try:
-                await connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-                await connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
-                def baseline(conn):
-                    script = ScriptDirectory(str(MIGRATION_PATH.parents[1]))
-                    with Operations.context(MigrationContext.configure(conn)):
-                        for revision in reversed(list(script.walk_revisions(base="base", head="0039"))):
-                            revision.module.upgrade()
-                await connection.run_sync(baseline)
-                session = AsyncSession(bind=connection, expire_on_commit=False)
-                one = Seller(id=uuid4(), email="first@example.test", password_hash="synthetic", business_name="One", whatsapp_number="unverified-shared-phone", is_active=True)
-                two = Seller(id=uuid4(), email="second@example.test", password_hash="synthetic", business_name="Two", whatsapp_number="unverified-shared-phone", is_active=True)
-                inactive = Seller(id=uuid4(), email="inactive@example.test", password_hash="synthetic", is_active=False)
-                session.add_all([one, two, inactive])
-                await session.flush()
-                def upgrade(conn):
-                    with Operations.context(MigrationContext.configure(conn)):
-                        migration.upgrade()
-                await connection.run_sync(upgrade)
-                yield session, connection, one, two, inactive
-                await session.close()
-            finally:
-                # DDL and fixture data, including the schema, are rolled back.
-                await transaction.rollback()
-    finally:
-        await engine.dispose()
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        try:
+            await connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+            await connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
+            def baseline(conn):
+                script = ScriptDirectory(str(MIGRATION_PATH.parents[1]))
+                with Operations.context(MigrationContext.configure(conn)):
+                    for revision in reversed(list(script.walk_revisions(base="base", head="0039"))):
+                        revision.module.upgrade()
+            await connection.run_sync(baseline)
+            session = AsyncSession(bind=connection, expire_on_commit=False)
+            one = Seller(id=uuid4(), email="first@example.test", password_hash="synthetic", business_name="One", whatsapp_number="unverified-shared-phone", is_active=True)
+            two = Seller(id=uuid4(), email="second@example.test", password_hash="synthetic", business_name="Two", whatsapp_number="unverified-shared-phone", is_active=True)
+            inactive = Seller(id=uuid4(), email="inactive@example.test", password_hash="synthetic", is_active=False)
+            session.add_all([one, two, inactive])
+            await session.flush()
+            def upgrade(conn):
+                with Operations.context(MigrationContext.configure(conn)):
+                    migration.upgrade()
+            await connection.run_sync(upgrade)
+            yield session, connection, one, two, inactive
+            await session.close()
+        finally:
+            # DDL and fixture data, including the schema, are rolled back.
+            await transaction.rollback()
 
 
 @pytest.mark.asyncio
