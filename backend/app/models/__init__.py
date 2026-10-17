@@ -45,3 +45,6 @@ __all__ += ["OAuthState", "PaymentReview"]
 from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
 from app.models.comment_automation import CommentRule, CommentEvent, CommentAction
 __all__ += ["WhatsAppAccount", "WhatsAppContact", "WhatsAppMessage", "WhatsAppTemplate", "CommentRule", "CommentEvent", "CommentAction"]
+
+from app.models.identity import Business, User, Membership
+__all__ += ["Business", "User", "Membership"]

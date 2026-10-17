@@ -29,6 +29,7 @@ from app.api.routes.private_media import router as private_media_router, PublicU
 from app.api.routes.whatsapp import router as whatsapp_router
 from app.api.webhooks.whatsapp import router as whatsapp_webhook_router
 from app.api.routes.comment_automation import router as comment_automation_router
+from app.api.v1.identity import router as v1_identity_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ app.include_router(razorpay_router)
 app.include_router(whatsapp_router)
 app.include_router(whatsapp_webhook_router)
 app.include_router(comment_automation_router)
+app.include_router(v1_identity_router)
 
 
 @app.get("/health")
