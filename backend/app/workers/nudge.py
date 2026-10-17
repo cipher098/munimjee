@@ -164,9 +164,14 @@ async def _send_nudge(conversation_id: str, target_count: int) -> None:
         return
 
     async with worker_session() as db:
+        from app.workers.message_batch import _lock_conversation
+        await _lock_conversation(db, conversation_id)
         result = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
         conversation = result.scalar_one_or_none()
         if not conversation:
+            return
+        from app.services.instagram_ingress import thread_quarantined
+        if await thread_quarantined(db, conversation.seller_id, conversation.customer_instagram_id):
             return
         # Only nudge a thread still in focus (mid-funnel).
         if not conversation.product_id:

@@ -56,8 +56,27 @@ async def receive_webhook(
         raise HTTPException(status_code=400, detail="Invalid webhook payload")
     if payload.get("object") != "instagram":
         return {"status": "ignored"}
+    entries = payload.get("entry", [])
+    if not isinstance(entries, list) or any(not isinstance(entry, dict) for entry in entries):
+        raise HTTPException(status_code=400, detail="Invalid webhook entries")
+    from app.services.instagram_ingress import validate_message_shape
+    try:
+        for entry in entries:
+            for key in ("messaging", "changes"):
+                if not isinstance(entry.get(key, []), list):
+                    raise ValueError("Invalid webhook entry")
+            for event in entry.get("messaging", []):
+                validate_message_shape(event)
+            for change in entry.get("changes", []):
+                if not isinstance(change, dict) or (change.get("value") is not None and not isinstance(change["value"], dict)):
+                    raise ValueError("Invalid webhook change")
+                value = change.get("value") or {}
+                if any(value.get(key) is not None and not isinstance(value[key], dict) for key in ("media", "from")):
+                    raise ValueError("Invalid webhook change")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid webhook event")
     from app.services.comment_automation import ingest_comment
-    for entry in payload.get("entry", []):
+    for entry in entries:
         for messaging_event in entry.get("messaging", []):
             await _handle_messaging_event(messaging_event, db)
         for change in entry.get("changes", []):
@@ -92,13 +111,18 @@ def _verify_signature(body: bytes, signature_header: str | None) -> None:
 # Event routing
 
 async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
-    sender_id: str = event.get("sender", {}).get("id", "")
-    recipient_id: str = event.get("recipient", {}).get("id", "")  # seller's Instagram page ID
+    from app.services.instagram_ingress import validate_message_shape
+    try:
+        validate_message_shape(event)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid webhook event")
+    sender_id: str = (event.get("sender") or {}).get("id", "")
+    recipient_id: str = (event.get("recipient") or {}).get("id", "")  # seller's Instagram page ID
 
     if not sender_id or not recipient_id:
         return
 
-    message = event.get("message", {})
+    message = event.get("message") or {}
     if not message:
         return
 
@@ -120,7 +144,10 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
         return
 
     from app.services.instagram_ingress import persist_message, BATCH_SECONDS
-    receipt = await persist_message(db, event)
+    try:
+        receipt = await persist_message(db, event)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid webhook event")
     if receipt is not None:
         # The receipt is committed already. Broker outages cannot lose accepted
         # work; the periodic recovery scanner dispatches pending DB receipts.

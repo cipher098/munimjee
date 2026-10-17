@@ -18,6 +18,7 @@ class InstagramIngress(Base):
     event_key = Column(String(64), nullable=False)
     provider_message_id = Column(String(255), nullable=True)
     events = Column(JSONB, nullable=False)
+    processed_indices = Column(JSONB, nullable=False, default=list, server_default="[]")
     status = Column(String(20), nullable=False, default="pending", server_default="pending")
     attempts = Column(Integer, nullable=False, default=0, server_default="0")
     error_code = Column(String(80), nullable=True)

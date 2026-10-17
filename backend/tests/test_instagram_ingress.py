@@ -110,3 +110,45 @@ async def test_replay_cannot_transfer_receipt_after_account_disconnect():
     db = SimpleNamespace(scalar=AsyncMock(side_effect=[row, None]))
     with pytest.raises(ValueError, match="instagram_account_binding_changed"):
         await replay_receipt(db, uuid4(), row.seller_id)
+
+
+@pytest.mark.parametrize("changes", [
+    {"message": {"text": "hi", "reply_to": []}},
+    {"message": {"attachments": [None]}},
+    {"message": {"attachments": [{"type": "image", "payload": ["bad"]}]}},
+    {"message": []}, {"sender": []},
+])
+@pytest.mark.asyncio
+async def test_malformed_nested_shapes_return_400_before_io(changes):
+    from fastapi import HTTPException
+    from app.api.webhooks.instagram import _handle_messaging_event
+    db = SimpleNamespace(execute=AsyncMock())
+    with pytest.raises(HTTPException) as error:
+        await _handle_messaging_event(message(**changes), db)
+    assert error.value.status_code == 400
+    db.execute.assert_not_awaited()
+
+
+@pytest.mark.parametrize("entries", [None, {}, [None], [{"messaging": {}}],
+                                     [{"messaging": [{"message": {"text": "hi", "reply_to": []}}]}]])
+@pytest.mark.asyncio
+async def test_signed_http_webhook_rejects_malformed_nested_payload_without_ack(entries, monkeypatch):
+    import hashlib
+    import hmac
+    import json
+    from fastapi import HTTPException
+    from starlette.requests import Request
+    from app.api.webhooks.instagram import receive_webhook
+    from app.config import settings
+    body = json.dumps({"object": "instagram", "entry": entries}).encode()
+    async def receive():
+        return {"type": "http.request", "body": body}
+    request = Request({"type": "http", "headers": []}, receive)
+    monkeypatch.setattr(settings, "META_WEBHOOK_SECRET", "synthetic-secret")
+    signature = "sha256=" + hmac.new(b"synthetic-secret", body, hashlib.sha256).hexdigest()
+    db = SimpleNamespace(execute=AsyncMock(), commit=AsyncMock())
+    with pytest.raises(HTTPException) as error:
+        await receive_webhook(request, db, signature)
+    assert error.value.status_code == 400
+    db.execute.assert_not_awaited()
+    db.commit.assert_not_awaited()

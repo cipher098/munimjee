@@ -20,7 +20,7 @@ def result(rows):
 
 
 def receipt():
-    return SimpleNamespace(id=uuid4(), seller_id=uuid4(), status="processing", events=[{"type": "text", "text": "hello"}])
+    return SimpleNamespace(id=uuid4(), seller_id=uuid4(), status="processing", processed_indices=[], events=[{"type": "text", "text": "hello"}])
 
 
 @pytest.mark.asyncio
@@ -35,12 +35,12 @@ async def test_success_uses_existing_writer_and_completes_in_same_transaction(mo
         yield db
         boundaries.append(row.status)
 
-    consume = AsyncMock()
+    consume = AsyncMock(return_value={0})
     monkeypatch.setattr(worker, "worker_session", session)
     monkeypatch.setattr(worker, "_claim", AsyncMock(return_value=[row.id]))
     monkeypatch.setattr(message_batch, "_consume_events", consume)
     await worker._process_thread(row.seller_id, "account", "customer")
-    consume.assert_awaited_once_with(db, seller, "customer", row.events)
+    consume.assert_awaited_once_with(db, seller, "customer", row.events, owned_receipt_ids=[row.id])
     assert row.status == "completed"
     assert boundaries == ["completed"]
 
@@ -74,7 +74,7 @@ async def test_account_reassignment_never_invokes_writer(monkeypatch):
     async def session():
         yield db
 
-    consume = AsyncMock()
+    consume = AsyncMock(return_value={0})
     monkeypatch.setattr(worker, "worker_session", session)
     monkeypatch.setattr(worker, "_claim", AsyncMock(return_value=[row.id]))
     monkeypatch.setattr(message_batch, "_consume_events", consume)
@@ -101,6 +101,7 @@ async def test_recovery_retains_interrupted_work_and_wakes_pending_after_commit(
 
     monkeypatch.setattr(worker, "worker_session", session)
     monkeypatch.setattr(worker.process_instagram_ingress, "apply_async", dispatch)
+    monkeypatch.setattr(worker, "_recover_legacy_buffers", lambda: None)
     await worker._recover()
     assert row.status == "error"
     assert row.error_code == "processing_interrupted_unknown_effect"
@@ -109,7 +110,7 @@ async def test_recovery_retains_interrupted_work_and_wakes_pending_after_commit(
 
 @pytest.mark.asyncio
 async def test_new_pending_message_extends_silence_window(monkeypatch):
-    db = SimpleNamespace(execute=AsyncMock(), scalar=AsyncMock(side_effect=[None, datetime.now(timezone.utc) + timedelta(seconds=20)]))
+    db = SimpleNamespace(execute=AsyncMock(), scalar=AsyncMock(side_effect=[None, None, datetime.now(timezone.utc) + timedelta(seconds=20)]))
 
     @asynccontextmanager
     async def session():
@@ -132,3 +133,41 @@ async def test_existing_processing_batch_prevents_second_claim(monkeypatch):
     monkeypatch.setattr(worker, "worker_session", session)
     assert await worker._claim(uuid4(), "account", "customer") == []
     assert db.scalar.await_count == 1
+
+
+def test_legacy_recovery_retains_buffer_and_dispatches_transfer_only(monkeypatch):
+    persisted = []
+    dispatched = []
+    fake = SimpleNamespace(scan_iter=lambda **kwargs: iter(["msg_batch:account:customer"]), persist=persisted.append)
+    monkeypatch.setattr(message_batch, "_redis", lambda: fake)
+    monkeypatch.setattr(message_batch.process_message_batch, "apply_async", lambda *, args: dispatched.append(args))
+    worker._recover_legacy_buffers()
+    assert persisted == ["msg_batch:account:customer"]
+    assert dispatched == [["account", "customer"]]
+
+
+def test_legacy_trim_compares_prefix_before_deleting_new_events(monkeypatch):
+    """Optional isolated Redis check; no key discovery or database reset."""
+    import json
+    import os
+    target = os.environ.get("TEST_REDIS_URL")
+    if target is None:
+        pytest.skip("Coordinator-allocated TEST_REDIS_URL required")
+    if target != "redis://127.0.0.1:56441/3":
+        pytest.fail("Refusing Redis access outside exact allocated test namespace")
+    import redis
+    client = redis.from_url(target, decode_responses=True)
+    account = "synthetic_" + uuid4().hex
+    key = f"msg_batch:{account}:customer"
+    first = {"type": "text", "text": "first", "mid": "first"}
+    later = {"type": "text", "text": "later", "mid": "later"}
+    monkeypatch.setattr(message_batch, "_redis", lambda: client)
+    try:
+        client.rpush(key, json.dumps(first))
+        message_batch.trim_processed_events(account, "customer", 1, expected_events=[first])
+        client.rpush(key, json.dumps(later))
+        # A stale concurrent task cannot trim the newly arrived prefix.
+        message_batch.trim_processed_events(account, "customer", 1, expected_events=[first])
+        assert [json.loads(item) for item in client.lrange(key, 0, -1)] == [later]
+    finally:
+        client.delete(key)

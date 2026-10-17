@@ -1,9 +1,9 @@
-"""
-Celery task: process a batch of messages from the same customer that arrived within
-an 8-second debounce window.  Each incoming webhook event is queued in Redis;
-a delayed task fires after 8 s of silence and processes them all, sending exactly
-one bot reply. (Set BATCH_WINDOW_SECONDS = 0 to disable batching and reply to every
-message immediately — but rapid bursts like "Hey" + "I want X" then get two replies.)
+"""Shared Instagram conversation policy and legacy Redis cutover transfer.
+
+New webhook messages live in the durable inbox. Old Redis batch tasks transfer
+buffered events into that same inbox and fence them for review before sending.
+The durable worker owns dispatch; takeover resume and nudges share its thread
+lock/quarantine gate.
 """
 from app.workers.async_runner import run_async
 from datetime import datetime, timedelta, timezone
@@ -195,7 +195,7 @@ async def _lock_conversation(db, conversation_id) -> None:
 def _redis():
     import redis as _redis_lib
     from app.config import settings
-    return _redis_lib.from_url(settings.REDIS_URL, decode_responses=True)
+    return _redis_lib.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=2, socket_timeout=2)
 
 
 def enqueue_event(page_id: str, customer_ig_id: str, event: dict) -> None:
@@ -237,13 +237,25 @@ def peek_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
     return [json.loads(item) for item in raw_list]
 
 
-def trim_processed_events(page_id: str, customer_ig_id: str, count: int) -> None:
-    """Drop the first `count` events (the ones just processed), keeping anything
-    that arrived during processing. Call ONLY after the DB transaction committed."""
+def trim_processed_events(page_id: str, customer_ig_id: str, count: int, *, expected_events=None) -> None:
+    """Trim only the exact transferred prefix after DB commit.
+
+    A concurrent legacy task may already have trimmed it. Comparing the prefix
+    prevents the stale task from deleting newly arrived events in its place.
+    """
     if count <= 0:
         return
     key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
-    _redis().ltrim(key, count, -1)
+    if expected_events is None:
+        raise ValueError("Expected Redis prefix required")
+    script = """
+    for i = 1, #ARGV do
+        if redis.call('LINDEX', KEYS[1], i - 1) ~= ARGV[i] then return 0 end
+    end
+    redis.call('LTRIM', KEYS[1], #ARGV, -1)
+    return #ARGV
+    """
+    _redis().eval(script, 1, key, *[json.dumps(event) for event in expected_events])
 
 
 def drop_all_events(page_id: str, customer_ig_id: str) -> None:
@@ -255,31 +267,21 @@ def drop_all_events(page_id: str, customer_ig_id: str) -> None:
 # Celery task
 # ---------------------------------------------------------------------------
 
-_MAX_BATCH_RETRIES = 3
-
-
 @celery_app.task(
     name="app.workers.message_batch.process_message_batch",
     bind=True,
-    acks_late=True,  # redeliver on worker loss; events stay in Redis until success
+    acks_late=True,
+    reject_on_worker_lost=True,
+    max_retries=None,
 )
 def process_message_batch(self, page_id: str, customer_ig_id: str) -> None:
     try:
         run_async(_process_batch(page_id, customer_ig_id))
     except Exception as exc:
-        if self.request.retries >= _MAX_BATCH_RETRIES:
-            # Poison batch — drop it so it can't block the conversation forever.
-            logger.error(
-                "process_message_batch dead-letter for %s:%s after %d retries: %s",
-                page_id, customer_ig_id, self.request.retries, exc,
-            )
-            try:
-                drop_all_events(page_id, customer_ig_id)
-            except Exception:
-                logger.exception("dead-letter drop failed for %s:%s", page_id, customer_ig_id)
-            return
-        # Transient failure — retry; events are still in Redis (not trimmed).
-        raise self.retry(exc=exc, countdown=min(2 ** self.request.retries, 30))
+        # This task only transfers old Redis work into the durable inbox.
+        # Never drop accepted work when the DB is unavailable. The Redis key is
+        # retained without expiry by _process_batch before attempting transfer.
+        raise self.retry(exc=exc, countdown=min(2 ** min(self.request.retries, 5), 30), max_retries=None)
 
 
 def _record_customer_entries(conversation, events) -> None:
@@ -297,6 +299,7 @@ def _record_customer_entries(conversation, events) -> None:
 async def _process_batch(page_id: str, customer_ig_id: str) -> None:
     # Read WITHOUT removing — legacy events stay in Redis until we
     # successfully commit, so a crash/retry reprocesses them instead of losing them.
+    _redis().persist(f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}")
     events = peek_all_events(page_id, customer_ig_id)
     if not events:
         logger.info("message_batch: no events for %s:%s — skipping", page_id, customer_ig_id)
@@ -304,49 +307,55 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
 
     logger.info("message_batch: processing %d events for %s:%s", len(events), page_id, customer_ig_id)
 
-    consumed = await _consume_batch(page_id, customer_ig_id)
+    consumed = await _consume_batch(page_id, customer_ig_id, events=events)
     # Reached only if _consume_batch returned normally → its transaction committed.
     # Trim the events we consumed; anything that arrived meanwhile survives.
-    trim_processed_events(page_id, customer_ig_id, consumed)
+    trim_processed_events(page_id, customer_ig_id, consumed, expected_events=events[:consumed])
 
 
-async def _consume_batch(page_id: str, customer_ig_id: str) -> int:
-    """Process the queued events in ONE transaction; return how many leading
-    events were consumed (to trim after commit). Raises on failure so the task
-    retries with the events still in Redis."""
+async def _consume_batch(page_id: str, customer_ig_id: str, *, events=None) -> int:
+    """Durably transfer legacy Redis work; this path never sends replies.
+
+    Every transferred receipt is fenced for cutover review unless its provider
+    mid is already completed in the shared ledger. Redis is trimmed after commit.
+    """
     from app.models.seller import Seller
-    from sqlalchemy import select
     from app.database import worker_session
-    from app.config import settings as _settings
+    from app.services.instagram_ingress import persist_legacy_batch
 
+    events = peek_all_events(page_id, customer_ig_id) if events is None else events
+    if not events:
+        return 0
     async with worker_session() as db:
-        result = await db.execute(
-            select(Seller).where(Seller.instagram_page_id == page_id, Seller.is_active == True)
-        )
-        seller = result.scalar_one_or_none()
-        if not seller:
-            logger.warning("message_batch: no seller for page_id %s — dropping queue", page_id)
-            drop_all_events(page_id, customer_ig_id)
-            return 0
-
-        return await _consume_events(
-            db, seller, customer_ig_id, [],
-            event_loader=lambda: peek_all_events(page_id, customer_ig_id),
-        )
+        sellers = (await db.execute(select(Seller).where(
+            Seller.instagram_page_id == page_id, Seller.is_active.is_(True),
+        ).limit(2))).scalars().all()
+        if len(sellers) != 1:
+            raise ValueError("Legacy Instagram account requires cutover review")
+        return await persist_legacy_batch(db, sellers[0], page_id, customer_ig_id, events)
 
 
-async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *, event_loader=None) -> int:
-    """Single policy/sending path shared by legacy Redis and durable IG ingress.
+async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *, owned_receipt_ids=()) -> set[int]:
+    """Single conversation writer; return exactly which event indices were consumed.
 
-    The caller owns the transaction. The same conversation advisory lock also
-    serializes takeover resume tasks. Legacy queues are re-read under the lock.
+    The caller owns the transaction and receipt completion. The same advisory
+    lock and quarantine gate also serialize/block takeover resume and nudges.
     """
     from app.config import settings as _settings
     from app.api.webhooks.instagram import _get_or_create_conversation
     conversation = await _get_or_create_conversation(seller, customer_ig_id, db)
     await db.flush()
 
-    # Fetch customer name once (before the lock — not idempotency-critical).
+    await _lock_conversation(db, conversation.id)
+    await db.refresh(conversation)
+    from app.services.instagram_ingress import thread_quarantined
+    if await thread_quarantined(db, seller.id, customer_ig_id, owned_receipt_ids=owned_receipt_ids):
+        return set()
+    if not events:
+        return set()
+    consumed = set(range(len(events)))
+
+    # Fetch customer name only after the thread passed its quarantine gate.
     if not conversation.customer_name:
         try:
             from app.integrations.instagram import InstagramClient
@@ -359,29 +368,6 @@ async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *
                 logger.info("Fetched customer name %r for conversation %s", name, conversation.id)
         except Exception as exc:
             logger.warning("Could not fetch customer name for %s: %s", customer_ig_id, exc)
-
-    # Serialize the whole consume for this conversation (vs concurrent batch
-    # tasks + the takeover-resume wake). The pg advisory xact lock is held
-    # until this transaction commits, so the peek + trim are race-free.
-    await _lock_conversation(db, conversation.id)
-    await db.refresh(conversation)
-
-    # Authoritative read under the lock — a concurrent task may have already
-    # consumed (and trimmed) some of what we peeked before locking.
-    events = event_loader() if event_loader is not None else events
-    if not events:
-        return 0
-    consumed = len(events)
-
-    # Idempotency guard: if every text msg in this batch is already in history
-    # AND there's no trailing unanswered customer turn, a prior committed run
-    # already handled + answered it (we're a retry/redelivery) — skip, trim.
-    batch_mids = {e.get("mid") for e in events if e.get("type") == "text" and e.get("mid")}
-    hist = conversation.messages or []
-    hist_mids = {m.get("mid") for m in hist if m.get("mid")}
-    if batch_mids and batch_mids <= hist_mids and not unanswered_customer_messages(hist):
-        logger.info("message_batch: %s already processed+answered — skipping (idempotent)", conversation.id)
-        return consumed
 
     # Post-payment change requests (refund / cancellation / item-change) are NEVER
     # auto-handled. While an OPEN manual action exists the bot stays silent on this chat
@@ -444,10 +430,9 @@ async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *
             active_cp.pending_tag_id = None
             await db.flush()
 
-    await _process_events(events, conversation, seller, db)
-    return consumed
+    return await _process_events(events, conversation, seller, db)
 
-async def _process_events(events: list, conversation, seller, db) -> None:
+async def _process_events(events: list, conversation, seller, db) -> set[int]:
     """
     Combine all events in the batch into a single bot reply:
 
@@ -482,7 +467,8 @@ async def _process_events(events: list, conversation, seller, db) -> None:
         if _cp:
             _active_cp_state = _cp.state
 
-    for event in events:
+    handled_media = set()
+    for index, event in enumerate(events):
         etype = event.get("type")
         if etype == "image":
             image_url = event["image_url"]
@@ -509,9 +495,11 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                 if image_class != "payment":
                     logger.info("Image classified %r but state is awaiting_payment — verifying as payment", image_class)
                 await handle_payment_screenshot(conversation, seller, image_url, db)
-                return
+                handled_media.add(index)
+                return handled_media
             else:
                 await handle_product_image(conversation, seller, image_url, db, send_reply=False)
+                handled_media.add(index)
 
         elif etype == "reel":
             # Check for Instagram URL in text too
@@ -522,6 +510,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
                 reel_title=event.get("reel_title"),
                 send_reply=False,
             )
+            handled_media.add(index)
 
     # Phase 2 — collect all text parts (including IG URLs in text messages).
     # If the customer replied to a specific old message, resolve that context first.
@@ -587,6 +576,7 @@ async def _process_events(events: list, conversation, seller, db) -> None:
         combined_text = reply_context_prefix + "[customer sent media]"
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True)
     # else: nothing actionable, no reply
+    return set(range(len(events)))
 
 
 # ---------------------------------------------------------------------------
@@ -658,6 +648,10 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
         conversation = result.scalar_one_or_none()
         if not conversation:
             logger.info("wake_paused_conversation: conversation %s not found — skip", conversation_id)
+            return
+
+        from app.services.instagram_ingress import thread_quarantined
+        if await thread_quarantined(db, conversation.seller_id, conversation.customer_instagram_id):
             return
 
         if is_bot_paused_for_manual_takeover(

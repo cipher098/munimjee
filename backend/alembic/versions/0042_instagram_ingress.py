@@ -19,6 +19,7 @@ def upgrade():
         sa.Column("event_key", sa.String(64), nullable=False),
         sa.Column("provider_message_id", sa.String(255), nullable=True),
         sa.Column("events", postgresql.JSONB(), nullable=False),
+        sa.Column("processed_indices", postgresql.JSONB(), nullable=False, server_default="[]"),
         sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
         sa.Column("attempts", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("error_code", sa.String(80), nullable=True),

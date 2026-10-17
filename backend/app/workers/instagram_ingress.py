@@ -8,7 +8,7 @@ from sqlalchemy import select, text
 from app.database import worker_session
 from app.models.instagram_ingress import InstagramIngress
 from app.models.seller import Seller
-from app.services.instagram_ingress import PROCESSING_TIMEOUT_SECONDS
+from app.services.instagram_ingress import PROCESSING_TIMEOUT_SECONDS, thread_quarantined
 from app.workers.async_runner import run_async
 from app.workers.celery_app import celery_app
 
@@ -44,7 +44,7 @@ async def _claim(seller_id, account_id, customer_id) -> list:
         active = await db.scalar(select(InstagramIngress.id).where(
             *filters, InstagramIngress.status == "processing",
         ).limit(1))
-        if active is not None:
+        if active is not None or await thread_quarantined(db, seller_id, customer_id):
             return []
         # Wait for a full silence window, preserving the existing debounce.
         newest = await db.scalar(select(InstagramIngress.available_at).where(
@@ -82,8 +82,26 @@ async def _process_thread(seller_id, account_id: str, customer_id: str) -> None:
                 _finish(rows, "error", "instagram_account_binding_changed")
                 return
             from app.workers.message_batch import _consume_events
-            await _consume_events(db, sellers[0], customer_id, [event for row in rows for event in row.events])
-            _finish(rows, "completed")
+            positions = [(row, index) for row in rows for index in range(len(row.events))
+                         if index not in (row.processed_indices or [])]
+            consumed = await _consume_events(
+                db, sellers[0], customer_id, [row.events[index] for row, index in positions],
+                owned_receipt_ids=ids,
+            )
+            if not isinstance(consumed, set) or not consumed <= set(range(len(positions))):
+                raise ValueError("Invalid conversation consumption result")
+            for row in rows:
+                done = set(row.processed_indices or [])
+                done.update(index for position, (source, index) in enumerate(positions)
+                            if source.id == row.id and position in consumed)
+                row.processed_indices = sorted(done)
+                if len(done) == len(row.events):
+                    _finish([row], "completed")
+                else:
+                    # Payment handling can intentionally return before later
+                    # text/media. Preserve those components for the next pass.
+                    row.status, row.started_at, row.finished_at = "pending", None, None
+                    row.available_at = datetime.now(timezone.utc)
     except Exception:
         # The legacy writer may send externally before its DB commit. A blind
         # retry could duplicate a reply or other side effect. Retain for review.
@@ -120,3 +138,20 @@ async def _recover() -> None:
             # DB remains authoritative; a later scan can retry the wake-up.
             logger.warning("Instagram ingress recovery broker unavailable; receipts retained")
             break
+    _recover_legacy_buffers()
+
+
+def _recover_legacy_buffers() -> None:
+    """Best-effort cutover transfer recovery; DB-native work needs no Redis scan."""
+    from itertools import islice
+    from app.workers.message_batch import _redis, process_message_batch, _BATCH_KEY_PREFIX
+    try:
+        redis = _redis()
+        for key in islice(redis.scan_iter(match=f"{_BATCH_KEY_PREFIX}*", count=100), 500):
+            parts = key.removeprefix(_BATCH_KEY_PREFIX).split(":")
+            if len(parts) != 2 or not all(parts):
+                continue
+            redis.persist(key)
+            process_message_batch.apply_async(args=parts)
+    except Exception:
+        logger.warning("Legacy Instagram transfer recovery unavailable; buffered work retained")
