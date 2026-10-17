@@ -1,0 +1,24 @@
+✔ ambiguous POST then reload retries the same payload and key exactly once (1.088834ms)
+✔ pending duplicate submit and changed uncertain basket never cause a new send (0.148583ms)
+✔ storage failure before POST sends nothing; post-acknowledgement failure cannot become rejected (0.154625ms)
+✔ only a definitive rejection permits a fresh corrected request key (0.133208ms)
+✔ expired unresolved storage erases address details while retaining a locked tombstone (0.090541ms)
+✔ an already open uncertain attempt expires before a later retry without reload (0.076542ms)
+✔ unrecognized stored attempt state paid cannot send (0.065667ms)
+✔ unrecognized stored attempt state success cannot send (0.055542ms)
+✔ unrecognized stored attempt state replayed cannot send (0.068042ms)
+✔ unrecognized stored attempt state __proto__ cannot send (0.083ms)
+✔ forged persisted confirmation cannot restore a script URL or bypass result validation (0.119625ms)
+✔ order URLs require an exact order path boundary and reject injected schemes (0.075417ms)
+✔ malformed created-order totals and server errors stay uncertain with no automatic retry (0.727ms)
+✔ checkout capability never activates from a missing or preview contract (0.04625ms)
+✔ checkout response deadline aborts one attempt without automatic resend (10.145875ms)
+✔ checkout body deadline aborts one attempt without automatic resend (11.265584ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56.851292

@@ -1,0 +1,294 @@
+{
+  "config": {
+    "configFile": "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/artifacts/v1/F20/local-review/playwright-qa.config.mjs",
+    "rootDir": "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/frontend/storefront/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/artifacts/v1/F20/local-review/browser-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/frontend/storefront/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/wave2*.spec.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:4319",
+      "reuseExistingServer": false,
+      "timeout": 10000,
+      "env": {
+        "PORT": "4319"
+      },
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/frontend/storefront/"
+    }
+  },
+  "suites": [
+    {
+      "title": "wave2-foundation.spec.js",
+      "file": "wave2-foundation.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "preview URL flags cannot authorize checkout, payment or publication",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 418,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:39.065Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8ce4595a1c9ab473c5d3-f84f8d75636ae54cef71",
+          "file": "wave2-foundation.spec.js",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "title": "browser contract rejects unknown stale inactive and malformed SKU proposals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 142,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:39.978Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8ce4595a1c9ab473c5d3-0063a6cd172219820ca8",
+          "file": "wave2-foundation.spec.js",
+          "line": 21,
+          "column": 1
+        },
+        {
+          "title": "malicious branding remains literal after theme change and modal roundtrip",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 260,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:40.127Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8ce4595a1c9ab473c5d3-b289515d94b2a0bff84a",
+          "file": "wave2-foundation.spec.js",
+          "line": 41,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "wave2-http.spec.js",
+      "file": "wave2-http.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "mock HTTP ambiguity survives reload and reuses exact checkout key/body",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 646,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:40.400Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "57cb296b530bd8bbda9e-0b95f3e4bc5253b7cc37",
+          "file": "wave2-http.spec.js",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "mock definitive 409 permits corrected details and a new request key",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 605,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:41.053Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "57cb296b530bd8bbda9e-34fb3c51d065e57505b5",
+          "file": "wave2-http.spec.js",
+          "line": 55,
+          "column": 1
+        },
+        {
+          "title": "mock malformed 201 remains uncertain and never announces an order",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 614,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T18:45:41.665Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "57cb296b530bd8bbda9e-447f009f3ea54ea073fe",
+          "file": "wave2-http.spec.js",
+          "line": 72,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T18:45:38.291Z",
+    "duration": 4065.006,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
