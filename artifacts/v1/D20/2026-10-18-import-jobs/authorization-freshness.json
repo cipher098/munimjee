@@ -1,0 +1,29 @@
+{
+  "source_sha": "f7db25fe206ed1a0813cdf5765df175102e60816",
+  "branch": "codex/v1-import-jobs",
+  "review_issue": "Cached ORM authorization rows could hide revocation, role downgrade or Instagram account changes after a tenant lock wait.",
+  "fix": "Owned scalar authorization projection with actor/tenant and active/revoked SQL guards; scoped no_autoflush around shared compatibility check; fresh role/account snapshot without refresh/expire/populate side effects.",
+  "command": "PYTHONPATH=backend .venv-imports/bin/python -m pytest backend/tests/test_v1_import_jobs.py backend/tests/test_v1_import_jobs_fetch.py backend/tests/test_v1_import_jobs_db.py backend/tests/test_v1_import_drafts.py -q -ra -p no:cacheprovider",
+  "results": {
+    "passed": 181,
+    "skipped": 9,
+    "warnings": 3,
+    "seconds": 0.32
+  },
+  "skip_gates": {
+    "import_migrated_checks": 3,
+    "two_session_authorization_races": 6,
+    "reason": "No allocated P01 TEST_DATABASE_URL/TEST_LANE/TEST_DB_RESET; no DB connection attempted. Import migration registration remains pending. Auth race cases use existing identity DDL only."
+  },
+  "race_cases": [
+    "user revoked",
+    "role downgraded",
+    "Instagram account rebound",
+    "membership revoked",
+    "business inactive",
+    "seller inactive"
+  ],
+  "race_test_design": "Strong stale ORM references kept with expire_on_commit=False; independent transaction holds business lock, changes authorization and commits while importer waits; unrelated dirty seller field must remain unflushed and untouched.",
+  "scope": "Only owned service/tests/docs; no shared identity model/dependency/framework changes, provider calls, production data or services.",
+  "status": "Pure/SQL-shape checks passed; actual two-session PostgreSQL race evidence pending local integrator."
+}
