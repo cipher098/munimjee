@@ -30,6 +30,9 @@ def create_router(*, canonical_base: str, provider_dependency=unavailable_provid
             if store.slug != slug:
                 raise LookupError('Storefront unavailable')
             html = render_storefront(store, origin, product_id=product_id, category_id=category_id)
+        except HTTPException as error:
+            error.headers={**(error.headers or {}),'X-Robots-Tag':'noindex, nofollow','Cache-Control':'no-store'}
+            raise
         except LookupError:
             raise HTTPException(404, 'Page unavailable', headers={'X-Robots-Tag': 'noindex, nofollow'})
         except (ValueError, KeyError, TypeError):
