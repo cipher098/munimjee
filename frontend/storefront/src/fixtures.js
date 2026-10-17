@@ -39,8 +39,4 @@ export const catalogueFixtures = presentationSamples.map((sample,index) => ({
   })),
 }));
 export const products = catalogueFixtures.map((dto,index)=>normalizeProduct(dto, presentationSamples[index]));
-export const themes = {
-  editorial:{name:'Editorial occasionwear',suffix:'',eyebrow:'THE CELEBRATION EDIT',headline:'For moments\nthat stay.',intro:'Occasionwear, considered. A softer kind of statement.',cta:'Explore the edit',feature:0,caption:'A study in rose · Gulab occasion set',collection:'Pieces to make memories in.',label:'THE ART OF OCCASION'},
-  catalogue:{name:'Everyday fashion',suffix:' / DAILY',eyebrow:'EVERYDAY, ELEVATED',headline:'Good pieces.\nGreat repeats.',intro:'Considered staples, easy layers, and a daily rotation that feels like you.',cta:'Find your everyday',feature:3,caption:'Easy layers · Linen weekend co-ord',collection:'Your next everyday favourite.',label:'A LITTLE LESS ORDINARY'},
-  video:{name:'Video-led boutique',suffix:' / STUDIO',eyebrow:'A CLOSER LOOK',headline:'Made to move\nwith you.',intro:'Discover the pieces behind the story. Explore our illustrated studio study.',cta:'Explore the pieces',feature:1,caption:'Illustrated story study · no seller footage',collection:'From the story to your wardrobe.',label:'IN THE STUDIO'},
-};
+export {themes} from './theme-config.js';

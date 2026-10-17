@@ -16,7 +16,7 @@ export function productPriceText(product) {
   return prices.length ? money(Math.min(...prices)) : 'Price after review';
 }
 export const button = (label,onClick,attributes={})=>el('button',{type:'button',onClick,...attributes},label);
-export const art = (product,className='')=>el('img',{src:`./assets/${product.image}`,alt:`Illustration of ${product.name}; synthetic sample`,className,loading:'lazy',width:600,height:760});
+export const art = (product,className='')=>product.image_url === null ? el('div',{className:`empty-state ${className}`},'Image unavailable') : el('img',{src:product.image_url || `./assets/${product.image}`,alt:product.image_url ? product.name : `Illustration of ${product.name}; synthetic sample`,className,loading:'lazy',width:600,height:760});
 export function productCard(product,onOpen) {
   const unavailable = product.skus.every(s=>s.availability!=='AVAILABLE'||!s.active);
   const state = product.readiness!=='reviewed' ? 'Stock review' : unavailable ? product.skus.some(s=>s.availability==='REVIEW_REQUIRED') ? 'Stock review' : product.skus.every(s=>s.availability==='SOLD_OUT') ? 'Sold out' : 'Unavailable' : product.tag;
