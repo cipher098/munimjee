@@ -410,3 +410,330 @@ async def test_template_create_preserves_meta_category_and_requires_auth(wa,monk
     assert r.status_code==201 and r.json()['category']=='MARKETING'
     wa.client.cookies.clear()
     assert (await wa.client.post('/whatsapp/templates',json=payload)).status_code==302
+
+
+@pytest.mark.parametrize('url,code', [
+    ('https://www.instagram.com/reel/Ab_C-1/?igsh=tracking', 'Ab_C-1'),
+    ('What price? https://instagram.com/reels/Ab_C-1/.', 'Ab_C-1'),
+    ('https://m.instagram.com/p/Ab_C-1/', 'Ab_C-1'),
+    ('https://evilinstagram.com/reel/Ab_C-1/', None),
+    ('https://instagram.com.evil.example/reel/Ab_C-1/', None),
+    ('https://instagram.com@evil.example/reel/Ab_C-1/', None),
+    ('https://evil.example/?url=https://instagram.com/reel/Ab_C-1/', None),
+    ('https://instagram.com/share/reel/opaque/', None),
+])
+def test_instagram_link_identity(url, code):
+    from app.services.whatsapp_context import instagram_references
+    refs = instagram_references(url)
+    assert [r['shortcode'] for r in refs] == ([code] if code else [])
+
+
+async def add_reel_product(wa, seller_index=0, *, active=True, name='Test clock'):
+    from app.models.product import Product
+    async with wa.session() as db:
+        product = Product(seller_id=wa.ids['sellers'][seller_index], name=name,
+            listed_price=250000, floor_price=200000, active=active,
+            reel_urls=['https://www.instagram.com/reel/Ab_C-1/'])
+        db.add(product)
+        await db.flush()
+        return str(product.id)
+
+
+async def stored_incoming(wa, mid):
+    async with wa.session() as db:
+        return await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.provider_message_id == mid))
+
+
+@pytest.mark.asyncio
+async def test_reel_context_matches_only_active_own_product_without_sending(wa):
+    own = await add_reel_product(wa)
+    await add_reel_product(wa, 1, name='Foreign clock')
+    await add_reel_product(wa, active=False, name='Inactive clock')
+    payload = incoming('reel', 'What price? https://www.instagram.com/reels/Ab_C-1/?igsh=abc')
+    assert (await posthook(wa, payload)).status_code == 200
+    assert (await posthook(wa, payload)).status_code == 200
+    row = await stored_incoming(wa, 'reel')
+    ref = row.payload['reel_context']['references'][0]
+    assert ref['url'] == 'https://www.instagram.com/reel/Ab_C-1/'
+    assert ref['status'] == 'matched'
+    assert ref['products'] == [{'id': own, 'name': 'Test clock'}]
+    assert 'floor_price' not in json.dumps(row.payload)
+    async with wa.session() as db:
+        assert await db.scalar(select(func.count()).select_from(WhatsAppMessage)) == 1
+
+
+@pytest.mark.asyncio
+async def test_unknown_and_ambiguous_reels_do_not_guess(wa):
+    await posthook(wa, incoming('unlinked', 'https://instagram.com/reel/Ab_C-1/'))
+    assert (await stored_incoming(wa, 'unlinked')).payload['reel_context']['references'][0]['status'] == 'unlinked'
+    await add_reel_product(wa)
+    await add_reel_product(wa, name='Another clock')
+    await posthook(wa, incoming('ambiguous', 'https://instagram.com/reel/Ab_C-1/'))
+    ref = (await stored_incoming(wa, 'ambiguous')).payload['reel_context']['references'][0]
+    assert ref['status'] == 'ambiguous' and len(ref['products']) == 2
+
+
+@pytest.mark.asyncio
+async def test_quoted_reel_uses_same_contact_and_current_catalogue(wa):
+    product_id = await add_reel_product(wa)
+    await posthook(wa, incoming('original', 'https://instagram.com/reel/Ab_C-1/'))
+    quote = incoming('quote', 'What is the price of this?')
+    event = quote['entry'][0]['changes'][0]['value']['messages'][0]
+    event['context'] = {'id': 'original', 'from': '919876543210'}
+    assert (await posthook(wa, quote)).status_code == 200
+    result = (await stored_incoming(wa, 'quote')).payload
+    assert result['reply_to_message_id'] == 'original'
+    assert result['reel_context']['source'] == 'quoted_message'
+    assert result['reel_context']['references'][0]['products'][0]['id'] == product_id
+    event['id'], event['from'] = 'foreign-contact', '919888888888'
+    await posthook(wa, quote)
+    assert 'reel_context' not in (await stored_incoming(wa, 'foreign-contact')).payload
+    # Explicit new reel must override the quoted one, even if unlinked.
+    event['id'], event['from'] = 'new-reel', '919876543210'
+    event['text']['body'] = 'https://instagram.com/reel/NewReel/'
+    await posthook(wa, quote)
+    ref = (await stored_incoming(wa, 'new-reel')).payload['reel_context']['references'][0]
+    assert ref['shortcode'] == 'NewReel' and ref['status'] == 'unlinked'
+    from app.models.product import Product
+    async with wa.session() as db:
+        product = await db.get(Product, UUID(product_id)); product.active = False
+    event['id'], event['text']['body'] = 'quote-inactive', 'Price?'
+    await posthook(wa, quote)
+    assert (await stored_incoming(wa, 'quote-inactive')).payload['reel_context']['references'][0]['status'] == 'unlinked'
+
+
+@pytest.mark.asyncio
+async def test_referral_and_video_caption_are_retained_without_guessing_ad_identity(wa):
+    body = incoming('ad', 'Interested')
+    event = body['entry'][0]['changes'][0]['value']['messages'][0]
+    event['referral'] = {'source_url': 'https://www.facebook.com/ads/123', 'source_id': '123', 'source_type': 'ad', 'headline': 'Clock offer'}
+    await posthook(wa, body)
+    payload = (await stored_incoming(wa, 'ad')).payload
+    assert payload['referral']['source_id'] == '123' and 'reel_context' not in payload
+    event['id'] = 'referral'
+    event['referral']['source_url'] = 'https://www.instagram.com/reel/Ab_C-1/'
+    await posthook(wa, body)
+    assert (await stored_incoming(wa, 'referral')).payload['reel_context']['source'] == 'referral_link'
+    event['id'], event['type'] = 'video', 'video'
+    event.pop('referral'); event.pop('text')
+    event['video'] = {'id': 'media-id', 'caption': 'https://www.instagram.com/reel/Ab_C-1/'}
+    await posthook(wa, body)
+    row = await stored_incoming(wa, 'video')
+    assert 'Ab_C-1' in row.text and row.payload['reel_context']['references'][0]['shortcode'] == 'Ab_C-1'
+    event['id'] = 'video-only'; event['video'].pop('caption')
+    await posthook(wa, body)
+    assert 'reel_context' not in (await stored_incoming(wa, 'video-only')).payload
+
+
+@pytest.mark.asyncio
+async def test_separate_question_inherits_recent_reel_but_new_link_does_not(wa):
+    await posthook(wa, incoming('shared', 'https://instagram.com/reel/Ab_C-1/', ago=0.1))
+    await posthook(wa, incoming('question', 'What is price of this?'))
+    result = (await stored_incoming(wa, 'question')).payload['reel_context']
+    assert result['source'] == 'recent_message'
+    assert result['references'][0]['shortcode'] == 'Ab_C-1'
+    await posthook(wa, incoming('different-link', 'https://instagram.com/share/reel/opaque/'))
+    assert 'reel_context' not in (await stored_incoming(wa, 'different-link')).payload
+    await posthook(wa, incoming('after-new-link', 'And this?'))
+    assert 'reel_context' not in (await stored_incoming(wa, 'after-new-link')).payload
+
+
+@pytest.mark.asyncio
+async def test_recent_context_expires_and_never_crosses_contacts(wa):
+    await posthook(wa, incoming('old-reel', 'https://instagram.com/reel/Ab_C-1/', ago=0.6))
+    await posthook(wa, incoming('expired', 'Price?'))
+    assert 'reel_context' not in (await stored_incoming(wa, 'expired')).payload
+    await posthook(wa, incoming('new-share', 'https://instagram.com/reel/Ab_C-1/', ago=0.1))
+    await posthook(wa, incoming('someone-else', 'Price?', phone='919888888888'))
+    assert 'reel_context' not in (await stored_incoming(wa, 'someone-else')).payload
+
+
+@pytest.mark.asyncio
+async def test_opt_in_reel_replies_follow_product_and_recheck_price_at_delivery(wa, monkeypatch):
+    product_id = await add_reel_product(wa)
+    r = await wa.client.patch('/whatsapp/account', json={'automation_enabled': True, 'reel_replies_enabled': True})
+    assert r.status_code == 200 and r.json()['reel_replies_enabled']
+    for _ in range(2):
+        await posthook(wa, incoming('reel-auto', 'https://instagram.com/reel/Ab_C-1/'))
+    await posthook(wa, incoming('price-auto', 'Price?'))
+    async with wa.session() as db:
+        rows = (await db.scalars(select(WhatsAppMessage).where(WhatsAppMessage.direction == 'outbound').order_by(WhatsAppMessage.created_at))).all()
+        assert len(rows) == 2
+        assert all('Test clock' in m.text and '₹2,500.00' in m.text for m in rows)
+        assert all(m.payload['reel_context']['references'][0]['products'][0]['id'] == product_id for m in rows)
+        message_id = rows[0].id
+        from app.models.product import Product
+        product = await db.get(Product, UUID(product_id)); product.listed_price = 275000
+    sent = []
+    async def send(account, contact, message):
+        sent.append(message.text); return 'wamid.reel-result'
+    monkeypatch.setattr(provider, 'send', send)
+    await deliver_one(message_id, wa.session)
+    assert len(sent) == 1 and '₹2,750.00' in sent[0]
+    assert '2000' not in sent[0] and '2,000' not in sent[0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('reason', ['disabled', 'unlinked', 'inactive', 'optout'])
+async def test_reel_delivery_rechecks_permission_and_mapping(wa, monkeypatch, reason):
+    product_id = await add_reel_product(wa)
+    await wa.client.patch('/whatsapp/account', json={'automation_enabled': True, 'reel_replies_enabled': True})
+    await posthook(wa, incoming('reel-auto', 'https://instagram.com/reel/Ab_C-1/'))
+    async with wa.session() as db:
+        message = await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.direction == 'outbound'))
+        message_id = message.id
+        if reason == 'disabled':
+            account = await db.get(WhatsAppAccount, wa.ids['sellers'][0]); account.reel_replies_enabled = False
+        elif reason == 'optout':
+            contact = await db.get(WhatsAppContact, wa.ids['contacts'][0]); contact.opted_out = True
+        else:
+            from app.models.product import Product
+            product = await db.get(Product, UUID(product_id))
+            if reason == 'inactive': product.active = False
+            else: product.reel_urls = []
+    async def unexpected(*args): raise AssertionError('Must not send')
+    monkeypatch.setattr(provider, 'send', unexpected)
+    await deliver_one(message_id, wa.session)
+    async with wa.session() as db:
+        assert (await db.get(WhatsAppMessage, message_id)).status == 'failed'
+
+
+@pytest.mark.asyncio
+async def test_reel_automation_requires_optin_and_never_replies_to_stop(wa):
+    await add_reel_product(wa)
+    await wa.client.patch('/whatsapp/account', json={'automation_enabled': True})
+    await posthook(wa, incoming('reel-disabled', 'https://instagram.com/reel/Ab_C-1/'))
+    await wa.client.patch('/whatsapp/account', json={'reel_replies_enabled': True})
+    await posthook(wa, incoming('stop-context', 'STOP'))
+    await posthook(wa, incoming('reel-optedout', 'https://instagram.com/reel/Ab_C-1/'))
+    async with wa.session() as db:
+        assert await db.scalar(select(func.count()).select_from(WhatsAppMessage).where(WhatsAppMessage.direction == 'outbound')) == 0
+
+
+@pytest.mark.asyncio
+async def test_unresolvable_new_link_overrides_quoted_reel(wa):
+    await posthook(wa, incoming('original', 'https://instagram.com/reel/Ab_C-1/'))
+    body = incoming('different', 'https://instagram.com/share/reel/opaque/')
+    body['entry'][0]['changes'][0]['value']['messages'][0]['context'] = {'id': 'original'}
+    await posthook(wa, body)
+    assert 'reel_context' not in (await stored_incoming(wa, 'different')).payload
+
+
+async def unlinked_product(wa, seller_index=0):
+    from app.models.product import Product
+    product_id = await add_reel_product(wa, seller_index)
+    async with wa.session() as db:
+        product = await db.get(Product, UUID(product_id)); product.reel_urls = []
+    return product_id
+
+
+@pytest.mark.asyncio
+async def test_unlinked_queue_groups_messages_and_resumes_once_per_customer(wa, monkeypatch):
+    product_id = await unlinked_product(wa)
+    await wa.client.patch('/whatsapp/account',json={'automation_enabled':True,'reel_replies_enabled':True})
+    await posthook(wa,incoming('share','https://instagram.com/reels/Ab_C-1/?igsh=abc',ago=0.01))
+    await posthook(wa,incoming('question','What is the price?'))
+    result = (await wa.client.get('/whatsapp/unlinked-reels')).json()
+    assert result['total'] == 1
+    group = result['items'][0]
+    assert group['shortcode'] == 'Ab_C-1' and group['message_count'] == 2 and group['customer_count'] == 1
+    detail = await wa.client.get('/whatsapp/unlinked-reels/Ab_C-1/messages?limit=1')
+    assert detail.status_code == 200 and detail.json()['total'] == 2 and detail.json()['has_more']
+    response = await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':product_id})
+    assert response.status_code == 200, response.text
+    assert response.json()['updated_messages'] == 2 and response.json()['queued_replies'] == 1
+    assert (await wa.client.get('/whatsapp/unlinked-reels')).json()['total'] == 0
+    response = await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':product_id})
+    assert response.status_code == 200 and response.json()['queued_replies'] == 0
+    async with wa.session() as db:
+        rows = (await db.scalars(select(WhatsAppMessage).where(WhatsAppMessage.direction=='outbound'))).all()
+        assert len(rows) == 1 and '₹2,500.00' in rows[0].text
+        assert rows[0].payload['customer_text'] == 'What is the price?'
+        message_id = rows[0].id
+    async def send(*args): return 'wamid.linked-reply'
+    monkeypatch.setattr(provider,'send',send)
+    await deliver_one(message_id,wa.session)
+    async with wa.session() as db: assert (await db.get(WhatsAppMessage,message_id)).status == 'accepted'
+    # Future shares immediately match the newly linked product.
+    await posthook(wa,incoming('future-share','https://instagram.com/reel/Ab_C-1/'))
+    assert (await stored_incoming(wa,'future-share')).payload['reel_context']['references'][0]['status'] == 'matched'
+
+
+@pytest.mark.asyncio
+async def test_unlinked_queue_is_tenant_scoped_and_requires_active_own_product(wa):
+    own = await unlinked_product(wa)
+    foreign = await unlinked_product(wa,1)
+    body=incoming('foreign-share','https://instagram.com/reel/PrivateReel/')
+    body['entry'][0]['id']='201';body['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']='101'
+    await posthook(wa,body)
+    assert (await wa.client.get('/whatsapp/unlinked-reels')).json()['total'] == 0
+    assert (await wa.client.get('/whatsapp/unlinked-reels/PrivateReel/messages')).status_code == 404
+    assert (await wa.client.post('/whatsapp/unlinked-reels/PrivateReel/link',json={'product_id':own})).status_code == 404
+    await posthook(wa,incoming('own-share','https://instagram.com/reel/Ab_C-1/'))
+    assert (await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':foreign})).status_code == 404
+    from app.models.product import Product
+    async with wa.session() as db:
+        product=await db.get(Product,UUID(own));product.active=False
+    assert (await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':own})).status_code == 404
+    wa.client.cookies.clear()
+    assert (await wa.client.get('/whatsapp/unlinked-reels')).status_code in {302,303,307,401,403}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('case,reason', [('expired','reply_window_closed'),('optout','opted_out'),('paused','automation_paused'),('manual','reply_already_attempted'),('newer','newer_customer_message'),('linkonly','resume_not_requested')])
+async def test_link_skips_customers_that_should_not_receive_resume(wa,case,reason):
+    product_id=await unlinked_product(wa)
+    await wa.client.patch('/whatsapp/account',json={'automation_enabled':True,'reel_replies_enabled':True})
+    await posthook(wa,incoming('waiting','https://instagram.com/reel/Ab_C-1/',ago=25 if case=='expired' else 0.01))
+    if case=='optout':
+        await posthook(wa,incoming('stop','STOP'))
+    elif case=='paused':
+        await wa.client.patch('/whatsapp/account',json={'reel_replies_enabled':False})
+    elif case=='manual':
+        assert (await queue(wa,'I will help you with this.')).status_code == 202
+    elif case=='newer':
+        await posthook(wa,incoming('new-topic','https://instagram.com/reel/DifferentReel/'))
+    r=await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':product_id,'resume':case!='linkonly'})
+    assert r.status_code == 200,r.text
+    assert r.json()['queued_replies']==0 and r.json()['skipped']=={reason:1}
+
+
+@pytest.mark.asyncio
+async def test_link_resumes_multiple_customers_and_queue_paginates(wa):
+    product_id=await unlinked_product(wa)
+    await wa.client.patch('/whatsapp/account',json={'automation_enabled':True,'reel_replies_enabled':True})
+    await posthook(wa,incoming('buyer1','https://instagram.com/reel/Ab_C-1/'))
+    await posthook(wa,incoming('buyer2','https://instagram.com/reel/Ab_C-1/',phone='919888888888'))
+    await posthook(wa,incoming('different','https://instagram.com/reel/OtherCode/',phone='919777777777'))
+    page=(await wa.client.get('/whatsapp/unlinked-reels?limit=1')).json()
+    assert page['total']==2 and page['has_more'] and len(page['items'])==1
+    page2=(await wa.client.get('/whatsapp/unlinked-reels?limit=1&offset=1')).json()
+    assert not page2['has_more'] and page2['items'][0]['shortcode'] != page['items'][0]['shortcode']
+    r=await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':product_id})
+    assert r.status_code==200 and r.json()['queued_replies']==2
+    assert (await wa.client.get('/whatsapp/unlinked-reels')).json()['total']==1
+
+
+@pytest.mark.asyncio
+async def test_ambiguous_reel_cannot_silently_replace_another_product(wa):
+    first=await add_reel_product(wa)
+    await add_reel_product(wa,name='Second linked product')
+    await posthook(wa,incoming('ambiguous-link','https://instagram.com/reel/Ab_C-1/'))
+    row=(await wa.client.get('/whatsapp/unlinked-reels')).json()['items'][0]
+    assert row['status']=='ambiguous' and len(row['products'])==2
+    assert (await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':first})).status_code==409
+
+
+@pytest.mark.asyncio
+async def test_concurrent_reel_link_actions_queue_one_reply(wa):
+    import asyncio
+    product_id=await unlinked_product(wa)
+    await wa.client.patch('/whatsapp/account',json={'automation_enabled':True,'reel_replies_enabled':True})
+    await posthook(wa,incoming('parallel-link','https://instagram.com/reel/Ab_C-1/'))
+    async def link():
+        return await wa.client.post('/whatsapp/unlinked-reels/Ab_C-1/link',json={'product_id':product_id})
+    responses=await asyncio.gather(link(),link())
+    assert all(r.status_code==200 for r in responses)
+    assert sum(r.json()['queued_replies'] for r in responses)==1
+    async with wa.session() as db:
+        assert await db.scalar(select(func.count()).select_from(WhatsAppMessage).where(WhatsAppMessage.direction=='outbound'))==1

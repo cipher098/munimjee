@@ -26,10 +26,10 @@ SPECS_PATH = pathlib.Path(__file__).parent.parent / "agents.yaml"
 # Last-resort defaults if agents.yaml is unreadable. Kept in sync with the
 # "defaults" block at the top of agents.yaml.
 _BUILTIN_DEFAULT_PROVIDER = "anthropic"
-_BUILTIN_DEFAULT_MODEL = "claude-sonnet-4-20250514"
+_BUILTIN_DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
 _BUILTIN_DEFAULT_MAX_TOKENS = 1024
 _BUILTIN_DEFAULT_FALLBACK_PROVIDER = "anthropic"
-_BUILTIN_DEFAULT_FALLBACK = "claude-3-5-sonnet-20241022"
+_BUILTIN_DEFAULT_FALLBACK = "claude-sonnet-4-5-20250929"
 
 
 @dataclass(frozen=True)

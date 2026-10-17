@@ -15,6 +15,7 @@ class WhatsAppAccount(Base):
     access_token = Column(Text, nullable=False)  # Fernet ciphertext only
     enabled = Column(Boolean, nullable=False, default=True)
     automation_enabled = Column(Boolean, nullable=False, default=False)
+    reel_replies_enabled = Column(Boolean, nullable=False, default=False, server_default='false')
     welcome_message = Column(Text, nullable=False, default='')
     rules = Column(JSONB, nullable=False, default=list)
     order_templates = Column(JSONB, nullable=False, default=dict)

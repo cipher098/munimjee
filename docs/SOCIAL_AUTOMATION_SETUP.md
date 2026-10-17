@@ -82,3 +82,57 @@ A live Meta canary remains required before enabling production automations. Offi
 - [Meta Instagram API collection](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api).
 - [Meta SDK IGComment source](https://github.com/facebook/facebook-nodejs-business-sdk/blob/main/src/objects/ig-comment.js) — timestamp, parent and replies fields.
 - [Instagram private replies documentation](https://developers.facebook.com/docs/instagram-platform/private-replies/) — recheck on the deployment account; unavailable to the research client during this increment.
+
+### WhatsApp reel context
+
+Incoming Instagram permalinks in text or media captions are now saved as
+`payload.reel_context`. The inbox displays the canonical link and product mapping.
+URL tracking parameters and `/reels/` versus `/reel/` do not affect identity.
+Matching uses only active products from the receiving seller and their existing
+`reel_urls`. Multiple matches are labelled ambiguous; no match is labelled unlinked.
+No product price is inferred from a reel and no private floor price is exposed.
+
+WhatsApp quoted replies resolve the referenced message only within the same seller
+and contact. Separate follow-up messages retain the most recent reel context for
+30 minutes from the original share, labelled `recent_message` (inferred context).
+A new URL, attachment, referral or quoted message does not inherit an unrelated
+older reel. Product mappings are rechecked for each message.
+
+Referral source URL/ID/type, headline and body are retained when Meta supplies them.
+An ad ID is not treated as an Instagram media ID. This implementation does not
+resolve opaque `/share/` links, download/watch videos, or identify a forwarded
+video that contains no Instagram permalink. Context extraction itself does not send messages. Opt-in catalogue replies require
+both automation_enabled and reel_replies_enabled, plus an enabled connection.
+They reply with the matched product name and listed price, and use catalogue
+description, warranty or stock information for the corresponding questions.
+Shipping and discounts are referred to the team, not invented. This is a bounded
+catalogue responder, not an open-ended AI conversation. It takes precedence over
+keyword rules when reel context exists. Unlinked/ambiguous reels require a manual
+reply. Delivery rechecks the toggle, opt-out/window, active product, reel mapping
+and current listed price. STOP and duplicate-delivery safeguards still apply.
+Apply Alembic migration 0039 before deploying the updated service.
+
+Verification: `tests/test_whatsapp.py` covers URL parsing, tenant-scoped mapping,
+unknown/ambiguous reels, quoted replies, separate follow-ups, expiration, referral
+metadata, caption handling and existing inbox/outbox safeguards. Use an isolated
+`TEST_DATABASE_URL` ending in `whatsapp_test`; the fixture resets that database.
+
+### Seller queue for reels without a product link
+
+Social → **Needs product link** groups unresolved WhatsApp messages by Instagram
+shortcode. The queue and per-reel message list are paginated, with customer counts,
+message previews, a link to open the reel, and an active catalogue product picker.
+Choosing **Link product & resume** saves the product's `reel_urls` mapping and
+refreshes the affected messages' saved context in the same transaction.
+
+Resume queues at most one reply per customer's latest unanswered inbound message.
+It skips opted-out customers, closed reply windows, newer conversation context,
+existing reply attempts, changed WhatsApp accounts, paused automation and messages
+that still reference multiple products. The result reports queued replies and skip
+reasons. Sellers can uncheck resume to save only the mapping. Existing conflicting
+product links must be corrected in Products; the queue never silently replaces one.
+
+The account lock serializes linking with webhook ingestion and delivery. Outbox
+idempotency uses the original inbound message ID, so repeat clicks do not send
+another reply. All product/message/contact queries are seller-scoped. No database
+migration is needed beyond the prior reel-reply migration 0039.

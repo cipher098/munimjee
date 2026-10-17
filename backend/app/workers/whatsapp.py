@@ -29,6 +29,15 @@ async def deliver_one(message_id, session_factory=worker_session):
                 raise HTTPException(409,'Contact opted out or WhatsApp account changed')
             if message.idempotency_key.startswith('auto:') and not account.automation_enabled:
                 raise HTTPException(409,'Automation was disabled before delivery')
+            if message.idempotency_key.startswith('auto:reel:'):
+                if not account.reel_replies_enabled:
+                    raise HTTPException(409, 'Reel replies were disabled before delivery')
+                # Recheck current mapping, active state and listed price at send time.
+                refreshed = await service.reel_catalogue_reply(db, seller_id,
+                    message.payload.get('reel_context', {}), message.payload.get('customer_text', ''))
+                if not refreshed:
+                    raise HTTPException(409, 'Reel product changed or became unavailable before delivery')
+                message.text = refreshed
             if message.kind == 'template':
                 # Refresh approval immediately before send; stale approvals never authorize sending.
                 await service.sync_templates(db,account)

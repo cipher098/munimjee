@@ -10,6 +10,7 @@ from app.models.product import Product
 from app.models.commerce import Storefront
 from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
 from app.services import whatsapp_provider as provider
+from app.services.whatsapp_context import inbound_context, reel_catalogue_reply
 
 
 def now():
@@ -81,9 +82,11 @@ async def sync_templates(db, account):
     await db.flush()
 
 
-async def queue_message(db, account, contact, *, key, text='', template=None, parameters=None):
+async def queue_message(db, account, contact, *, key, text='', template=None, parameters=None, context=None):
     existing = await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.seller_id == account.seller_id, WhatsAppMessage.idempotency_key == key))
     payload = {} if not template else {'name':template.name,'language':template.language,'parameters':parameters or []}
+    if context and not template:
+        payload = context
     if existing:
         if existing.contact_id != contact.id or existing.text != text or existing.payload != payload:
             raise HTTPException(409, 'This idempotency key was used for a different message')
@@ -184,7 +187,12 @@ async def ingest_message(db, account, value, event):
         await db.flush()
     kind = event.get('type', 'unsupported')
     text = str((event.get('text') or {}).get('body', ''))[:4096] if kind == 'text' else f'[{kind} message]'
-    db.add(WhatsAppMessage(seller_id=account.seller_id, contact_id=contact.id, phone_number_id=account.phone_number_id, provider_message_id=mid, idempotency_key=f'in:{mid}', direction='inbound', kind=str(kind)[:30], text=text, status='received', created_at=timestamp))
+    if kind in {'image', 'video', 'document'} and isinstance(event.get(kind), dict):
+        caption = event[kind].get('caption')
+        if isinstance(caption, str) and caption:
+            text += '\n' + caption[:4096]
+    context = await inbound_context(db, account, contact, event, text)
+    db.add(WhatsAppMessage(seller_id=account.seller_id, contact_id=contact.id, phone_number_id=account.phone_number_id, provider_message_id=mid, idempotency_key=f'in:{mid}', direction='inbound', kind=str(kind)[:30], text=text, payload=context, status='received', created_at=timestamp))
     contact.last_inbound_at = max(contact.last_inbound_at or timestamp, timestamp)
     command = text.strip().casefold() if kind == 'text' else ''
     # Older deliveries cannot reverse a more recent consent decision.
@@ -194,6 +202,12 @@ async def ingest_message(db, account, value, event):
         record_consent(contact, False, False, f'inbound:{command}:{mid}', at=timestamp)
     await db.flush()
     if command in {'stop','unsubscribe','start'} or contact.opted_out or not account.enabled or not account.automation_enabled or not window_open(contact) or timestamp < now() - timedelta(hours=24):
+        return
+    if account.reel_replies_enabled and context.get('reel_context'):
+        reply = await reel_catalogue_reply(db, account.seller_id, context['reel_context'], text)
+        if reply:
+            await queue_message(db, account, contact, key=f'auto:reel:{mid}', text=reply,
+                context={'reel_context': context['reel_context'], 'customer_text': text})
         return
     reply, product_id = '', None
     for rule in account.rules or []:

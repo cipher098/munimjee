@@ -197,7 +197,8 @@ class InstagramClient:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(
                 f"{self._base_url}/instagram_oembed",
-                params={"url": ig_url, "fields": "media_id", "access_token": self._token},
+                params={"url": ig_url, "fields": "media_id"},
+                headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
                 logger.warning("oEmbed resolution failed %d: %s", response.status_code, response.text)
@@ -209,7 +210,8 @@ class InstagramClient:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(
                 f"{self._base_url}/{user_id}",
-                params={"fields": "name", "access_token": self._token},
+                params={"fields": "name"},
+                headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
                 logger.warning("get_user_info failed %d: %s", response.status_code, response.text)
@@ -221,7 +223,8 @@ class InstagramClient:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(
                 f"{self._base_url}/{media_id}",
-                params={"fields": "shortcode", "access_token": self._token},
+                params={"fields": "shortcode"},
+                headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
                 logger.warning("get_media_shortcode failed %d: %s", response.status_code, response.text)

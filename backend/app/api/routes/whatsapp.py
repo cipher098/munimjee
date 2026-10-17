@@ -2,7 +2,7 @@
 from uuid import UUID
 from typing import Literal
 import re
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -45,6 +45,7 @@ class TemplateRef(BaseModel):
 class AccountPatch(BaseModel):
     enabled: bool | None = None
     automation_enabled: bool | None = None
+    reel_replies_enabled: bool | None = None
     welcome_message: str | None = Field(default=None, max_length=3500)
     rules: list[Rule] | None = Field(default=None, max_length=50)
     order_templates: dict[str, TemplateRef] | None = None
@@ -60,6 +61,11 @@ class Reply(BaseModel):
         if not value.strip():
             raise ValueError('Message cannot be blank')
         return value.strip()
+
+
+class LinkReel(BaseModel):
+    product_id: UUID
+    resume: bool = True
 
 
 class TemplateSend(TemplateRef):
@@ -123,9 +129,9 @@ def account_json(account):
     except HTTPException:
         ready = False
     base = getattr(settings, 'PUBLIC_BASE_URL', '').rstrip('/')
-    data = {'configured':bool(account and account.access_token), 'encryption_ready':ready, 'webhook_ready':bool(getattr(settings,'WHATSAPP_APP_SECRET','') and getattr(settings,'WHATSAPP_WEBHOOK_VERIFY_TOKEN','')), 'webhook_url':base + '/webhooks/whatsapp', 'enabled':False, 'automation_enabled':False, 'welcome_message':'', 'rules':[], 'order_templates':{}}
+    data = {'configured':bool(account and account.access_token), 'encryption_ready':ready, 'webhook_ready':bool(getattr(settings,'WHATSAPP_APP_SECRET','') and getattr(settings,'WHATSAPP_WEBHOOK_VERIFY_TOKEN','')), 'webhook_url':base + '/webhooks/whatsapp', 'enabled':False, 'automation_enabled':False, 'reel_replies_enabled':False, 'welcome_message':'', 'rules':[], 'order_templates':{}}
     if account:
-        data.update({key:getattr(account,key) for key in ('phone_number_id','waba_id','display_phone_number','enabled','automation_enabled','welcome_message','rules','order_templates')})
+        data.update({key:getattr(account,key) for key in ('phone_number_id','waba_id','display_phone_number','enabled','automation_enabled','reel_replies_enabled','welcome_message','rules','order_templates')})
     return data
 
 
@@ -208,6 +214,24 @@ async def disconnect(seller_id=Depends(current_seller_id),db:AsyncSession=Depend
 async def contacts(seller_id=Depends(current_seller_id),db:AsyncSession=Depends(get_db)):
     rows = (await db.scalars(select(WhatsAppContact).where(WhatsAppContact.seller_id == seller_id).order_by(WhatsAppContact.last_inbound_at.desc().nullslast(),WhatsAppContact.created_at.desc()).limit(200))).all()
     return {'items':[{**{key:getattr(c,key) for key in ('id','phone','name','last_inbound_at','opted_out','utility_opt_in','marketing_opt_in')},'reply_window_open':service.window_open(c),'consent_history':c.consent_history} for c in rows]}
+
+
+@router.get('/unlinked-reels')
+async def unlinked_reels(offset:int=Query(0,ge=0), limit:int=Query(20,ge=1,le=50), seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
+    from app.services.whatsapp_reel_queue import list_queue
+    return await list_queue(db, seller_id, offset, limit)
+
+
+@router.get('/unlinked-reels/{shortcode}/messages')
+async def unlinked_reel_messages(shortcode:str=Path(pattern=r'^[A-Za-z0-9_-]{1,100}$'), offset:int=Query(0,ge=0), limit:int=Query(25,ge=1,le=100), seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
+    from app.services.whatsapp_reel_queue import queue_messages
+    return await queue_messages(db, seller_id, shortcode, offset, limit)
+
+
+@router.post('/unlinked-reels/{shortcode}/link')
+async def link_unlinked_reel(payload:LinkReel, shortcode:str=Path(pattern=r'^[A-Za-z0-9_-]{1,100}$'), seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
+    from app.services.whatsapp_reel_queue import link_and_resume
+    return await link_and_resume(db, seller_id, shortcode, payload.product_id, payload.resume)
 
 
 @router.get('/contacts/{contact_id}/messages')
