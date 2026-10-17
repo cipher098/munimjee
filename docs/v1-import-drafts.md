@@ -160,8 +160,9 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=backend .venv-imports/bin/python -m 
   -c /dev/null --noconftest -p no:cacheprovider backend/tests/test_v1_import_drafts.py -q
 ```
 
-93 synthetic cases pass. They cover invalid/adversarial references and fields,
+110 synthetic cases pass. They cover invalid/adversarial references and fields,
 bounded batches, exact/source duplicate handling, multi-product reels, cross-tenant
 matching/reimport denial, unknown facts, explicit review, terminal rejection,
-changed approved data, preserved seller corrections and stale reimports.
+changed approved data, preserved seller corrections, stale reimports, forged DTO
+UUIDs with mismatched source identity, and escaped unpaired Unicode surrogates.
 No database, API, provider retrieval, UI or live seller acceptance is claimed.
