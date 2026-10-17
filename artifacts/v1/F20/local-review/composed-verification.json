@@ -1,0 +1,31 @@
+{
+  "task": "F20 composed remote checkpoint",
+  "tested_source_sha": "6114e6c7151cf591a286a33c0b69b93bee8c5d2c",
+  "branch": "codex/v1-wave2-qa",
+  "date": "2026-10-18",
+  "timezone": "Asia/Kolkata",
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "dependency_changes": {
+    "imports_fresh_authority_source": "f7db25fe206ed1a0813cdf5765df175102e60816",
+    "qa_cherry_pick": "a2aa9a3a52421d769b0714ed1e002fcafa534ba9"
+  },
+  "checks": [
+    {
+      "command": "PYTHONPATH=backend .venv/bin/python -m pytest backend/tests -q -r f -p no:cacheprovider",
+      "passed": 752,
+      "skipped": 224,
+      "failed": 0,
+      "warnings": 18,
+      "seconds": 1.18
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "composition_note": "Initial combined run found eight test-double interface failures because the revoked-action sentinel lacked no_autoflush. Added a null context and an execute-fails assertion; authorization/resource-read assertions remain intact. Final full run passed.",
+  "scope": "No database target configured; all database gates remain explicitly skipped. This evidence does not establish native auth, registered import schema, canonical catalogue.v2 checkout, or provider acceptance.",
+  "historical_independent_evidence": "artifacts/v1/F20/local-review/verification.json retains earlier exact source and 73 independent backend / 16 JS / 6 simulated browser results.",
+  "boundary": "No live provider/customer/payment calls, production mutations or shared-service restart."
+}
