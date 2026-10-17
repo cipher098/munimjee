@@ -330,3 +330,48 @@ def test_changed_identity_is_not_reimport(payload):
     changed["provenance"]["source_product_id"] = "different-product"
     with pytest.raises(ImportReviewError):
         reimport_candidate(candidate, parsed(changed), business_id=BUSINESS)
+
+
+@pytest.mark.parametrize("change", ["source_url", "source_product_id", "source_kind", "media_id"])
+def test_forged_reimport_uuid_cannot_replace_source_identity(payload, change):
+    if change != "source_url":
+        payload["provenance"]["source"] = {"kind": "instagram", "media_id": "12345"}
+    candidate = parsed(payload)
+    changed = copy.deepcopy(payload)
+    if change == "source_url":
+        changed["provenance"]["source"] = {"kind": "website", "url": "https://another.example.com/product"}
+    elif change == "source_product_id":
+        changed["provenance"]["source_product_id"] = "unrelated-item"
+    elif change == "source_kind":
+        changed["provenance"]["source"]["kind"] = "uploaded_media"
+    else:
+        changed["provenance"]["source"]["media_id"] = "unrelated-media"
+    # Simulate a publicly constructible/reconstituted DTO with a forged UUID.
+    forged = parsed(changed).model_copy(update={"id": candidate.id})
+    with pytest.raises(ImportReviewError, match="exact source/product identity"):
+        reimport_candidate(candidate, forged, business_id=BUSINESS)
+    with pytest.raises(ImportReviewError, match="does not belong to business"):
+        reimport_candidate(candidate, forged, business_id=OTHER_BUSINESS)
+
+
+@pytest.mark.parametrize("path", [
+    ("facts", "title"), ("facts", "description"),
+    ("provenance", "source_product_id"), ("provenance", "evidence"),
+    ("provenance", "source", "url"), ("seller_product_ref",),
+])
+@pytest.mark.parametrize("surrogate", ["\ud800", "\udfff"])
+def test_escaped_unpaired_surrogates_rejected_in_json_batch(payload, path, surrogate):
+    target = payload
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = f"unpaired-{surrogate}"
+    encoded = json.dumps([payload], ensure_ascii=True)
+    assert "\\ud" in encoded
+    with pytest.raises(ValidationError):
+        parse_batch(encoded, business_id=BUSINESS)
+
+
+def test_escaped_unpaired_surrogate_media_id_rejected(payload):
+    payload["provenance"]["source"] = {"kind": "instagram", "media_id": "media-\ud800"}
+    with pytest.raises(ValidationError):
+        parse_batch(json.dumps([payload]), business_id=BUSINESS)

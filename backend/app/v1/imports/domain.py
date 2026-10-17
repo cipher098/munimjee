@@ -177,7 +177,11 @@ def reimport_candidate(
 ) -> ReimportResult:
     _assert_owner(existing, business_id)
     _assert_owner(incoming, business_id)
-    if existing.id != incoming.id:
+    if (
+        existing.id != incoming.id
+        or existing.provenance.source.identity() != incoming.provenance.source.identity()
+        or existing.provenance.source_product_id != incoming.provenance.source_product_id
+    ):
         raise ImportReviewError("reimport requires exact source/product identity")
     if incoming.provenance.captured_at < existing.provenance.captured_at:
         raise ImportReviewError("stale source capture cannot replace newer extraction")
