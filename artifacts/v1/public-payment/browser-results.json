@@ -1,0 +1,9 @@
+{
+  "checks": 29,
+  "externalRequests": [],
+  "pageErrors": [],
+  "cspErrors": [],
+  "sdkLoads": 6,
+  "provider": "synthetic-only",
+  "bootstrap": "actual-app.main"
+}

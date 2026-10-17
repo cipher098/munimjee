@@ -30,7 +30,7 @@ function decodeStore(x){
  check(keys(x,['contract_version','name','slug','description','logo_url','contact_email','contact_phone','shipping_policy','return_policy','currency','shipping_fee','cod_enabled','categories','whatsapp_updates_available','payment_options','checkout_enabled']));
  check(x.contract_version==='storefront.v1'&&text(x.name,1,100)&&/^[a-z0-9][a-z0-9-]{0,62}$/.test(x.slug)&&x.currency==='INR'&&amount(x.shipping_fee)&&typeof x.checkout_enabled==='boolean'&&typeof x.cod_enabled==='boolean'&&Array.isArray(x.categories)&&keys(x.payment_options,['cod_enabled','razorpay_enabled','razorpay_mode'])&&typeof x.payment_options.cod_enabled==='boolean'&&typeof x.payment_options.razorpay_enabled==='boolean');
  check(x.categories.every(c=>keys(c,['id','name'])&&UUID.test(c.id)&&text(c.name,1,200)));
- return {slug:x.slug,name:x.name,currency:'INR',shippingMinor:x.shipping_fee,checkoutEnabled:x.checkout_enabled,paymentMethods:x.payment_options.cod_enabled?['cod']:[],categories:x.categories.map(c=>({category_id:c.id,name:c.name}))};
+ return {slug:x.slug,name:x.name,currency:'INR',shippingMinor:x.shipping_fee,checkoutEnabled:x.checkout_enabled,paymentMethods:[...(x.payment_options.cod_enabled?['cod']:[]),...(x.payment_options.razorpay_enabled?['razorpay']:[])],categories:x.categories.map(c=>({category_id:c.id,name:c.name}))};
 }
 function encodeCheckout(payload,key){
  check(UUID.test(key)&&keys(payload,['customer','address','items','note','payment_method','whatsapp_updates_opt_in']));
@@ -50,7 +50,7 @@ function decodeOrder(x,{payload,slug,accessToken,orderId,created=true}={}){
   check(object(x.customer)&&x.customer.name===payload.customer.name.trim()&&phone(x.customer.phone)===phone(payload.customer.phone)&&object(x.address)&&Object.entries(payload.address).every(([k,v])=>x.address[k]===v.trim()));
  }
  const capability=created?x.access_token:accessToken;check(text(capability,1,4096)&&token.test(capability)&&text(slug,1,63));
- return {orderId:x.id,currency:'INR',subtotalMinor:x.subtotal,shippingMinor:x.shipping_fee,totalMinor:x.total,paymentStatus:x.payment_status,fulfillmentStatus:x.fulfillment_status,paymentUrl:null,statusUrl:`/api/v1/storefronts/${encodeURIComponent(slug)}/orders/${x.id}`,accessToken:capability};
+ return {orderId:x.id,currency:'INR',subtotalMinor:x.subtotal,shippingMinor:x.shipping_fee,totalMinor:x.total,paymentStatus:x.payment_status,fulfillmentStatus:x.fulfillment_status,paymentMethod:x.payment_method,paymentUrl:null,statusUrl:`/api/v1/storefronts/${encodeURIComponent(slug)}/orders/${x.id}`,accessToken:capability};
 }
 export const canonicalContract={decodeStore,decodeProducts,encodeCheckout,decodeCreatedOrder:decodeOrder,decodeOrderStatus:(x,context)=>decodeOrder(x,{...context,created:false}),acceptsReplay:true,paginatedProducts:true,
  decodeCheckoutError(status,data){return status===409&&keys(data,['detail'])&&keys(data.detail,['code','message'])&&data.detail.code==='sku_out_of_stock'&&text(data.detail.message,1,200)?{definitive:true,code:'sku_out_of_stock',message:'This quantity is no longer available. Review your bag and refresh availability.'}:null;}};

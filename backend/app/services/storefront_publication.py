@@ -52,11 +52,10 @@ class PublishedStorefrontProvider:
             if row.category_id not in category_ids:
                 dto["category_id"] = None
             products.append(dto)
-        from app.api.routes.razorpay import payment_options
-        options = await payment_options(slug, db)
-        # This storefront currently implements COD only. Backend gateway support
-        # does not establish a usable browser payment handoff.
-        methods = ("cod",) if options.get("cod_enabled") else ()
+        from app.services.checkout_sessions import public_payment_options
+        options = await public_payment_options(slug, db)
+        methods = tuple(method for method, enabled in (("cod", options["cod_enabled"]),
+            ("razorpay", options["razorpay_enabled"])) if enabled)
         return PublicStorefront(slug=store.slug, name=store.name, theme=self.theme,
             description=store.description, shipping_policy=store.shipping_policy, return_policy=store.return_policy,
             currency=store.currency, products=tuple(products),

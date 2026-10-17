@@ -10,9 +10,10 @@ export function sameOriginPath(value,origin,{prefix='/'}={}){
 export function validateConfirmation(order,origin,slug){
   const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if(!order||!uuid.test(order.orderId)||order.currency!=='INR'||![order.subtotalMinor,order.shippingMinor,order.totalMinor].every(n=>Number.isSafeInteger(n)&&n>=0)||order.totalMinor!==order.subtotalMinor+order.shippingMinor||!['pending','paid','collected','review_required','cancelled','expired'].includes(order.paymentStatus)||!['pending','confirmed','packed','shipped','delivered','cancelled'].includes(order.fulfillmentStatus)) throw new CheckoutError('The checkout response could not be verified.');
+  if(order.paymentMethod!==undefined&&!['cod','razorpay'].includes(order.paymentMethod))throw new CheckoutError('The payment method could not be verified.');
   if(order.accessToken!==undefined&&(typeof order.accessToken!=='string'||order.accessToken.length>4096||!/^[a-f0-9]{64}$/.test(order.accessToken)))throw new CheckoutError('The order access could not be verified.');
   const base=`/api/v1/storefronts/${encodeURIComponent(slug)}/orders/${order.orderId}`;
-  return {orderId:order.orderId,currency:'INR',subtotalMinor:order.subtotalMinor,shippingMinor:order.shippingMinor,totalMinor:order.totalMinor,paymentStatus:order.paymentStatus,fulfillmentStatus:order.fulfillmentStatus,paymentUrl:sameOriginPath(order.paymentUrl,origin,{prefix:base+'/'}),statusUrl:sameOriginPath(order.statusUrl,origin,{prefix:base}),...(order.accessToken!==undefined?{accessToken:order.accessToken}:{})};
+  return {orderId:order.orderId,currency:'INR',subtotalMinor:order.subtotalMinor,shippingMinor:order.shippingMinor,totalMinor:order.totalMinor,paymentStatus:order.paymentStatus,fulfillmentStatus:order.fulfillmentStatus,paymentUrl:sameOriginPath(order.paymentUrl,origin,{prefix:base+'/'}),statusUrl:sameOriginPath(order.statusUrl,origin,{prefix:base}),...(order.accessToken!==undefined?{accessToken:order.accessToken}:{}),...(order.paymentMethod!==undefined?{paymentMethod:order.paymentMethod}:{})};
 }
 export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,origin=globalThis.location?.origin,timeoutMs=15000}){
   if(!/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug)) throw new Error('Invalid storefront slug.');

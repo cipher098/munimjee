@@ -1,0 +1,1 @@
+PASS 25 actual Chromium checks: native setup/activation/publication, SSR SKU facts, COD, private status/reload/unpublish, no-capability denial, four uncertain POST/replay cases, real typed stock rejection/recovery. No external requests.

@@ -20,6 +20,16 @@ async def unavailable_provider() -> StorefrontProvider:
     raise HTTPException(503, 'Public catalogue integration is not configured', headers={'X-Robots-Tag': 'noindex, nofollow'})
 
 
+def checkout_csp(*, product_images=False):
+    # Exact provider origins follow Razorpay's maintained Magento CSP allowlist.
+    # SDK/frame behavior still needs a real-provider canary before activation.
+    images = "https:" if product_images else "https://cdn.razorpay.com"
+    return ("default-src 'self'; script-src 'self' https://checkout.razorpay.com https://cdn.razorpay.com; "
+            "style-src 'self'; img-src 'self' " + images + "; "
+            "connect-src 'self' https://lumberjack.razorpay.com https://lumberjack-metrics.razorpay.com; "
+            "frame-src https://api.razorpay.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
+
+
 def create_router(*, canonical_base: str, provider_dependency=unavailable_provider) -> APIRouter:
     origin = canonical_origin(canonical_base)  # Fail at configuration, not from Host headers.
     routes = APIRouter(prefix='/stores', tags=['public-storefront-pages'])
@@ -37,7 +47,7 @@ def create_router(*, canonical_base: str, provider_dependency=unavailable_provid
             raise HTTPException(404, 'Page unavailable', headers={'X-Robots-Tag': 'noindex, nofollow'})
         except (ValueError, KeyError, TypeError):
             raise HTTPException(503, 'Catalogue temporarily unavailable', headers={'X-Robots-Tag': 'noindex, nofollow'})
-        return HTMLResponse(html, headers={'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'", 'Referrer-Policy': 'same-origin'})
+        return HTMLResponse(html, headers={'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', 'Content-Security-Policy': checkout_csp(product_images=True), 'Referrer-Policy': 'same-origin'})
 
     @routes.get('/{slug}', response_class=HTMLResponse)
     async def store_page(slug: str, provider: StorefrontProvider = Depends(provider_dependency)):
@@ -63,6 +73,6 @@ def create_router(*, canonical_base: str, provider_dependency=unavailable_provid
         html = f'''<!doctype html><html lang="en" data-theme="catalogue"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Your order</title><link rel="stylesheet" href="/storefront-assets/src/styles.css"><link rel="stylesheet" href="/storefront-assets/src/live.css"><script type="application/json" id="order-context">{context}</script><script type="module" src="/storefront-assets/src/order-status.js"></script></head><body><main class="collection" id="order-status"><h1>Your order</h1><p role="status">Checking order access in this browser session…</p></main><noscript>Order status requires JavaScript and access from the browser session that placed the order.</noscript></body></html>'''
         return HTMLResponse(html, headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow',
             'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
-            'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"})
+            'Content-Security-Policy':checkout_csp()})
 
     return routes
