@@ -41,3 +41,27 @@ async def require_v1_mutation(request: Request, db: AsyncSession = Depends(get_d
             or not secrets.compare_digest(secret_digest(cookie), context.session.csrf_digest)):
         raise HTTPException(status_code=403, detail="Refresh this page before trying again")
     return actor
+
+
+def business_mutation(capability: str):
+    """Revalidate a native mutation before its caller-owned transaction commits.
+
+    FastAPI 0.111 closes this yield dependency before its get_db dependency.
+    Writers used with this guard must not commit internally or send externally.
+    A revocation during any awaited row lock therefore rolls back staged facts,
+    reservations and outbox rows, even when an older domain helper only checks
+    authority before waiting.
+    """
+    from uuid import UUID
+    from app.services.identity import require_business_access
+
+    async def guarded(request: Request, business_id: UUID, db: AsyncSession = Depends(get_db)):
+        actor = await require_v1_mutation(request, db)
+        await require_business_access(db, actor, business_id, capability)
+        yield actor
+        current = await require_v1_mutation(request, db)
+        if current != actor:
+            raise HTTPException(401, 'The native session changed')
+        await require_business_access(db, current, business_id, capability)
+
+    return guarded

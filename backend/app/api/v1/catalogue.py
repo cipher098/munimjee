@@ -5,7 +5,7 @@ from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.identity import current_actor
-from app.api.v1.session import require_v1_mutation
+from app.api.v1.session import require_v1_mutation, business_mutation
 from app.api.routes import commerce as legacy, razorpay as gateway
 from app.database import get_db
 from app.config import settings
@@ -65,7 +65,7 @@ async def read_settings(business_id: UUID, actor: Actor = Depends(current_actor)
 
 @router.put("/businesses/{business_id}/catalogue/storefront")
 async def save_settings(business_id: UUID, payload: StoreInput,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("business.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "business.write")
     return settings_view(await legacy.save_store(payload, str(business_id), db))
 
@@ -79,7 +79,7 @@ async def read_policy(business_id: UUID, actor: Actor = Depends(current_actor), 
 
 @router.put("/businesses/{business_id}/catalogue/checkout-policy")
 async def save_policy(business_id: UUID, payload: StorePolicyWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await sku.lock_store(db, business_id)
     policy = await db.get(CatalogueStorePolicy, business_id)
@@ -113,7 +113,7 @@ async def products(business_id: UUID, page: int = Query(1, ge=1), page_size: int
 
 @router.post("/businesses/{business_id}/catalogue/products", status_code=201)
 async def create_product(business_id: UUID, payload: ProductCreate, response: Response,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     pid, replay = await sku.create_reviewed_product(db, business_id, payload)
     response.status_code = 200 if replay else 201
@@ -129,7 +129,7 @@ async def product_detail(business_id: UUID, product_id: UUID,
 
 @router.post("/businesses/{business_id}/catalogue/products/{product_id}/backfill")
 async def backfill(business_id: UUID, product_id: UUID,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await catalogue_result(drafts.backfill_product(db, business_id, product_id))
     return await seller_product(db, business_id, product_id)
@@ -137,7 +137,7 @@ async def backfill(business_id: UUID, product_id: UUID,
 
 @router.put("/businesses/{business_id}/catalogue/products/{product_id}/review")
 async def review(business_id: UUID, product_id: UUID, payload: CatalogueReviewWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await catalogue_result(drafts.apply_review(db, business_id, product_id, payload))
     return await seller_product(db, business_id, product_id)
@@ -145,7 +145,7 @@ async def review(business_id: UUID, product_id: UUID, payload: CatalogueReviewWr
 
 @router.post("/businesses/{business_id}/catalogue/products/{product_id}/activate")
 async def activate(business_id: UUID, product_id: UUID, payload: ActivationWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await sku.activate_product(db, business_id, product_id, actor.user_id, payload)
     return await seller_product(db, business_id, product_id)
@@ -153,7 +153,7 @@ async def activate(business_id: UUID, product_id: UUID, payload: ActivationWrite
 
 @router.put("/businesses/{business_id}/catalogue/products/{product_id}/skus")
 async def edit_skus(business_id: UUID, product_id: UUID, payload: OperationalSKUWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await sku.update_operational_skus(db, business_id, product_id, payload)
     return await seller_product(db, business_id, product_id)
@@ -161,7 +161,7 @@ async def edit_skus(business_id: UUID, product_id: UUID, payload: OperationalSKU
 
 @router.patch("/businesses/{business_id}/catalogue/products/{product_id}")
 async def edit_product(business_id: UUID, product_id: UUID, payload: ProductMetadataWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("catalogue.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "catalogue.write")
     await sku.update_product_metadata(db, business_id, product_id, payload)
     return await seller_product(db, business_id, product_id)
@@ -260,14 +260,14 @@ async def orders(business_id: UUID, status: str | None = None, page: int = Query
 
 @router.post("/businesses/{business_id}/orders/{order_id}/transition")
 async def transition(business_id: UUID, order_id: UUID, payload: TransitionInput,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("orders.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "orders.write")
     return await legacy.transition(order_id, payload, str(business_id), db)
 
 
 @router.post("/businesses/{business_id}/orders/{order_id}/reconcile-gateway-order")
 async def reconcile_payment_order(business_id: UUID, order_id: UUID, payload: PaymentReconcileWrite,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("orders.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "orders.write")
     order = await legacy.seller_order(db, business_id, order_id, lock=True)
     if not order.items or any(i.get("_inventory_engine") != sku.ENGINE for i in order.items):
@@ -278,9 +278,9 @@ async def reconcile_payment_order(business_id: UUID, order_id: UUID, payload: Pa
 
 @router.post("/businesses/{business_id}/orders/{order_id}/reconcile-payment")
 async def reconcile_payment(business_id: UUID, order_id: UUID,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("orders.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "orders.write")
-    return await gateway.reconcile(order_id, str(business_id), db)
+    return await gateway.reconcile_order(order_id, str(business_id), db, commit=False)
 
 
 @router.get("/businesses/{business_id}/orders/{order_id}")
@@ -292,6 +292,6 @@ async def order_detail(business_id: UUID, order_id: UUID,
 
 @router.post("/businesses/{business_id}/orders/{order_id}/collect-cod")
 async def collect_cod(business_id: UUID, order_id: UUID,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("orders.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "orders.write")
     return await legacy.collect_cod(order_id, str(business_id), db)
