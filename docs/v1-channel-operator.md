@@ -22,7 +22,7 @@ Newly connected accounts stay paused. Connection checks read provider account ac
 
 ## Catalogue authority
 
-Once `is_product_activated` returns true, legacy product price/stock facts are frozen. Instagram focused turns, reply-to switches, reel/image resolution, dynamic price lines, order assembly, resume and nudges check authority. Product locks serialize these reads/sends with activation. The durable item becomes a human-review handoff; it does not invent a SKU answer. WhatsApp reel context gives a deterministic human handoff without legacy price/stock. Deactivating checkout policy does not restore legacy authority.
+Once `is_product_activated` returns true, legacy product price/stock facts are frozen. Instagram focused turns, reply-to switches, reel/image resolution, dynamic price lines, order assembly, resume and nudges check authority. Shared Product reader locks serialize these reads/sends with activation while allowing concurrent chats. Missing or foreign product context fails closed before legacy facts can be read. The durable item becomes a human-review handoff; it does not invent a SKU answer. WhatsApp reel context gives a deterministic human handoff without legacy price/stock. Deactivating checkout policy does not restore legacy authority.
 
 ## Integration
 

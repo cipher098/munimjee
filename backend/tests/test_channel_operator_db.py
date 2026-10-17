@@ -183,14 +183,19 @@ async def test_reviewed_replay_rechecks_current_eligibility(world, change):
 
 
 @pytest.mark.asyncio
-async def test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation(world, monkeypatch):
+@pytest.mark.parametrize("revocation",["membership","business"])
+async def test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation(world, monkeypatch,revocation):
     body = await review_payload(world,"replay")
     response = await world.client.post(world.base + f"/instagram/receipts/{world.ids[4]}/review",json=body,headers=headers(world))
     assert response.status_code == 200 and response.json()["queued"] is True
     async with world.session() as db:
         row = await db.get(InstagramIngress,world.ids[4]); assert row.status == "retry" and row.operator_replay_pending
         member = await db.scalar(select(Membership).where(Membership.business_id==world.ids[0],Membership.user_id==world.ids[2]))
-        member.revoked_at=datetime.now(timezone.utc)
+        if revocation=="membership":
+            member.revoked_at=datetime.now(timezone.utc)
+        else:
+            from app.models.identity import Business
+            (await db.get(Business,world.ids[0])).is_active=False
     consume = AsyncMock(return_value={0})
     monkeypatch.setattr("app.workers.message_batch._consume_events",consume)
     from app.workers.instagram_ingress import _process_thread
@@ -489,3 +494,50 @@ async def test_ordinary_pending_receipt_without_current_signed_time_cannot_enter
     consume.assert_not_awaited()
     async with world.session() as db:
         row=await db.get(InstagramIngress,world.ids[4]);assert row.status=="error" and row.error_code=="provider_window_unverified"
+
+
+@pytest.mark.asyncio
+async def test_legacy_product_authority_guard_refuses_foreign_or_missing_product_context(world):
+    from app.models.product import Product
+    from app.services.channel_readiness import guard_legacy_product,CatalogueAuthorityHandoff
+    async with world.session() as db:
+        product=Product(seller_id=world.ids[1],name="Other business private product",listed_price=123456,floor_price=100000)
+        db.add(product);await db.flush()
+        for product_id in (product.id,uuid4()):
+            with pytest.raises(CatalogueAuthorityHandoff):
+                await guard_legacy_product(db,world.ids[0],product_id)
+
+
+@pytest.mark.asyncio
+async def test_product_authority_readers_share_locks_and_serialize_with_activation(world):
+    import asyncio
+    from app.models.product import Product
+    from app.services.channel_readiness import guard_legacy_product,legacy_fact_products
+    async with world.session() as db:
+        products=[Product(seller_id=world.ids[0],name=f"Shared item {index}",listed_price=10000,floor_price=8000) for index in range(2)]
+        db.add_all(products);await db.flush();ids=[product.id for product in products]
+    ready=asyncio.Event();reached=[]
+    async def chat(focus):
+        async with world.session() as db:
+            await guard_legacy_product(db,world.ids[0],focus)
+            reached.append(focus)
+            if len(reached)==2:ready.set()
+            await ready.wait()
+            products=list((await db.scalars(select(Product).where(Product.id.in_(ids)))).all())
+            assert len(await legacy_fact_products(db,world.ids[0],products))==2
+    await asyncio.wait_for(asyncio.gather(chat(ids[0]),chat(ids[1])),timeout=5)
+    started,acquired=asyncio.Event(),asyncio.Event()
+    async def activation_lock():
+        async with world.session() as db:
+            started.set()
+            await db.scalar(select(Product.id).where(Product.id==ids[0]).with_for_update())
+            acquired.set()
+    async with world.session() as db:
+        await guard_legacy_product(db,world.ids[0],ids[0])
+        activation=asyncio.create_task(activation_lock())
+        await started.wait()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(acquired.wait(),timeout=0.1)
+        assert not acquired.is_set()
+    await asyncio.wait_for(activation,timeout=5)
+    assert acquired.is_set()

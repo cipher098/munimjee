@@ -163,9 +163,11 @@ async def replay_block_reason(db, row, *, actor_id=None):
         if await db.scalar(select(ManualAction.id).where(ManualAction.conversation_id == conversation.id, ManualAction.status == "open").limit(1)):
             return "An open manual action needs a human response first."
     if actor_id is not None:
-        membership = (await db.execute(select(Membership, User).join(User, User.id == Membership.user_id).where(
+        membership = (await db.execute(select(Membership, User).join(User, User.id == Membership.user_id).join(
+            Business, Business.id == Membership.business_id).where(
             Membership.business_id == row.seller_id, Membership.user_id == actor_id,
             Membership.is_active.is_(True), Membership.revoked_at.is_(None), User.is_active.is_(True), User.revoked_at.is_(None),
+            Business.is_active.is_(True),
         ))).one_or_none()
         if membership is None or "automation.manage" not in capabilities_for(membership[0].role):
             return "The reviewer no longer has permission to resume automation."

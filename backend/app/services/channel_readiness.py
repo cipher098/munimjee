@@ -22,10 +22,13 @@ async def guard_legacy_product(db, seller_id, product_id) -> None:
     from sqlalchemy import select
     from app.models.product import Product
     from app.services.checkout_v1 import is_product_activated
-    # Activation uses this same Product lock. Hold it until the caller commits,
-    # so activation cannot race a subsequent legacy fact read or customer send.
-    product = await db.scalar(select(Product.id).where(Product.id == product_id, Product.seller_id == seller_id).with_for_update(key_share=True))
-    if product and await is_product_activated(db, seller_id, product):
+    # Readers share this lock; activation takes FOR UPDATE on the same Product.
+    # Hold until commit so activation cannot race a legacy fact read/send, while
+    # chats focused on different products cannot deadlock each other as readers.
+    product = await db.scalar(select(Product.id).where(Product.id == product_id, Product.seller_id == seller_id).with_for_update(read=True))
+    if product is None:
+        raise CatalogueAuthorityHandoff("Product context does not belong to this business")
+    if await is_product_activated(db, seller_id, product):
         raise CatalogueAuthorityHandoff("Current SKU facts need a human response")
 
 
