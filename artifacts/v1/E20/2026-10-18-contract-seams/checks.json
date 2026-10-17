@@ -57,5 +57,22 @@
       "sha256": "70ddcab12f16539c024c78948171412cdef948d9fb33ae46d64c43ffed0a8552",
       "scope": "Synthetic injected mock-HTTP journey, not real catalogue/payment integration"
     }
-  ]
+  ],
+  "followup_review": {
+    "source_commit": "24e15707629925001555bae3c25fd3ba11240682",
+    "scope": "Stable product anchors in enhanced live cards and Escape/Enter focus checks; preview buttons unchanged",
+    "root_reported_browser_result": {
+      "tests": 16,
+      "passed": 16,
+      "duration_seconds": 20.8,
+      "source_note": "Root reported complete run on unchanged working tree before24e1570commit"
+    },
+    "owner_mock_http_result": {
+      "tests": 8,
+      "passed": 8,
+      "duration_seconds": 6.7,
+      "source_note": "Owner verified stable anchors before added explicit Escape/Enter assertion"
+    },
+    "owner_full_followup_run": "Intentionally interrupted after14passed when root announced browserlock; this is not counted as a complete pass"
+  }
 }
