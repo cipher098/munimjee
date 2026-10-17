@@ -59,7 +59,7 @@ async def seed(business_id: str, actor=Depends(require_v1_mutation), db=Depends(
         identifier=uuid4();ids.append(str(identifier))
         text = ["Is the indigo kurta still available in medium?", "Could you confirm the delivery address before I pay?", "Please check the price from yesterday’s message."][index % 3]
         db.add(InstagramIngress(id=identifier,seller_id=bid,account_id="1234567",customer_id=f"synthetic-{index:04}",
-               event_key=uuid4().hex,provider_message_id=f"synthetic-preview-{index}",events=[{"type":"text","text":text}],processed_indices=[],
+               event_key=uuid4().hex,provider_message_id=f"synthetic-preview-{index}",events=[{"type":"image","image_url":"https://example.invalid/recorded-attachment"}] if index==3 else [{"type":"text","text":text}],processed_indices=[],
                status="error",error_code="processing_failed_unknown_effect",attempts=1,available_at=current,
                occurred_at=current-timedelta(days=2) if index==2 else current,
                created_at=current-timedelta(minutes=index)))

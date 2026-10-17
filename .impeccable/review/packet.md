@@ -11,10 +11,11 @@ Direction contract:
 - FIRST VIEWPORT: show the selected business, review filter, uncertainty context and the first saved item.
 - FORM: familiar working table on desktop and stacked rows on mobile; protected-focus review dialog, current role controls and current connection status. No new visual system or illustrative claims.
 
-Required captures (all validated after final Chromium16-check run):
+Required captures (all validated after final Chromium17-check run):
 - `.impeccable/review/desktop.png` (1365px, full document from top)
 - `.impeccable/review/mobile.png` (390×844px, viewport from top)
 - `artifacts/v1/channel-operator/desktop-uncertain-review.png` (1365×1000px)
+- `artifacts/v1/channel-operator/desktop-attachment-review.png` (1365×1000px)
 - `artifacts/v1/channel-operator/desktop-connections.png` (1365px full document)
 - `artifacts/v1/channel-operator/desktop-session-error.png` (1365×1000px)
 - `artifacts/v1/channel-operator/mobile-owner-review.png` (390×844px; dialog is scrollable)

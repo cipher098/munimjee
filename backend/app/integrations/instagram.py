@@ -18,16 +18,16 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 class _CredentialURLFilter(logging.Filter):
-    """HTTPX logs request URLs at INFO; OAuth-required query secrets stay redacted."""
+    """Keep OAuth query secrets out of HTTPX and incoming callback access logs."""
     def filter(self, record):
         from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
         if isinstance(record.args, tuple):
             cleaned = []
             for value in record.args:
                 text = str(value)
-                if text.startswith("https://"):
+                if text.startswith(("https://", "/")) and "?" in text:
                     url = urlsplit(text)
-                    query = [(key, "[redacted]" if key in {"access_token", "client_secret", "code"} else item)
+                    query = [(key, "[redacted]" if key in {"access_token", "client_secret", "code", "state"} else item)
                              for key, item in parse_qsl(url.query, keep_blank_values=True)]
                     value = urlunsplit((url.scheme, url.netloc, url.path, urlencode(query), ""))
                 cleaned.append(value)
@@ -35,7 +35,8 @@ class _CredentialURLFilter(logging.Filter):
         return True
 
 
-logging.getLogger("httpx").addFilter(_CredentialURLFilter())
+for _transport_logger in ("httpx", "uvicorn.access"):
+    logging.getLogger(_transport_logger).addFilter(_CredentialURLFilter())
 
 
 

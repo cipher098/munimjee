@@ -55,3 +55,13 @@ def test_provider_url_logging_redacts_oauth_secrets():
     assert _CredentialURLFilter().filter(record)
     message=record.getMessage()
     assert "synthetic-secret" not in message and "synthetic-client" not in message and "fields=id" in message
+
+
+def test_inbound_callback_access_log_redacts_code_and_state():
+    import logging
+    from app.integrations.instagram import _CredentialURLFilter
+    record=logging.LogRecord("uvicorn.access",logging.INFO,"synthetic",1,'%s - "%s %s HTTP/%s" %d',
+        ("127.0.0.1","GET","/api/v1/businesses/synthetic/channels/instagram/callback?code=synthetic-private-code&state=synthetic-private-state","1.1",303),None)
+    assert _CredentialURLFilter().filter(record)
+    message=record.getMessage()
+    assert "synthetic-private-code" not in message and "synthetic-private-state" not in message and "callback" in message
