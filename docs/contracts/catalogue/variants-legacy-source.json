@@ -1,0 +1,20 @@
+{
+  "id": "22222222-2222-4222-8222-222222222222",
+  "seller_id": "11111111-1111-4111-8111-111111111111",
+  "category_id": null,
+  "name": "Cotton kurta",
+  "description": "Seller approved cotton kurta",
+  "listed_price": 129900,
+  "stock_quantity": 7,
+  "active": true,
+  "variants": [
+    {
+      "label": "Red"
+    },
+    {
+      "label": "Red"
+    }
+  ],
+  "photo_url": "https://example.com/kurta.jpg",
+  "photo_urls": []
+}

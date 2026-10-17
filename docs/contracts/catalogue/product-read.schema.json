@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "SKURead": {
+      "additionalProperties": false,
+      "properties": {
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "object"
+        },
+        "price_minor": {
+          "maximum": 2000000000,
+          "minimum": 0,
+          "title": "Price Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "const": "INR",
+          "enum": [
+            "INR"
+          ],
+          "title": "Currency",
+          "type": "string"
+        },
+        "stock_available": {
+          "anyOf": [
+            {
+              "maximum": 2000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stock Available"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "sku_id": {
+          "format": "uuid",
+          "title": "Sku Id",
+          "type": "string"
+        },
+        "product_id": {
+          "format": "uuid",
+          "title": "Product Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "price_minor",
+        "currency",
+        "stock_available",
+        "active",
+        "sku_id",
+        "product_id"
+      ],
+      "title": "SKURead",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "catalogue.v1",
+      "default": "catalogue.v1",
+      "enum": [
+        "catalogue.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "mode": {
+      "const": "preview_foundation",
+      "default": "preview_foundation",
+      "enum": [
+        "preview_foundation"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "business_id": {
+      "format": "uuid",
+      "title": "Business Id",
+      "type": "string"
+    },
+    "product_id": {
+      "format": "uuid",
+      "title": "Product Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "category_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Category Id"
+    },
+    "photo_urls": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Photo Urls",
+      "type": "array"
+    },
+    "readiness": {
+      "enum": [
+        "needs_review",
+        "default_backfilled",
+        "reviewed",
+        "stale"
+      ],
+      "title": "Readiness",
+      "type": "string"
+    },
+    "checkout_enabled": {
+      "const": false,
+      "default": false,
+      "enum": [
+        false
+      ],
+      "title": "Checkout Enabled",
+      "type": "boolean"
+    },
+    "skus": {
+      "items": {
+        "$ref": "#/$defs/SKURead"
+      },
+      "title": "Skus",
+      "type": "array"
+    }
+  },
+  "required": [
+    "business_id",
+    "product_id",
+    "name",
+    "description",
+    "category_id",
+    "photo_urls",
+    "readiness",
+    "skus"
+  ],
+  "title": "CatalogueProductRead",
+  "type": "object"
+}

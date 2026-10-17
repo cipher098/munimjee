@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "description": "Seller-only reconciliation contract, excluded from public product fields.",
+  "properties": {
+    "business_id": {
+      "format": "uuid",
+      "title": "Business Id",
+      "type": "string"
+    },
+    "product_id": {
+      "format": "uuid",
+      "title": "Product Id",
+      "type": "string"
+    },
+    "readiness": {
+      "enum": [
+        "needs_review",
+        "default_backfilled",
+        "reviewed",
+        "stale"
+      ],
+      "title": "Readiness",
+      "type": "string"
+    },
+    "mapping_revision": {
+      "minimum": 1,
+      "title": "Mapping Revision",
+      "type": "integer"
+    },
+    "legacy_fingerprint": {
+      "title": "Legacy Fingerprint",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "legacy_variants": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Legacy Variants",
+      "type": "array"
+    }
+  },
+  "required": [
+    "business_id",
+    "product_id",
+    "readiness",
+    "mapping_revision",
+    "legacy_fingerprint",
+    "issues",
+    "legacy_variants"
+  ],
+  "title": "CatalogueMappingRead",
+  "type": "object"
+}
