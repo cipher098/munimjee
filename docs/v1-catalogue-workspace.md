@@ -15,11 +15,17 @@ Missing or revoked native sessions do not gain access through this page. Viewer/
 
 ## Retry and race handling
 
-A draft keeps its idempotency key and exact payload after a transport/server failure. Retrying unchanged recovers a committed draft if only its response was lost. Changing facts while an earlier save is unconfirmed is blocked until the seller retries unchanged or reloads/checks the catalogue. Definite client errors allow correction. Activation and stock edits use server revisions/fingerprints; there is no automatic conflict retry with a refreshed revision. Product and order detail requests discard late responses after changing or closing the detail. Pagination discards older responses.
+Before sending a product draft, the page persists and reads back its exact body/key in `sessionStorage` under `munimjee.v1.catalogue-draft:{user_id}:{business_id}`. The envelope also binds a SHA-256 fingerprint of the native session's CSRF token; no raw token is stored. After an uncertain response or reload, the page displays the saved human-readable facts and an explicit **Retry saved draft** button. It never posts automatically, and another draft cannot replace an unresolved command. The retry rechecks current native identity, session and write capability, then sends the same body/key. A successful response must contain a valid product record for the same business before recovery state clears. A malformed success response remains uncertain. A definite first-attempt client rejection allows correction; a client error after an earlier uncertain attempt keeps recovery pending.
+
+Malformed, expired or changed stored state blocks new draft commands and directs the seller to review existing products. Unavailable persistence sends no new draft POST. Different users/businesses/sessions cannot reuse or reveal the pending facts. Shared native cleanup removes this reserved prefix on login/signup/invitation acceptance, logout/logout-all and 401; the page also clears/withholds recovery on identity mismatch or 401. Recovery is limited to the original native browser session. After signing in again, review existing products before creating a replacement for an earlier uncertain save. Public customer checkout storage has a separate lifecycle and is not modified here.
+
+Activation and stock edits use server revisions/fingerprints; there is no automatic conflict retry with a refreshed revision. Product and order detail requests discard late responses after changing or closing the detail. Pagination discards older responses.
+
+The **Open storefront** link is hidden unless the private storefront API supplies `public_storefront_url` for a published store. The UI accepts the exact `/stores/{slug}` path over HTTPS, or HTTP on the current origin for local previews, and rejects credentials, query strings and fragments. The integration owner supplies the configured canonical URL and gates it behind the default-off storefront feature. This UI does not derive the public origin from the request Host.
 
 ## Verification
 
-The new tests use P01 `migrated_database`/`migrated_engine`: numeric-loopback disposable database name `munimjee_test_<TEST_LANE>`, `TEST_DB_RESET=1`, a held reset lease, and the actual Alembic chain. Providers are blocked by the synthetic test configuration. Browser tests run the real local application with only the new router registrations added by the test entry point. No real customer messages or payments are used.
+The new tests use P01 `migrated_database`/`migrated_engine`: numeric-loopback disposable database name `munimjee_test_<TEST_LANE>`, `TEST_DB_RESET=1`, a held reset lease, and the actual Alembic chain. Providers are blocked by the synthetic test configuration. The integrated application mounts this router in actual `app.main`; its central browser entry point adds no duplicate registration. The isolated feature-branch test entry point supplies the equivalent catalogue/workspace registrations until those central composition commits are consumed. No real customer messages or payments are used.
 
 Run backend checks with the guarded test lane configured:
 
@@ -32,7 +38,7 @@ The browser runner expects the storefront's locked Playwright dependency in `fro
 
 The customer storefront UI remains the remote storefront workstream. Public product/checkout API success here is not a customer-browser checkout certification or production release.
 
-Verified locally on the guarded PostgreSQL 16 checkout lane: **3 backend checks passed** and **37 recorded real-browser checks passed**. The activation conflict check also proves that a stale draft cannot activate and its review checkbox resets after current facts reload. Impeccable's mechanical detector returned no findings. The browser run uses synthetic identities and blocks non-local browser requests.
+Verified locally on the guarded PostgreSQL 16 checkout lane: **3 backend checks passed** and **66 recorded real-browser checks passed**. The expanded recovery cases cover post-commit response loss across reload, exact-key retry with one product, malformed success responses, changed/corrupt/expired storage, persistence denial before POST, hidden-form tampering, session replacement, foreign user/business isolation and 401 cleanup. Public-link allow/deny cases explicitly inject the optional API field at the browser transport boundary; the real feature-off API leaves the link hidden. The activation conflict check also proves that a stale draft cannot activate and its review checkbox resets after current facts reload. Impeccable's mechanical detector returned no findings. The browser run uses synthetic identities and blocks non-local browser requests.
 
 ## Visual system evidence
 
