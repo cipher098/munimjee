@@ -184,7 +184,14 @@ async def start_payment(
     db: AsyncSession = Depends(get_db),
 ):
     store, order = await authorized_order(db, slug, order_id, authorization)
-    account = await payments.require_gateway(db, order.seller_id)
+    sku_order = bool(order.items) and all(item.get("_inventory_engine") == "sku.v1" for item in order.items)
+    if sku_order:
+        from app.services.checkout_sessions import require_public_gateway, current_account, validate_account
+        account = (validate_account(payments.order_account(order, await current_account(db, order.seller_id)))
+            if order.gateway_order_id else await require_public_gateway(db, order.seller_id))
+    else:
+        # Preserve the incumbent Product payment contract and its configuration gate.
+        account = await payments.require_gateway(db, order.seller_id)
     if (
         order.payment_status != "pending"
         or order.fulfillment_status != "pending"
@@ -196,7 +203,7 @@ async def start_payment(
             409, "Payment reservation expired; please place a new order"
         )
     if not order.gateway_order_id:
-        if order.items and all(item.get('_inventory_engine') == 'sku.v1' for item in order.items):
+        if sku_order:
             from app.services.sku_payments import ensure_gateway_order
             await ensure_gateway_order(db, order, account)
         else:

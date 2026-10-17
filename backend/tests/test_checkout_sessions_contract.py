@@ -29,3 +29,14 @@ def test_public_frozen_handoff_fixtures_round_trip():
         body=json.loads((root/(name+".json")).read_text())
         assert model.model_validate(body).model_dump(mode="json")==body
         assert model.model_json_schema()==json.loads((root/(name+".schema.json")).read_text())
+
+
+def test_operator_review_fixture_schema_and_public_allowlist():
+    from app.schemas.checkout_sessions import PaymentReviewRead
+    from pathlib import Path
+    import json
+    root = Path(__file__).resolve().parents[2] / "docs/contracts/checkout-session"
+    data = json.loads((root / "payment-review.json").read_text())
+    assert PaymentReviewRead.model_validate(data).model_dump(mode="json") == data
+    assert PaymentReviewRead.model_json_schema() == json.loads((root / "payment-review.schema.json").read_text())
+    assert set(data) == {"contract_version", "order_id", "attempt_state", "gateway_order_id", "payment_status", "fulfillment_status", "reconciliation_eligible"}

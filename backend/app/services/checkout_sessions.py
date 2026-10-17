@@ -16,7 +16,7 @@ from app.models.commerce import CommerceOrder, Storefront
 from app.models.identity import Business
 from app.models.razorpay import RazorpayAccount
 from app.models.seller import Seller
-from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead
+from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead, PaymentReviewRead
 from app.services import razorpay_payments as payments
 from app.services.commerce import authorize_order, order_token
 from app.services.sku_payments import eligible, ensure_gateway_order
@@ -211,3 +211,25 @@ async def verify_session(db, slug, order_id, authorization, payload):
     from app.api.routes.razorpay import verify_payment
     await verify_payment(slug, order_id, payload, "Bearer " + order_token(order), db)
     return await state(db, order)
+
+
+async def payment_review(db, business_id, order_id):
+    # Native callers authorize the business first; scalar facts bypass retained ORM
+    # state and never expose customer bearers, prefill or credential snapshots.
+    row = (await db.execute(select(CommerceOrder.id, CommerceOrder.payment_method,
+        CommerceOrder.items, CommerceOrder.gateway_order_id, CommerceOrder.payment_status,
+        CommerceOrder.fulfillment_status).where(CommerceOrder.id == order_id,
+        CommerceOrder.seller_id == business_id).execution_options(autoflush=False))).one_or_none()
+    if row is None:
+        raise HTTPException(404, "Order not found")
+    attempt = await db.scalar(select(SKUPaymentAttempt.state).where(SKUPaymentAttempt.order_id == order_id)
+        .execution_options(autoflush=False))
+    sku_online = row.payment_method == "razorpay" and bool(row.items) and all(
+        item.get("_inventory_engine") == "sku.v1" for item in row.items)
+    eligible = (sku_online and attempt is not None
+        and row.payment_status not in {"paid", "collected", "review_required"}
+        and ((row.gateway_order_id is None and attempt in {"requesting", "unknown"})
+            or (row.gateway_order_id is not None and attempt == "ready")))
+    return PaymentReviewRead(order_id=row.id, attempt_state=attempt or "not_started",
+        gateway_order_id=row.gateway_order_id, payment_status=row.payment_status,
+        fulfillment_status=row.fulfillment_status, reconciliation_eligible=eligible)
