@@ -1,0 +1,46 @@
+{
+  "mode": "actual-theme-ui-with-synthetic-http-no-database-or-public-provider",
+  "source": "/Users/user/Documents/ChatGPT/munimjee-wave3-themes",
+  "source_head": "aa6ac940ef877a8a37baac39afec44268b49f84e",
+  "source_worktree_ui_status": "?? backend/static/theme_settings.css\n?? backend/static/theme_settings.html\n?? backend/static/theme_settings.js",
+  "browser_version": "153.0.8010.12",
+  "runner_sha256": "6269ce224326bccbdc15a80f882d168f390c669abf05749996290b3f6adaabf6",
+  "source_hashes": {
+    "theme_settings.html": "2302b6bbec609c8451c46473ca2023a2b26cd7ef2421914676f128c03212dacc",
+    "theme_settings.js": "ead27824d2b361a292f2f3f2eef129267d2136dc11ae05747a32f2bb28d42405",
+    "theme_settings.css": "e5a8d89c38bb45df563bf8ffb933b4b2287866a9b952a8d24977e86263438c9b",
+    "v1_client.js": "04d95e597fb4b20ea423da4be58e1b365f0030609f3b179468405f2e7419a5fd",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged_during_run": true,
+  "checks_passed": 6,
+  "checks_failed": 0,
+  "results": [
+    {
+      "name": "viewer can read and explicitly reload saved design at mobile width",
+      "result": "passed"
+    },
+    {
+      "name": "delayed old-session load cannot repopulate a terminal auth fence",
+      "result": "passed"
+    },
+    {
+      "name": "lost draft response reload replays exact key and publishes only explicitly",
+      "result": "passed"
+    },
+    {
+      "name": "rapid draft submit preserves one immutable command",
+      "result": "passed"
+    },
+    {
+      "name": "unavailable browser storage prevents a new draft mutation",
+      "result": "passed"
+    },
+    {
+      "name": "identity change removes all theme command scopes and private preview",
+      "result": "passed"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": 0
+}
