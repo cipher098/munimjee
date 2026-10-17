@@ -330,6 +330,10 @@ async def reconcile(
     seller_id: str = Depends(current_seller_id),
     db: AsyncSession = Depends(get_db),
 ):
+    return await reconcile_order(order_id, seller_id, db)
+
+
+async def reconcile_order(order_id, seller_id, db, *, commit=True):
     await db.scalar(select(Storefront.seller_id).where(Storefront.seller_id == seller_id).with_for_update())
     order = await db.scalar(
         select(CommerceOrder)
@@ -348,7 +352,10 @@ async def reconcile(
     for payment in result.get("items", []):
         if payment.get("status") == "captured":
             await payments.apply_captured_payment(db, order, payment)
-    await db.commit()
+    if commit:
+        await db.commit()
+    else:
+        await db.flush()
     return {
         "payment_status": order.payment_status,
         "fulfillment_status": order.fulfillment_status,

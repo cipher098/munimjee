@@ -52,7 +52,7 @@ async def read_store(seller_id: str = Depends(current_seller_id), db: AsyncSessi
 
 @seller_router.put('/store')
 async def save_store(payload: StoreInput, seller_id: str = Depends(current_seller_id), db: AsyncSession = Depends(get_db)):
-    seller = await db.scalar(select(Seller).where(Seller.id == seller_id, Seller.is_active.is_(True)).with_for_update())
+    seller = await db.scalar(select(Seller).where(Seller.id == seller_id, Seller.is_active.is_(True)).with_for_update(key_share=True))
     if not seller:
         raise HTTPException(404, 'Seller not found')
     store = await db.scalar(select(Storefront).where(Storefront.seller_id == seller_id).with_for_update())
