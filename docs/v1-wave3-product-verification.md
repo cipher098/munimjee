@@ -25,9 +25,9 @@ There is no metadata-created schema, alternate admin URL or dotenv fallback.
 
 | Boundary | Independent check | Current evidence / remaining gate |
 | --- | --- | --- |
-| Website authorization | Explicit source consent; literal extraction only; no implicit ownership claim | Existing mounted API; workspace consent and browser assertions pending peer integration |
-| Original upload | Exact bytes/hash preserved; same-key replay; changed-body conflict; two uploads of same bytes produce one candidate | New mounted DB journey; DB execution pending |
-| Durable progress | A pending job is visible, claim commits before retrieval, reload reads current state | New mounted DB journey; browser reload pending |
+| Website authorization | Explicit source consent; literal extraction only; no implicit ownership claim | Workspace HTTP-mock consent/unknown-fact checks passed; actual composed browser pending |
+| Original upload | Exact bytes/hash preserved; same-key replay; changed-body conflict; two uploads of same bytes produce one candidate | Mounted DB journey pending; raw-upload browser recovery passed with synthetic HTTP |
+| Durable progress | A pending job is visible, claim commits before retrieval, reload reads current state | HTTP-mock pending-job/reload recovery passed; mounted DB execution pending |
 | Cancellation | Cancel while synthetic retrieval waits; same-key cancel replay; late result produces no candidates | New mounted DB race; DB execution pending |
 | Current authority | Role downgraded in another transaction during retrieval; late result fails with `authorization_revoked` | New mounted DB race; DB execution pending |
 | Retry | Stable timeout code, durable manual backoff, same-key response replay, early claim no-op and later recovery | New mounted DB journey; DB execution pending |
@@ -70,11 +70,14 @@ production migration/rollback and production cutover are separate gates.
 
 ## Independent browser checkpoint (HTTP mocks)
 
-The actual peer import page passed **6/6** independent Chromium checks with
+The actual peer import page passed **9/9** independent Chromium checks with
 synthetic HTTP responses: explicit consent/unknown-stock approval block; rapid
 submit with one durable command key; delayed old poll rejected after explicit
 refresh; changed identity clears evidence/forms/import commands; current viewer
-controls disabled with 390px fit; and malicious source text stays literal.
+controls disabled with 390px fit; malicious source text stays literal; lost job
+response reload preserves the exact immutable request; a lost raw upload requires
+matching original bytes/type/SHA before replay using the reserved job key; and a
+corrupt saved command blocks new actions.
 The test serves captured actual peer HTML/JS/CSS bytes read-only. It does not mount
 an alternate application implementation or claim database integration.
 
@@ -83,15 +86,19 @@ synthetic HTTP: viewer can read and reload at 390px; delayed old-session load
 cannot repopulate a terminal fence; a committed/lost draft response reloads and
 replays the exact operation/key, with publication only on its separate action;
 rapid draft submit allocates one durable command; unavailable storage prevents a
-new mutation; and changed identity clears all theme-command scopes and preview.
+new mutation; and changed identity on **window focus** clears all theme-command scopes and
+preview. The delayed old-session response case separately uses visibilitychange.
 The preview response in this suite is explicitly an inert synthetic transport,
 not proof of the theme renderer or public provider.
 
 Both suites observed **zero page errors and zero external requests**. Their
 JSON artifacts identify source base SHA, changed/untracked UI files, exact asset
 SHA-256 values, runner digest, Chromium version and whether the source stayed
-unchanged during the run. These are interim peer-source checks, not an integrated
-release claim. The 390px screenshots were visually inspected; no horizontal
+unchanged during the run. Final owner application sources are import workspace
+`c5645d6` and theme settings source `42d1951` at final evidence head
+`e5e2874`; both UI worktrees were clean and their
+asset hashes stayed unchanged during the final runs. These are committed
+peer-source checks, not an integrated release claim. The 390px screenshots were visually inspected; no horizontal
 layout overflow was observed. Physical-device and full accessibility acceptance
 remain pending.
 

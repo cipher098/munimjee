@@ -21,7 +21,7 @@ function candidate(title='Synthetic private candidate') {const id='44444444-4444
 async function setup({jobs=[],candidates=[],viewport={width:1440,height:1000},init}={}) {
  const c=await browser.newContext({viewport});const page=await c.newPage();page.setDefaultTimeout(5000);
  page.on('pageerror',e=>errors.push(e.message));
- const model={jobs,candidates,user:uid,csrf:'bound-synthetic-csrf',capabilities:['catalogue.read','catalogue.write'],sessionStatus:200,posts:[],sessionHook:null,jobsHook:null};
+ const model={jobs,candidates,user:uid,csrf:'bound-synthetic-csrf',capabilities:['catalogue.read','catalogue.write'],sessionStatus:200,posts:[],sessionHook:null,jobsHook:null,uploads:[],abortUploadFirst:false,abortJobFirst:false};
  await page.addInitScript(()=>{window.__qaStorageWrites=[];const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('munimjee.v1.import-command:'))window.__qaStorageWrites.push({key,value});return original.call(this,key,value);};});
  if(init)await page.addInitScript(init);
  await c.route('**/*',async route=>{
@@ -38,8 +38,14 @@ async function setup({jobs=[],candidates=[],viewport={width:1440,height:1000},in
    return route.fulfill({json:model.jobs});
   }
   if(pathname.endsWith('/imports/candidates'))return route.fulfill({json:{items:model.candidates,next_after:null}});
+  if(pathname.endsWith('/imports/uploads')&&request.method()==='POST'){
+   const bytes=request.postDataBuffer(),key=url.searchParams.get('idempotency_key');model.uploads.push({key,bytes,headers:request.headers()});
+   const result={asset_id:'66666666-6666-4666-8666-666666666666',sha256:createHash('sha256').update(bytes).digest('hex'),size_bytes:bytes.length,content_type:request.headers()['content-type']};
+   if(model.abortUploadFirst){model.abortUploadFirst=false;return route.abort('failed');}
+   return route.fulfill({status:201,json:result});
+  }
   if(pathname.endsWith('/imports/jobs')&&request.method()==='POST'){
-   const body=request.postDataJSON();model.posts.push(body);model.jobs=[job()];return route.fulfill({status:202,json:model.jobs[0]});
+   const body=request.postDataJSON();model.posts.push(body);model.jobs=[job()];if(model.abortJobFirst){model.abortJobFirst=false;return route.abort('failed');}return route.fulfill({status:202,json:model.jobs[0]});
   }
   if(pathname.includes('/imports/'))return route.fulfill({status:409,json:{detail:'Synthetic current revision conflict'}});
   return route.fulfill({status:404});
@@ -99,6 +105,25 @@ try {
   const title='<img src=x onerror="window.__injected=true">';const {c,page}=await setup({candidates:[candidate(title)]});
   await page.getByRole('button',{name:new RegExp('img src=x')}).click();await expect(page.locator('#review-heading')).toHaveText(title);
   assert.equal(await page.locator('#candidate-list img').count(),0);assert.equal(await page.evaluate(()=>window.__injected),undefined);await c.close();
+ });
+
+ await record('lost job response reload preserves the exact request key without automatic replay',async()=>{
+  const {c,page,model}=await setup();model.abortJobFirst=true;await page.locator('#website-url').fill('https://shop.example.com/dress');await page.locator('#website-consent').check();await page.locator('#website-form button').click();
+  await expect(page.locator('#recovery')).toBeVisible();await expect(page.locator('#recovery-error')).not.toHaveText('');assert.equal(model.posts.length,1);
+  await page.reload();await expect(page.locator('#recovery')).toBeVisible();assert.equal(model.posts.length,1);await page.locator('#retry-command').click();await expect(page.locator('#notice')).toContainText('Import request confirmed');
+  assert.equal(model.posts.length,2);assert.deepEqual(model.posts[0],model.posts[1]);await expect(page.locator('#recovery')).toBeHidden();await c.close();
+ });
+ await record('lost raw upload reselects exact original bytes and keeps the reserved job key',async()=>{
+  const {c,page,model}=await setup();model.abortUploadFirst=true;const original=Buffer.from('89504e470d0a1a0a73796e7468657469632d6f726967696e616c','hex');
+  await page.locator('#upload-file').setInputFiles({name:'synthetic-garment.png',mimeType:'image/png',buffer:original});await page.locator('#upload-consent').check();await page.locator('#upload-form button').click();
+  await expect(page.locator('#recovery-error')).not.toHaveText('');assert.equal(model.uploads.length,1);assert.equal(model.posts.length,0);
+  const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem(sessionStorage.key(0))));assert.equal(saved.kind,'upload');assert.equal(saved.body.size,original.length);assert.equal(saved.body.sha256,createHash('sha256').update(original).digest('hex'));assert.equal(Object.hasOwn(saved.body,'content'),false);
+  await page.reload();await expect(page.locator('#recovery-file-label')).toBeVisible();assert.equal(model.uploads.length,1);
+  await page.locator('#recovery-file').setInputFiles({name:'wrong.png',mimeType:'image/png',buffer:Buffer.from('different')});await page.locator('#retry-command').click();await expect(page.locator('#recovery-error')).toContainText('exact original file');assert.equal(model.uploads.length,1);
+  await page.locator('#recovery-file').setInputFiles({name:'synthetic-garment.png',mimeType:'image/png',buffer:original});await page.locator('#retry-command').click();await expect(page.locator('#notice')).toContainText('Import request confirmed');assert.equal(model.uploads.length,2);assert.equal(model.uploads[0].key,model.uploads[1].key);assert.deepEqual(model.uploads[0].bytes,model.uploads[1].bytes);assert.deepEqual(model.uploads[1].bytes,original);assert.equal(model.uploads[1].headers['x-csrf-token'],'bound-synthetic-csrf');assert.equal(model.posts.length,1);assert.equal(model.posts[0].idempotency_key,saved.body.job_key);assert.equal(model.posts[0].source_kind,'uploaded_media');await c.close();
+ });
+ await record('corrupt saved action blocks all new import requests',async()=>{
+  const {c,page,model}=await setup({init:()=>sessionStorage.setItem('munimjee.v1.import-command:22222222-2222-4222-8222-222222222222:11111111-1111-4111-8111-111111111111','{invalid')});await expect(page.locator('#recovery')).toBeVisible();await expect(page.locator('#recovery-error')).toContainText('cannot be read');await expect(page.locator('#website-fields button')).toBeDisabled();await expect(page.locator('#retry-command')).toBeDisabled();assert.equal(model.posts.length,0);assert.equal(model.uploads.length,0);await c.close();
  });
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
  const current=await Promise.all(files.map(async file=>[file,createHash('sha256').update(await readFile(path.join(source,'backend/static',file))).digest('hex')]));

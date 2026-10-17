@@ -1,13 +1,13 @@
 {
   "mode": "actual-theme-ui-with-synthetic-http-no-database-or-public-provider",
   "source": "/Users/user/Documents/ChatGPT/munimjee-wave3-themes",
-  "source_head": "aa6ac940ef877a8a37baac39afec44268b49f84e",
-  "source_worktree_ui_status": "?? backend/static/theme_settings.css\n?? backend/static/theme_settings.html\n?? backend/static/theme_settings.js",
+  "source_head": "e5e2874f9c0314fc6dd9539a44dce84841495589",
+  "source_worktree_ui_status": "",
   "browser_version": "153.0.8010.12",
-  "runner_sha256": "6269ce224326bccbdc15a80f882d168f390c669abf05749996290b3f6adaabf6",
+  "runner_sha256": "580ea20277980520859dd98f01256323698fa91d1b259e504617a79ba068ee8e",
   "source_hashes": {
     "theme_settings.html": "2302b6bbec609c8451c46473ca2023a2b26cd7ef2421914676f128c03212dacc",
-    "theme_settings.js": "ead27824d2b361a292f2f3f2eef129267d2136dc11ae05747a32f2bb28d42405",
+    "theme_settings.js": "c7e8540502e8480be71222abfd6b4e268cb24be9a85ca48fc301bca80d87b6ff",
     "theme_settings.css": "e5a8d89c38bb45df563bf8ffb933b4b2287866a9b952a8d24977e86263438c9b",
     "v1_client.js": "04d95e597fb4b20ea423da4be58e1b365f0030609f3b179468405f2e7419a5fd",
     "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
@@ -37,7 +37,7 @@
       "result": "passed"
     },
     {
-      "name": "identity change removes all theme command scopes and private preview",
+      "name": "window focus identity change removes all theme command scopes and private preview",
       "result": "passed"
     }
   ],
