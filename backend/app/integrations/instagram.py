@@ -26,10 +26,15 @@ class _CredentialURLFilter(logging.Filter):
             for value in record.args:
                 text = str(value)
                 if text.startswith(("https://", "/")) and "?" in text:
-                    url = urlsplit(text)
-                    query = [(key, "[redacted]" if key in {"access_token", "client_secret", "code", "state"} else item)
-                             for key, item in parse_qsl(url.query, keep_blank_values=True)]
-                    value = urlunsplit((url.scheme, url.netloc, url.path, urlencode(query), ""))
+                    try:
+                        url = urlsplit(text)
+                        query = [(key, "[redacted]" if key in {"access_token", "client_secret", "code", "state"} else item)
+                                 for key, item in parse_qsl(url.query, keep_blank_values=True)]
+                        value = urlunsplit((url.scheme, url.netloc, url.path, urlencode(query), ""))
+                    except (TypeError, ValueError):
+                        # Logging malformed callback URLs must neither crash nor
+                        # expose an unparsed query containing provider secrets.
+                        value = text.partition("?")[0] + "?[redacted]"
                 cleaned.append(value)
             record.args = tuple(cleaned)
         return True

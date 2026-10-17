@@ -65,3 +65,14 @@ def test_inbound_callback_access_log_redacts_code_and_state():
     assert _CredentialURLFilter().filter(record)
     message=record.getMessage()
     assert "synthetic-private-code" not in message and "synthetic-private-state" not in message and "callback" in message
+
+
+def test_malformed_url_logging_fails_closed_without_crashing():
+    import logging
+    from app.integrations.instagram import _CredentialURLFilter
+    record=logging.LogRecord("httpx",logging.INFO,"synthetic",1,"Request %s",
+        ("https://[malformed/access_token?code=synthetic-private-code&state=synthetic-private-state",),None)
+    assert _CredentialURLFilter().filter(record)
+    message=record.getMessage()
+    assert "synthetic-private-code" not in message and "synthetic-private-state" not in message
+    assert message.endswith("?[redacted]")
