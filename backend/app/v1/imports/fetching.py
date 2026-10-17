@@ -60,8 +60,14 @@ def source_url(value: str) -> str:
     except ValueError as exc:
         raise FetchError("invalid_url") from exc
     # Tokens must not enter durable source references, logs, redirects or errors.
-    for key, _ in parse_qsl(urlsplit(normalized).query, keep_blank_values=True, max_num_fields=32):
+    try:
+        query = parse_qsl(urlsplit(normalized).query, keep_blank_values=True, max_num_fields=32)
+    except ValueError as exc:
+        raise FetchError("too_many_query_fields") from exc
+    for key, _ in query:
         lowered = key.casefold().replace("-", "_")
+        if "%" in lowered:
+            raise FetchError("encoded_query_key_forbidden")
         if lowered in {"sig", "key", "auth", "session", "code", "state", "jwt"} or lowered.endswith("_key") or any(
             secret in lowered for secret in ("token", "secret", "password", "credential", "authorization", "api_key", "signature", "session")
         ):
@@ -70,6 +76,8 @@ def source_url(value: str) -> str:
 
 
 def public_ip(value: str) -> str:
+    if "%" in value:
+        raise FetchError("transition_address_forbidden")
     try:
         address = ipaddress.ip_address(value)
     except ValueError as exc:
@@ -78,6 +86,10 @@ def public_ip(value: str) -> str:
         raise FetchError("non_public_address")
     # IPv4-mapped/transition addresses add ambiguity to routing and policy.
     if address.version == 6 and (address.ipv4_mapped or address.sixtofour or address.teredo):
+        raise FetchError("transition_address_forbidden")
+    if address.version == 6 and any(address in network for network in (
+        ipaddress.ip_network("64:ff9b::/96"), ipaddress.ip_network("64:ff9b:1::/48"),
+    )):
         raise FetchError("transition_address_forbidden")
     return address.compressed
 
