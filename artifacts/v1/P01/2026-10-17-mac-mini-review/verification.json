@@ -1,0 +1,42 @@
+{
+  "task": "P01/F10",
+  "branch": "codex/v1-test-isolation",
+  "tested_source_sha": "c289ddc151aaa5198e61f1357d83ee910c789052",
+  "environment": {
+    "host": "Mac mini dev",
+    "python": "3.12.14",
+    "database_configured": false
+  },
+  "checks": [
+    {
+      "command": "cd backend && ../.venv/bin/python -m pytest tests -q -r f",
+      "passed": 361,
+      "skipped": 173,
+      "failed": 0,
+      "warnings": 2,
+      "verified_by": "remote coordinator"
+    },
+    {
+      "command": "git diff e7694ff..HEAD --check",
+      "exit_code": 0,
+      "verified_by": "remote coordinator"
+    }
+  ],
+  "skip_reasons": {
+    "database_dependent": 172,
+    "historical_cassette_missing": 1
+  },
+  "boundaries": [
+    "No database tests executed on this host. Docker daemon was unresponsive; no shared service restarted.",
+    "PostgreSQL15/16 migrations and database lease verification remain pending on coordinator host or CI.",
+    "Redis instances, worker queues, app HTTP ports, and browser runtime isolation remain pending.",
+    "No production credentials, database changes, provider sends, deployment, or shared domain changes."
+  ],
+  "review_fixes": [
+    "Prevent dotenv read during settings construction, not only value application.",
+    "Reject remote Docker contexts and pin Compose to verified local Unix endpoint."
+  ],
+  "note": "Evidence-only followup; tested source SHA identifies the reviewed code. Branch head may additionally include this evidence file.",
+  "review_date": "2026-10-17",
+  "timezone": "Asia/Kolkata"
+}
