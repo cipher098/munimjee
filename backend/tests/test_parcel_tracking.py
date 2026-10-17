@@ -338,3 +338,58 @@ async def test_native_session_revoked_during_remote_preview_returns_no_candidate
     finally:
         release.set()
         if not task.done():task.cancel()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',['connector_disabled','registry_removed','consent_withdrawn','provider_uncertain','accepted'])
+async def test_real_outbox_sender_revalidates_after_template_wait_and_never_retries_unknown(api,monkeypatch,change):
+    from app.services import whatsapp_provider as provider
+    from app.workers.whatsapp import deliver_one
+    result,_=await link(api);link_id=UUID(result['link']['id']);calls=[]
+    async with api['factory'].begin() as db:
+        row=await db.get(OrderParcelLink,link_id);row.tracking_state='delivered';row.raw_status='Delivered'
+        order=await db.get(CommerceOrder,api['oid']);order.whatsapp_updates_opt_in=True
+        contact=WhatsAppContact(id=uuid4(),seller_id=api['bid'],phone='919876543210',utility_opt_in=True,last_inbound_at=datetime.now(timezone.utc)-timedelta(days=2));db.add(contact)
+        db.add(WhatsAppAccount(seller_id=api['bid'],phone_number_id='synthetic-pni',waba_id='synthetic-waba',access_token='synthetic-not-used',enabled=True))
+        await db.flush();message=WhatsAppMessage(seller_id=api['bid'],contact_id=contact.id,phone_number_id='synthetic-pni',idempotency_key=f'parcel:{link_id}:delivered',direction='outbound',kind='template',payload={'name':'synthetic','language':'en','parameters':['Synthetic','MJ-synthetic','Delivered']},status='queued');db.add(message);await db.flush();message_id=message.id
+    async def templates(account):
+        # This await represents the real template refresh boundary. Revoke a
+        # different authoritative record after the sender has read its context.
+        if change=='connector_disabled':
+            async with api['factory'].begin() as db:(await db.get(ParcelConnector,api['connector_id'])).enabled=False
+        elif change=='registry_removed':monkeypatch.setattr(settings,'V1_PARCEL_CONNECTORS_JSON','{}')
+        elif change=='consent_withdrawn':
+            async with api['factory'].begin() as db:(await db.get(CommerceOrder,api['oid'])).whatsapp_updates_opt_in=False
+        return [{'name':'synthetic','language':'en','status':'APPROVED','category':'UTILITY','components':[{'type':'BODY','text':'{{1}} {{2}} {{3}}'}]}]
+    async def send(account,contact,message):
+        calls.append(message.id)
+        if change=='provider_uncertain':raise provider.SendUncertain('Synthetic post-submit timeout')
+        return 'synthetic-provider-mid'
+    monkeypatch.setattr(provider,'fetch_templates',templates);monkeypatch.setattr(provider,'send',send)
+    await deliver_one(message_id,api['factory']);await deliver_one(message_id,api['factory'])
+    async with api['factory']() as db:
+        message=await db.get(WhatsAppMessage,message_id)
+        expected='unknown' if change=='provider_uncertain' else 'accepted' if change=='accepted' else 'failed'
+        assert message.status==expected
+    assert len(calls)==(1 if change in {'provider_uncertain','accepted'} else 0)
+
+
+@pytest.mark.asyncio
+async def test_registry_disabled_during_remote_enrollment_requires_review_after_response(api,monkeypatch):
+    ready,release=asyncio.Event(),asyncio.Event();original=BridgeAdapter.ensure
+    async def delayed(self,*args):
+        result=await original(self,*args);ready.set();await release.wait();return result
+    monkeypatch.setattr(BridgeAdapter,'ensure',delayed)
+    preview=await make_preview(api)
+    body={'idempotency_key':str(uuid4()),'candidate_token':preview['candidate_token'],'expected_order_fingerprint':preview['order']['fingerprint'],'confirmed':True}
+    task=asyncio.create_task(api['client'].post(api['base'],headers=api['data']['headers'],json=body))
+    try:
+        await asyncio.wait_for(ready.wait(),10);monkeypatch.setattr(settings,'V1_PARCEL_CONNECTORS_JSON','{}');release.set()
+        result=await task;assert result.status_code==200,result.text
+        assert result.json()['link']['state']=='review_required'
+        async with api['factory']() as db:
+            row=await db.scalar(select(OrderParcelLink));assert row.error_code=='business_or_connector_changed' and row.remote_id is None and row.lease_token is None
+            assert await db.scalar(select(func.count()).select_from(WhatsAppMessage))==0
+        assert (await control('/__synthetic/stats'))['shipments']==1
+    finally:
+        release.set()
+        if not task.done():task.cancel()

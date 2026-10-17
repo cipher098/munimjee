@@ -42,8 +42,8 @@ class Command(BaseModel):
 
 
 def link_view(row):
-    return {k:(str(getattr(row,k)) if k=='id' else getattr(row,k).isoformat() if getattr(row,k) is not None and k.endswith('_at') else getattr(row,k)) for k in
-        ('id','courier_id','awb','state','revision','tracking_state','raw_status','checked_at','attempted_at','last_sync_at','error_code','created_at')}
+    return {k:(str(getattr(row,k)) if k in {'id','business_id','order_id','idempotency_key'} else getattr(row,k).isoformat() if getattr(row,k) is not None and k.endswith('_at') else getattr(row,k)) for k in
+        ('id','business_id','order_id','idempotency_key','courier_id','awb','state','revision','tracking_state','raw_status','checked_at','attempted_at','last_sync_at','error_code','created_at')}
 
 async def link_for(db,business_id,order_id,link_id,lock=False):
     query=select(OrderParcelLink).where(OrderParcelLink.id==link_id,OrderParcelLink.business_id==business_id,OrderParcelLink.order_id==order_id)

@@ -195,7 +195,12 @@ async def process_link(db,link_id,*,adapter_factory=ParcelAdapter,force_refresh=
     if not link or link.lease_token!=token:return
     current=await db.scalar(select(ParcelConnector).where(ParcelConnector.id==link.connector_id).execution_options(populate_existing=True))
     link.lease_token,link.lease_until=None,None;link.next_poll_at=now()+timedelta(minutes=5)
-    if not current or not current.enabled or not await business_live(db,link.business_id) or connector_identity!=(current.origin,current.instance_id,current.credential_ref):
+    try:
+        if current is None:raise ConnectorUnavailable('connector_unconfigured')
+        configuration(current)  # Registry/feature policy can change during HTTP.
+        authorized=True
+    except ConnectorUnavailable:authorized=False
+    if not authorized or not await business_live(db,link.business_id) or connector_identity!=(current.origin,current.instance_id,current.credential_ref):
         link.state,link.error_code='review_required','business_or_connector_changed'
     elif pending:
         try:
