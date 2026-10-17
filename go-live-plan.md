@@ -2,7 +2,7 @@
 
 Updated: 17 October 2026, Asia/Kolkata.
 
-Status: agreed product direction; proposed execution plan. Implementation, test results, provider approvals and launch readiness must be recorded with evidence. Creating this plan does not start implementation or authorize production cutover.
+Status: execution authorized on 17 October 2026. Preparation and first foundation slices are in progress on isolated branches. Implementation, test results, provider approvals and launch readiness must be recorded with evidence. Production cutover is not authorized. See docs/v1-execution-status.md for actual task status.
 
 ## 1. The V1 outcome
 
@@ -309,7 +309,7 @@ Resolve these early, while independent development runs:
 
 Agents can autonomously implement, refactor within scope, create test fixtures, run isolated checks, inspect staging and fix failures. Live account login/OTP, consent screens, legal declarations, new permissions, paid transactions and provider approvals may require account-owner actions. Never bypass them or mark them passed from mocks. Request a narrowly scoped action, record the blocker and continue other lanes.
 
-No unsolicited real-customer messages or ad spend. Live canaries use explicitly authorized accounts/recipients. Production deployment/cutover is a separate release action after evidence is ready and the owner authorizes it. Current authorization is to write the plan.
+No unsolicited real-customer messages or ad spend. Live canaries use explicitly authorized accounts/recipients. Production deployment/cutover is a separate release action after evidence is ready and the owner authorizes it. Current authorization includes parallel implementation and isolated testing; production cutover remains separate.
 
 ## 12. Release gates
 
@@ -341,6 +341,6 @@ Rollback means a tested application switch or forward fix that preserves post-cu
 
 ## 14. Initial execution status
 
-No implementation lane is started by this document. The source review found valuable uncommitted changes in the existing checkouts; P00 must preserve and reconcile them first. The Mac mini is configured as a possible handoff destination, but saved-project registration, runtime resources and autonomous execution capacity remain to be verified.
+Execution began on 17 October 2026. P00 preserved both dirty checkouts in private local snapshots and copied reviewed application changes into integration commit e7694ff. Original checkouts and running services remain unchanged. The Mac mini dev chat is available and has GitHub push access; its Docker daemon is unresponsive and disk free space is approximately 11 GiB, so database-backed verification runs on this Mac until remote capacity is resolved.
 
-Next action when execution is authorized: start P00, then run P01/P02/P03 concurrently. Dispatch the six feature lanes only after their contract and isolation prerequisites are satisfied. Update this document with decisions and evidence; keep marketing claims synchronized with released features.
+Named workers are implementing bounded foundation slices in isolated worktrees. Pure contract work can proceed while test safety and migrations are prepared; no task is product-verified from scaffolding alone. Follow docs/v1-execution-status.md and docs/v1-contract-decisions.md for branch ownership and frozen decisions. Update this document with decisions and evidence; keep marketing claims synchronized with released features.
