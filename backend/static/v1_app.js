@@ -7,7 +7,15 @@
   let actor, business, profileVersion = 0, businessLoad = 0;
   const api = window.V1.api;
   const text = (tag, value, className) => {const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n;};
+  function clearInvite() {
+    $('invite-result').hidden = true; $('invite-link').value = ''; $('invite-form').reset();
+    $('invite-error').textContent = ''; $('team-list').replaceChildren();
+    $('invite-form').querySelectorAll('button').forEach(b => b.disabled = false);
+  }
   function access() {
+    businessLoad++; business = null; clearInvite(); $('profile-form').reset(); $('checklist').replaceChildren();
+    $('business-heading').textContent = 'Your business';
+    document.querySelectorAll('#access-form button, #workspace button').forEach(b => b.disabled = false);
     $('workspace').hidden = true; $('access').hidden = false; $('logout').hidden = true;
     $('access-title').textContent = mode === 'signup' ? 'Create your account' : mode === 'invite' ? 'Join your team' : 'Welcome back';
     $('business-name-label').hidden = mode !== 'signup';
@@ -18,15 +26,16 @@
     $('access-toggle').hidden = mode === 'invite'; $('invite-note').hidden = mode !== 'invite';
   }
   async function busy(form, errorId, callback) {
+    const epoch = businessLoad;
     $(errorId).textContent = '';
     const buttons = [...form.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
     form.setAttribute('aria-busy', 'true');
-    try { await callback(); } catch (e) {$(errorId).textContent = e.message;
+    try { await callback(); } catch (e) {if (epoch !== businessLoad) return; $(errorId).textContent = e.message;
       if (e.status === 401 && actor) {actor = null; mode = 'login'; access(); $('access-error').textContent = 'Your session ended. Sign in to continue.';}
-    } finally {buttons.forEach(b => b.disabled = false);form.removeAttribute('aria-busy');}
+    } finally {if (epoch === businessLoad) buttons.forEach(b => b.disabled = false);form.removeAttribute('aria-busy');}
   }
   async function loadBusiness() {
-    const load = ++businessLoad;
+    const load = ++businessLoad; clearInvite();
     $('business-content').hidden = true;
     $('global-error').textContent = '';
     business = actor.businesses.find(b => b.id === $('business-picker').value) || actor.businesses[0];
@@ -61,9 +70,9 @@
     if (!$('team').hidden) await loadTeam();
   }
   async function loadTeam() {
-    const businessId = business.id;
+    const businessId = business.id, epoch = businessLoad;
     const rows = await api(`/api/v1/businesses/${businessId}/invitations`);
-    if (business?.id !== businessId) return;
+    if (business?.id !== businessId || epoch !== businessLoad) return;
     $('team-list').replaceChildren();
     for (const row of rows) {
       const line = text('p', `${row.email} · ${row.role} · ${row.revoked ? 'Revoked' : row.consumed ? 'Accepted' : new Date(row.expires_at) < new Date() ? 'Expired' : 'Pending'}`);
@@ -87,11 +96,14 @@
     const data = await api('/api/v1/auth/' + (mode === 'invite' ? 'invitations/accept' : mode), {method: 'POST', body}); form.elements.password.value = ''; await workspace(data);
   });});
   $('profile-form').addEventListener('submit', event => {event.preventDefault(); const form = event.currentTarget; busy(form, 'profile-error', async () => {
+    const businessId = business.id, epoch = businessLoad;
     const body = {expected_version: profileVersion}; for (const key of ['name','business_type','country','support_email','phone','website']) body[key] = form.elements[key].value || null;
-    const saved = await api(`/api/v1/businesses/${business.id}/profile`, {method:'PUT',body}); business.name=saved.name; await loadBusiness(); $('profile-status').textContent='Business details saved.';
+    const saved = await api(`/api/v1/businesses/${businessId}/profile`, {method:'PUT',body}); if (epoch !== businessLoad || business?.id !== businessId) return; business.name=saved.name; await loadBusiness(); $('profile-status').textContent='Business details saved.';
   });});
   $('invite-form').addEventListener('submit', event => {event.preventDefault(); const form = event.currentTarget; busy(form, 'invite-error', async () => {
-    const data = await api(`/api/v1/businesses/${business.id}/invitations`, {method:'POST',body:{email:form.elements.email.value,role:form.elements.role.value}});
+    const businessId = business.id, epoch = businessLoad;
+    const data = await api(`/api/v1/businesses/${businessId}/invitations`, {method:'POST',body:{email:form.elements.email.value,role:form.elements.role.value}});
+    if (epoch !== businessLoad || business?.id !== businessId) return;
     $('invite-link').value = location.origin + data.invitation_url; $('invite-result').hidden=false; await loadTeam();
   });});
   $('business-picker').addEventListener('change', () => {loadBusiness().catch(e => $('global-error').textContent=e.message);});

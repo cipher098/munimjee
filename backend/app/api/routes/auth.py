@@ -124,6 +124,9 @@ class SellerSignupResponse(BaseModel):
 @router.post("/seller/signup", response_model=SellerSignupResponse)
 async def seller_signup(body: SellerSignupRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     """Create a new seller account. Instagram is connected via /oauth/start afterwards."""
+    if settings.V1_AUTH_ENABLED or settings.V1_ENFORCE_LEGACY_ACCESS or request.cookies.get("v1_session"):
+        from app.api.v1.session import check_login_origin
+        check_login_origin(request)
     if len(body.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
 
@@ -181,6 +184,9 @@ class TokenResponse(BaseModel):
 
 @router.post("/seller/login", response_model=TokenResponse)
 async def seller_login(body: SellerLoginRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    if settings.V1_AUTH_ENABLED or settings.V1_ENFORCE_LEGACY_ACCESS or request.cookies.get("v1_session"):
+        from app.api.v1.session import check_login_origin
+        check_login_origin(request)
     result = await db.execute(select(Seller).where(Seller.email == body.email))
     seller = result.scalar_one_or_none()
     if not seller or not _verify_password(body.password, seller.password_hash):

@@ -307,3 +307,27 @@ async def test_concurrent_profile_saves_refresh_locked_identity_map(client, monk
     assert sorted(r.status_code for r in results)==[200,409]
     saved=(await c.get(f"/api/v1/businesses/{bid}/profile")).json()
     assert saved["version"]==1 and saved["name"] in {"First writer","Second writer"}
+
+
+@pytest.mark.asyncio
+async def test_legacy_browser_paths_cannot_change_native_session_cross_site(client,monkeypatch):
+    c=client
+    email=f"{uuid4().hex}@example.com"
+    await signup(c,email)
+    token=c.cookies["v1_session"]
+    foreign={"Origin":"https://evil.invalid"}
+    assert (await c.post("/api/v1/auth/logout",headers=foreign)).status_code==403
+    # A legacy GET merely returns the native workspace; it mutates no cookie/session.
+    response=await c.get("/dashboard-auth/logout",headers=foreign)
+    assert response.status_code==303 and response.headers["location"]=="/v1"
+    assert "set-cookie" not in response.headers
+    assert (await c.get("/api/v1/auth/session",headers={"Authorization":"Bearer "+token})).status_code==200
+    for flags in (True,False):
+        monkeypatch.setattr(settings,"V1_AUTH_ENABLED",flags)
+        monkeypatch.setattr(settings,"V1_ENFORCE_LEGACY_ACCESS",flags)
+        assert (await c.post("/dashboard-auth/login",headers=foreign,data={"identifier":email,"password":PASSWORD})).status_code==403
+        assert (await c.post("/auth/seller/login",headers=foreign,json={"email":email,"password":PASSWORD})).status_code==403
+        assert (await c.post("/auth/seller/signup",headers=foreign,json={"email":f"{uuid4().hex}@example.com","password":PASSWORD})).status_code==403
+    # Original pure-legacy path remains compatible with both rollout flags off.
+    c.cookies.clear()
+    assert (await c.post("/dashboard-auth/login",headers=foreign,data={"identifier":email,"password":PASSWORD})).status_code==303

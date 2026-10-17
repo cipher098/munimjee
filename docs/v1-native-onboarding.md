@@ -37,6 +37,12 @@ remain separate product gates. `onboarding_complete` remains false here.
 - The enforcement flag also denies admin view-as access until separate expiring
   support grants exist. Existing delivery auth is unchanged. This is a rollout
   boundary, not a claim that legacy revocation is enforced with its flag off.
+- Legacy GET logout never mutates a native session: it returns the native
+  workspace, whose logout is a protected POST. Legacy login/signup reject foreign
+  supplied Origins when rollout is enabled or any native cookie is present.
+- Invitation responses are bound to the originating business/view generation.
+  Business switches discard delayed results; identity changes clear invitation
+  bearer links, invitee fields and cached private workspace DOM.
 - Login inputs, invitation tokens and audit details are bounded. Tokens are hashed
   at rest; raw invitation links are returned once and are not sent by this code.
   Native/private responses use `Cache-Control: no-store`.
@@ -49,14 +55,17 @@ calls. Tests reset only `munimjee_test_auth_wave2` while holding its advisory le
 
 - 93 focused auth/identity/legacy commerce safeguards checks passed; the final
   route/cache/link update was followed by all 12 HTTP onboarding checks passing.
+  The final legacy CSRF regression brings HTTP onboarding coverage to 14 checks.
   An additional retained-ORM-context concurrency regression passes after explicit
   locked-row refresh; the ordinary route already released its clean weak refs.
   Without refresh, deliberately retained contexts reproduce two successful saves;
   with refresh, one succeeds and the other returns 409.
-- 12 real Chromium assertions pass against the actual served app and migrated DB:
+- 16 real Chromium assertions pass against the actual served app and migrated DB:
   desktop/mobile signup, profile persistence and resumed login, stale-save conflict,
   CSRF denial, separate-browser viewer invitation, role-limited controls, logout
-  and logout-all. Screenshots were inspected at 1365px and 390px; no horizontal
+  and logout-all. An actual committed invitation response is delayed while the
+  browser switches businesses; its bearer link is discarded and logout clears
+  invitee/link DOM state. Screenshots were inspected at 1365px and 390px; no horizontal
   overflow or browser JavaScript errors. No auth/profile/invite DTO mocks.
 - Failure matrix covers expired/revoked/mismatched/revoked-inviter invitations,
   concurrent duplicate signup and invitation consumption, tenant existence hiding,
