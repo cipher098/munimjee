@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
-from fastapi import APIRouter,Depends,HTTPException,Query
+from fastapi import APIRouter,Depends,HTTPException,Query,Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel,ConfigDict,Field,StrictBool
 from sqlalchemy import select,func
@@ -53,6 +53,13 @@ async def link_for(db,business_id,order_id,link_id,lock=False):
     return link
 
 
+def request_authority(request,db,actor):
+    async def recheck():
+        current=await require_v1_mutation(request,db)
+        if current!=actor:raise HTTPException(401,'The native session changed')
+    return recheck
+
+
 @router.get('/v1/businesses/{business_id}/orders/{order_id}/parcel',include_in_schema=False)
 async def page(business_id:UUID,order_id:UUID,actor:Actor=Depends(current_actor),db:AsyncSession=Depends(get_db)):
     await service.access_order(db,actor,business_id,order_id)
@@ -73,16 +80,17 @@ async def overview(business_id:UUID,order_id:UUID,actor:Actor=Depends(current_ac
 
 
 @router.post(BASE+'/preview')
-async def preview(business_id:UUID,order_id:UUID,payload:Preview,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
-    return await service.preview(db,actor,business_id,order_id,payload)
+async def preview(request:Request,business_id:UUID,order_id:UUID,payload:Preview,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
+    return await service.preview(db,actor,business_id,order_id,payload,authority=request_authority(request,db,actor))
 
 
 @router.post(BASE)
-async def confirm(business_id:UUID,order_id:UUID,payload:Confirm,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
-    link,replay=await service.confirm(db,actor,business_id,order_id,payload)
+async def confirm(request:Request,business_id:UUID,order_id:UUID,payload:Confirm,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
+    link,replay=await service.confirm(db,actor,business_id,order_id,payload,authority=request_authority(request,db,actor))
     link_id=link.id
     await db.commit()  # Never acknowledge a non-durable link intent.
     await service.process_link(db,link_id)
+    await request_authority(request,db,actor)()
     await service.access_order(db,actor,business_id,order_id,write=True)
     current=await link_for(db,business_id,order_id,link_id)
     return {'link':link_view(current),'replayed':replay}
@@ -98,9 +106,11 @@ async def history(business_id:UUID,order_id:UUID,link_id:UUID,page:int=Query(1,g
 
 
 @router.post(BASE+'/{link_id}/refresh')
-async def refresh(business_id:UUID,order_id:UUID,link_id:UUID,payload:Command,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
+async def refresh(request:Request,business_id:UUID,order_id:UUID,link_id:UUID,payload:Command,actor:Actor=Depends(require_v1_mutation),db:AsyncSession=Depends(get_db)):
     await service.access_order(db,actor,business_id,order_id,write=True)
     link=await link_for(db,business_id,order_id,link_id,lock=True)
+    await request_authority(request,db,actor)()
+    await service.access_order(db,actor,business_id,order_id,write=True)
     previous=await db.scalar(select(ParcelAudit).where(ParcelAudit.business_id==business_id,ParcelAudit.idempotency_key==payload.idempotency_key))
     if previous:
         if previous.link_id!=link_id or previous.action!='seller_refresh_requested':raise HTTPException(409,'This command was already used for different details')
@@ -108,5 +118,6 @@ async def refresh(business_id:UUID,order_id:UUID,link_id:UUID,payload:Command,ac
     db.add(ParcelAudit(business_id=business_id,link_id=link_id,actor_id=actor.user_id,action='seller_refresh_requested',idempotency_key=payload.idempotency_key,details={}))
     await db.commit()
     await service.process_link(db,link_id)
+    await request_authority(request,db,actor)()
     await service.access_order(db,actor,business_id,order_id,write=True)
     return {'link':link_view(await link_for(db,business_id,order_id,link_id)),'replayed':False}

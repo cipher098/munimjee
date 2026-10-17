@@ -51,7 +51,7 @@ def order_view(order):
         'payment_status':order.payment_status,'fulfillment_status':order.fulfillment_status,'fingerprint':fingerprint(order)}
 
 
-async def preview(db,actor,business_id,order_id,payload,*,adapter_factory=ParcelAdapter):
+async def preview(db,actor,business_id,order_id,payload,*,adapter_factory=ParcelAdapter,authority=None):
     _,order=await access_order(db,actor,business_id,order_id,write=True)
     if order.fulfillment_status=='cancelled' or order.payment_status in {'cancelled','expired','review_required'}:
         raise HTTPException(409,'This order needs review before a parcel can be linked')
@@ -63,6 +63,7 @@ async def preview(db,actor,business_id,order_id,payload,*,adapter_factory=Parcel
     await db.commit()
     try:result=await adapter_factory(connector).resolve(payload.courier_id,awb)
     except ConnectorUnavailable:raise HTTPException(503,'Parcel details could not be checked. Nothing was linked.') from None
+    if authority:await authority()
     await require_business_access(db,actor,business_id,'orders.write')
     if result['state']=='manual_review' or (result.get('snapshot') or {}).get('shipment',{}).get('revoked'):
         raise HTTPException(409,'This tracking number needs manual review. It was not linked.')
@@ -71,8 +72,11 @@ async def preview(db,actor,business_id,order_id,payload,*,adapter_factory=Parcel
         'candidate_token':jwt.encode(claims,settings.SECRET_KEY,algorithm='HS256'),'expires_in':300}
 
 
-async def confirm(db,actor,business_id,order_id,payload):
+async def confirm(db,actor,business_id,order_id,payload,*,authority=None):
     _,order=await access_order(db,actor,business_id,order_id,write=True,lock=True)
+    if authority:
+        await authority()
+        await require_business_access(db,actor,business_id,'orders.write')
     # Replay is identified before candidate expiry; it cannot create a new intent.
     request_hash=digest({'order':order_id,'candidate_token':payload.candidate_token,'fingerprint':payload.expected_order_fingerprint,'confirmed':payload.confirmed})
     previous=await db.scalar(select(OrderParcelLink).where(OrderParcelLink.business_id==business_id,OrderParcelLink.idempotency_key==payload.idempotency_key))
@@ -212,10 +216,17 @@ async def revalidate_notification(db,message,contact):
     """Existing WhatsApp sender calls this after approval refresh, before send."""
     if not message.idempotency_key.startswith('parcel:'):return
     if not settings.V1_PARCEL_ENABLED:raise HTTPException(409,'Parcel updates are paused')
-    try:link_id=UUID(message.idempotency_key.split(':')[1])
-    except (ValueError,IndexError):raise HTTPException(409,'Invalid parcel update') from None
-    link=(await db.execute(select(OrderParcelLink.order_id,OrderParcelLink.state,OrderParcelLink.tracking_state,OrderParcelLink.error_code).where(OrderParcelLink.id==link_id,OrderParcelLink.business_id==message.seller_id).execution_options(autoflush=False))).first()
-    if not link or link.state!='linked' or link.error_code or link.tracking_state!=message.idempotency_key.split(':')[2] or not await business_live(db,message.seller_id):raise HTTPException(409,'Parcel updates are paused or superseded')
+    parts=message.idempotency_key.split(':')
+    if len(parts)!=3 or parts[2] not in {'in_transit','out_for_delivery','delivered','returned'}:raise HTTPException(409,'Invalid parcel update')
+    try:link_id=UUID(parts[1])
+    except ValueError:raise HTTPException(409,'Invalid parcel update') from None
+    link=(await db.execute(select(OrderParcelLink.order_id,OrderParcelLink.state,OrderParcelLink.tracking_state,OrderParcelLink.error_code,OrderParcelLink.connector_id).where(OrderParcelLink.id==link_id,OrderParcelLink.business_id==message.seller_id).execution_options(autoflush=False))).first()
+    if not link or link.state!='linked' or link.error_code or link.tracking_state!=parts[2] or not await business_live(db,message.seller_id):raise HTTPException(409,'Parcel updates are paused or superseded')
+    connector=(await db.execute(select(ParcelConnector.business_id,ParcelConnector.instance_id,ParcelConnector.origin,ParcelConnector.credential_ref,ParcelConnector.enabled).where(ParcelConnector.id==link.connector_id,ParcelConnector.business_id==message.seller_id).execution_options(autoflush=False))).first()
+    try:
+        if connector is None:raise ConnectorUnavailable('connector_unconfigured')
+        configuration(connector)
+    except ConnectorUnavailable:raise HTTPException(409,'Parcel connector authorization changed') from None
     order=(await db.execute(select(CommerceOrder.whatsapp_updates_opt_in,CommerceOrder.fulfillment_status,CommerceOrder.payment_status,CommerceOrder.customer).where(CommerceOrder.id==link.order_id,CommerceOrder.seller_id==message.seller_id).execution_options(autoflush=False))).first()
     from app.services import whatsapp as wa
     if not order or not order.whatsapp_updates_opt_in or order.fulfillment_status=='cancelled' or order.payment_status in {'cancelled','expired','review_required'} or not contact.utility_opt_in or contact.opted_out or contact.phone!=wa.normalize_phone(order.customer['phone']):raise HTTPException(409,'Parcel notification consent or order changed')

@@ -96,7 +96,7 @@ class ParcelAdapter:
                         if len(content)>256000:raise ConnectorUnavailable('invalid_snapshot')
                     if response.status_code not in (200,201):raise ConnectorUnavailable('connector_request_unconfirmed')
                     return json.loads(content)
-        except (httpx.HTTPError,ValueError):
+        except (httpx.HTTPError,ValueError,RecursionError):
             raise ConnectorUnavailable('connector_request_unconfirmed') from None
 
     async def resolve(self,courier,awb):

@@ -1,6 +1,6 @@
 """Tenant-owned existing-parcel links; carrier tracking never mutates order truth."""
 from uuid import uuid4
-from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, ForeignKey, ForeignKeyConstraint, UniqueConstraint, Index, text
+from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, ForeignKey, ForeignKeyConstraint, UniqueConstraint, CheckConstraint, Index, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from app.database import Base
@@ -45,6 +45,7 @@ class OrderParcelLink(Base):
         UniqueConstraint('business_id','idempotency_key',name='v1_parcel_command_key'),
         ForeignKeyConstraint(['business_id','order_id'],['commerce_orders.seller_id','commerce_orders.id']),
         ForeignKeyConstraint(['business_id','connector_id'],['v1_parcel_connectors.business_id','v1_parcel_connectors.id']),
+        ForeignKeyConstraint(['business_id','actor_id'],['memberships.business_id','memberships.user_id'],name='v1_parcel_link_actor_member'),
         Index('v1_parcel_one_order','business_id','order_id',unique=True,postgresql_where=text("state <> 'unlinked'")),
         Index('v1_parcel_one_awb','connector_id','courier_id','awb',unique=True,postgresql_where=text("state <> 'unlinked'")),
         Index('v1_parcel_one_remote','connector_id','remote_id',unique=True,postgresql_where=text("state <> 'unlinked'")))
@@ -87,4 +88,19 @@ class ParcelAudit(Base):
     idempotency_key=Column(UUID(as_uuid=True),nullable=False)
     details=Column(JSONB,nullable=False,default=dict)
     created_at=Column(DateTime(timezone=True),nullable=False,server_default=func.now())
-    __table_args__=(UniqueConstraint('business_id','idempotency_key',name='v1_parcel_audit_key'),ForeignKeyConstraint(['business_id','link_id'],['v1_order_parcel_links.business_id','v1_order_parcel_links.id']),)
+    __table_args__=(UniqueConstraint('business_id','idempotency_key',name='v1_parcel_audit_key'),ForeignKeyConstraint(['business_id','actor_id'],['memberships.business_id','memberships.user_id'],name='v1_parcel_audit_actor_member'),ForeignKeyConstraint(['business_id','link_id'],['v1_order_parcel_links.business_id','v1_order_parcel_links.id']),)
+
+# Keep runtime metadata aligned with the reviewed static migration.
+PARCEL_CHECKS={
+    OrderParcelLink:{
+      'v1_parcel_link_state':"state IN ('pending_enrollment','enrollment_unknown','linked','review_required','unlinked')",
+      'v1_parcel_link_counters':'revision>0 AND snapshot_revision>=0',
+      'v1_parcel_link_lease':'(lease_token IS NULL)=(lease_until IS NULL)',
+      'v1_parcel_link_identity':"awb ~ '^[A-Z0-9-]{6,35}$' AND request_hash ~ '^[a-f0-9]{64}$' AND order_fingerprint ~ '^[a-f0-9]{64}$'",
+    },
+    ParcelNotification:{'v1_parcel_notification_decision':"decision IN ('queued','skipped')"},
+    ParcelObservation:{'v1_parcel_event_hash':"event_hash ~ '^[a-f0-9]{64}$'"},
+    ParcelAudit:{'v1_parcel_audit_details':"jsonb_typeof(details)='object'"},
+}
+for model,checks in PARCEL_CHECKS.items():
+    for name,expression in checks.items():model.__table__.append_constraint(CheckConstraint(expression,name=name))
