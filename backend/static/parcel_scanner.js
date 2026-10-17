@@ -1,0 +1,14 @@
+// Derived from Parcel Desk's camera lifecycle; shared local ZXing decoder.
+import {readImageBarcodes} from './parcel_barcode_reader.js';
+import {barcodeResult} from './parcel_barcode_result.js';
+export function scanner(video,status,toggle,onRead){
+ let generation=0,stream=null,timer=null,starting=false;
+ function stop(){generation++;clearTimeout(timer);stream?.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;starting=false;toggle.textContent='Start camera';}
+ async function start(){stop();status.textContent='Starting camera…';starting=true;toggle.textContent='Cancel camera request';const id=generation;
+  try{if(!navigator.mediaDevices?.getUserMedia)throw Error('unavailable');const opened=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});if(id!==generation){opened.getTracks().forEach(t=>t.stop());return;}stream=opened;video.srcObject=opened;await video.play();if(id!==generation)return;starting=false;toggle.textContent='Stop camera';status.textContent='Point the camera at one parcel barcode.';const canvas=document.createElement('canvas');let previous='',matches=0;
+   async function scan(){if(id!==generation)return;try{if(video.videoWidth&&video.readyState>=2){const scale=Math.min(1,1280/video.videoWidth);canvas.width=Math.round(video.videoWidth*scale);canvas.height=Math.round(video.videoHeight*scale);canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('frame');const values=await readImageBarcodes(new Uint8Array(await blob.arrayBuffer()));if(id!==generation)return;const result=barcodeResult(values);if(result){matches=previous===result.awb?matches+1:1;previous=result.awb;if(matches>=2){stop();status.textContent='Barcode read. Confirm the courier and tracking number.';onRead(result);return;}}else{previous='';matches=0;if(new Set(values).size>1)status.textContent='Several barcodes are visible. Scan one label or enter the number manually.';}}}catch{if(id===generation){stop();status.textContent='The camera could not read this label. Enter the tracking number manually, or restart the camera.';}return;}if(id===generation)timer=setTimeout(scan,400);}
+   scan();
+  }catch(error){if(id!==generation)return;stop();status.textContent=error.name==='NotAllowedError'?'Camera access was denied. Enter the tracking number manually, or allow the camera and restart.':'Camera unavailable. Enter the tracking number manually, or restart the camera.';}
+ }
+ toggle.addEventListener('click',()=>{if(stream||starting){stop();status.textContent='Camera stopped. Manual entry is available.';}else start();});const hidden=()=>{if(document.hidden){stop();status.textContent='Camera stopped while this page was hidden.';}};document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',stop);start();return {stop};
+}
