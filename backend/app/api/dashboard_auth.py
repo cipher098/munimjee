@@ -41,7 +41,7 @@ class DashCtx:
 def _make_token(role: str, seller_id: str | None, sub: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=_EXPIRE_DAYS)
     return jwt.encode(
-        {"role": role, "seller_id": seller_id, "sub": sub, "exp": expire},
+        {"role": role, "seller_id": seller_id, "sub": sub, "iat": datetime.now(timezone.utc).timestamp(), "exp": expire},
         settings.SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -76,6 +76,10 @@ async def verify_dashboard_cookie(
         seller = await db.get(Seller, seller_id)
         if seller is None or not seller.is_active:
             raise _redirect_login()
+        from app.services.auth_sessions import enforce_legacy_owner_access
+        await enforce_legacy_owner_access(db, seller_id, payload)
+    if role == "admin" and view_seller and settings.V1_ENFORCE_LEGACY_ACCESS:
+        raise HTTPException(status_code=403, detail="An explicit support grant is required")
     return DashCtx(
         role=role,
         seller_id=payload.get("seller_id"),
@@ -128,20 +132,32 @@ async def do_login(
     if seller and seller.password_hash and _verify_password(password, seller.password_hash):
         if not seller.is_active:
             raise HTTPException(status_code=403, detail="Account inactive")
+        from app.services.auth_sessions import revoke_browser_session
+        await revoke_browser_session(db, request)
+        await db.commit()
         token = _make_token("seller", str(seller.id), seller.email or str(seller.id))
         resp = RedirectResponse(url="/dashboard", status_code=303)
         resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
         resp.delete_cookie(_VIEW_COOKIE)
+        resp.delete_cookie("v1_session")
+        resp.delete_cookie("v1_csrf")
+        resp.delete_cookie("seller_session")
         return resp
 
     # 2) Admin login — allowed phone + shared dashboard password.
     admin_password = settings.DASHBOARD_PASSWORD
     configured_admin = bool(admin_password and admin_password.strip().casefold() != "changeme" and admin_password.strip())
     if configured_admin and phone_norm in settings.DASHBOARD_ALLOWED_PHONES and password == admin_password:
+        from app.services.auth_sessions import revoke_browser_session
+        await revoke_browser_session(db, request)
+        await db.commit()
         token = _make_token("admin", None, phone_norm)
         resp = RedirectResponse(url="/dashboard/admin", status_code=303)
         resp.set_cookie(_COOKIE, token, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
         resp.delete_cookie(_VIEW_COOKIE)
+        resp.delete_cookie("v1_session")
+        resp.delete_cookie("v1_csrf")
+        resp.delete_cookie("seller_session")
         return resp
 
     raise HTTPException(status_code=403, detail="Invalid email/phone or password")
@@ -164,6 +180,8 @@ async def me(ctx: DashCtx = Depends(verify_dashboard_cookie), db: AsyncSession =
 @router.post("/view/{seller_id}")
 async def view_seller(seller_id: str, request: Request, ctx: DashCtx = Depends(require_admin)):
     """Admin picks a seller to view — scopes the seller pages to them."""
+    if settings.V1_ENFORCE_LEGACY_ACCESS:
+        raise HTTPException(status_code=403, detail="An explicit support grant is required")
     resp = RedirectResponse(url="/dashboard", status_code=303)
     resp.set_cookie(_VIEW_COOKIE, seller_id, max_age=_EXPIRE_DAYS * 86400, httponly=True, secure=_secure_cookie(request), samesite="lax")
     return resp
@@ -177,8 +195,12 @@ async def exit_view(ctx: DashCtx = Depends(require_admin)):
 
 
 @router.get("/logout")
-async def logout():
+async def logout(request: Request, db: AsyncSession = Depends(get_db)):
+    from app.services.auth_sessions import revoke_browser_session, clear_auth_cookies
+    await revoke_browser_session(db, request)
+    await db.commit()
     resp = RedirectResponse(url="/dashboard-auth/login", status_code=303)
+    clear_auth_cookies(resp)
     resp.delete_cookie(_COOKIE)
     resp.delete_cookie(_VIEW_COOKIE)
     resp.delete_cookie("seller_session")
