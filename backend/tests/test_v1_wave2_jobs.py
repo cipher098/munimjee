@@ -1,4 +1,5 @@
 """Independent durable-import authority tests; fake DB is not migration proof."""
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -33,6 +34,11 @@ async def test_revoked_actor_cannot_replay_a_prior_authorized_import_action(monk
     denied = AsyncMock(side_effect=HTTPException(404, "Business not found"))
     monkeypatch.setattr(service, "require_business_access", denied)
     class NoReadsAfterRevocation:
+        @property
+        def no_autoflush(self):
+            return nullcontext()
+        async def execute(self, query):
+            pytest.fail("A revoked actor reached a database query")
         async def scalar(self, query):
             pytest.fail("A revoked actor reached an idempotency/resource lookup")
         async def scalars(self, query):
