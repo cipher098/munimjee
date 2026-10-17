@@ -40,9 +40,9 @@ function renderProducts(){
 }
 function openProduct(product){
   let selected=null;
-  const status=el('p',{className:'stock-status','aria-live':'polite'},'Choose a size to see sample availability.');
+  const status=el('p',{className:'stock-status','aria-live':'polite'},product.skus.length ? 'Choose a size to see sample availability.' : 'Variants need review before selection.');
   const quantity=el('input',{type:'number',id:'product-quantity',value:1,min:1,max:1,step:1,inputmode:'numeric',disabled:true});
-  const add=button('Choose a size',()=>{
+  const add=button(product.skus.length ? 'Choose a size' : 'Stock needs review',()=>{
     const result=addItem(state.cart,products,selected?.id,Number(quantity.value));
     if(!result.ok){status.textContent=result.error;return;}
     state.cart=result.cart;updateBag();productModal.dialog.close();openCart();announce(`${product.name} added to bag.`);

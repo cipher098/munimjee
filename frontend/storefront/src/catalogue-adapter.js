@@ -10,6 +10,7 @@ export function normalizeProduct(dto,presentation={}) {
     slug:presentation.slug || dto.product_id,
     name:dto.name,
     description:dto.description,
+    readiness:dto.readiness,
     category:presentation.category || 'Collection',
     image:presentation.image || 'ivory.svg',
     tag:presentation.tag || 'Sample collection',

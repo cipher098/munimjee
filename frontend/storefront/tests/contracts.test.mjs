@@ -81,4 +81,5 @@ test('INR display preserves paise from server minor units',()=>{
 test('products awaiting SKU review do not show an infinite price or crash',()=>{
  const dto=JSON.parse(readFileSync(new URL('../../../docs/contracts/catalogue/variants-needs-review-read.json',import.meta.url)));
  assert.equal(productPriceText(normalizeProduct(dto)),'Price after review');
+ assert.equal(normalizeProduct(dto).readiness,'needs_review');
 });
