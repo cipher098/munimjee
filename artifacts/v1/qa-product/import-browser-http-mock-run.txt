@@ -1,0 +1,46 @@
+{
+  "mode": "actual-ui-with-synthetic-http-no-database",
+  "source": "/Users/user/Documents/ChatGPT/munimjee-wave3-imports",
+  "source_head": "aa6ac940ef877a8a37baac39afec44268b49f84e",
+  "source_worktree_ui_status": "?? backend/static/import_workspace.css\n?? backend/static/import_workspace.html\n?? backend/static/import_workspace.js",
+  "browser_version": "153.0.8010.12",
+  "runner_sha256": "430ef2e64bb3fd76226b171629811db205bb6434e943d7c95d2a2ad67136b6eb",
+  "source_hashes": {
+    "import_workspace.html": "f93c49e4b18ae27f22477f09f7febe6f5a95600a4807ac1e4486c23e6471c85e",
+    "import_workspace.js": "2c3dba95e35832850fcb28039602d9cad44d8355c289dceff84642b423e5d8d2",
+    "import_workspace.css": "f08ae7438aa2e499e131fcd36c10c88b555eaa9ad15948561d8fe122160d45e7",
+    "v1_client.js": "04d95e597fb4b20ea423da4be58e1b365f0030609f3b179468405f2e7419a5fd",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged_during_run": true,
+  "checks_passed": 6,
+  "checks_failed": 0,
+  "results": [
+    {
+      "name": "source consent and unknown-stock approval block are visible",
+      "result": "passed"
+    },
+    {
+      "name": "rapid submits preserve one immutable request key",
+      "result": "passed"
+    },
+    {
+      "name": "a delayed old poll cannot overwrite an explicitly refreshed job",
+      "result": "passed"
+    },
+    {
+      "name": "identity change erases private evidence, form facts and saved operations",
+      "result": "passed"
+    },
+    {
+      "name": "read-only role removes every mutation control and mobile layout fits",
+      "result": "passed"
+    },
+    {
+      "name": "source markup stays literal and creates no executable elements",
+      "result": "passed"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": 0
+}

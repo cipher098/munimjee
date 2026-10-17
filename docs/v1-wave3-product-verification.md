@@ -67,3 +67,74 @@ must land under owner review before these can be product-verified together.
 No peer application commit has been cherry-picked into this QA branch. Physical
 devices, live provider permission/consent, media decoder/security operations,
 production migration/rollback and production cutover are separate gates.
+
+## Independent browser checkpoint (HTTP mocks)
+
+The actual peer import page passed **6/6** independent Chromium checks with
+synthetic HTTP responses: explicit consent/unknown-stock approval block; rapid
+submit with one durable command key; delayed old poll rejected after explicit
+refresh; changed identity clears evidence/forms/import commands; current viewer
+controls disabled with 390px fit; and malicious source text stays literal.
+The test serves captured actual peer HTML/JS/CSS bytes read-only. It does not mount
+an alternate application implementation or claim database integration.
+
+The actual peer theme editor passed **6/6** independent Chromium checks with
+synthetic HTTP: viewer can read and reload at 390px; delayed old-session load
+cannot repopulate a terminal fence; a committed/lost draft response reloads and
+replays the exact operation/key, with publication only on its separate action;
+rapid draft submit allocates one durable command; unavailable storage prevents a
+new mutation; and changed identity clears all theme-command scopes and preview.
+The preview response in this suite is explicitly an inert synthetic transport,
+not proof of the theme renderer or public provider.
+
+Both suites observed **zero page errors and zero external requests**. Their
+JSON artifacts identify source base SHA, changed/untracked UI files, exact asset
+SHA-256 values, runner digest, Chromium version and whether the source stayed
+unchanged during the run. These are interim peer-source checks, not an integrated
+release claim. The 390px screenshots were visually inspected; no horizontal
+layout overflow was observed. Physical-device and full accessibility acceptance
+remain pending.
+
+Reproduce the HTTP-mock suites after installing the repository's locked Playwright
+dependency in `frontend/storefront`:
+
+```sh
+node backend/tests/wave3_imports_mock_browser.mjs /path/to/reviewed/import-source
+node backend/tests/wave3_themes_mock_browser.mjs /path/to/reviewed/theme-source
+```
+
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` may point to an already installed Chromium
+binary. The QA host used cached Chromium headless shell revision 1243 with
+Playwright 1.58.2; it did not download a new browser. Source and browser paths are
+recorded only as local provenance, with no credentials or real customer data.
+
+The actual mounted-app runner is prepared and syntax-checked, but **not run**:
+
+```sh
+PYTHONPATH=backend .venv-qa-wave3/bin/python -m tests.run_v1_wave3_browser
+```
+
+It requires the coordinator's explicit P01 disposable DB variables, reviewed UI
+composition and the actual full Alembic chain. It starts only loopback port 4322,
+holds the reset/migration lease for the complete browser lifetime, creates a real
+native account and an explicitly unpublished synthetic Storefront, then exercises
+consent → pending job → reload → synthetic literal extraction → factual review →
+private approval. It separately checks zero catalogue products, unchanged
+unpublished store and disabled checkout policy. The only extra test-server route
+is an authenticated/current-write-capability synthetic worker trigger; it is
+owned under `backend/tests` and never mounted by production `app.main`.
+
+## Private browser-storage contract
+
+Shared native identity transitions and 401 handling must remove every native
+seller command prefix:
+
+- `munimjee.v1.catalogue-draft:`
+- `munimjee.v1.import-command:`
+- `munimjee.v1.theme-command:`
+
+Public customer checkout/status recovery has a separate lifecycle and must remain
+intact. At the inspected base, shared `v1_client.js` clears only the catalogue
+prefix. That integration gap has been reported to the coordinator; each new
+page's own identity/fingerprint fence is independently verified above. Shared
+all-prefix cleanup after composition remains a separate check.
