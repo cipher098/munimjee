@@ -1,0 +1,112 @@
+{
+  "task": "F20",
+  "source_sha": "826fb4eab79ff96947f4ed6076f8b0187400ec3a",
+  "branch": "codex/v1-wave2-qa",
+  "verified_at_utc": "2026-10-17T18:45:42.366035+00:00",
+  "host": "Mac mini QA worktree; no test database configured",
+  "python": "3.12.14",
+  "node": "v24.20.0",
+  "results": [
+    {
+      "check": "independent-backend",
+      "exit_code": 0,
+      "command": [
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/.venv/bin/python",
+        "-m",
+        "pytest",
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/backend/tests/test_v1_wave2_boundaries.py",
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/backend/tests/test_v1_wave2_import_fetch.py",
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/backend/tests/test_v1_wave2_jobs.py",
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/backend/tests/test_v1_wave2_storefront.py",
+        "-q",
+        "-ra",
+        "--junitxml=/Users/user/Documents/ChatGPT/munimjee-wave2-qa/artifacts/v1/F20/local-review/independent-backend.xml"
+      ],
+      "stdout": "independent-backend.log",
+      "stderr": "independent-backend.stderr.log",
+      "tests": 78,
+      "skipped": 5,
+      "failures": 0,
+      "errors": 0,
+      "skip_categories": {
+        "database": 5
+      },
+      "passed": 73
+    },
+    {
+      "check": "full-backend",
+      "exit_code": 0,
+      "command": [
+        "/Users/user/Documents/ChatGPT/munimjee-wave2-qa/.venv/bin/python",
+        "-m",
+        "pytest",
+        "backend/tests",
+        "-q",
+        "-ra",
+        "--junitxml=/Users/user/Documents/ChatGPT/munimjee-wave2-qa/artifacts/v1/F20/local-review/full-backend.xml"
+      ],
+      "stdout": "full-backend.log",
+      "stderr": "full-backend.stderr.log",
+      "tests": 965,
+      "skipped": 218,
+      "failures": 0,
+      "errors": 0,
+      "skip_categories": {
+        "database": 215,
+        "cassette": 1,
+        "redis": 2
+      },
+      "passed": 747
+    },
+    {
+      "check": "checkout-javascript",
+      "exit_code": 0,
+      "command": [
+        "node",
+        "--test",
+        "frontend/storefront/tests/wave2-checkout.test.mjs"
+      ],
+      "stdout": "checkout-javascript.log",
+      "stderr": "checkout-javascript.stderr.log",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "check": "independent-browser",
+      "exit_code": 0,
+      "command": [
+        "frontend/storefront/node_modules/.bin/playwright",
+        "test",
+        "--config=artifacts/v1/F20/local-review/playwright-qa.config.mjs",
+        "--reporter=json"
+      ],
+      "stdout": "independent-browser.log",
+      "stderr": "independent-browser.stderr.log",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration_ms": 4065.006
+    }
+  ],
+  "reviewed_dependency_sources": [
+    "b1b4b401cf76810c12752fe211d92f2ff4434c0e",
+    "cac1adc8d102b12781e78fdb761f491bd3d8cebf",
+    "e8d8a26",
+    "314e521",
+    "68f4ba5",
+    "8bdbee3f8f9b56ce84686db4291fd582613af2aa",
+    "9f775dd8b71066e822ab67da90e5e1fda0cb362c",
+    "160312f4642452669b609bd7fd0c1d8617c36b2b",
+    "86e2455e5aa91d8662982df78cb09ce08615a6fe"
+  ],
+  "limitations": [
+    "Actual DB/Alembic execution unavailable here; five owned cross-module DB cases remain skipped.",
+    "Cached User and Membership authority freshness cases require coordinator DB execution; no production defect claim.",
+    "Native session/CSRF registration and import DDL chain remain pending on coordinator.",
+    "Canonical catalogue.v2 codec remains null; HTTP checkout journeys use explicit internal fixture codec and intercepted requests.",
+    "No live providers, customer messages, paid transactions, shipping bookings or production changes.",
+    "Browser tests are local Chromium only, not physical-device or full E20 product acceptance."
+  ],
+  "junit_note": "5 oversized parametrized test names were shortened with full-name SHA256; test counts/outcomes are unchanged."
+}
