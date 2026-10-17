@@ -52,6 +52,8 @@ async def _access(db, actor, business_id, *, write=False, lock=False):
     access = await require_business_access(db, actor, business_id, "catalogue.write" if write else "catalogue.read")
     if lock:
         await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
+        # A concurrent revocation may have committed while this lock waited.
+        access = await require_business_access(db, actor, business_id, "catalogue.write" if write else "catalogue.read")
     return access
 
 
