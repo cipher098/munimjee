@@ -134,6 +134,16 @@ async def test_revoked_access_fails_before_any_row_read(access):
 
 
 @pytest.mark.asyncio
+async def test_revocation_while_waiting_for_tenant_lock_blocks_mutation(access):
+    access.side_effect = [SimpleNamespace(), HTTPException(403, "revoked while waiting")]
+    db = FakeDB([None])
+    payload = ImportJobCreate(idempotency_key=uuid4(), source_kind="website", source_url=URL, source_authorized=True)
+    with pytest.raises(HTTPException):
+        await service.create_job(db, ACTOR, BUSINESS, payload)
+    assert len(db.queries) == 1 and not db.added
+
+
+@pytest.mark.asyncio
 async def test_same_upload_different_upload_keys_have_stable_candidate_source_identity(access):
     content = b"\x89PNG\r\n\x1a\nsynthetic"
     assets = []
