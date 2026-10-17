@@ -115,3 +115,10 @@ def test_sku_product_identity_mismatch_and_duplicate_categories_fail_closed():
     with pytest.raises(ValueError):public_product(mismatched)
     category={'category_id':CATEGORY,'name':'Duplicate'}
     with pytest.raises(ValueError):render_storefront(snapshot(categories=(category,category)),'https://good.test')
+
+
+@pytest.mark.parametrize('field',['shipping_policy','return_policy','category_name'])
+def test_nested_private_objects_are_rejected_in_policy_and_category_text(field):
+    secret={'credentials':'PRIVATE-NESTED-SENTINEL'}
+    changes={'categories':({'category_id':CATEGORY,'name':secret},)} if field=='category_name' else {field:secret}
+    with pytest.raises(ValueError):render_storefront(snapshot(**changes),'https://good.test')
