@@ -66,11 +66,50 @@ try {
   assert.equal(await guestPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
   await guestPage.screenshot({path:new URL('mobile-viewer.png',output).pathname,fullPage:true});
   await guest.close();
+  // Add another real membership, then delay a committed A invitation response
+  // while switching to B. The bearer link must not leak into B's workspace.
+  const other = await context(), otherPage = await other.newPage();
+  await signup(otherPage, 'Second Business');
+  const otherSession = await (await otherPage.request.get(base+'/api/v1/auth/session')).json();
+  const otherBid = otherSession.businesses[0].id;
+  const join = await otherPage.request.post(base+`/api/v1/businesses/${otherBid}/invitations`, {
+    headers:{Origin:base,'X-CSRF-Token':otherSession.csrf_token},data:{email,role:'manager'}});
+  const joinURL = (await join.json()).invitation_url;
+  const accepted = await page.request.post(base+'/api/v1/auth/invitations/accept', {
+    headers:{Origin:base},data:{email,password,token:joinURL.split('=')[1]}});
+  assert.equal(accepted.status(),200);
+  await page.reload(); await page.locator('#business-picker').selectOption(bid);
+  await page.getByRole('heading',{name:'Concurrent Update',exact:true}).waitFor();
+  let releaseInvite, markStarted, markCompleted;
+  const held = new Promise(r=>releaseInvite=r), started = new Promise(r=>markStarted=r), completed = new Promise(r=>markCompleted=r);
+  const pattern = `**/api/v1/businesses/${bid}/invitations`;
+  await page.route(pattern,async route=>{
+    if(route.request().method()!=='POST') return route.continue();
+    const response=await route.fetch();markStarted();await held;await route.fulfill({response});markCompleted();
+  });
+  await page.locator('#invite-form [name=email]').fill('delayed@example.com');
+  await page.getByRole('button',{name:'Create invitation link'}).click();await started;
+  await page.locator('#business-picker').selectOption(otherBid);
+  await page.getByRole('heading',{name:'Second Business',exact:true}).waitFor();
+  releaseInvite();await completed;await page.unroute(pattern);
+  await expect(page.locator('#invite-form')).not.toHaveAttribute('aria-busy','true');
+  await expect(page.locator('#invite-link')).toHaveValue('');
+  assert.equal(await page.locator('#invite-result').isHidden(),true);checks++;
+  assert.equal(await page.locator('#team').isHidden(),true);checks++;
+  await page.locator('#business-picker').selectOption(bid);
+  await page.getByRole('heading',{name:'Concurrent Update',exact:true}).waitFor();
+  await page.locator('#invite-form [name=email]').fill('logout-clear@example.com');
+  await page.getByRole('button',{name:'Create invitation link'}).click();
+  await page.locator('#invite-result').waitFor({state:'visible'});
+  await other.close();
   await page.getByRole('button',{name:'Sign out',exact:true}).click();
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  assert.equal(await page.locator('#invite-link').inputValue(),'');
+  assert.equal(await page.locator('#invite-form [name=email]').inputValue(),'');checks++;
   await page.getByLabel('Email',{exact:true}).fill(email);
   await page.getByLabel(/^Password/).fill(password);
   await page.getByRole('button',{name:'Sign in',exact:true}).click();
+  await page.locator('#business-picker').selectOption(bid);
   await page.getByRole('heading',{name:'Concurrent Update',exact:true}).waitFor();
   await expect(page.locator('#setup-progress')).toHaveText('2 of 5 ready');checks++;
   await page.getByRole('button',{name:'Sign out on all devices'}).click();

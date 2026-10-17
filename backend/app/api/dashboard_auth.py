@@ -115,6 +115,9 @@ async def do_login(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
+    if settings.V1_AUTH_ENABLED or settings.V1_ENFORCE_LEGACY_ACCESS or request.cookies.get("v1_session"):
+        from app.api.v1.session import check_login_origin
+        check_login_origin(request)
     ident = (identifier or "").strip()
     phone_norm = ident.replace(" ", "").replace("+91", "")
 
@@ -196,6 +199,11 @@ async def exit_view(ctx: DashCtx = Depends(require_admin)):
 
 @router.get("/logout")
 async def logout(request: Request, db: AsyncSession = Depends(get_db)):
+    # Native logout is a protected POST in /api/v1/auth/logout. A cross-site
+    # top-level GET must not clear/revoke a native session. Legacy-only logout
+    # retains its established behavior.
+    if request.cookies.get("v1_session"):
+        return RedirectResponse(url="/v1", status_code=303)
     from app.services.auth_sessions import revoke_browser_session, clear_auth_cookies
     await revoke_browser_session(db, request)
     await db.commit()
