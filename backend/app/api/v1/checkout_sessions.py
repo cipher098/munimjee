@@ -6,13 +6,14 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
+from app.config import settings
 from app.api.routes.razorpay import VerifyInput, GatewayInput
 from app.api.routes import razorpay as gateway
 from app.api.v1.identity import current_actor
 from app.api.v1.session import require_v1_mutation
 from app.services.identity import Actor, require_business_access
 from app.models.seller import Seller
-from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead
+from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead, PaymentReviewRead
 from app.services import checkout_sessions as service
 
 router = APIRouter(prefix="/api/v1/storefronts", tags=["public-checkout-session"])
@@ -86,3 +87,15 @@ async def update_payment_configuration(business_id: UUID, request: Request,
     await require_business_access(db, fresh_actor, business_id, "business.write")
     result = await gateway.update_settings(body, request, str(business_id), db, verify_connection=False)
     return {**result, "connection_verification": "not_performed"}
+
+
+@configuration_router.get("/{business_id}/orders/{order_id}/payment-review", response_model=PaymentReviewRead,
+                          dependencies=[Depends(no_store)])
+async def review_payment(business_id: UUID, order_id: UUID,
+        actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
+    if not settings.V1_AUTH_ENABLED:
+        raise HTTPException(404, "V1 sign-in is unavailable")
+    if actor.auth_method != "v1_user":
+        raise HTTPException(401, "Native V1 sign-in required")
+    await require_business_access(db, actor, business_id, "orders.write")
+    return await service.payment_review(db, business_id, order_id)

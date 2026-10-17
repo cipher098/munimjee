@@ -63,3 +63,14 @@ class CheckoutStateRead(Contract):
 
 PUBLIC_SESSION_FIELDS = frozenset(CheckoutSessionRead.model_fields)
 PUBLIC_STATE_FIELDS = frozenset(CheckoutStateRead.model_fields)
+
+
+class PaymentReviewRead(Contract):
+    """Native operator facts; never customer capability or gateway credentials."""
+    contract_version: Literal["payment-review.v1"] = "payment-review.v1"
+    order_id: UUID
+    attempt_state: Literal["not_started", "requesting", "unknown", "ready"]
+    gateway_order_id: str | None = Field(default=None, pattern=r"^order_[A-Za-z0-9]+$", max_length=100)
+    payment_status: Literal["pending", "paid", "collected", "review_required", "cancelled", "expired"]
+    fulfillment_status: Literal["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"]
+    reconciliation_eligible: bool = Field(strict=True)

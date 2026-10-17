@@ -1,0 +1,81 @@
+{
+  "additionalProperties": false,
+  "description": "Native operator facts; never customer capability or gateway credentials.",
+  "properties": {
+    "contract_version": {
+      "const": "payment-review.v1",
+      "default": "payment-review.v1",
+      "enum": [
+        "payment-review.v1"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "order_id": {
+      "format": "uuid",
+      "title": "Order Id",
+      "type": "string"
+    },
+    "attempt_state": {
+      "enum": [
+        "not_started",
+        "requesting",
+        "unknown",
+        "ready"
+      ],
+      "title": "Attempt State",
+      "type": "string"
+    },
+    "gateway_order_id": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "pattern": "^order_[A-Za-z0-9]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gateway Order Id"
+    },
+    "payment_status": {
+      "enum": [
+        "pending",
+        "paid",
+        "collected",
+        "review_required",
+        "cancelled",
+        "expired"
+      ],
+      "title": "Payment Status",
+      "type": "string"
+    },
+    "fulfillment_status": {
+      "enum": [
+        "pending",
+        "confirmed",
+        "packed",
+        "shipped",
+        "delivered",
+        "cancelled"
+      ],
+      "title": "Fulfillment Status",
+      "type": "string"
+    },
+    "reconciliation_eligible": {
+      "title": "Reconciliation Eligible",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "order_id",
+    "attempt_state",
+    "payment_status",
+    "fulfillment_status",
+    "reconciliation_eligible"
+  ],
+  "title": "PaymentReviewRead",
+  "type": "object"
+}

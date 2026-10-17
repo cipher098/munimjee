@@ -434,3 +434,108 @@ async def test_native_configuration_deep_json_and_slow_body_fail_closed(payment_
     assert result.status_code == 408
     async with factory() as db:
         assert await db.get(RazorpayAccount, bid) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("alias", ["shop-api", "api/v1/storefronts"])
+@pytest.mark.parametrize("block", ["flag", "business", "seller"])
+async def test_older_aliases_cannot_initialize_sku_gateway_when_gate_or_tenant_disabled(payment_api, monkeypatch, alias, block):
+    client, factory = payment_api
+    bid, slug, order, bearer = await online_order(payment_api, monkeypatch)
+    calls = fake_provider(monkeypatch, order)
+    if block == "flag":
+        monkeypatch.setattr(settings, "V1_PUBLIC_PAYMENTS_ENABLED", False)
+    else:
+        from app.models.identity import Business
+        from app.models.seller import Seller
+        async with factory.begin() as db:
+            (await db.get(Business if block == "business" else Seller, bid)).is_active = False
+    response = await client.post(f"/{alias}/{slug}/orders/{order['id']}/razorpay", headers=bearer)
+    assert response.status_code == 409, response.text
+    assert calls == []
+    async with factory() as db:
+        assert await db.get(SKUPaymentAttempt, UUID(order["id"])) is None
+        assert (await db.get(CommerceOrder, UUID(order["id"]))).gateway_order_id is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("alias", ["shop-api", "api/v1/storefronts"])
+async def test_older_aliases_reuse_ready_sku_snapshot_after_disable_without_new_post(payment_api, monkeypatch, alias):
+    client, factory = payment_api
+    bid, slug, order, bearer = await online_order(payment_api, monkeypatch)
+    calls = fake_provider(monkeypatch, order)
+    ready = await client.post(session_path(slug, order), headers=bearer)
+    assert ready.status_code == 200
+    monkeypatch.setattr(settings, "V1_PUBLIC_PAYMENTS_ENABLED", False)
+    from app.models.identity import Business
+    from app.models.seller import Seller
+    async with factory.begin() as db:
+        (await db.get(RazorpayAccount, bid)).enabled = False
+        (await db.get(Business, bid)).is_active = False
+        (await db.get(Seller, bid)).is_active = False
+    response = await client.post(f"/{alias}/{slug}/orders/{order['id']}/razorpay", headers=bearer)
+    assert response.status_code == 200, response.text
+    assert response.json()["order_id"] == "order_synthetic"
+    assert calls == [("rzp_test_synthetic", "POST", "orders")]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role,expected", [("owner",200),("manager",200),("staff",200),("viewer",403)])
+async def test_payment_review_is_native_capability_scoped_and_contains_only_safe_facts(payment_api, monkeypatch, role, expected):
+    client, factory = payment_api
+    bid, slug, order, bearer = await online_order(payment_api, monkeypatch)
+    operator, *_ = await actor(factory, bid, role)
+    path = f"/api/v1/businesses/{bid}/orders/{order['id']}/payment-review"
+    async def forbidden(*args, **kwargs):
+        raise AssertionError("Native review must not call a provider")
+    monkeypatch.setattr(payments, "gateway_request", forbidden)
+    response = await client.get(path, headers=operator)
+    assert response.status_code == expected, response.text
+    if expected == 200:
+        assert response.headers["cache-control"] == "no-store"
+        assert response.json() == {"contract_version":"payment-review.v1", "order_id":order["id"],
+            "attempt_state":"not_started", "gateway_order_id":None, "payment_status":"pending",
+            "fulfillment_status":"pending", "reconciliation_eligible":False}
+    assert (await client.get(path, headers=bearer)).status_code == 401
+    foreign, _, _ = await seed(factory)
+    assert (await client.get(f"/api/v1/businesses/{foreign}/orders/{order['id']}/payment-review", headers=operator)).status_code == 404
+    if expected == 200:
+        assert (await client.get(path.replace(order['id'],str(uuid4())), headers=operator)).status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("attempt_state,gateway,status,expected", [
+    ("requesting",None,"pending",True),("unknown",None,"pending",True),
+    ("ready","order_synthetic","pending",True),("ready","order_synthetic","expired",True),
+    ("ready","order_synthetic","paid",False),("ready","order_synthetic","review_required",False)])
+async def test_review_eligibility_supports_uncertain_association_and_late_capture_review(payment_api, monkeypatch, attempt_state, gateway, status, expected):
+    client, factory = payment_api
+    bid, _, order, _ = await online_order(payment_api, monkeypatch)
+    operator, *_ = await actor(factory, bid)
+    async with factory.begin() as db:
+        saved = await db.get(CommerceOrder, UUID(order["id"]))
+        saved.gateway_order_id, saved.payment_status = gateway, status
+        if status == "expired":
+            saved.fulfillment_status = "cancelled"
+        db.add(SKUPaymentAttempt(order_id=saved.id, state=attempt_state))
+    response = await client.get(f"/api/v1/businesses/{bid}/orders/{order['id']}/payment-review", headers=operator)
+    assert response.status_code == 200, response.text
+    assert response.json()["attempt_state"] == attempt_state
+    assert response.json()["gateway_order_id"] == gateway
+    assert response.json()["reconciliation_eligible"] is expected
+    assert not {"gateway_credentials", "session_token", "access_token", "customer"}.intersection(response.json())
+
+
+@pytest.mark.asyncio
+async def test_payment_review_rejects_legacy_and_revoked_native_sessions(payment_api, monkeypatch):
+    client, factory = payment_api
+    bid, _, order, _ = await online_order(payment_api, monkeypatch)
+    from app.api.dashboard_auth import _make_token
+    legacy = _make_token("seller", str(bid), "synthetic@example.invalid")
+    path = f"/api/v1/businesses/{bid}/orders/{order['id']}/payment-review"
+    assert (await client.get(path, headers={"Authorization":"Bearer " + legacy})).status_code == 401
+    operator, _, _, sid = await actor(factory, bid)
+    from app.models.identity_auth import UserSession
+    async with factory.begin() as db:
+        (await db.get(UserSession, sid)).revoked_at = datetime.now(timezone.utc)
+    assert (await client.get(path, headers=operator)).status_code == 401
