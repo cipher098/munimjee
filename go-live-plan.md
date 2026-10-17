@@ -2,7 +2,9 @@
 
 Updated: 18 October 2026, Asia/Kolkata.
 
-Status: execution authorized on 17 October 2026. The verified foundation is followed by a second bounded wave: native signup/invites and resumable business setup, an explicit SKU activation/order workspace, channel operator recovery and durable import jobs are integrated on isolated branches. Actual native browser journeys cover synthetic sellers and orders on migrated PostgreSQL 16. The public storefront adapter and real customer-facing checkout journey are being integrated; remote HTTP mocks alone are not acceptance of that journey. Provider approvals, Parcel Desk connector, import workspace/approved catalogue bridge and rollout gates remain open. Production cutover is not authorized. See docs/v1-execution-status.md and docs/v1-wave2-contracts.md for exact scope, evidence and pending checks.
+Status: execution authorized on 17 October 2026. The verified foundation is followed by a second bounded wave: native signup/invites and resumable business setup, an explicit SKU activation/order workspace, channel operator recovery and durable import jobs are integrated on isolated branches. Actual native browser journeys cover synthetic sellers and orders on migrated PostgreSQL 16. The public storefront adapter and real customer-facing COD checkout journey now pass isolated native/API browser checks, including uncertain-result replay and protected order status. 
+
+Online payment UI, persistent seller theme selection and deployment rehearsal remain separate gates. A separate local runtime image passes packaging and offline startup/static proof. Provider approvals, Parcel Desk connector, import workspace/approved catalogue bridge and rollout gates remain open. Production cutover is not authorized. See docs/v1-execution-status.md and docs/v1-wave2-contracts.md for exact scope, evidence and pending checks.
 
 ## 1. The V1 outcome
 

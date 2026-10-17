@@ -1,0 +1,20 @@
+{
+  "image_id": "sha256:040c2625ed60a24f2dce2cabd1229da85fbe58afedeed59f00c98245b81f5b02",
+  "size_bytes": 129636999,
+  "checks": "off/enabled/missing; no network or DB",
+  "container_removed": true,
+  "tag": "munimjee-v1-runtime:local-20261018-integration-7675f36",
+  "source_revision": "d2b73a96ba9539872b6a6dabeb61f1cb22b01d25",
+  "tested_application_revision": "7675f36",
+  "architecture": "arm64",
+  "runtime_user": "10001:10001",
+  "modes": [
+    "default_off",
+    "canonical_enabled",
+    "missing_assets"
+  ],
+  "network": "none",
+  "manifest_file_count": 233,
+  "independent_review": "allowlist/symlink/pinned-index dependency guard and CID-only verified cleanup reviewed; 10 pure checks passed independently",
+  "smoke_script_revision": "fc2e634"
+}

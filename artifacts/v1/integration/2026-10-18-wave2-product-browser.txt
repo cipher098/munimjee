@@ -1,0 +1,7 @@
+66 real catalogue browser checks passed
+PASS 25 actual Chromium checks: native setup/activation/publication, SSR SKU facts, COD, private status/reload/unpublish, no-capability denial, four uncertain POST/replay cases, real typed stock rejection/recovery. No external requests.
+PASS 16 real Chromium checks: desktop/mobile signup, saved/resumed profile, conflict, CSRF, invitation role, logout/all. No provider requests.
+INFO:httpx:HTTP Request: GET https://graph.instagram.com/v22.0/me?fields=user_id%2Cusername%2Cname%2Caccount_type "HTTP/1.1 200 OK"
+INFO:app.integrations.instagram:fetch_ig_user: user_id=1234567 username=None name=None account_type=BUSINESS
+INFO:httpx:HTTP Request: GET https://graph.facebook.com/v23.0/1234567/phone_numbers?fields=id%2Cdisplay_phone_number&limit=100 "HTTP/1.1 200 OK"
+PASS 17 real Chromium checks: native signup/invitation, scoped pagination, explicit review, no-delivery closure, verified paused connection, eligible queued retry, expired-window block, empty state, mobile viewer. No provider sends.
