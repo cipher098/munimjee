@@ -82,3 +82,18 @@ def test_smoke_cleanup_only_uses_docker_created_cid_not_a_reused_name(tmp_path,m
     smoke.cleanup_created_container(cidfile)
     assert calls[0]==['docker','rm','--force',cid]
     assert calls[1][calls[1].index('--filter')+1]=='id='+cid
+
+@pytest.mark.parametrize('failure',['daemon_unavailable','container_still_present'])
+def test_smoke_never_claims_verified_cleanup_when_docker_fails_or_container_remains(tmp_path,monkeypatch,failure):
+    monkeypatch.syspath_prepend(str(ROOT/'scripts'))
+    spec=spec_from_file_location('smoke_v1_runtime',ROOT/'scripts/smoke_v1_runtime.py')
+    smoke=module_from_spec(spec);spec.loader.exec_module(smoke)
+    cidfile=tmp_path/'container.cid';cidfile.write_text('a'*64)
+    def command(args,**kwargs):
+        if args[1]=='ps':
+            if failure=='daemon_unavailable':raise subprocess.CalledProcessError(1,args)
+            return subprocess.CompletedProcess(args,0,stdout='a'*64+'\n')
+        return subprocess.CompletedProcess(args,0,stdout='')
+    monkeypatch.setattr(smoke.subprocess,'run',command)
+    with pytest.raises((RuntimeError,subprocess.CalledProcessError)):
+        smoke.cleanup_created_container(cidfile)

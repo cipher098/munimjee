@@ -19,5 +19,5 @@
   "dns_network_attempts": 0,
   "database_provider_calls": 0,
   "smoke_container_removed": true,
-  "package_unit_tests_passed": 8
+  "package_unit_tests_passed": 10
 }
