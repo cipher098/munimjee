@@ -20,9 +20,12 @@ export const art = (product,className='')=>product.image_url === null ? el('div'
 export function productCard(product,onOpen) {
   const unavailable = product.skus.every(s=>s.availability!=='AVAILABLE'||!s.active);
   const state = product.readiness!=='reviewed' ? 'Stock review' : unavailable ? product.skus.some(s=>s.availability==='REVIEW_REQUIRED') ? 'Stock review' : product.skus.every(s=>s.availability==='SOLD_OUT') ? 'Sold out' : 'Unavailable' : product.tag;
+  const action=(content,attributes={})=>product.page_url
+    ? el('a',{href:product.page_url,...attributes,onClick:event=>{if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&!event.altKey){event.preventDefault();onOpen(product);}}},content)
+    : button(content,()=>onOpen(product),attributes);
   return el('article',{className:'product-card'},
-    button([art(product),el('span',{className:'image-action'},'Choose your size ↗')],()=>onOpen(product),{className:'product-image', 'aria-label':`View ${product.name}`}),
-    el('div',{className:'product-meta'},el('span',{className:'eyebrow'},state),el('div',{className:'product-title'},el('h3',{},button(product.name,()=>onOpen(product),{className:'text-button'})),el('span',{},productPriceText(product)))));
+    action([art(product),el('span',{className:'image-action'},'Choose your size ↗')],{className:'product-image','aria-label':`View ${product.name}`}),
+    el('div',{className:'product-meta'},el('span',{className:'eyebrow'},state),el('div',{className:'product-title'},el('h3',{},action(product.name,{className:'text-button'})),el('span',{},productPriceText(product)))));
 }
 export function dialogShell(title,id) {
   const body=el('div',{className:'dialog-body'});

@@ -4,13 +4,13 @@ import {themes} from './theme-config.js';
 import {CheckoutAttempt} from './checkout-attempt.js';
 
 // Internal SSR page projection only: no catalogue.v1 fixture or query enables this.
-export function viewProduct(dto,categories){
-  return {id:dto.product_id,name:dto.name,description:dto.description,category:categories.find(c=>c.category_id===dto.category_id)?.name||'Collection',category_id:dto.category_id,image_url:dto.photo_urls?.[0]||null,readiness:'reviewed',tag:'The collection',skus:dto.skus.map(sku=>({id:sku.sku_id,label:Object.values(sku.options).join(' / ')||'Default',price_minor:sku.price_minor,currency:sku.currency,active:sku.active,available_units:sku.stock_available,availability:sku.stock_available===0?'SOLD_OUT':'AVAILABLE'}))};
+export function viewProduct(dto,categories,base=''){
+  return {id:dto.product_id,page_url:base?`${base}/products/${dto.product_id}`:null,name:dto.name,description:dto.description,category:categories.find(c=>c.category_id===dto.category_id)?.name||'Collection',category_id:dto.category_id,image_url:dto.photo_urls?.[0]||null,readiness:'reviewed',tag:'The collection',skus:dto.skus.map(sku=>({id:sku.sku_id,label:Object.values(sku.options).join(' / ')||'Default',price_minor:sku.price_minor,currency:sku.currency,active:sku.active,available_units:sku.stock_available,availability:sku.stock_available===0?'SOLD_OUT':'AVAILABLE'}))};
 }
 export function mountLiveStorefront({root,data,api,storage}){
   if(data.contract_version!=='storefront.page.v1'||data.capabilities?.public_catalogue!==true||!Object.hasOwn(themes,data.store.theme))throw new Error('Unsupported public storefront.');
   const store=data.store,theme=themes[store.theme],base=`/stores/${encodeURIComponent(store.slug)}`;
-  let products=data.products.map(dto=>viewProduct(dto,data.categories)),cart=[],selectedCategory=data.selected_category_id,search='';
+  let products=data.products.map(dto=>viewProduct(dto,data.categories,base)),cart=[],selectedCategory=data.selected_category_id,search='';
   const attempt=new CheckoutAttempt({slug:store.slug,storage});
   if(attempt.current?.payload?.items&&!['confirmed','rejected'].includes(attempt.current.state))cart=attempt.current.payload.items.map(item=>({sku_id:item.sku_id,quantity:item.quantity}));
   const detail=dialogShell('A closer look','live-product-dialog'),bag=dialogShell('Your bag','live-bag-dialog'),checkout=dialogShell('Checkout','live-checkout-dialog');
@@ -69,7 +69,7 @@ export function mountLiveStorefront({root,data,api,storage}){
   const selected=data.selected_product_id?products.find(product=>product.id===data.selected_product_id):null;
   const detailSection=selected?el('section',{className:'brand-story'},el('h1',{},selected.name),el('p',{},selected.description),button('Choose your size',()=>openProduct(selected),{className:'primary-button'})):hero;
   const categories=el('nav',{className:'categories','aria-label':'Categories'},el('a',{href:base},'All pieces'),data.categories.map(category=>el('a',{href:`${base}/categories/${category.category_id}`},category.name)));
-  const refresh=api?.readProducts?button('Refresh availability',async()=>{refresh.disabled=true;try{const dto=await api.readProducts();products=dto.products.map(item=>viewProduct(item,data.categories));renderProducts();live.textContent='Availability updated.';}catch(error){live.textContent=error.message;}finally{refresh.disabled=false;}},{className:'text-button'}):null;
+  const refresh=api?.readProducts?button('Refresh availability',async()=>{refresh.disabled=true;try{const dto=await api.readProducts();products=dto.products.map(item=>viewProduct(item,data.categories,base));renderProducts();live.textContent='Availability updated.';}catch(error){live.textContent=error.message;}finally{refresh.disabled=false;}},{className:'text-button'}):null;
   root.replaceChildren(el('header',{className:'shop-header'},el('a',{className:'wordmark',href:base},store.name.toUpperCase()+theme.suffix),el('nav',{'aria-label':'Main'},el('a',{href:'#collection'},'The collection'),bagButton)),...(!checkoutReady?[el('aside',{className:'live-capability-notice'},'Browse this collection. Checkout integration is pending; no orders can be placed here.')]:[]),detailSection,el('section',{id:'collection',className:'collection'},el('div',{className:'section-heading'},el('h2',{},theme.collection),refresh),el('div',{className:'collection-controls'},categories,el('label',{className:'search-label'},el('span',{className:'sr-only'},'Search products'),el('input',{type:'search',placeholder:'Search the collection',onInput:event=>{search=event.target.value;renderProducts();}}))),el('p',{id:'live-count',className:'result-count','aria-live':'polite'}),el('div',{id:'live-grid',className:'product-grid'})),el('footer',{},el('div',{className:'policies'},el('details',{},el('summary',{},'Delivery policy'),el('p',{},store.shipping_policy)),el('details',{},el('summary',{},'Returns policy'),el('p',{},store.return_policy)))),live);
   renderProducts();
   if(attempt.locked&&attempt.current){openCheckout();}

@@ -9,8 +9,12 @@ async function harness(page,theme='editorial'){
  await page.route('**/api/v1/storefronts/tara/products',route=>route.fulfill({json:{products:data.products}}));
 }
 async function bagToCheckout(page){
- await page.getByRole('button',{name:'View Gulab occasion set',exact:true}).click();
+ await page.getByRole('link',{name:'View Gulab occasion set',exact:true}).click();
  const detail=page.getByRole('dialog',{name:'A closer look'});
+ await page.keyboard.press('Escape');
+ const link=page.getByRole('link',{name:'View Gulab occasion set',exact:true});
+ await expect(link).toBeFocused();await expect(link).toHaveAttribute('href',/\/stores\/tara\/products\/22222222/);
+ await link.press('Enter');
  await detail.getByRole('radio',{name:/S \/ Rose/}).check();
  await detail.getByLabel('Quantity',{exact:true}).fill('2');
  await detail.getByRole('button',{name:/Add to bag/}).click();
