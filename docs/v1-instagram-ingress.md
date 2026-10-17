@@ -3,8 +3,8 @@
 New actionable customer DMs commit a minimal normalized receipt before HTTP/SQS
 acknowledgment. Provider account ID is resolved through the active Seller mapping;
 event-supplied seller IDs have no authority. Processing rechecks and locks that
-mapping. `account_id + event_key` uniquely identifies a receipt; the provider mid
-is authoritative when present, independent of rotating media URLs. Without a mid,
+mapping. `account_id + event_key` uniquely identifies a receipt; provider account/customer participants plus mid
+are authoritative when present, independent of rotating media URLs. Without a mid,
 normalized content, participants and provider timestamp form a fallback hash.
 Identical messages without both mid and timestamp cannot be distinguished.
 
@@ -48,13 +48,24 @@ stale task from trimming newly arrived work. Transfer failures retain keys witho
 expiry and retry; the periodic recovery task also scans a bounded set of legacy
 buffer keys. Redis failure during this optional scan does not discard DB receipts.
 
-Legacy buffered events are held with `legacy_cutover_review_required`; missing
-provider IDs use `legacy_identity_unverifiable`. Legacy buffers lack a reliable
-record of whether an older worker already sent before losing its commit. A
+Legacy buffered events are held with `legacy_cutover_review_required`. Before
+transfer, a Redis Lua operation assigns persistent transfer IDs to individual
+items missing provider mids. Retries reuse those IDs; repeated items and successive
+identical buffers receive distinct IDs. Trusted account/customer participants are
+part of every legacy identity. Legacy buffers lack a reliable record of whether
+an older worker already sent before losing its commit. A
 collision with a pending durable receipt is therefore held for review as well.
 Completed/resolved ledger entries are not replayed by subsequent legacy transfers.
 Reviewed replay sends through the same durable worker once; reviewed resolution
 can release the hold without repeating an already handled operation.
+
+A raw missing-mid snapshot without persistent transfer IDs is not acknowledged as
+transferred: only its identifiable prefix can be trimmed. A per-thread audit hold
+preserves its observed suffix, including repeated items; Redis retains the suffix
+without expiry. This audit hold is not an event/replay identity and generic replay
+or resolution rejects it. The real transfer adapter first persists item IDs, then
+creates distinct held receipts and retires the placeholder hold. No deduplication
+claim is made for indistinguishable successive raw buffers without transfer IDs.
 
 Before any deployment, stop older worker binaries that still contain the direct
 Redis sending implementation and reconcile their outstanding work. New code

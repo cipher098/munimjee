@@ -12,7 +12,7 @@ from app.models.seller import Seller
 
 BATCH_SECONDS = 20
 PROCESSING_TIMEOUT_SECONDS = 15 * 60
-UNKNOWN_EFFECT_ERRORS = {"processing_failed_unknown_effect", "processing_interrupted_unknown_effect", "legacy_identity_unverifiable", "legacy_cutover_review_required"}
+UNKNOWN_EFFECT_ERRORS = {"processing_failed_unknown_effect", "processing_interrupted_unknown_effect", "legacy_identity_unverifiable", "legacy_cutover_review_required", "legacy_snapshot_unidentified"}
 
 
 def validate_message_shape(event: dict) -> None:
@@ -107,7 +107,9 @@ def event_key(event: dict, events: list[dict]) -> str:
     Identical no-mid/no-timestamp messages cannot be distinguished by Meta's data.
     """
     mid = (event.get("message") or {}).get("mid")
-    identity = {"mid": mid} if mid else {
+    participants = {"account": (event.get("recipient") or {}).get("id"),
+                    "customer": (event.get("sender") or {}).get("id")}
+    identity = {**participants, "mid": mid} if mid else {
         "sender": (event.get("sender") or {}).get("id"),
         "recipient": (event.get("recipient") or {}).get("id"),
         "timestamp": event.get("timestamp"), "events": events,
@@ -158,6 +160,8 @@ async def replay_receipt(db, receipt_id, seller_id, *, side_effects_reviewed: bo
     ).with_for_update())
     if row is None or row.status != "error":
         return False
+    if row.error_code == "legacy_snapshot_unidentified":
+        raise ValueError("legacy_buffer_review_required")
     if row.error_code in UNKNOWN_EFFECT_ERRORS and not side_effects_reviewed:
         raise ValueError("side_effect_review_required")
     seller = await db.scalar(select(Seller).where(
@@ -173,29 +177,31 @@ async def replay_receipt(db, receipt_id, seller_id, *, side_effects_reviewed: bo
 
 
 async def persist_legacy_batch(db, seller, account_id: str, customer_id: str, events: list[dict]) -> int:
-    """Transfer old Redis work into the same ledger used by provider receipts.
+    """Transfer only a prefix with stable provider or Redis transfer identities.
 
-    No sends occur here. Legacy work is fenced for reviewed cutover because a
-    previous worker may already have sent before losing its commit. The caller
-    commits before trimming Redis. Provider mids
-    dedupe text AND media across both paths. Missing mids cannot be correlated
-    after legacy timestamp loss, so retain them for reviewed reconciliation.
+    Redis assigns missing-mid transfer IDs atomically before this call. Raw legacy
+    snapshots without IDs are quarantined and NOT trimmed: identical successive
+    buffers cannot be distinguished from retries without that persistent identity.
     """
+    prefix = next((index for index, item in enumerate(events)
+                   if not item.get("mid") and not item.get("_legacy_transfer_id")), len(events))
     groups = {}
-    for position, item in enumerate(events):
+    for item in events[:prefix]:
         mid = item.get("mid")
-        identity = ("mid", mid) if mid else ("unidentified", position)
+        identity = ("mid", mid) if mid else ("transfer", item["_legacy_transfer_id"])
         groups.setdefault(identity, []).append(item)
     now = datetime.now(timezone.utc)
-    for position, ((kind, mid), grouped) in enumerate(groups.items()):
-        identity = {"mid": mid} if kind == "mid" else {"legacy_events": grouped}
+    participants = {"account": account_id, "customer": customer_id}
+    for position, ((kind, identifier), grouped) in enumerate(groups.items()):
+        identity = {**participants, "mid": identifier} if kind == "mid" else {
+            **participants, "legacy_transfer_id": identifier,
+        }
         key = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-        uncertain = kind != "mid"
         await db.execute(insert(InstagramIngress).values(
             id=uuid4(), seller_id=seller.id, account_id=account_id, customer_id=customer_id,
-            event_key=key, provider_message_id=mid if not uncertain else None,
+            event_key=key, provider_message_id=identifier if kind == "mid" else None,
             events=grouped, processed_indices=[], status="error", attempts=0,
-            error_code="legacy_identity_unverifiable" if uncertain else "legacy_cutover_review_required",
+            error_code="legacy_cutover_review_required",
             created_at=now + timedelta(microseconds=position), available_at=now,
         ).on_conflict_do_nothing(constraint="instagram_ingress_event_once"))
         row = await db.scalar(select(InstagramIngress).where(
@@ -203,8 +209,37 @@ async def persist_legacy_batch(db, seller, account_id: str, customer_id: str, ev
         ).with_for_update())
         if row is not None and row.status in {"pending", "retry"}:
             row.status, row.error_code = "error", "legacy_cutover_review_required"
+
+    hold_key = hashlib.sha256(json.dumps({**participants, "legacy_unidentified_hold": True},
+                              sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    if prefix < len(events):
+        # This is an audit snapshot, never a replay identity. Keep repeated items
+        # together so multiplicity is visible; Redis retains the entire suffix.
+        await db.execute(insert(InstagramIngress).values(
+            id=uuid4(), seller_id=seller.id, account_id=account_id, customer_id=customer_id,
+            event_key=hold_key, events=events[prefix:], processed_indices=[], status="error", attempts=0,
+            error_code="legacy_snapshot_unidentified", available_at=now,
+        ).on_conflict_do_nothing(constraint="instagram_ingress_event_once"))
+        hold = await db.scalar(select(InstagramIngress).where(
+            InstagramIngress.account_id == account_id, InstagramIngress.event_key == hold_key,
+        ).with_for_update())
+        if hold is not None:
+            # This key names a thread hold, not an event or replay identity. A
+            # later raw snapshot must re-arm it even after a prior transfer.
+            hold.status, hold.error_code, hold.finished_at = "error", "legacy_snapshot_unidentified", None
+    else:
+        # A formerly unidentifiable snapshot is now safely represented by stable
+        # transfer receipts. Retire only that audit hold; new receipts still need
+        # cutover review before any sending can resume.
+        hold = await db.scalar(select(InstagramIngress).where(
+            InstagramIngress.account_id == account_id, InstagramIngress.event_key == hold_key,
+            InstagramIngress.status == "error", InstagramIngress.error_code == "legacy_snapshot_unidentified",
+        ).with_for_update())
+        if hold is not None:
+            hold.status, hold.error_code = "resolved", "legacy_snapshot_transferred"
+            hold.finished_at = now
     await db.flush()
-    return len(events)
+    return prefix
 
 
 async def resolve_receipt_without_replay(db, receipt_id, seller_id, *, side_effects_reviewed: bool = False) -> bool:
@@ -221,6 +256,8 @@ async def resolve_receipt_without_replay(db, receipt_id, seller_id, *, side_effe
     ).with_for_update())
     if row is None:
         return False
+    if row.error_code == "legacy_snapshot_unidentified":
+        raise ValueError("legacy_buffer_review_required")
     row.status, row.error_code = "resolved", "reviewed_without_replay"
     row.finished_at = datetime.now(timezone.utc)
     await db.flush()

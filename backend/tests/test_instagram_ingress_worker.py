@@ -171,3 +171,33 @@ def test_legacy_trim_compares_prefix_before_deleting_new_events(monkeypatch):
         assert [json.loads(item) for item in client.lrange(key, 0, -1)] == [later]
     finally:
         client.delete(key)
+
+
+def test_redis_missing_mid_transfer_ids_survive_retry_and_distinguish_next_buffer(monkeypatch):
+    import json
+    import os
+    target = os.environ.get("TEST_REDIS_URL")
+    if target is None:
+        pytest.skip("Coordinator-allocated TEST_REDIS_URL required")
+    if target != "redis://127.0.0.1:56441/3":
+        pytest.fail("Refusing Redis access outside exact allocated test namespace")
+    import redis
+    client = redis.from_url(target, decode_responses=True)
+    account = "synthetic_" + uuid4().hex
+    key = f"msg_batch:{account}:customer"
+    item = {"type": "text", "text": "same", "mid": None}
+    monkeypatch.setattr(message_batch, "_redis", lambda: client)
+    try:
+        client.rpush(key, json.dumps(item), json.dumps(item))
+        client.expire(key, 120)
+        first, raw = message_batch._snapshot_legacy_events(account, "customer")
+        assert client.ttl(key) == -1
+        assert len({event["_legacy_transfer_id"] for event in first}) == 2
+        retry, retry_raw = message_batch._snapshot_legacy_events(account, "customer")
+        assert retry == first and retry_raw == raw
+        message_batch.trim_processed_events(account, "customer", 2, expected_raw=raw)
+        client.rpush(key, json.dumps(item))
+        following, _ = message_batch._snapshot_legacy_events(account, "customer")
+        assert following[0]["_legacy_transfer_id"] not in {event["_legacy_transfer_id"] for event in first}
+    finally:
+        client.delete(key)

@@ -407,3 +407,72 @@ async def test_review_can_release_quarantine_without_replaying_known_handled_eve
     async with sessions() as db:
         assert (await db.get(InstagramIngress, old.id)).status == "resolved"
         assert (await db.get(InstagramIngress, new.id)).status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_unidentified_legacy_snapshots_preserve_customers_and_multiplicity_without_trimming(sessions):
+    await seed(sessions)
+    repeated = [{"type": "text", "text": "same", "mid": None},
+                {"type": "text", "text": "same", "mid": None}]
+    assert await message_batch._consume_batch("account", "first-customer", events=repeated) == 0
+    assert await message_batch._consume_batch("account", "second-customer", events=repeated) == 0
+    # A repeated snapshot is an audit hold; it never claims events were consumed.
+    assert await message_batch._consume_batch("account", "first-customer", events=repeated) == 0
+    async with sessions() as db:
+        rows = (await db.execute(select(InstagramIngress))).scalars().all()
+        assert len(rows) == 2
+        assert {row.customer_id for row in rows} == {"first-customer", "second-customer"}
+        assert len({row.event_key for row in rows}) == 2
+        assert all(row.events == repeated and row.error_code == "legacy_snapshot_unidentified" for row in rows)
+        for row in rows:
+            with pytest.raises(ValueError, match="legacy_buffer_review_required"):
+                await replay_receipt(db, row.id, row.seller_id, side_effects_reviewed=True)
+
+
+@pytest.mark.asyncio
+async def test_stable_legacy_transfer_ids_preserve_repeats_and_successive_buffers(sessions):
+    await seed(sessions)
+    first = [{"type": "text", "text": "same", "mid": None, "_legacy_transfer_id": "batch-a:1"},
+             {"type": "text", "text": "same", "mid": None, "_legacy_transfer_id": "batch-a:2"}]
+    second = [{"type": "text", "text": "same", "mid": None, "_legacy_transfer_id": "batch-b:1"}]
+    assert await message_batch._consume_batch("account", "first-customer", events=first) == 2
+    assert await message_batch._consume_batch("account", "first-customer", events=first) == 2
+    assert await message_batch._consume_batch("account", "first-customer", events=second) == 1
+    assert await message_batch._consume_batch("account", "second-customer", events=first) == 2
+    async with sessions() as db:
+        rows = (await db.execute(select(InstagramIngress))).scalars().all()
+        assert len(rows) == 5  # Three first-customer occurrences, two second-customer.
+        assert sorted(len(row.events) for row in rows) == [1, 1, 1, 1, 1]
+        assert len({row.event_key for row in rows}) == 5
+        assert all(row.status == "error" and row.error_code == "legacy_cutover_review_required" for row in rows)
+
+
+@pytest.mark.asyncio
+async def test_real_redis_transfer_commits_every_missing_mid_occurrence_before_trim(sessions, monkeypatch):
+    import json
+    target = os.environ.get("TEST_REDIS_URL")
+    if target is None:
+        pytest.skip("Coordinator-allocated TEST_REDIS_URL required")
+    if target != "redis://127.0.0.1:56441/3":
+        pytest.fail("Refusing Redis access outside exact allocated test namespace")
+    import redis
+    await seed(sessions)
+    client = redis.from_url(target, decode_responses=True)
+    customer = "synthetic_" + uuid4().hex
+    key = f"msg_batch:account:{customer}"
+    item = {"type": "text", "text": "same", "mid": None}
+    monkeypatch.setattr(message_batch, "_redis", lambda: client)
+    try:
+        client.rpush(key, json.dumps(item), json.dumps(item))
+        await message_batch._process_batch("account", customer)
+        assert client.llen(key) == 0
+        client.rpush(key, json.dumps(item))
+        await message_batch._process_batch("account", customer)
+        assert client.llen(key) == 0
+        async with sessions() as db:
+            rows = (await db.execute(select(InstagramIngress).where(InstagramIngress.customer_id == customer))).scalars().all()
+            assert len(rows) == 3
+            assert len({row.event_key for row in rows}) == 3
+            assert all(len(row.events) == 1 and row.status == "error" for row in rows)
+    finally:
+        client.delete(key)

@@ -237,7 +237,34 @@ def peek_all_events(page_id: str, customer_ig_id: str) -> list[dict]:
     return [json.loads(item) for item in raw_list]
 
 
-def trim_processed_events(page_id: str, customer_ig_id: str, count: int, *, expected_events=None) -> None:
+def _snapshot_legacy_events(page_id: str, customer_ig_id: str) -> tuple[list[dict], list[str]]:
+    """Persist per-item transfer IDs before importing missing-mid Redis work.
+
+    IDs survive retries; a subsequent identical buffer receives fresh IDs. Return
+    exact serialized bytes for compare-and-trim after the database commit.
+    """
+    from uuid import uuid4
+    key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
+    script = """
+    redis.call('PERSIST', KEYS[1])
+    local items = redis.call('LRANGE', KEYS[1], 0, -1)
+    for i, raw in ipairs(items) do
+        local item = cjson.decode(raw)
+        if not item.mid or item.mid == cjson.null or item.mid == '' then
+            if not item._legacy_transfer_id or item._legacy_transfer_id == cjson.null then
+                item._legacy_transfer_id = ARGV[1] .. ':' .. i
+                items[i] = cjson.encode(item)
+                redis.call('LSET', KEYS[1], i - 1, items[i])
+            end
+        end
+    end
+    return items
+    """
+    raw = _redis().eval(script, 1, key, uuid4().hex) or []
+    return [json.loads(item) for item in raw], raw
+
+
+def trim_processed_events(page_id: str, customer_ig_id: str, count: int, *, expected_events=None, expected_raw=None) -> None:
     """Trim only the exact transferred prefix after DB commit.
 
     A concurrent legacy task may already have trimmed it. Comparing the prefix
@@ -246,8 +273,10 @@ def trim_processed_events(page_id: str, customer_ig_id: str, count: int, *, expe
     if count <= 0:
         return
     key = f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}"
-    if expected_events is None:
-        raise ValueError("Expected Redis prefix required")
+    if expected_raw is None:
+        if expected_events is None:
+            raise ValueError("Expected Redis prefix required")
+        expected_raw = [json.dumps(event) for event in expected_events]
     script = """
     for i = 1, #ARGV do
         if redis.call('LINDEX', KEYS[1], i - 1) ~= ARGV[i] then return 0 end
@@ -255,7 +284,7 @@ def trim_processed_events(page_id: str, customer_ig_id: str, count: int, *, expe
     redis.call('LTRIM', KEYS[1], #ARGV, -1)
     return #ARGV
     """
-    _redis().eval(script, 1, key, *[json.dumps(event) for event in expected_events])
+    _redis().eval(script, 1, key, *expected_raw)
 
 
 def drop_all_events(page_id: str, customer_ig_id: str) -> None:
@@ -299,8 +328,7 @@ def _record_customer_entries(conversation, events) -> None:
 async def _process_batch(page_id: str, customer_ig_id: str) -> None:
     # Read WITHOUT removing — legacy events stay in Redis until we
     # successfully commit, so a crash/retry reprocesses them instead of losing them.
-    _redis().persist(f"{_BATCH_KEY_PREFIX}{page_id}:{customer_ig_id}")
-    events = peek_all_events(page_id, customer_ig_id)
+    events, raw = _snapshot_legacy_events(page_id, customer_ig_id)
     if not events:
         logger.info("message_batch: no events for %s:%s — skipping", page_id, customer_ig_id)
         return
@@ -310,7 +338,7 @@ async def _process_batch(page_id: str, customer_ig_id: str) -> None:
     consumed = await _consume_batch(page_id, customer_ig_id, events=events)
     # Reached only if _consume_batch returned normally → its transaction committed.
     # Trim the events we consumed; anything that arrived meanwhile survives.
-    trim_processed_events(page_id, customer_ig_id, consumed, expected_events=events[:consumed])
+    trim_processed_events(page_id, customer_ig_id, consumed, expected_raw=raw[:consumed])
 
 
 async def _consume_batch(page_id: str, customer_ig_id: str, *, events=None) -> int:
