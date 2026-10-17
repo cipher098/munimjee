@@ -90,3 +90,15 @@ CSRF/origin failure, 404 inaccessible resource, 409 stale facts/activation/stock
 idempotency/uncertain-payment conflict, 422 invalid strict contract fields. Client
 code must preserve user edits and refetch current facts on 409, never silently
 change selected SKU or retry payment creation with a fresh identity.
+
+### Definitive pre-reservation stock rejection
+
+Only the SKU quantity check before customer/order/reservation writes returns HTTP409
+with `checkout-out-of-stock.json`: `detail.code = "sku_out_of_stock"`. Its bounded
+schema is `checkout-error.schema.json`. This response establishes that this attempt
+created no order, reservation or payment capability, and permits a corrected fresh
+intent. The idempotency lookup precedes this check: an already-created same-key,
+same-body order still returns HTTP200 even when its reservation exhausted stock.
+All other409 strings/objects, timeout, unreadable response and5xx remain uncertain;
+clients retain the exact body and key. Never infer definitive rejection by matching
+arbitrary conflict messages. No gateway/payment authority changes are introduced.

@@ -2,9 +2,11 @@
 
 Updated: 18 October 2026. Active work, not product-complete. Base is verified `7de7cd6` plus frozen wave-two contracts. Original fixture preview at port 4317 is preserved; this worktree uses port 4318. No production, provider, payment, customer messaging or courier-booking call is authorized or performed.
 
+The first-slice evidence below is historical. The completed canonical API/provider follow-up, current wiring and actual database/browser evidence are recorded in [v1-storefront-integration.md](v1-storefront-integration.md). Its protected status route and strict HTTP 200 replay decoder supersede the pending items described below. Production registration and asset packaging remain integrator-owned.
+
 ## First contract slice
 
-`backend/app/api/v1/storefront.py` exports `create_router(canonical_base=..., provider_dependency=...)`; it is not registered in shared startup. The integrator must supply a canonical publication provider and mount `frontend/storefront` at `/storefront-assets`. The default provider returns 503/noindex, preventing accidentally exposing legacy or draft products.
+`backend/app/api/v1/storefront.py` exports `create_router(canonical_base=..., provider_dependency=...)`; it is not registered in shared startup. The integrator must supply a canonical publication provider and mount only `frontend/storefront/src` at `/storefront-assets/src`. The default provider returns 503/noindex, preventing accidentally exposing legacy or draft products.
 
 Stable server-rendered paths:
 

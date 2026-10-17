@@ -21,6 +21,9 @@ export class CheckoutAttempt {
         if(data.version!==1||data.slug!==slug||!['pending','uncertain','confirmed','rejected','expired'].includes(data.state)||!uuid.test(data.key)||!validPayload(data.payload,['pending','uncertain'].includes(data.state))||!Number.isSafeInteger(data.createdAt)||data.createdAt<=0||data.createdAt>now()+60000)throw new Error('Invalid saved attempt');
         if(data.state==='confirmed')data.confirmation=validateConfirmation(data.confirmation,origin,slug);
         this.current=data.state==='pending'?{...data,state:'uncertain'}:data;
+        if(now()-data.createdAt>MAX_AGE_MS&&data.state==='confirmed'&&this.current.confirmation.accessToken){
+          delete this.current.confirmation.accessToken;this.persist();
+        }
         if(now()-data.createdAt>MAX_AGE_MS&&data.state!=='confirmed'){
           // Expiry removes PII but retains a locked tombstone; never silently POST a new key.
           this.current={...data,state:'expired',payload:{items:data.payload.items}};this.persist();

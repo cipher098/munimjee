@@ -51,4 +51,18 @@ def create_router(*, canonical_base: str, provider_dependency=unavailable_provid
     async def category_page(slug: str, category_id: UUID, provider: StorefrontProvider = Depends(provider_dependency)):
         return await page(slug, provider, category_id=category_id)
 
+    @routes.get('/{slug}/orders/{order_id}', response_class=HTMLResponse)
+    async def private_order_page(slug: str, order_id: UUID):
+        # A shell only: no store publication dependency, customer data or token
+        # enters public HTML. The session-held capability authorizes a later GET.
+        import json
+        import re
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}', slug):
+            raise HTTPException(404, 'Order page unavailable')
+        context = json.dumps({"slug":slug,"orderId":str(order_id)})
+        html = f'''<!doctype html><html lang="en" data-theme="catalogue"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Your order</title><link rel="stylesheet" href="/storefront-assets/src/styles.css"><link rel="stylesheet" href="/storefront-assets/src/live.css"><script type="application/json" id="order-context">{context}</script><script type="module" src="/storefront-assets/src/order-status.js"></script></head><body><main class="collection" id="order-status"><h1>Your order</h1><p role="status">Checking order access in this browser session…</p></main><noscript>Order status requires JavaScript and access from the browser session that placed the order.</noscript></body></html>'''
+        return HTMLResponse(html, headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow',
+            'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
+            'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"})
+
     return routes

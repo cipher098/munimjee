@@ -271,7 +271,7 @@ async def create_sku_order(db, store, payload):
         if per_product[sku.product_id] > 20:
             raise HTTPException(422, "Maximum 20 units per product")
         if sku.stock_available is not None and sku.stock_available < item.quantity:
-            conflict("Insufficient stock for selected SKU")
+            raise HTTPException(409, {"code": "sku_out_of_stock", "message": "Selected quantity is no longer available."})
         snapshots.append({"product_id": str(product.id), "sku_id": str(sku.id),
             "name": product.name, "options": deepcopy(sku.options), "currency": sku.currency,
             "quantity": item.quantity, "unit_price": sku.price_minor,

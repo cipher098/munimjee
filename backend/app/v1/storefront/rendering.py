@@ -134,7 +134,8 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
         image = f'<img src="{escape(item["photo_urls"][0], quote=True)}" alt="{escape(item["name"], quote=True)}" width="600" height="760" loading="lazy">' if item['photo_urls'] else '<div class="empty-state">Image unavailable</div>'
         prices = [sku['price_minor'] for sku in item['skus'] if sku['active']]
         price = f'₹{min(prices)/100:,.2f}' if prices else 'Unavailable'
-        cards.append(f'<article class="product-card"><a class="product-image" href="{base}/products/{item["product_id"]}">{image}</a><div class="product-meta"><h3><a href="{base}/products/{item["product_id"]}">{escape(item["name"])}</a></h3><p>{price}</p></div></article>')
+        availability = 'In stock' if any(sku['active'] and sku['stock_available'] is not None and sku['stock_available'] > 0 for sku in item['skus']) else 'Availability checked at checkout' if any(sku['active'] and sku['stock_available'] is None for sku in item['skus']) else 'Sold out'
+        cards.append(f'<article class="product-card"><a class="product-image" href="{base}/products/{item["product_id"]}">{image}</a><div class="product-meta"><h3><a href="{base}/products/{item["product_id"]}">{escape(item["name"])}</a></h3><p>{price} INR</p><p>{availability}</p></div></article>')
     links = ''.join(f'<a href="{base}/categories/{item["category_id"]}">{escape(item["name"])}</a>' for item in categories)
     detail = f'<section class="brand-story"><h1>{escape(selected["name"])}</h1><p>{escape(selected["description"])}</p></section>' if selected else ''
     schema = {'@context': 'https://schema.org', '@type': 'Product' if selected else 'CollectionPage', 'name': selected['name'] if selected else title, 'description': description, 'url': origin + path}

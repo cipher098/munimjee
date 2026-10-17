@@ -9,9 +9,10 @@ export function sameOriginPath(value,origin,{prefix='/'}={}){
 }
 export function validateConfirmation(order,origin,slug){
   const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if(!order||!uuid.test(order.orderId)||order.currency!=='INR'||![order.subtotalMinor,order.shippingMinor,order.totalMinor].every(n=>Number.isSafeInteger(n)&&n>=0)||order.totalMinor!==order.subtotalMinor+order.shippingMinor||!['pending','paid','collected','review_required'].includes(order.paymentStatus)||!['pending','confirmed','packed','shipped','delivered'].includes(order.fulfillmentStatus)) throw new CheckoutError('The checkout response could not be verified.');
+  if(!order||!uuid.test(order.orderId)||order.currency!=='INR'||![order.subtotalMinor,order.shippingMinor,order.totalMinor].every(n=>Number.isSafeInteger(n)&&n>=0)||order.totalMinor!==order.subtotalMinor+order.shippingMinor||!['pending','paid','collected','review_required','cancelled','expired'].includes(order.paymentStatus)||!['pending','confirmed','packed','shipped','delivered','cancelled'].includes(order.fulfillmentStatus)) throw new CheckoutError('The checkout response could not be verified.');
+  if(order.accessToken!==undefined&&(typeof order.accessToken!=='string'||order.accessToken.length>4096||!/^[a-f0-9]{64}$/.test(order.accessToken)))throw new CheckoutError('The order access could not be verified.');
   const base=`/api/v1/storefronts/${encodeURIComponent(slug)}/orders/${order.orderId}`;
-  return {orderId:order.orderId,currency:'INR',subtotalMinor:order.subtotalMinor,shippingMinor:order.shippingMinor,totalMinor:order.totalMinor,paymentStatus:order.paymentStatus,fulfillmentStatus:order.fulfillmentStatus,paymentUrl:sameOriginPath(order.paymentUrl,origin,{prefix:base+'/'}),statusUrl:sameOriginPath(order.statusUrl,origin,{prefix:base})};
+  return {orderId:order.orderId,currency:'INR',subtotalMinor:order.subtotalMinor,shippingMinor:order.shippingMinor,totalMinor:order.totalMinor,paymentStatus:order.paymentStatus,fulfillmentStatus:order.fulfillmentStatus,paymentUrl:sameOriginPath(order.paymentUrl,origin,{prefix:base+'/'}),statusUrl:sameOriginPath(order.statusUrl,origin,{prefix:base}),...(order.accessToken!==undefined?{accessToken:order.accessToken}:{})};
 }
 export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,origin=globalThis.location?.origin,timeoutMs=15000}){
   if(!/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug)) throw new Error('Invalid storefront slug.');
@@ -25,17 +26,40 @@ export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,or
   async function read(path,decode){const {response,data}=await request(path,{headers:{Accept:'application/json'}});if(!response.ok)throw new Error(response.status===404?'This collection is unavailable.':'The collection could not be loaded.');return decode(data);}
   return {
     readStore:()=>read(base,contract.decodeStore),
-    readProducts:()=>read(base+'/products',contract.decodeProducts),
+    async readProducts(){
+      if(!contract.paginatedProducts)return read(base+'/products',contract.decodeProducts);
+      const products=[],productIds=new Set(),skuIds=new Set();let expected=null,readCount=0;
+      for(let page=1;page<=10;page++){
+        const data=await read(base+`/products?page=${page}&page_size=100`,contract.decodeProducts);
+        if(expected===null)expected=data.total;
+        if(data.total!==expected||expected>1000||data.page!==page)throw new Error('The collection changed. Refresh the page before editing your bag.');
+        for(const product of data.products){
+          if(productIds.has(product.product_id)||product.skus.some(sku=>skuIds.has(sku.sku_id)))throw new Error('The collection changed. Refresh the page before editing your bag.');
+          productIds.add(product.product_id);for(const sku of product.skus)skuIds.add(sku.sku_id);
+        }
+        products.push(...data.products);readCount+=data.itemCount;
+        if(readCount===expected)return {products};
+        if(!data.itemCount||readCount>expected)break;
+      }
+      throw new Error('The complete collection could not be verified.');
+    },
+    async readOrder(order){
+      const known=validateConfirmation(order,origin,slug);
+      if(!known.accessToken||typeof contract.decodeOrderStatus!=='function')throw new Error('Order access is unavailable in this browser session.');
+      const {response,data}=await request(base+`/orders/${known.orderId}`,{headers:{Accept:'application/json',Authorization:`Bearer ${known.accessToken}`}});
+      if(!response.ok)throw new Error('Order status could not be checked. Keep your order reference and try again later.');
+      try{return validateConfirmation(contract.decodeOrderStatus(data,{slug,orderId:known.orderId,accessToken:known.accessToken}),origin,slug);}catch{throw new Error('The order status response could not be verified.');}
+    },
     async checkout(payload,key){
       let body;try{body=contract.encodeCheckout(payload,key);}catch{throw new CheckoutError('Checkout details could not be validated.',{definitive:true,code:'invalid_details'});}
       let response,data;
       try{({response,data}=await request(base+'/checkout',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)}));}
       catch{throw new CheckoutError('We could not confirm the result. Check the same attempt again.');}
-      if(response.status!==201){
+      if(response.status!==201&&!(response.status===200&&contract.acceptsReplay===true)){
         const known=contract.decodeCheckoutError?.(response.status,data);
         throw new CheckoutError(known?.message||'We could not confirm this checkout attempt.',{definitive:known?.definitive===true,code:known?.code});
       }
-      return validateConfirmation(contract.decodeCreatedOrder(data),origin,slug);
+      try{return validateConfirmation(contract.decodeCreatedOrder(data,{payload:body,key,slug}),origin,slug);}catch{throw new CheckoutError('The checkout response could not be verified. Keep the same attempt to check its result.');}
     },
   };
 }
