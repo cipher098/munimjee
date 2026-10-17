@@ -10,10 +10,10 @@ window.V1 = (() => {
       body: options.body === undefined ? undefined : JSON.stringify(options.body)});
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = typeof data.detail === 'string' ? data.detail : 'Check the entered details and try again.';
+      const message = typeof data?.detail === 'string' ? data.detail : 'Check the entered details and try again.';
       const error = new Error(message); error.status = response.status; throw error;
     }
-    if (Object.hasOwn(data, 'csrf_token')) csrf = data.csrf_token;
+    if (data && Object.hasOwn(data, 'csrf_token')) csrf = data.csrf_token;
     return data;
   }
   return {api, session: () => api('/api/v1/auth/session'), get csrf() { return csrf; }};
