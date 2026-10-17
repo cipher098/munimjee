@@ -6,6 +6,15 @@ Status: execution authorized on 17 October 2026. The verified foundation is foll
 
 Online payment UI, persistent seller theme selection and deployment rehearsal remain separate gates. A separate local runtime image passes packaging and offline startup/static proof. Provider approvals, Parcel Desk connector, import workspace/approved catalogue bridge and rollout gates remain open. Production cutover is not authorized. See docs/v1-execution-status.md and docs/v1-wave2-contracts.md for exact scope, evidence and pending checks.
 
+Wave 3 continues from verified `aa6ac94` under `docs/v1-wave3-contracts.md`.
+The atomic reviewed import-to-private-catalogue bridge is mounted and passes
+actual migrated PG16 API/security checks. Its complete seller UI/browser journey,
+public online-payment handoff, tenant-scoped ParcelDesk scan/link/tracking and
+persistent theme publication are still being composed and independently tested.
+Sales console, analytics, explicit support grants, verified customer identity
+links and real provider canaries remain tracked scope; this wave does not claim
+full V1 acceptance.
+
 ## 1. The V1 outcome
 
 A sales representative can onboard a boutique from its existing Instagram account and website, prepare and review its catalogue, publish a premium storefront, connect Instagram and WhatsApp, demonstrate catalogue-aware conversations, complete a purchase and manage the order without code changes or database edits.

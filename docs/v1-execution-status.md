@@ -2,6 +2,31 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
+## Wave 3 in progress
+
+Base `aa6ac940ef877a8a37baac39afec44268b49f84e` is preserved. Contracts and
+ownership are frozen in `docs/v1-wave3-contracts.md`. The approved import bridge
+source `a085c71` + `5e43aac` is integrated through `3795f10`: actual 0047 tenant
+receipt DDL, exact source allocation, atomic explicit approval/private Product+SKU
+creation, immutable provenance, current-role/session checks after lock waits,
+and idempotent same-command recovery across reimport. Its focused actual PG16
+lane passed **35 checks, 0 skips, 0 failures** in 23.10s; central actual application
+registration/migrated integration checks passed **39** in 22.99s. Raw focused
+results are `artifacts/v1/import-catalogue/2026-10-18-bridge.{xml,txt}`. These are
+API/database results; a complete native import UI journey is still pending.
+
+The new payment/import-bridge/parcel flags are default off (`296b73d`). Shared
+native transport preserves explicit typed conflict codes (`5a698ed`) and clears
+private parcel recovery on identity transitions (`fa5bfaa`). Payment module/API
+and ParcelDesk connector workers continue synthetic transport and migrated
+PG16 failure/concurrency checks. Independent ParcelDesk review found session
+revalidation-after-wait and send-time connector eligibility gaps; those fixes
+must pass before its source is composed centrally. The original ParcelDesk and
+running application remain untouched. Remote imports/themes/QA checkpoints are
+fetched for review; their synthetic HTTP and pure results do not imply migrated
+DB/browser/public-theme acceptance. No wave 3 full-suite or runtime-image claim
+is made yet.
+
 ## Integrated wave 2
 
 | Lane | Reviewed source | Integrated behavior and limits |
