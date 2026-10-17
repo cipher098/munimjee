@@ -142,17 +142,18 @@ async def _send_and_tag(
     db: AsyncSession,
 ) -> None:
     """Send a text reply, capture the mid, and tag the last bot history entry."""
+    from app.services.channel_readiness import guard_legacy_product, InstagramSendUncertain
+    await guard_legacy_product(db, conversation.seller_id, conversation.product_id)
     try:
         result = await client.send_message(conversation.customer_instagram_id, reply)
         mid = result.get("message_id")
+        if not mid:
+            raise InstagramSendUncertain("Instagram did not return a message ID")
         if mid:
             _tag_last_bot_message_mid(conversation, mid)
             await db.flush()
     except Exception as exc:
-        logger.error(
-            "Failed to send Instagram reply in conversation %s: %s — reply saved to DB",
-            conversation.id, exc,
-        )
+        raise InstagramSendUncertain("Instagram reply needs outcome review") from exc
 
 
 def find_message_by_mid(conversation: Conversation, mid: str) -> dict | None:
@@ -224,6 +225,8 @@ async def _ensure_cycle_order(conversation, seller, conv_product, method, db):
     # cost or above what we last quoted.
     from app.models.product import Product
     from app.bot.responder import enforce_unit_price, _price_ceiling
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, conv_product.product_id)
     _product = (await db.execute(
         select(Product).where(Product.id == conv_product.product_id)
     )).scalar_one_or_none()
@@ -313,6 +316,8 @@ async def _build_deal_order(conversation, seller, focused_cp, deal_lines, db):
             cp = focused_cp
         else:
             cp = await _get_or_create_conv_product(conversation.id, l["product_id"], db)
+        from app.services.channel_readiness import guard_legacy_product
+        await guard_legacy_product(db, seller.id, l["product_id"])
         product = (await db.execute(
             select(Product).where(Product.id == l["product_id"])
         )).scalar_one_or_none()
@@ -409,6 +414,8 @@ async def _send_next_product_photo(
 
     from app.config import settings
     from app.integrations.instagram import InstagramClient
+    from app.services.channel_readiness import guard_legacy_product, InstagramSendUncertain
+    await guard_legacy_product(db, seller.id, product.id)
 
     # Build the photo list. If the customer has locked in a variant
     # ("blue dedo") and that variant exists on the product, cycle ONLY its
@@ -462,13 +469,14 @@ async def _send_next_product_photo(
         msgs.append({"role": "bot", "content": "[product photo]", "product_id": str(product.id)})
         conversation.messages = msgs
         mid = result.get("message_id")
+        if not mid:
+            raise InstagramSendUncertain("Instagram did not return a message ID")
         if mid:
             _tag_last_bot_message_mid(conversation, mid)
         await db.flush()
         return True
     except Exception as exc:
-        logger.warning("Could not send product photo for %r: %s", product.name, exc)
-        return False
+        raise InstagramSendUncertain("Instagram image needs outcome review") from exc
 
 
 async def _send_product_image_if_new(
@@ -573,11 +581,15 @@ async def _share_primary_payment_method(conversation, seller, conv_product, db, 
                 msgs.append({"role": "bot", "content": "[payment QR]", "order_id": str(order.id)})
                 conversation.messages = msgs
                 mid = result.get("message_id")
+                if not mid:
+                    from app.services.channel_readiness import InstagramSendUncertain
+                    raise InstagramSendUncertain("Instagram did not return a payment image ID")
                 if mid:
                     _tag_last_bot_message_mid(conversation, mid)
                 qr_sent_now = True
             except Exception as exc:
-                logger.warning("Could not send payment QR (will retry next turn): %s", exc)
+                from app.services.channel_readiness import InstagramSendUncertain
+                raise InstagramSendUncertain("Instagram payment image needs outcome review") from exc
     await db.flush()
 
     qr_delivered = qr_already_sent or qr_sent_now
@@ -651,6 +663,8 @@ async def _advance_conversation_inner(
     resume: bool,
     customer_mid: str | None,
 ) -> None:
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, conversation.product_id)
     if not resume:
         _append_message(conversation, "customer", customer_message, mid=customer_mid)
 
@@ -860,6 +874,8 @@ async def _advance_conversation_inner(
         )
 
     new_product_id = extra.get("product_id")
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, new_product_id)
     if new_product_id:
         from sqlalchemy import select as sa_select
         from app.models.product import Product as ProductModel
@@ -954,15 +970,8 @@ async def _handle_product_image_inner(
             await _send_and_tag(conversation, client, reply, db)
         return
 
-    products_for_vision = [
-        {
-            "id": str(p.id),
-            "name": p.name,
-            "description": p.description or "",
-            "listed_price_paise": p.listed_price,
-        }
-        for p in products
-    ]
+    from app.services.channel_readiness import identity_product_data
+    products_for_vision = await identity_product_data(db, seller.id, products)
 
     claude = ClaudeClient()
 
@@ -993,6 +1002,8 @@ async def _handle_product_image_inner(
     confidence = match.get("confidence", "low")
 
     matched = next((p for p in products if str(p.id) == product_id), None) if product_id else None
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, matched.id if matched else None)
     logger.info(
         "\n"
         "┌─────────────────────────────────────────\n"
@@ -1213,10 +1224,8 @@ async def _handle_reel_inner(
             select(Product).where(Product.seller_id == seller.id, Product.active == True)
         )
         all_products = all_result.scalars().all()
-        products_for_match = [
-            {"id": str(p.id), "name": p.name, "description": p.description or "", "listed_price_paise": p.listed_price}
-            for p in all_products
-        ]
+        from app.services.channel_readiness import identity_product_data
+        products_for_match = await identity_product_data(db, seller.id, all_products)
         claude = ClaudeClient()
         match = await claude.match_product_by_description(reel_title, products_for_match)
         if match.get("confidence") in ("high", "medium") and match.get("product_id"):
@@ -1244,7 +1253,9 @@ async def _handle_reel_inner(
             await _send_and_tag(conversation, client, reply, db)
         return
 
-    # Product matched — set on conversation
+    # Product matched — validate its authority before price/state use.
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, matched_product.id)
     conversation.product_id = str(matched_product.id)
     conv_product = await _get_or_create_conv_product(conversation.id, str(matched_product.id), db)
 
@@ -1320,6 +1331,8 @@ async def _handle_payment_screenshot_inner(
     db: AsyncSession,
 ) -> None:
     """Extract payment evidence for seller review; OCR cannot confirm settled funds."""
+    from app.services.channel_readiness import guard_legacy_product
+    await guard_legacy_product(db, seller.id, conversation.product_id)
     from app.models.payment_method import PaymentMethod
     from app.models.transaction import Transaction
     from app.models.commerce_safeguards import PaymentReview

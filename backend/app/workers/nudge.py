@@ -170,8 +170,19 @@ async def _send_nudge(conversation_id: str, target_count: int) -> None:
         conversation = result.scalar_one_or_none()
         if not conversation:
             return
+        from app.services.channel_readiness import instagram_automation_enabled, guard_legacy_product, CatalogueAuthorityHandoff
+        if not await instagram_automation_enabled(db, conversation.seller_id):
+            return
+        try:
+            await guard_legacy_product(db, conversation.seller_id, conversation.product_id)
+        except CatalogueAuthorityHandoff:
+            return
         from app.services.instagram_ingress import thread_quarantined
         if await thread_quarantined(db, conversation.seller_id, conversation.customer_instagram_id):
+            return
+        from app.services.channel_readiness import resume_messages_after_review
+        customer_turns = [item for item in (conversation.messages or []) if item.get("role") == "customer"]
+        if not await resume_messages_after_review(db, conversation.seller_id, conversation.customer_instagram_id, customer_turns):
             return
         # Only nudge a thread still in focus (mid-funnel).
         if not conversation.product_id:

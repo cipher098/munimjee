@@ -377,6 +377,9 @@ async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *
     await _lock_conversation(db, conversation.id)
     await db.refresh(conversation)
     from app.services.instagram_ingress import thread_quarantined
+    from app.services.channel_readiness import instagram_automation_enabled
+    if not await instagram_automation_enabled(db, seller.id):
+        return set()
     if await thread_quarantined(db, seller.id, customer_ig_id, owned_receipt_ids=owned_receipt_ids):
         return set()
     if not events:
@@ -570,6 +573,8 @@ async def _process_events(events: list, conversation, seller, db) -> set[int]:
                         r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id))
                         ref_product = r1.scalar_one_or_none()
                         if ref_product:
+                            from app.services.channel_readiness import guard_legacy_product
+                            await guard_legacy_product(db, seller.id, ref_product.id)
                             conversation.product_id = ref_product_id
                             logger.info(
                                 "reply_to switched product: %s → %s",
@@ -678,6 +683,13 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
             logger.info("wake_paused_conversation: conversation %s not found — skip", conversation_id)
             return
 
+        from app.services.channel_readiness import instagram_automation_enabled, guard_legacy_product, CatalogueAuthorityHandoff
+        if not await instagram_automation_enabled(db, conversation.seller_id):
+            return
+        try:
+            await guard_legacy_product(db, conversation.seller_id, conversation.product_id)
+        except CatalogueAuthorityHandoff:
+            return
         from app.services.instagram_ingress import thread_quarantined
         if await thread_quarantined(db, conversation.seller_id, conversation.customer_instagram_id):
             return
@@ -704,6 +716,8 @@ async def _wake_paused_conversation(conversation_id: str) -> None:
             return
 
         pending = unanswered_customer_messages(conversation.messages)
+        from app.services.channel_readiness import resume_messages_after_review
+        pending = await resume_messages_after_review(db, conversation.seller_id, conversation.customer_instagram_id, pending)
         if not pending:
             logger.info(
                 "wake_paused_conversation: conversation %s already answered — skip",

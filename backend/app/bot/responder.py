@@ -154,6 +154,8 @@ async def generate_bot_reply(
     Returns (reply_text, new_state, extra_dict).
     extra_dict may contain: agreed_price, negotiation_round, product_id.
     """
+    from app.services.channel_readiness import guard_legacy_product, legacy_fact_products
+    await guard_legacy_product(db, seller.id, conversation.product_id)
     product: Product | None = None
     if conversation.product_id:
         result = await db.execute(select(Product).where(Product.id == conversation.product_id))
@@ -171,7 +173,11 @@ async def generate_bot_reply(
     result = await db.execute(
         select(Product).where(Product.seller_id == seller.id, Product.active == True)
     )
-    all_products = result.scalars().all()
+    candidates = result.scalars().all()
+    for candidate in candidates:
+        if candidate.name and candidate.name.casefold() in customer_message.casefold():
+            await guard_legacy_product(db, seller.id, candidate.id)
+    all_products = await legacy_fact_products(db, seller.id, candidates)
     products_list = [
         {"id": str(p.id), "name": p.name, "listed_price_paise": p.listed_price}
         for p in all_products
@@ -401,6 +407,8 @@ async def generate_bot_reply(
         )
     )
     _other_rows = _other_cp_result.all()
+    for _, other_product in _other_rows:
+        await guard_legacy_product(db, seller.id, other_product.id)
     other_inquiry_products = [
         {
             "id": str(p.id),
@@ -652,6 +660,7 @@ async def generate_bot_reply(
             _pid = str(_it.get("product_id") or "")
             if not _pid:
                 continue
+            await guard_legacy_product(db, seller.id, _pid)
             _p = (await db.execute(select(Product).where(Product.id == _pid))).scalar_one_or_none()
             if not _p:
                 continue
@@ -795,6 +804,7 @@ async def generate_bot_reply(
         parts = []
         _mp_total = 0
         for pid in extra["product_ids"]:
+            await guard_legacy_product(db, seller.id, pid)
             p_res = await db.execute(select(Product).where(Product.id == pid))
             p = p_res.scalar_one_or_none()
             if not p:
@@ -831,6 +841,7 @@ async def generate_bot_reply(
     if extra.get("show_product_ids"):
         _sp_parts = []
         for pid in extra["show_product_ids"]:
+            await guard_legacy_product(db, seller.id, pid)
             p = (await db.execute(select(Product).where(Product.id == pid))).scalar_one_or_none()
             if not p:
                 continue
@@ -854,6 +865,7 @@ async def generate_bot_reply(
     if _qitems and decision.get("action") not in ("accept", "bulk_discount"):
         _qparts, _qtotal = [], 0
         for _it in _qitems:
+            await guard_legacy_product(db, seller.id, str(_it.get("product_id") or ""))
             _qp = (await db.execute(
                 select(Product).where(Product.id == str(_it.get("product_id") or ""))
             )).scalar_one_or_none()
@@ -941,6 +953,7 @@ async def generate_bot_reply(
     # If Claude switched to a different product, reload it so reply text uses the correct product
     switched_product_id = decision.get("product_id")
     if switched_product_id and str(switched_product_id) != str(conversation.product_id):
+        await guard_legacy_product(db, seller.id, switched_product_id)
         result = await db.execute(select(Product).where(Product.id == switched_product_id))
         switched = result.scalar_one_or_none()
         if switched:

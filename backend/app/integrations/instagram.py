@@ -17,6 +17,27 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+class _CredentialURLFilter(logging.Filter):
+    """HTTPX logs request URLs at INFO; OAuth-required query secrets stay redacted."""
+    def filter(self, record):
+        from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+        if isinstance(record.args, tuple):
+            cleaned = []
+            for value in record.args:
+                text = str(value)
+                if text.startswith("https://"):
+                    url = urlsplit(text)
+                    query = [(key, "[redacted]" if key in {"access_token", "client_secret", "code"} else item)
+                             for key, item in parse_qsl(url.query, keep_blank_values=True)]
+                    value = urlunsplit((url.scheme, url.netloc, url.path, urlencode(query), ""))
+                cleaned.append(value)
+            record.args = tuple(cleaned)
+        return True
+
+
+logging.getLogger("httpx").addFilter(_CredentialURLFilter())
+
+
 
 # ---------------------------------------------------------------------------
 # Outbound message-id registry (Redis)
@@ -104,7 +125,7 @@ async def exchange_code_for_user_token(code: str, redirect_uri: str) -> dict:
             },
         )
         if response.status_code != 200:
-            logger.error("IG OAuth code exchange failed %d: %s", response.status_code, response.text)
+            logger.error("IG OAuth code exchange failed %d", response.status_code)
         response.raise_for_status()
         data = response.json()
         logger.info(
@@ -127,7 +148,7 @@ async def exchange_for_long_lived_token(short_lived_token: str) -> str:
             },
         )
         if response.status_code != 200:
-            logger.error("IG long-lived exchange failed %d: %s", response.status_code, response.text)
+            logger.error("IG long-lived exchange failed %d", response.status_code)
         response.raise_for_status()
         return response.json()["access_token"]
 
@@ -147,7 +168,7 @@ async def subscribe_ig_user_to_messages(ig_user_id: str, user_token: str) -> dic
             },
         )
         if response.status_code != 200:
-            logger.error("IG subscribe_apps failed %d: %s", response.status_code, response.text)
+            logger.error("IG subscribe_apps failed %d", response.status_code)
         response.raise_for_status()
         return response.json()
 
@@ -165,11 +186,11 @@ async def fetch_ig_user(user_token: str) -> dict:
             f"https://graph.instagram.com/{settings.INSTAGRAM_API_VERSION}/me",
             params={
                 "fields": "user_id,username,name,account_type",
-                "access_token": user_token,
             },
+            headers={"Authorization": f"Bearer {user_token}"},
         )
         if response.status_code != 200:
-            logger.error("fetch_ig_user failed %d: %s", response.status_code, response.text)
+            logger.error("fetch_ig_user failed %d", response.status_code)
         response.raise_for_status()
         data = response.json()
         logger.info(
@@ -201,7 +222,7 @@ class InstagramClient:
                 headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
-                logger.warning("oEmbed resolution failed %d: %s", response.status_code, response.text)
+                logger.warning("oEmbed resolution failed %d", response.status_code)
                 return None
             return response.json().get("media_id")
 
@@ -214,7 +235,7 @@ class InstagramClient:
                 headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
-                logger.warning("get_user_info failed %d: %s", response.status_code, response.text)
+                logger.warning("get_user_info failed %d", response.status_code)
                 return {}
             return response.json()
 
@@ -227,7 +248,7 @@ class InstagramClient:
                 headers={"Authorization": f"Bearer {self._token}"},
             )
             if response.status_code != 200:
-                logger.warning("get_media_shortcode failed %d: %s", response.status_code, response.text)
+                logger.warning("get_media_shortcode failed %d", response.status_code)
                 return None
             return response.json().get("shortcode")
 
@@ -243,7 +264,7 @@ class InstagramClient:
             )
             if response.status_code != 200:
                 logger.error(
-                    "Instagram send_message failed %d: %s", response.status_code, response.text
+                    "Instagram send_message failed %d", response.status_code
                 )
             response.raise_for_status()
             data = response.json()
@@ -267,7 +288,7 @@ class InstagramClient:
             )
             if response.status_code != 200:
                 logger.error(
-                    "Instagram send_image failed %d: %s", response.status_code, response.text
+                    "Instagram send_image failed %d", response.status_code
                 )
             response.raise_for_status()
             data = response.json()

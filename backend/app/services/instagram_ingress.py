@@ -12,7 +12,7 @@ from app.models.seller import Seller
 
 BATCH_SECONDS = 20
 PROCESSING_TIMEOUT_SECONDS = 15 * 60
-UNKNOWN_EFFECT_ERRORS = {"processing_failed_unknown_effect", "processing_interrupted_unknown_effect", "legacy_identity_unverifiable", "legacy_cutover_review_required", "legacy_snapshot_unidentified"}
+UNKNOWN_EFFECT_ERRORS = {"processing_failed_unknown_effect", "processing_interrupted_unknown_effect", "legacy_identity_unverifiable", "legacy_cutover_review_required", "legacy_snapshot_unidentified", "operator_replay_withheld", "authoritative_catalogue_handoff", "provider_window_unverified"}
 
 
 def validate_message_shape(event: dict) -> None:
@@ -100,6 +100,16 @@ def normalize_message(event: dict) -> list[dict]:
     return normalized
 
 
+def provider_event_time(value):
+    """Store signed provider time when supplied; receipt time is not proof of freshness."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return datetime.fromtimestamp(value / 1000 if value > 1e12 else value, timezone.utc)
+    except (ValueError, OverflowError, OSError):
+        return None
+
+
 def event_key(event: dict, events: list[dict]) -> str:
     """Provider mid is stable even when a redelivery changes attachment URLs.
 
@@ -139,6 +149,7 @@ async def persist_message(db, event: dict) -> InstagramIngress | None:
     await db.execute(insert(InstagramIngress).values(
         id=uuid4(), seller_id=sellers[0].id, account_id=account_id, customer_id=customer_id,
         event_key=key, provider_message_id=(event.get("message") or {}).get("mid"),
+        occurred_at=provider_event_time(event.get("timestamp")),
         events=events, processed_indices=[], status="pending", attempts=0, available_at=now + timedelta(seconds=BATCH_SECONDS),
     ).on_conflict_do_nothing(constraint="instagram_ingress_event_once"))
     receipt = await db.scalar(select(InstagramIngress).where(

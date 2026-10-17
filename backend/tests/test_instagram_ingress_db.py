@@ -42,7 +42,7 @@ async def sessions(migrated_engine, monkeypatch):
 
 def event(mid="m1", customer="customer", account="account"):
     return {"sender": {"id": customer}, "recipient": {"id": account},
-            "timestamp": 123456, "message": {"mid": mid, "text": "price?"}, "seller_id": str(uuid4())}
+            "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000), "message": {"mid": mid, "text": "price?"}, "seller_id": str(uuid4())}
 
 
 async def seed(sessions):

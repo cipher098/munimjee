@@ -1,7 +1,7 @@
 """Durable inbox for actionable Instagram customer messages (no credentials)."""
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
 
@@ -22,6 +22,8 @@ class InstagramIngress(Base):
     status = Column(String(20), nullable=False, default="pending", server_default="pending")
     attempts = Column(Integer, nullable=False, default=0, server_default="0")
     error_code = Column(String(80), nullable=True)
+    operator_replay_pending = Column(Boolean, nullable=False, default=False, server_default="false")
+    occurred_at = Column(DateTime(timezone=True), nullable=True)
     available_at = Column(DateTime(timezone=True), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=True)
     finished_at = Column(DateTime(timezone=True), nullable=True)

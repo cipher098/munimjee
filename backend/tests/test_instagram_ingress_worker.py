@@ -20,14 +20,14 @@ def result(rows):
 
 
 def receipt():
-    return SimpleNamespace(id=uuid4(), seller_id=uuid4(), status="processing", processed_indices=[], events=[{"type": "text", "text": "hello"}])
+    return SimpleNamespace(id=uuid4(), seller_id=uuid4(), status="processing", occurred_at=datetime.now(timezone.utc), operator_replay_pending=False, processed_indices=[], events=[{"type": "text", "text": "hello"}])
 
 
 @pytest.mark.asyncio
 async def test_success_uses_existing_writer_and_completes_in_same_transaction(monkeypatch):
     row = receipt()
     seller = SimpleNamespace(id=row.seller_id)
-    db = SimpleNamespace(execute=AsyncMock(side_effect=[result([row]), result([seller])]))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(side_effect=[result([row]), result([seller])]))
     boundaries = []
 
     @asynccontextmanager
@@ -49,7 +49,7 @@ async def test_success_uses_existing_writer_and_completes_in_same_transaction(mo
 async def test_possible_send_failure_retained_as_error_without_automatic_replay(monkeypatch):
     row = receipt()
     seller = SimpleNamespace(id=row.seller_id)
-    db = SimpleNamespace(execute=AsyncMock(side_effect=[result([row]), result([seller]), result([row])]))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(side_effect=[result([row]), result([seller]), result([row])]))
 
     @asynccontextmanager
     async def session():
@@ -68,7 +68,7 @@ async def test_possible_send_failure_retained_as_error_without_automatic_replay(
 @pytest.mark.asyncio
 async def test_account_reassignment_never_invokes_writer(monkeypatch):
     row = receipt()
-    db = SimpleNamespace(execute=AsyncMock(side_effect=[result([row]), result([SimpleNamespace(id=uuid4())])]))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(side_effect=[result([row]), result([SimpleNamespace(id=uuid4())])]))
 
     @asynccontextmanager
     async def session():
@@ -86,7 +86,7 @@ async def test_account_reassignment_never_invokes_writer(monkeypatch):
 @pytest.mark.asyncio
 async def test_recovery_retains_interrupted_work_and_wakes_pending_after_commit(monkeypatch):
     row = receipt()
-    db = SimpleNamespace(execute=AsyncMock(side_effect=[result([row]), result([(row.seller_id, "account", "customer")])]))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(side_effect=[result([row]), result([(row.seller_id, "account", "customer")])]))
     committed = []
 
     @asynccontextmanager
@@ -110,7 +110,7 @@ async def test_recovery_retains_interrupted_work_and_wakes_pending_after_commit(
 
 @pytest.mark.asyncio
 async def test_new_pending_message_extends_silence_window(monkeypatch):
-    db = SimpleNamespace(execute=AsyncMock(), scalar=AsyncMock(side_effect=[None, None, datetime.now(timezone.utc) + timedelta(seconds=20)]))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(), scalar=AsyncMock(side_effect=[None, None, datetime.now(timezone.utc) + timedelta(seconds=20)]))
 
     @asynccontextmanager
     async def session():
@@ -124,7 +124,7 @@ async def test_new_pending_message_extends_silence_window(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_existing_processing_batch_prevents_second_claim(monkeypatch):
-    db = SimpleNamespace(execute=AsyncMock(), scalar=AsyncMock(return_value=uuid4()))
+    db = SimpleNamespace(get=AsyncMock(return_value=None), execute=AsyncMock(), scalar=AsyncMock(return_value=uuid4()))
 
     @asynccontextmanager
     async def session():

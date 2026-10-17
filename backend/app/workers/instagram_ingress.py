@@ -40,6 +40,9 @@ async def _claim(seller_id, account_id, customer_id) -> list:
         await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:thread))"), {
             "thread": f"ig-ingress:{seller_id}:{account_id}:{customer_id}",
         })
+        from app.services.channel_readiness import instagram_automation_enabled
+        if not await instagram_automation_enabled(db, seller_id):
+            return []
         filters = _thread(seller_id, account_id, customer_id)
         active = await db.scalar(select(InstagramIngress.id).where(
             *filters, InstagramIngress.status == "processing",
@@ -81,6 +84,26 @@ async def _process_thread(seller_id, account_id: str, customer_id: str) -> None:
             if len(sellers) != 1 or sellers[0].id != seller_id:
                 _finish(rows, "error", "instagram_account_binding_changed")
                 return
+            from app.services.channel_readiness import current_provider_window
+            outside_window = [row for row in rows if not current_provider_window(row.occurred_at)]
+            if outside_window:
+                for row in rows:
+                    row.status, row.started_at = "pending", None
+                _finish(outside_window, "error", "provider_window_unverified")
+                return
+            from app.services.channel_operator import replay_block_reason
+            from app.models.channel_operator import ChannelOperation
+            for row in rows:
+                if row.operator_replay_pending:
+                    audit = await db.scalar(select(ChannelOperation).where(ChannelOperation.business_id == seller_id,
+                          ChannelOperation.resource_id == row.id, ChannelOperation.action == "ingress_replay")
+                          .order_by(ChannelOperation.created_at.desc()).limit(1))
+                    blocked = await replay_block_reason(db, row, actor_id=audit.actor_user_id) if audit else "No authorized review audit"
+                    if blocked:
+                        for item in rows:
+                            item.status, item.started_at = "pending", None
+                        _finish([row], "error", "operator_replay_withheld")
+                        return
             from app.workers.message_batch import _consume_events
             positions = [(row, index) for row in rows for index in range(len(row.events))
                          if index not in (row.processed_indices or [])]
@@ -97,12 +120,15 @@ async def _process_thread(seller_id, account_id: str, customer_id: str) -> None:
                 row.processed_indices = sorted(done)
                 if len(done) == len(row.events):
                     _finish([row], "completed")
+                    row.operator_replay_pending = False
                 else:
                     # Payment handling can intentionally return before later
                     # text/media. Preserve those components for the next pass.
                     row.status, row.started_at, row.finished_at = "pending", None, None
                     row.available_at = datetime.now(timezone.utc)
-    except Exception:
+    except Exception as exc:
+        from app.services.channel_readiness import CatalogueAuthorityHandoff
+        code = "authoritative_catalogue_handoff" if isinstance(exc, CatalogueAuthorityHandoff) else "processing_failed_unknown_effect"
         # The legacy writer may send externally before its DB commit. A blind
         # retry could duplicate a reply or other side effect. Retain for review.
         logger.warning("Instagram ingress processing failed; receipts require side-effect review")
@@ -110,7 +136,7 @@ async def _process_thread(seller_id, account_id: str, customer_id: str) -> None:
             rows = (await db.execute(select(InstagramIngress).where(
                 InstagramIngress.id.in_(ids), InstagramIngress.status == "processing",
             ).with_for_update())).scalars().all()
-            _finish(rows, "error", "processing_failed_unknown_effect")
+            _finish(rows, "error", code)
 
 
 def _finish(rows, status: str, code: str | None = None) -> None:

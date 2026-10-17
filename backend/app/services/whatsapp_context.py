@@ -120,6 +120,11 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
     if len(matches) != 1 or [str(matches[0].id)] != [p.get('id') for p in ref.get('products', [])]:
         return None
     product = matches[0]
+    from app.services.channel_readiness import guard_legacy_product, CatalogueAuthorityHandoff
+    try:
+        await guard_legacy_product(db, seller_id, product.id)
+    except CatalogueAuthorityHandoff:
+        return "Our team will confirm the current options, price and availability for this product."
     price = f'₹{product.listed_price / 100:,.2f}'
     reply = f'You’re asking about {product.name}.\nListed price: {price}.'
     question = customer_text.casefold()
