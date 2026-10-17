@@ -25,7 +25,13 @@ async function shopUntilBag(data){const c=await context(),page=await c.newPage()
 async function fill(form){await form.getByLabel('Full name',{exact:true}).fill('Synthetic Buyer');await form.getByLabel('Indian mobile number',{exact:true}).fill('9876543210');await form.getByLabel('Address',{exact:true}).fill('Synthetic Street');await form.getByLabel('City',{exact:true}).fill('Bengaluru');await form.getByLabel('State',{exact:true}).fill('Karnataka');await form.getByLabel('PIN code',{exact:true}).fill('560001');}
 async function totalOrders(setup){return(await(await setup.page.request.get(base+`/api/v1/businesses/${setup.bid}/orders`)).json()).total;}
 try{
- const setupData=await setup('Synthetic Indigo Boutique',1),{c,page,form}=await shop(setupData,{width:390,height:844});await fill(form);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:new URL('mobile-cod-checkout.png',output).pathname,fullPage:false});
+ const setupData=await setup('Synthetic Indigo Boutique',1);
+ await setupData.page.goto(base+`/v1/businesses/${setupData.bid}/catalogue`);
+ const publicLink=setupData.page.getByRole('link',{name:'Open storefront',exact:true});
+ await expect(publicLink).toBeVisible();await expect(publicLink).toHaveAttribute('href',base+'/stores/'+setupData.slug);
+ const publicPageReady=setupData.owner.waitForEvent('page');await publicLink.click();const publicPage=await publicPageReady;
+ await publicPage.getByRole('link',{name:'View Synthetic Indigo Dress',exact:true}).waitFor();await publicPage.close();checks++;
+ const {c,page,form}=await shop(setupData,{width:390,height:844});await fill(form);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:new URL('mobile-cod-checkout.png',output).pathname,fullPage:false});
  await form.getByRole('button',{name:'Place order',exact:true}).click();await expect(form.getByText('Your order is received.',{exact:true})).toBeVisible();await expect(form.getByText('Payment: Pending',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Bag (0)',exact:true})).toBeVisible();assert.equal(await totalOrders(setupData),1);checks++;
  const stored=JSON.parse(await page.evaluate(slug=>sessionStorage.getItem(`munimjee.checkout.v1:${slug}`),setupData.slug));assert.equal(stored.state,'confirmed');assert.doesNotMatch(JSON.stringify(stored),/Synthetic Buyer|Synthetic Street|9876543210/);assert.match(stored.confirmation.accessToken,/^[a-f0-9]{64}$/);checks++;
  await page.screenshot({path:new URL('mobile-cod-confirmation.png',output).pathname,fullPage:false});await form.getByRole('link',{name:'Open order status page',exact:true}).click();await expect(page.getByRole('status')).toHaveText('Order status checked.');await expect(page.getByText('Payment: pending',{exact:true})).toBeVisible();assert.equal(page.url().includes('token'),false);checks++;
