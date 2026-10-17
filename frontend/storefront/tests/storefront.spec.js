@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 for(const theme of ['editorial','catalogue','video']){
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
-  test(`${theme} ${viewport.width}: browse, variants, capped cart, honest checkout and keyboard close`,async({page})=>{
+  test(`${theme} ${viewport.width}: browse, variants, capped cart, honest checkout and keyboard close`,async({page},testInfo)=>{
    const errors=[];const writes=[];const external=[];
    page.on('pageerror',error=>errors.push(error.message));
    page.on('request',request=>{if(request.method()!=='GET') writes.push(request.url());if(new URL(request.url()).hostname!=='127.0.0.1') external.push(request.url());});
@@ -33,7 +33,7 @@ for(const theme of ['editorial','catalogue','video']){
    await page.getByLabel('Search products').fill('linen');await expect(page.locator('.product-card')).toHaveCount(1);
    await page.getByLabel('Search products').fill('zzzz');await expect(page.getByText('A little too specific?')).toBeVisible();
    await page.getByRole('button',{name:'Clear filters'}).click();await expect(page.locator('.product-card')).toHaveCount(6);
-   await page.screenshot({path:`design/${theme}-${viewport.width===1440?'desktop':'mobile'}.png`,fullPage:true});
+   await page.screenshot({path:testInfo.outputPath(`${theme}-${viewport.width===1440?'desktop':'mobile'}.png`),fullPage:true});
    expect(errors).toEqual([]);expect(writes).toEqual([]);expect(external).toEqual([]);
   });
  }

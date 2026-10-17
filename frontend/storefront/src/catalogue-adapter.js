@@ -1,9 +1,10 @@
-// Deliberately fixture-only. No API call and no claim that readiness is frozen.
+// Frozen catalogue.v1 preview adapter. No API call or server checkout authority.
 export function normalizeProduct(dto,presentation={}) {
   if(dto.contract_version!=='catalogue.v1' || dto.mode!=='preview_foundation' || dto.checkout_enabled!==false) throw new Error('Unsupported preview catalogue contract.');
-  const requiresReview=dto.readiness?.state==='variant_stock_review';
-  // Unknown readiness fails closed rather than treating null stock as review.
-  const reviewed=dto.readiness?.state==='reviewed_sample';
+  const requiresReview=dto.readiness==='needs_review';
+  // Only seller-reviewed snapshots are selectable in this local preview.
+  // Backfilled/stale/unknown snapshots remain disabled until review.
+  const reviewed=dto.readiness==='reviewed';
   return {
     id:dto.product_id,
     slug:presentation.slug || dto.product_id,
@@ -16,6 +17,7 @@ export function normalizeProduct(dto,presentation={}) {
       id:sku.sku_id,
       size:sku.options.Size,
       color:sku.options.Colour,
+      label:Object.values(sku.options).join(' / ') || 'Default',
       price_minor:sku.price_minor,
       currency:sku.currency,
       active:sku.active && reviewed,

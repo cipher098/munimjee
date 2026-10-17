@@ -1,4 +1,4 @@
-// Synthetic public-only proposal fixtures. This module must never import seller records.
+// Synthetic public-only frozen catalogue.v1 fixtures. This module must never import seller records.
 import {normalizeProduct} from './catalogue-adapter.js';
 export const CONTRACT_VERSION = 'catalogue.v1';
 export const business = Object.freeze({
@@ -17,8 +17,8 @@ const presentationSamples = [
   {id:'22222222-2222-4222-8222-222222222205',slug:'indigo-day-dress',name:'Indigo day dress',category:'Dresses',description:'An illustrative relaxed silhouette, drawn in deep indigo. A synthetic example for browsing and size selection.',image:'indigo.svg',tag:'From morning to evening',skus:[sku('33333333-3333-4333-8333-333333333310','S','Indigo',279000,0),sku('33333333-3333-4333-8333-333333333311','M','Indigo',279000,0)]},
   {id:'22222222-2222-4222-8222-222222222206',slug:'heritage-layer',name:'Heritage layer',category:'Co-ords',description:'An example of a legacy product with unresolved variant inventory. It stays unavailable until each variant is reviewed.',image:'terracotta.svg',tag:'Awaiting catalogue review',skus:[sku('33333333-3333-4333-8333-333333333312','S','Clay',410000,null,'REVIEW_REQUIRED'),sku('33333333-3333-4333-8333-333333333313','M','Clay',410000,null,'REVIEW_REQUIRED')]},
 ];
-// The field names match catalogue.v1. readiness is an isolated proposal until its
-// exact server schema is agreed. Never connect this fixture to an API implicitly.
+// The envelope and string readiness match frozen catalogue.v1.
+// Never connect this fixture to an API implicitly.
 export const catalogueFixtures = presentationSamples.map((sample,index) => ({
   contract_version: CONTRACT_VERSION,
   mode: 'preview_foundation',
@@ -28,7 +28,7 @@ export const catalogueFixtures = presentationSamples.map((sample,index) => ({
   description: sample.description,
   category_id: `44444444-4444-4444-8444-${String(index+1).padStart(12,'0')}`,
   photo_urls: [`./assets/${sample.image}`],
-  readiness: {state: sample.skus.some(sku=>sku.availability==='REVIEW_REQUIRED') ? 'variant_stock_review' : 'reviewed_sample', issues: []},
+  readiness: sample.skus.some(sku=>sku.availability==='REVIEW_REQUIRED') ? 'needs_review' : 'reviewed',
   checkout_enabled: false,
   skus: sample.skus.map(sku=>({
     sku_id: sku.id, product_id: sample.id,
