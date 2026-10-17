@@ -14,7 +14,7 @@ settings.PAYMENT_ENCRYPTION_KEY=Fernet.generate_key().decode()
 from app.main import app
 from app.services import razorpay_payments as payments
 nonce=sys.argv[1]
-orders={};calls=[];fault={'drop_next':False}
+orders={};captures={};calls=[];fault={'drop_next':False}
 
 
 async def synthetic_gateway(account,method,path,data=None):
@@ -28,9 +28,13 @@ async def synthetic_gateway(account,method,path,data=None):
         return result
     if method=='GET' and path.startswith('payments/pay_'):
         provider_id='order_'+path.removeprefix('payments/pay_');row=orders[provider_id]
-        return dict(id=path.removeprefix('payments/'),order_id=provider_id,amount=row['amount'],currency=row['currency'],status='captured',captured=True)
+        payment=dict(id=path.removeprefix('payments/'),order_id=provider_id,amount=row['amount'],currency=row['currency'],status='captured',captured=True)
+        captures[provider_id]=payment
+        return payment
     if method=='GET' and path.startswith('orders/'):
-        return orders[path.split('/')[1]]
+        provider_id=path.split('/')[1]
+        if path.endswith('/payments'):return {'items':[captures[provider_id]] if provider_id in captures else []}
+        return orders[provider_id]
     raise AssertionError('Unexpected synthetic provider call')
 payments.gateway_request=synthetic_gateway
 

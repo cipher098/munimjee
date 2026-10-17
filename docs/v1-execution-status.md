@@ -2,30 +2,41 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave 3 in progress
+## Wave 3 local integration
 
 Base `aa6ac940ef877a8a37baac39afec44268b49f84e` is preserved. Contracts and
-ownership are frozen in `docs/v1-wave3-contracts.md`. The approved import bridge
-source `a085c71` + `5e43aac` is integrated through `3795f10`: actual 0047 tenant
-receipt DDL, exact source allocation, atomic explicit approval/private Product+SKU
-creation, immutable provenance, current-role/session checks after lock waits,
-and idempotent same-command recovery across reimport. Its focused actual PG16
-lane passed **35 checks, 0 skips, 0 failures** in 23.10s; central actual application
-registration/migrated integration checks passed **39** in 22.99s. Raw focused
-results are `artifacts/v1/import-catalogue/2026-10-18-bridge.{xml,txt}`. These are
-API/database results; a complete native import UI journey is still pending.
+ownership remain frozen in `docs/v1-wave3-contracts.md`; all workers use
+GPT-6.1 Sol / high. Source through `1ac880a` now composes the reviewed bridge,
+public payment shell and native ParcelDesk workflow. This remains local test
+acceptance, with every new rollout flag off by default.
 
-The new payment/import-bridge/parcel flags are default off (`296b73d`). Shared
-native transport preserves explicit typed conflict codes (`5a698ed`) and clears
-private parcel recovery on identity transitions (`fa5bfaa`). Payment module/API
-and ParcelDesk connector workers continue synthetic transport and migrated
-PG16 failure/concurrency checks. Independent ParcelDesk review found session
-revalidation-after-wait and send-time connector eligibility gaps; those fixes
-must pass before its source is composed centrally. The original ParcelDesk and
-running application remain untouched. Remote imports/themes/QA checkpoints are
-fetched for review; their synthetic HTTP and pure results do not imply migrated
-DB/browser/public-theme acceptance. No wave 3 full-suite or runtime-image claim
-is made yet.
+| Slice | Integrated source and evidence | Current limit |
+| --- | --- | --- |
+| Reviewed import bridge | `a085c71`, `5e43aac`, `a86867a`, `e4bac16`; central through `54a4a67`. Actual 0047 immutable tenant receipt, atomic explicit approval/private Product+SKU creation, exact known-stock allocation and provenance, same-key recovery across reimport. **37 focused actual PG16 checks**, no skips/failures. | Complete native import review/allocation UI and browser journey still pending remote integration. No automatic publication/activation or unknown-stock conversion. |
+| Native transaction authority | `5b46137`: native catalogue/order mutations revalidate current session/capability before caller-owned commit, including lock waits and provider GET reconciliation. Business/Seller non-key locks avoid proven FK lock inversions. **83 focused actual PG16 checks**, no skips/failures. | This guard requires writers to avoid internal commits/external sends. Legacy workflows retain their existing boundary. |
+| Online payment handoff | Payment owner `04de4b3` integrated as `2a1dc60`, shared composition `1ac880a`. Purpose-separated ephemeral session capability, existing durable attempt/capture authority, SDK preparation before a new order command, exact interrupted/lost verification recovery and retained order method. **38 actual app.main/native/guest browser checks**, **61 Node**, **19 migrated projection/publication/bootstrap checks**. | SDK/provider are synthetic. Both SKU initialization aliases now enforce the new gate (`9729441`); native exact-provider reconciliation/recovery is now included in the 38-check browser proof, including selection and session privacy fences. Real SDK/domain/CSP and captured-payment canaries remain external gates. |
+| ParcelDesk tracking | Owned `431f444`, `d46bb30`, `df5fc7e`, `8914fb0`, central registration `7cc0b18`; source-only connector `2f85e53`. Actual 0048, scoped HMAC/durable commands, order-first scan/confirmation, lease recovery/cache history and current-policy existing WhatsApp outbox hook. Central **25 actual PG16/two-service/startup checks** plus **18 actual production-bootstrap browser checks**. Connector **10 SQLite/HMAC/queue checks**. | Synthetic camera proves wiring; physical phone, private provision/D1/TLS transport and permitted real delivery remain open. Review-required link resolution/replacement UI is not implemented. |
+| Existing storefront paths | Shared payment composition reran **25 actual COD browser checks**, **22 incumbent HTTP-mock/theme checks**, **66 actual native catalogue checks** after the session fence, syntax and **61 Node checks**. | Persistent seller theme configuration and public rendering still await actual remote 0049 integration; all-theme mock proof is not persistent-theme acceptance. |
+
+Independent existing-worker source/render review reproduced a stale pending read
+replacing a newer verified paid state, then verified the epoch fix keeps both
+UI and stored confirmation paid. Parcel review fixed native session privacy and
+courier-selection races; the final captures and delayed-preview regressions were
+independently accepted. A fresh additional agent could not start because of the
+thread limit; no such review is claimed. Raw central results are under
+`artifacts/v1/integration/2026-10-18-wave3-*`, public payment captures under
+`artifacts/v1/public-payment/`, and parcel captures under
+`artifacts/v1/parcel-tracking/`. Overlapping counts are not added together.
+
+Current actual migration head is `0048_v1_parcel_tracking`; remote theme revision
+0049 remains reserved, not shipped. The full wave3 checkpoint through `1ac880a` passed **1223 tests, 8 documented
+skips, 0 failures** in **363.48 seconds**, using actual PG16 migrations. The
+payment alias/DTO followup `626d62f` is integrated as `9729441` after that
+checkpoint; final-source regression and the new runtime image remain separate
+gates in progress. Earlier wave2 image hashes do not
+certify new payment/parcel files. The original ParcelDesk and running application
+remain untouched. No live provider call, customer send, paid transaction or
+production deployment was performed.
 
 ## Integrated wave 2
 

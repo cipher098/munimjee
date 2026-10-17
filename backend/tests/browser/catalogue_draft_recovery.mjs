@@ -49,7 +49,7 @@ export async function recoveryChecks({base,page,owner,context,email,password,bid
  // Same user gets a different native session: old recovery is withheld before POST.
  await write(JSON.stringify(await fresh()));await reload();const sameUserBefore=posts;
  const replacement=await page.request.post(base+'/api/v1/auth/login',{headers:{Origin:base},data:{email,password}});assert.equal(replacement.status(),200);
- await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#draft-recovery-facts').textContent(),'');assert.equal(posts,sameUserBefore);checks+=2;
+ await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#workspace').textContent(),'');assert.equal(posts,sameUserBefore);checks+=2;
  await reload();
  // Create a second real business and grant this same owner a membership there.
  const other=await context(),otherPage=await other.newPage();const otherEmail=`recovery-other-${crypto.randomUUID()}@example.com`;
@@ -61,10 +61,10 @@ export async function recoveryChecks({base,page,owner,context,email,password,bid
  const foreignKey=prefix+session.user_id+':'+foreignBid;await write(scoped,foreignKey);await page.reload();await page.locator('#workspace').waitFor({state:'visible'});await expect(page.locator('#draft-recovery-message')).toContainText('different sign-in or business');assert.equal(await read(foreignKey),null);assert.equal(await page.locator('#draft-recovery-facts').textContent(),'');checks++;
  // An expired/revoked browser session clears local recovery on the 401 path.
  await reload();const before401=posts;const now=(await api('/api/v1/auth/session')).data;assert.equal((await page.request.post(base+'/api/v1/auth/logout',{headers:{Origin:base,'X-CSRF-Token':now.csrf_token}})).status(),200);
- await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#draft-recovery-facts').textContent(),'');assert.equal(posts,before401);checks++;
+ await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#workspace').textContent(),'');assert.equal(posts,before401);checks++;
  // A different valid user in the same browser cannot reuse the previous command.
  assert.equal((await page.request.post(base+'/api/v1/auth/login',{headers:{Origin:base},data:{email,password}})).status(),200);await reload();await write(JSON.stringify(await fresh()));await reload();const beforeForeignUser=posts;
  assert.equal((await page.request.post(base+'/api/v1/auth/login',{headers:{Origin:base},data:{email:otherEmail,password}})).status(),200);
- await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#draft-recovery-facts').textContent(),'');assert.equal(posts,beforeForeignUser);checks++;
+ await page.getByRole('button',{name:'Retry saved draft',exact:true}).click();await expect(page.locator('#workspace')).toBeHidden();assert.equal(await read(),null);assert.equal(await page.locator('#workspace').textContent(),'');assert.equal(posts,beforeForeignUser);checks++;
  await other.close();page.off('request',postListener);return checks;
 }

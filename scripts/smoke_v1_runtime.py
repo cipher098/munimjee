@@ -56,7 +56,7 @@ for name,digest in manifest['files'].items():
     if name=='Dockerfile': continue  # recipe is hashed, never copied into runtime
     target=Path('/opt/munimjee')/name if name.startswith('storefront-src/') else Path('/app')/(name[8:] if name.startswith('backend/') else name)
     assert hashlib.sha256(target.read_bytes()).hexdigest()==digest
-assert len(list(Path('/opt/munimjee/storefront-src').iterdir()))==11
+assert len(list(Path('/opt/munimjee/storefront-src').iterdir()))==12
 assert not any(line.startswith(('pytest','vcrpy')) for line in Path('/app/requirements.txt').read_text().splitlines())
 paths={route.path for route in app.routes}
 with TestClient(app, base_url='https://configured.example') as client:
@@ -66,7 +66,7 @@ with TestClient(app, base_url='https://configured.example') as client:
         assert client.get('/storefront-assets/src/live-entry.js').status_code==404
     else:
         assert '/stores/{slug}' in paths and '/stores/{slug}/orders/{order_id}' in paths
-        for asset in ('live-entry.js','canonical-contract.js','order-status.js','styles.css','live.css'):
+        for asset in ('live-entry.js','canonical-contract.js','order-status.js','payment-handoff.js','styles.css','live.css'):
             response=client.get('/storefront-assets/src/'+asset)
             assert response.status_code==200 and len(response.content)>10
         for path in ('/storefront-assets/tests/fixtures.js','/storefront-assets/node_modules/package.json',
@@ -74,6 +74,9 @@ with TestClient(app, base_url='https://configured.example') as client:
                      '/storefront-assets/src/app.js','/storefront-assets/src/../requirements.txt',
                      '/storefront-assets/src/.env','/static/.env','/static/keys/private.pem'):
             assert client.get(path).status_code==404, path
+        for asset in ('parcel_tracking.js','parcel_scanner.js','parcel_barcode_reader.js','parcel_zxing_reader.wasm','parcel_scanner_LICENSE.txt'):
+            response=client.get('/static/'+asset)
+            assert response.status_code==200 and len(response.content)>10
         # Private shell requires no DB, contains no order facts or capability.
         response=client.get('/stores/synthetic/orders/66666666-6666-4666-8666-666666666601')
         assert response.status_code==200 and response.headers['cache-control']=='no-store'

@@ -1,0 +1,1 @@
+38 actual bootstrap/public payment browser checks passed; gateway and SDK synthetic.

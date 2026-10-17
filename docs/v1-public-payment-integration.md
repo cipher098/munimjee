@@ -34,7 +34,7 @@ provider account/domain configuration and payment-mode approval remain external
 release gates; no real gateway request/payment was made during these checks.
 
 Evidence lives under `artifacts/v1/public-payment/` and the integration browser
-log: **29 actual Chromium checks passed**, with **61 Node checks** and **19
+log: **38 actual Chromium checks passed**, with **61 Node checks** and **19
 actual migrated projection/publication/bootstrap checks** passing separately. It uses actual app.main bootstrap, full PostgreSQL16 migrations, native
 signup/configuration and a separate guest browser. Only the SDK/provider are
 synthetic. Cases cover pre-order SDK failure with zero orders, server-verified
@@ -53,3 +53,29 @@ this is an integrator plus independent existing-worker review. No real SDK/CSP
 or payment outcome is inferred from the synthetic checkout proof. The same
 composition passed **25 actual COD browser checks** and **22 incumbent
 HTTP-mock/theme browser checks**.
+
+The native seller order pane uses `payment-review.v1` (`626d62f`, integrated
+`9729441`) for exact current attempt facts. It can associate an exact provider
+order only after explicit review, using the existing server receipt/amount/
+currency validation, then check captured payment through the existing read-only
+provider reconciliation operation. It never starts a provider charge. Native
+identity/current-capability checks surround reads and writes; a latched session
+fence clears private workspace DOM and recovery intent on session replacement,
+401 or lost business access, including focus/visibility transitions. A stale
+reconciliation refresh cannot reopen an older order over the current selection.
+
+The final 38-check actual browser run demonstrates an uncertain committed
+provider result → seller exact-ID association → pending capture check → the same
+buyer order settling, with no extra provider order POST. Delayed list and auth
+guard responses test selection/session fencing; a native login replacement
+clears customer/order/provider facts and prevents a pending older guard from
+issuing another private request. Desktop/mobile seller recovery and mobile
+session-ended captures are retained alongside customer recovery captures. Only
+the SDK/provider transports are synthetic; native sessions, CSRF, tenant APIs,
+receipts, stock and PostgreSQL16 migrations are real local application behavior.
+
+The shared catalogue workspace's **66 actual browser checks** pass after the
+identity fence, including private draft recovery and session/business isolation.
+The first rerun exposed a stale test assertion expecting a cleared child node
+to remain after session end; it now asserts the stronger empty-workspace result.
+No application fallback restores private DOM after the fence.

@@ -5,7 +5,8 @@
   const businessId = location.pathname.split('/')[3];
   const root = `/api/v1/businesses/${businessId}`;
   const catalogue = root + '/catalogue';
-  const api = window.V1.api;
+  const rawApi = window.V1.api;
+  let sessionEnded = false;
   let access, store = null, productPage = 1, orderPage = 1, detail = null, detailEpoch = 0, orderEpoch = 0;
   let draftCommand = null, productsLoad = 0, ordersLoad = 0;
   let draftBlocked = false, ownerId = null, sessionFingerprint = null, intentStorageKey = null;
@@ -122,8 +123,8 @@
   }
   function button(label, action, kind='secondary') {const node=el('button',label,`button ${kind}`);node.type='button';node.addEventListener('click',action);return node;}
   function setError(id, error) {
-    $(id).textContent = error instanceof TypeError ? "We could not confirm the response. Check your connection, then retry the same action." : error.message;
-    if (error.status === 401) {clearIntentForIdentity();$('workspace').hidden=true;$('access-needed').hidden=false;$('global-error').textContent='Your session ended. Sign in again to continue.';}
+    if($(id))$(id).textContent = error instanceof TypeError ? "We could not confirm the response. Check your connection, then retry the same action." : error.message;
+    if (error.status === 401) endWorkspace();
   }
   async function busy(form, errorId, action) {
     if (form.dataset.busy) return;
@@ -245,6 +246,73 @@
     for(const order of data.items){const row=el('article',undefined,'order-row'),copy=el('div');copy.append(el('h3',order.number),el('p',`${order.customer.name} · ${money(order.total)}`),el('p',`${order.fulfillment_status} · payment ${order.payment_status}`,'muted'));row.append(copy,button('View order',()=>openOrder(order.id).catch(e=>setError('orders-error',e))));$('order-list').append(row);}
     $('order-page').textContent=`Page ${data.page} · ${data.total} orders`;$('orders-previous').disabled=orderPage===1;$('orders-next').disabled=orderPage*data.page_size>=data.total;
   }
+  function endWorkspace() {
+    if(sessionEnded)return;
+    sessionEnded=true;orderEpoch++;detailEpoch++;productsLoad++;ordersLoad++;
+    clearIntentForIdentity();draftCommand=null;detail=null;store=null;access=null;
+    $('workspace').replaceChildren();$('workspace').hidden=true;$('business-name').textContent='';$('notice').textContent='';$('refresh').disabled=true;
+    $('access-needed').hidden=false;$('global-error').textContent='Your sign-in ended or changed. Sign in again, then reopen this business.';
+  }
+  async function workspaceSession() {
+    if(sessionEnded)throw Object.assign(Error('Your sign-in ended or changed.'),{status:401});
+    if(!ownerId||!sessionFingerprint)return;
+    try {
+      const session=await window.V1.session(),current=session.businesses?.find(b=>b.id===businessId);
+      if(session.user_id!==ownerId||!current||!session.csrf_token||await digest(session.csrf_token)!==sessionFingerprint||!current.capabilities.includes('catalogue.read'))throw Object.assign(Error('Your sign-in or business access changed.'),{status:401});
+      if(sessionEnded)throw Object.assign(Error('Your sign-in ended or changed.'),{status:401});
+      access=current;
+      if($('store-fields'))$('store-fields').disabled=!current.capabilities.includes('business.write');
+      if($('policy-fields'))$('policy-fields').disabled=!current.capabilities.includes('catalogue.write');
+      if(!current.capabilities.includes('catalogue.write')){for(const id of ['activation-form','inventory-form'])if($(id))$(id).hidden=true;syncDraftUI();}
+      if(!current.capabilities.includes('orders.read')){$('order-list')?.replaceChildren();$('order-detail')?.replaceChildren();if($('orders'))$('orders').hidden=true;}
+      if(!current.capabilities.includes('orders.write'))document.querySelectorAll('.payment-review').forEach(n=>n.remove());
+      return session;
+    }catch(error){if(error.status===401)endWorkspace();throw error;}
+  }
+  async function api(path,options={}) {
+    try {await workspaceSession();if(sessionEnded)throw Object.assign(Error('Your sign-in changed.'),{status:401});const result=await rawApi(path,options);await workspaceSession();if(sessionEnded)throw Object.assign(Error('Your sign-in changed.'),{status:401});return result;}
+    catch(error){if(error.status===401)endWorkspace();throw error;}
+  }
+  const recheckWorkspace=()=>{if(ownerId&&!sessionEnded)workspaceSession().catch(error=>{if(error.status!==401)setError('global-error',error);});};
+  window.addEventListener('focus',recheckWorkspace);window.addEventListener('pageshow',recheckWorkspace);document.addEventListener('visibilitychange',()=>{if(!document.hidden)recheckWorkspace();});
+  async function assertOrderIdentity() {
+    const session=await workspaceSession(),current=session?.businesses?.find(b=>b.id===businessId);
+    if(!current)throw Object.assign(Error('Your sign-in or business access changed. Sign in again before continuing.'),{status:401});
+    access=current;
+    if(!current.capabilities.includes('orders.write'))throw Object.assign(Error('Your current role cannot review payments.'),{status:403});
+  }
+  async function showPaymentReview(id,order,box,epoch) {
+    if(order.payment_method!=='razorpay'||!can('orders.write'))return;
+    const panel=el('section',undefined,'payment-review'),message=el('p','Checking saved payment details…','muted');message.setAttribute('role','status');panel.append(el('h4','Online payment review'),message);box.append(panel);
+    try {
+      await assertOrderIdentity();
+      const review=await api(root+`/orders/${id}/payment-review`);
+      await assertOrderIdentity();if(epoch!==orderEpoch)return;
+      if(!isObject(review)||review.contract_version!=='payment-review.v1'||review.order_id!==id||!['not_started','requesting','unknown','ready'].includes(review.attempt_state)||typeof review.reconciliation_eligible!=='boolean'||!(review.gateway_order_id===null||/^order_[A-Za-z0-9]{1,94}$/.test(review.gateway_order_id)))throw Error('Payment details could not be confirmed. Refresh this order before continuing.');
+      const states={not_started:'A payment attempt has not started.',requesting:'The provider order result is not yet confirmed.',unknown:'The provider order result is unknown. Do not create another charge.',ready:'A provider order is associated.'};
+      message.textContent=states[review.attempt_state];
+      panel.append(el('p','This checks the existing provider order. It never creates a charge. A successful window or association alone does not confirm payment.','hint'));
+      if(review.gateway_order_id)panel.append(el('p','Provider order: '+review.gateway_order_id,'payment-reference'));
+      if(!review.reconciliation_eligible)return;
+      const form=el('form');panel.append(form);
+      let provider;
+      if(!review.gateway_order_id)provider=labelInput(form,'Exact provider order ID','gateway_order_id','',{required:true,pattern:'order_[A-Za-z0-9]{1,94}',maxlength:'100',autocomplete:'off'});
+      const confirmed=check(form,review.gateway_order_id?'I want to check captured payment for this exact order.':'I checked this provider order in the gateway dashboard and want the server to verify its receipt, total and currency.','payment_reviewed');confirmed.required=true;
+      const submit=el('button',review.gateway_order_id?'Check captured payment':'Associate provider order','button secondary');submit.type='submit';form.append(submit);
+      let pending=false;
+      form.addEventListener('submit',async event=>{
+        event.preventDefault();if(pending||!form.reportValidity()||epoch!==orderEpoch)return;
+        const body=provider?{gateway_order_id:provider.value.trim()}:null;
+        pending=true;form.querySelectorAll('input,button').forEach(n=>n.disabled=true);message.textContent='Checking the existing provider record…';
+        try {
+          await assertOrderIdentity();if(epoch!==orderEpoch)return;
+          await api(root+`/orders/${id}/`+(provider?'reconcile-gateway-order':'reconcile-payment'),{method:'POST',...(body?{body}:{})});
+          await assertOrderIdentity();if(epoch!==orderEpoch)return;
+          await loadOrders();if(epoch!==orderEpoch)return;await openOrder(id);$('notice').textContent='Payment record checked with the server. Review the current order status.';
+        }catch(error){if(epoch===orderEpoch){message.textContent=error.message+' Refresh this order before trying again.';if(error.status===401){box.replaceChildren();box.hidden=true;setError('global-error',error);}}}
+      });
+    }catch(error){if(epoch===orderEpoch){message.textContent=error.message;if(error.status===401){box.replaceChildren();box.hidden=true;setError('global-error',error);}}}
+  }
   async function openOrder(id){
     const epoch=++orderEpoch,data=await api(root+`/orders/${id}`);if(epoch!==orderEpoch)return;
     const box=$('order-detail');box.replaceChildren();box.hidden=false;box.append(el('h3',data.number),el('p',`${data.fulfillment_status} · payment ${data.payment_status}`),el('p',`${data.customer.name} · ${data.customer.phone}`),el('p',[data.address.line1,data.address.line2,data.address.city,data.address.state,data.address.postal_code].filter(Boolean).join(', ')));
@@ -265,14 +333,14 @@
         if(status==='shipped'&&!form.reportValidity())return;
         if(status==='cancelled'&&!window.confirm('Cancel this order and release its reserved stock? Paid orders will need refund review.'))return;
         pending=true;error.textContent='';actions.querySelectorAll('button').forEach(n=>n.disabled=true);
-        try{await api(root+`/orders/${id}/transition`,{method:'POST',body:{status,...(status==='shipped'?{carrier:carrier.value||null,tracking_number:tracking.value||null,tracking_url:url.value||null}:{})}});if(epoch!==orderEpoch)return;await loadOrders();await openOrder(id);$('notice').textContent='Order updated.';}
+        try{await api(root+`/orders/${id}/transition`,{method:'POST',body:{status,...(status==='shipped'?{carrier:carrier.value||null,tracking_number:tracking.value||null,tracking_url:url.value||null}:{})}});if(epoch!==orderEpoch)return;await loadOrders();if(epoch!==orderEpoch)return;await openOrder(id);$('notice').textContent='Order updated.';}
         catch(e){if(epoch===orderEpoch){error.textContent=e.message+' Refresh the order before trying again.';if(e.status===401)setError('global-error',e);}}
         finally{pending=false;if(epoch===orderEpoch)actions.querySelectorAll('button').forEach(n=>n.disabled=false);}
       };
       if(next)actions.append(button({confirmed:'Confirm order',packed:'Mark packed',shipped:'Mark shipped',delivered:'Mark delivered'}[next],()=>transition(next),'primary'));
       if(['pending','confirmed','packed'].includes(data.fulfillment_status))actions.append(button('Cancel order',()=>transition('cancelled'),'danger'));
     }
-    actions.append(button('Refresh order',()=>openOrder(id).catch(e=>setError('orders-error',e))));actions.append(button('Close order',()=>{orderEpoch++;box.hidden=true;box.replaceChildren();}));box.scrollIntoView({block:'start',behavior:'instant'});
+    actions.append(button('Refresh order',()=>openOrder(id).catch(e=>setError('orders-error',e))));actions.append(button('Close order',()=>{orderEpoch++;box.hidden=true;box.replaceChildren();}));box.scrollIntoView({block:'start',behavior:'instant'});await showPaymentReview(id,data,box,epoch);
   }
   $('store-form').addEventListener('submit',event=>{event.preventDefault();busy(event.currentTarget,'store-error',async()=>{
     const form=$('store-form'),body={};for(const name of ['name','slug','description','contact_email','contact_phone','shipping_policy','return_policy'])body[name]=form.elements[name].value.trim();

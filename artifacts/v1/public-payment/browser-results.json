@@ -1,9 +1,9 @@
 {
-  "checks": 29,
+  "checks": 38,
   "externalRequests": [],
   "pageErrors": [],
   "cspErrors": [],
-  "sdkLoads": 6,
+  "sdkLoads": 7,
   "provider": "synthetic-only",
   "bootstrap": "actual-app.main"
 }

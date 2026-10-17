@@ -4,16 +4,22 @@ Updated: 18 October 2026, Asia/Kolkata.
 
 Status: execution authorized on 17 October 2026. The verified foundation is followed by a second bounded wave: native signup/invites and resumable business setup, an explicit SKU activation/order workspace, channel operator recovery and durable import jobs are integrated on isolated branches. Actual native browser journeys cover synthetic sellers and orders on migrated PostgreSQL 16. The public storefront adapter and real customer-facing COD checkout journey now pass isolated native/API browser checks, including uncertain-result replay and protected order status. 
 
-Online payment UI, persistent seller theme selection and deployment rehearsal remain separate gates. A separate local runtime image passes packaging and offline startup/static proof. Provider approvals, Parcel Desk connector, import workspace/approved catalogue bridge and rollout gates remain open. Production cutover is not authorized. See docs/v1-execution-status.md and docs/v1-wave2-contracts.md for exact scope, evidence and pending checks.
+Wave 3 local integration now includes the atomic reviewed import-to-private-
+catalogue API bridge, the public Razorpay handoff/recovery shell and the scoped
+ParcelDesk order-first scan/link/tracking workflow. Actual app.main browser checks
+cover synthetic online payment, COD and the two-service parcel flow on migrated
+PostgreSQL 16. The full regression and refreshed runtime-image gates remain in
+progress. New flags stay off; no real provider request, paid transaction,
+customer send or production cutover is authorized or claimed.
 
-Wave 3 continues from verified `aa6ac94` under `docs/v1-wave3-contracts.md`.
-The atomic reviewed import-to-private-catalogue bridge is mounted and passes
-actual migrated PG16 API/security checks. Its complete seller UI/browser journey,
-public online-payment handoff, tenant-scoped ParcelDesk scan/link/tracking and
-persistent theme publication are still being composed and independently tested.
-Sales console, analytics, explicit support grants, verified customer identity
-links and real provider canaries remain tracked scope; this wave does not claim
-full V1 acceptance.
+Complete native import review/allocation UI and persistent seller selection of
+the three website designs remain remote integration work. Real SDK/payment and
+Meta approvals, private ParcelDesk provisioning/D1/TLS, physical-phone testing,
+review-required parcel resolution and deployment/restore rehearsal remain gates.
+Sales console, analytics, explicit support grants and verified customer identity
+links remain tracked scope. See `docs/v1-execution-status.md` for exact source,
+counts and limitations and `docs/v1-wave3-contracts.md` for current boundaries.
+The verified earlier local runtime image remains evidence for wave2 only.
 
 ## 1. The V1 outcome
 

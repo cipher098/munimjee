@@ -3,3 +3,5 @@
 summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;font-size:14px;font-weight:600}details[open]>summary{margin-bottom:24px}summary:focus-visible{outline:3px solid #95ae95;outline-offset:3px}.settings-layout>details{align-self:start}
 
 #draft-recovery{margin-bottom:32px}#draft-recovery-facts{overflow-wrap:anywhere}#draft-recovery-facts ul{padding-left:20px}#draft-recovery-message{max-width:72ch}
+
+.payment-review{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}.payment-review h4{margin-bottom:12px}.payment-review form{max-width:660px}.payment-review label{display:block;margin:18px 0}.payment-review label.check{display:flex}.payment-review .payment-reference{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.payment-review .hint{max-width:74ch}
