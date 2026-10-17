@@ -49,3 +49,15 @@ test('restricted storage cannot prevent a successful native logout',async()=>{
   vm.runInNewContext(source,context);
   assert.equal((await context.window.V1.api('/api/v1/auth/logout',{method:'POST'})).logged_out,true);
 });
+test('only typed server error codes permit explicit recovery classification',async()=>{
+  for(const detail of ['ordinary conflict',null,{code:1,message:[]},{code:'parcel_preview_expired_or_invalid',message:'Scan the label again.'}]){
+    const context={window:{},fetch:async()=>({ok:false,status:409,json:async()=>({detail})})};
+    vm.runInNewContext(source,context);
+    await assert.rejects(context.window.V1.api('/conflict'),error=>{
+      assert.equal(error.status,409);
+      assert.equal(error.code,typeof detail?.code==='string'?detail.code:null);
+      if(typeof detail?.message==='string')assert.equal(error.message,detail.message);
+      return true;
+    });
+  }
+});

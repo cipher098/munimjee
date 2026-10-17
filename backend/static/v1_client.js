@@ -22,8 +22,12 @@ window.V1 = (() => {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (response.status === 401) { csrf = null; clearPrivateDrafts(); }
-      const message = typeof data?.detail === 'string' ? data.detail : 'Check the entered details and try again.';
-      const error = new Error(message); error.status = response.status; throw error;
+      const message = typeof data?.detail === 'string' ? data.detail
+        : typeof data?.detail?.message === 'string' ? data.detail.message : 'Check the entered details and try again.';
+      const error = new Error(message);
+      error.status = response.status;
+      error.code = typeof data?.detail?.code === 'string' ? data.detail.code : null;
+      throw error;
     }
     if (method === 'POST' && ['/api/v1/auth/login', '/api/v1/auth/signup',
         '/api/v1/auth/invitations/accept', '/api/v1/auth/logout', '/api/v1/auth/logout-all'].includes(path)) {
