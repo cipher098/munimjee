@@ -1,0 +1,36 @@
+Task: A10 first identity foundation slice
+Date: 2026-10-17 Asia/Kolkata
+Baseline source: e7694ff
+Feature source: final SHA supplied in coordinator handoff; this artifact is committed with the code.
+Environment: isolated worktree munimjee-v1-identity, Python 3.11.15, own .venv
+Database: coordinator-allocated disposable local PostgreSQL container, port 55441,
+  database v1_identity_commerce_test. Exact URL allowlist enforced by test fixture.
+  Application DATABASE_URL intentionally points to invalid loopback port1, preventing
+  accidental application DB use. Synthetic auth/provider settings only.
+
+Validation commands:
+  PYTHONPATH=backend .venv/bin/python -m pytest backend/tests/test_v1_identity.py backend/tests/test_v1_identity_db.py -q
+  .venv/bin/python -m compileall -q backend/app/models/identity.py backend/app/services/identity.py backend/app/api/v1 backend/app/schemas backend/alembic/versions/0040_v1_identity.py backend/tests/test_v1_identity.py backend/tests/test_v1_identity_db.py
+  git diff --check
+
+Results:
+  39 passed, 0 skipped, 2 warnings, 1.79s (31 pure cases, 8 database cases).
+  Syntax compilation passed. Whitespace validation passed.
+  Warnings: existing Pydantic class-config deprecation; HTTPX per-request cookie deprecation.
+
+Observed DB coverage:
+  Each case creates a fresh schema in a rollback-only transaction. Actual historical
+  Alembic upgrade functions 0001 through0039 run before fixture Seller rows are inserted;
+  domain migration0040_v1_identity then creates and backfills identity tables.
+  No create_all. All generated schemas and fixture data disappear on rollback.
+  Repeat migration/service backfills preserve revocation, inactivity and role downgrade.
+  Shared unverified phones do not link users; ID mapping is by authenticated legacy account.
+  Tenant isolation, FK/unique/role constraints, API ownership, denied support impersonation,
+  distinct native role and explicit new-seller bridging pass.
+
+Pending:
+  Integrator main/router and models/__init__ registration.
+  Independent integrated source/migration checks (including Alembic version bookkeeping).
+  Native login/token issuance, invites, signup bridge transaction wiring, onboarding UI,
+  verified customer links, audited expiring support grants and full readiness evaluation.
+  No product acceptance or production release claim. No live external calls or deployments.
