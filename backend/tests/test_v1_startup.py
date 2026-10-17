@@ -24,7 +24,8 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/api/v1/businesses/{business_id}/onboarding", "/v1",
             "/v1/businesses/{business_id}/catalogue", "/v1/businesses/{business_id}/channels",
             "/api/v1/storefronts/{slug}/products",
-            "/api/v1/businesses/{business_id}/catalogue/products"} <= paths
+            "/api/v1/businesses/{business_id}/catalogue/products",
+            "/api/v1/businesses/{business_id}/imports/candidates/{candidate_id}/catalogue-preview"} <= paths
 
 
 def test_celery_discovers_ingress_and_schedules_recovery():
