@@ -1,0 +1,12 @@
+# Theme settings bounded verification
+
+Implementation source: `42d19515b9ce659f2a1cb66a70b2f6ec205984fe`, branch `codex/v1-theme-settings`; source foundation `aa6ac940ef877a8a37baac39afec44268b49f84e`. Local worktree `/Users/user/Documents/ChatGPT/munimjee-wave3-themes`; Python 3.12.14 owned venv, Playwright 1.58.2 with cached Chromium on macOS arm64. Date: 18 October 2026, Asia/Kolkata. No environment/key files were read or copied. No provider, production or runtime-container changes were made.
+
+- `.venv/bin/python -m pytest backend/tests/test_v1_theme_settings.py -q --junitxml=artifacts/v1/theme-settings/pytest.xml`: **21 passed, 11 skipped, 0 failed**. Skips are actual P01 migrated PostgreSQL cases requiring an explicit test DB and integrator-registered theme DDL. One existing upstream Pydantic deprecation warning. This is not persistence proof.
+- `node --test frontend/storefront/tests/theme-settings.browser.mjs`: the recorded 11-case pre-focus run passed **11/11**, followed by `--test-name-pattern='window focus'` **1/1** after adding that handler. **12 unique browser cases passed**, all controlled HTTP; no actual backend/native main composition or PostgreSQL claim. `--test-name-pattern='three themes'` reran one existing case after screenshot capture improvements and passed; not added to the count.
+- `node --check backend/static/theme_settings.js` and `git diff --check`: passed.
+- Visual study approved before implementation; final desktop/mobile and mobile iframe preview inspected. 360/390/768/1440 CSS viewport overflow checks pass. Mobile viewport checks are not physical-device validation.
+
+The browser cases cover three-theme save/preview/design-publish semantics, same-key uncertain committed-response replay after reload, no auto-retry, conflict/reload, read-only viewer reload/visibility, rapid preparation and retry events, delayed startup/read/write responses after identity loss, storage failure, tampered recovery and still-visible window focus after an account switch.
+
+Pending integration: reserved Alembic DDL/predecessor, shared model registry/router mount, shared seller navigation, native global private-prefix cleanup, runtime static allowlist, published-only provider/dataclass/SSR/live renderer hook and actual native/public/COD regression acceptance. Proposed table DDL is `proposed-ddl.sql`; full contract/hook detail is `docs/v1-theme-settings.md`. No invented migration number, create_all fallback, public preview authority, automatic Storefront publication/product activation or checkout enablement is present.
