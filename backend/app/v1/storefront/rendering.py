@@ -92,6 +92,10 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
         raise LookupError('Storefront unavailable')
     if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}', store.slug) or store.theme not in THEMES or store.currency != 'INR':
         raise ValueError('Invalid store presentation')
+    for field in ('name','description','shipping_policy','return_policy'):
+        value=getattr(store,field)
+        if not isinstance(value,str) or len(value)>6000 or (field=='name' and not value.strip()):
+            raise ValueError('Invalid public store text')
     origin = canonical_origin(origin)
     base = f'/stores/{store.slug}'
     products = [public_product(item) for item in store.products]
@@ -99,7 +103,11 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
     sku_ids=[sku['sku_id'] for item in products for sku in item['skus']]
     if len(set(product_ids))!=len(product_ids) or len(set(sku_ids))!=len(sku_ids):
         raise ValueError('Duplicate public catalogue identity')
-    categories = [{'category_id': str(UUID(str(item['category_id']))), 'name': str(item['name'])} for item in store.categories]
+    categories = []
+    for item in store.categories:
+        if not isinstance(item,dict) or not isinstance(item.get('name'),str) or not 1<=len(item['name'])<=200:
+            raise ValueError('Invalid public category text')
+        categories.append({'category_id':str(UUID(str(item['category_id']))),'name':item['name']})
     if len({item['category_id'] for item in categories})!=len(categories):
         raise ValueError('Duplicate public category identity')
     selected = None
