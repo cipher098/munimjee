@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-17",
+  "timezone": "Asia/Kolkata",
+  "integration_commit": "d4631a351a76d74721037d5a2c749d9f02ba7689",
+  "environment": {
+    "python": "3.11",
+    "postgresql": "15, dedicated disposable local container",
+    "test_lane": "integration",
+    "test_database": "munimjee_test_integration",
+    "network": "P01 blocks all external sockets; test DB only"
+  },
+  "checks": [
+    {
+      "scope": "identity/catalogue/P01 and legacy regression; before adding import domain source",
+      "command": ".venv/bin/python -m pytest backend/tests -q -ra",
+      "passed": 621,
+      "skipped": 5,
+      "seconds": 107.81,
+      "note": "Portable P01 fixture/model registration changes were present as working-tree changes; committed in integration_commit. Later import source independently verified below."
+    },
+    {
+      "scope": "P01 safety + identity + catalogue",
+      "passed": 172,
+      "skipped": 0,
+      "seconds": 9.84
+    },
+    {
+      "scope": "D10 import draft domain, integrated source",
+      "command": ".venv/bin/python -m pytest backend/tests/test_v1_import_drafts.py -q",
+      "passed": 110,
+      "skipped": 0,
+      "seconds": 0.07
+    },
+    {
+      "scope": "Syntax and whitespace",
+      "commands": [
+        "compileall targeted changed Python modules/tests",
+        "git diff --check"
+      ],
+      "result": "passed"
+    }
+  ],
+  "missing_cassette_skips": [
+    "decide_greeting",
+    "awaiting_payment_lock",
+    "happy_path_accept",
+    "price_lock_consistency",
+    "walkaway_calls_bluff"
+  ],
+  "pending": [
+    "Social review fixes and actual0042 integration",
+    "Storefront frozen readiness DTO alignment",
+    "Product/provider/physical-device acceptance",
+    "PostgreSQL16 CI",
+    "Native login/invites/support and full onboarding",
+    "Parcel Desk trusted connector/order scan/update implementation"
+  ],
+  "plan_sync": "Only go-live-plan.md copied to /Users/gothi/sellerbot after plan commit; byte comparison passed; runtime application files/services untouched"
+}
