@@ -30,6 +30,7 @@ from app.api.routes.whatsapp import router as whatsapp_router
 from app.api.webhooks.whatsapp import router as whatsapp_webhook_router
 from app.api.routes.comment_automation import router as comment_automation_router
 from app.api.v1.identity import router as v1_identity_router
+from app.api.v1.auth import router as v1_auth_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ app.include_router(whatsapp_router)
 app.include_router(whatsapp_webhook_router)
 app.include_router(comment_automation_router)
 app.include_router(v1_identity_router)
+app.include_router(v1_auth_router)
 
 
 @app.get("/health")
@@ -176,3 +178,10 @@ async def commerce_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
 @app.get("/dashboard/social", include_in_schema=False)
 async def social_dashboard(ctx: DashCtx = Depends(verify_dashboard_cookie)):
     return FileResponse(_STATIC_DIR / "social.html")
+
+
+@app.get("/v1", include_in_schema=False)
+async def v1_workspace():
+    from app.api.v1.auth import enabled
+    enabled()
+    return FileResponse(_STATIC_DIR / "v1_app.html", headers={"Cache-Control": "no-store"})

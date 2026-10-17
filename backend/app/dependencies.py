@@ -34,6 +34,8 @@ async def get_current_seller(
     seller = result.scalar_one_or_none()
     if not seller or not seller.is_active:
         raise HTTPException(status_code=401, detail="Seller not found or inactive")
+    from app.services.auth_sessions import enforce_legacy_owner_access
+    await enforce_legacy_owner_access(db, seller.id, payload)
     return seller
 
 

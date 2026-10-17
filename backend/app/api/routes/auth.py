@@ -59,7 +59,7 @@ def _verify_password(plain: str, hashed: str) -> bool:
 def _create_token(payload: dict) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(
-        {**payload, "exp": expire},
+        {**payload, "iat": datetime.now(timezone.utc).timestamp(), "exp": expire},
         settings.SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -75,6 +75,8 @@ def _secure_cookie(request: Request) -> bool:
 
 def _set_seller_session(response: Response, request: Request, token: str) -> None:
     # A newly authenticated seller must not inherit a previous dashboard identity.
+    response.delete_cookie("v1_session")
+    response.delete_cookie("v1_csrf")
     response.delete_cookie("dashboard_session")
     response.delete_cookie("view_seller")
     response.set_cookie("seller_session", token, httponly=True, secure=_secure_cookie(request),
@@ -100,6 +102,8 @@ async def authenticated_seller(request: Request, db: AsyncSession = Depends(get_
     seller = await db.get(Seller, sid)
     if seller is None or not seller.is_active:
         raise HTTPException(status_code=401, detail="Seller login required")
+    from app.services.auth_sessions import enforce_legacy_owner_access
+    await enforce_legacy_owner_access(db, seller.id, payload)
     return seller
 
 
@@ -142,6 +146,10 @@ async def seller_signup(body: SellerSignupRequest, request: Request, response: R
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=409, detail="Email already registered")
+    from app.services.identity import ensure_legacy_owner_bridge
+    from app.services.auth_sessions import revoke_browser_session
+    await ensure_legacy_owner_bridge(db, seller)
+    await revoke_browser_session(db, request)
     await db.commit()
 
     token = _create_token({"sub": str(seller.id), "role": "seller"})
@@ -180,6 +188,9 @@ async def seller_login(body: SellerLoginRequest, request: Request, response: Res
     if not seller.is_active:
         raise HTTPException(status_code=403, detail="Account inactive")
 
+    from app.services.auth_sessions import revoke_browser_session
+    await revoke_browser_session(db, request)
+    await db.commit()
     token = _create_token({"sub": str(seller.id), "role": "seller"})
     _set_seller_session(response, request, token)
     return TokenResponse(access_token=token, role="seller")
