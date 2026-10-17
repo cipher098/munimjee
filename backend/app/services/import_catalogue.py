@@ -12,6 +12,7 @@ from sqlalchemy import select, update
 
 from app.config import settings
 from app.models.import_catalogue import ImportCatalogueBridge
+from app.models.identity import Business
 from app.models.imports_v1 import ImportAudit, ImportDraft
 from app.models.commerce import Storefront
 from app.schemas.catalogue_v1 import SKUWrite
@@ -106,7 +107,12 @@ async def preview(db, actor, business_id, candidate_id):
 async def create_draft(db, actor, business_id, candidate_id, payload, *, reauthorize=None):
     if not settings.V1_IMPORT_BRIDGE_ENABLED:
         raise HTTPException(404, 'Import catalogue bridge is disabled')
-    await imports._access(db, actor, business_id, write=True, lock=True)
+    await imports._access(db, actor, business_id, write=True)
+    # Serialize import decisions without blocking the Business FK KEY SHARE
+    # acquired by canonical catalogue writers holding the Storefront lock.
+    await db.scalar(select(Business.id).where(Business.id == business_id)
+        .with_for_update(key_share=True).execution_options(autoflush=False))
+    await imports._fresh_access(db, actor, business_id, 'catalogue.write')
     if reauthorize is not None:
         await reauthorize()
     request_hash = imports.digest({'candidate_id':str(candidate_id), **payload.model_dump(mode='json')})

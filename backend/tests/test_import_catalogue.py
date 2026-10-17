@@ -357,3 +357,39 @@ async def test_preview_exposes_disabled_creation_without_changing_unknown_facts(
         assert result.state=='unsupported'
         assert 'Import catalogue creation is not enabled' in result.issues
         assert result.facts['stock']==4
+
+
+@pytest.mark.asyncio
+async def test_manual_catalogue_create_and_import_bridge_share_fk_locks_without_deadlock(setup):
+    from app.schemas.checkout_v1 import ProductCreate
+    from app.services.checkout_v1 import create_reviewed_product, lock_store
+    from sqlalchemy import text
+    factory,actor,bid,candidate=setup
+    task=None
+    async def import_create():
+        async with factory() as db:
+            result=await service.create_draft(db,actor,bid,candidate.id,command())
+            await db.commit()
+            return result
+    try:
+        async with factory() as manual:
+            pid=await manual.scalar(text('SELECT pg_backend_pid()'))
+            await lock_store(manual,bid)
+            task=asyncio.create_task(import_create())
+            for _ in range(200):
+                await manual.execute(text('SELECT pg_stat_clear_snapshot()'))
+                waiting=await manual.scalar(text('SELECT count(*) FROM pg_stat_activity WHERE :pid = ANY(pg_blocking_pids(pid))'),{'pid':pid})
+                if waiting:break
+                await asyncio.sleep(.01)
+            assert waiting
+            product_input=ProductCreate(idempotency_key=uuid4(),seller_reviewed=True,name='Manual reviewed product',
+                skus=[dict(options={},price_minor=10000,currency='INR',stock_available=2,active=True)])
+            manual_product,_=await asyncio.wait_for(create_reviewed_product(manual,bid,product_input),5)
+            await manual.commit()
+        imported=await asyncio.wait_for(task,5)
+        assert imported.product_id!=manual_product
+        async with factory() as db:
+            assert await db.scalar(select(func.count()).select_from(Product).where(Product.seller_id==bid))==2
+    finally:
+        if task is not None and not task.done():
+            task.cancel();await asyncio.gather(task,return_exceptions=True)

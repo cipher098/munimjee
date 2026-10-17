@@ -11,7 +11,9 @@ creation or replay. The session and committed membership/user/Business/Seller
 state are checked again after allocation locks. Reads require `catalogue.read`.
 See [concrete contracts](contracts/import-catalogue/README.md).
 
-Business → Storefront → source candidate locks serialize review and first creation.
+Business (`FOR NO KEY UPDATE`) → Storefront → source candidate locks serialize
+review and first creation. The Business lock permits the foreign-key key-share
+locks of concurrent manual catalogue creation while serializing source decisions.
 Source candidate reads use scalar projections, avoiding retained ORM document
 state. In one caller-owned transaction the bridge validates current facts and
 exact allocation, explicitly approves a pending/review candidate if required,
