@@ -54,3 +54,6 @@ __all__ += ["CatalogueSKU", "CatalogueProductMapping"]
 
 from app.models.instagram_ingress import InstagramIngress
 __all__ += ["InstagramIngress"]
+
+from app.models.identity_auth import UserSession, BusinessInvitation, IdentityAuditEvent
+__all__ += ["UserSession", "BusinessInvitation", "IdentityAuditEvent"]
