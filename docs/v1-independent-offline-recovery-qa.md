@@ -79,7 +79,7 @@ size rejection; new evidence is finite response counts/slots, not process memory
 
 DB, Redis, real process restart/persistence, provider, physical device and long-running
 soak gates remain unrun. Expected real commercial pilot traffic remains **MISSING**.
-Browser peer original checkpoints are reviewed below; narrow onboarding harness followup remains pending. No release,
+Browser peer original checkpoints, narrow followups and separately fetched-source comparisons are reviewed below. No release,
 production throughput or latency SLA claim.
 
 
@@ -128,8 +128,8 @@ Two narrow onboarding harness improvements were sent to the owner/coordinator:
   compatibility assertion precise.
 
 These are test repeatability/fidelity improvements, not reasons to hide the real
-privacy/layout failures. A tiny committed owner followup will be inspected without
-changing production or enlarging the original browser workload.
+privacy/layout failures. The tiny owner followup was subsequently reviewed below without changing
+production or enlarging the original browser workload.
 
 
 ### Baseline onboarding followup reviewed
@@ -148,3 +148,55 @@ The coordinator subsequently supplied a **separate** fetched snapshot
 onboarding comparison will receive a distinct review record when committed.
 The baseline results above continue to describe `abab30a`. An unfetched local
 `789db95`/migration 0056 report is not this review's source or evidence.
+
+
+## Final independent review of fetched-source comparisons
+
+Both comparisons below target only `8ae97c2d57c0efda5a03a41a469bf9447739ee72`
+(runtime delta `52fdda8d84f261841a44ef6a84e38e78cd93f237`). Read-only Git blob,
+script-diff, hash, artifact and semantic review found no safety/effect/semantic
+blocker within their recorded synthetic scope. This reviewer did not rerun the
+browsers or change their scripts. Baseline `abab30a` evidence stays historical.
+
+**Storefront:** harness-only `51f24801a5beb7f39ee57f8739301c633b056272` and
+separate docs/evidence `12c85209883825892e874dab7e68ddf3c2cd3a91` change only
+trusted owned output paths. The assertion tail is byte-identical to the original;
+all 75 names/outcomes match (69 pass / six cart-overlap reds). All 20 application
+hashes match exact `8ae97c2`, fresh HTML fixture hashes match, and all 29 original
+artifact/document files are preserved. There are zero page errors/external origins.
+The 153 unhandled POSTs target only same-origin `/activity/contexts` and are denied
+before any server. Activity coverage is **MISSING**: no successful, disabled or ready
+activity response was fabricated, and these denials are neither activity success
+nor a standalone product defect. The UI observations are bounded by denied optional
+activity traffic.
+
+**Onboarding:** harness-only `e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86` plus
+`a7282ed267d09b4f28b3b22dba24495f59a834b7` and separate docs/evidence
+`9642527196f2e80b0a0effd69678949be34074af` retain the same 32 IDs. The final
+result is 27 pass / five real UX reds; raw 26/6 lost-response diagnostics remain.
+All native, formatter and verification source hashes match exact `8ae97c2`, all
+recorded artifact hashes match, and original baseline files are preserved. The
+actual six-step formatter runs against absent/zero fake readiness rows; synthetic
+readable CSRF cookie issuance/clear models the new client guard without replacing
+it. Terminal 401 messages move to the visible sign-in error region while workspace
+and private-value fencing assertions remain.
+
+Five former failures now pass: business-switch401, invitation-revoke401, role-focus,
+session-focus and cross-identity error. Five genuine failures remain: keyboard
+entry focus, logout focus, scoped focus contrast, startup503 recovery action, and
+long-name mobile reflow. There are no new classified product failures.
+
+The existing lost-response case legitimately self-heals. Independent trace review
+confirms exactly one synthetic commit; two expected-version-3 PUTs, with the retry
+rejected409; actual frontend GETs returning identical full version-4 facts before
+and after manual reload; exact rendered profile equality; no extra PUT on reload;
+and a new Saved mutation at 304ms after the fresh GET responseEnd at about302.7ms.
+Removing only the obsolete literal409-message requirement retains stronger
+facts/effects/read-timing invariants. This certifies the bounded synthetic UI
+recovery scenario, not actual database idempotency or durability.
+
+No new scenarios, production files, schema, migration, provider, credentials, DB,
+Redis, ambient service, user browser, customer message, charge or deployment were
+added by this review. Runtime789db95/0056, actual migrated persistence/restart,
+physical devices, full accessibility, provider acceptance, real pilot envelope and
+soak remain outside this evidence. Exact hashes/mappings are in `peer-review.json`.
