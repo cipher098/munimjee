@@ -151,3 +151,29 @@ and registration each attempt one fake method. Expanded run13pass/3intendedfail
 (`fixed-85780-app-final-scalar.txt`). Capture queried-App and compare synchronously
 after the last await, before client dispatch. Owner notified; no additional policy
 or runtime edit was made. No actualSQL/provider/browser execution is claimed.
+
+
+## Final bounded source verdict at e897ee6
+
+Independent rerun of the exact16 cases on frozen e897ee6 (localdependency230a7f6)
+passes16/16. All reported source failures are resolved in the bounded reviewed
+backend: reserved-MID suppression, immutable minTTL, final rollout/config gates,
+post-claim native/current-generation check, original-App binding across commit
+and final scalar, late attachment/route App guards. Matching controls still reach
+each fake exchange/subscribe/register once; revoked or changed-App controls reach
+none. Source review also retains one-way provider association, ordinary unbound
+message deletion, exact ciphertext provenance/ambiguity denial, strict explicit
+selection and unknown-effect no-retry semantics. No remaining substantive backend
+source blocker was found within this scope.
+
+This is a source/no-network verdict, **not runtime authorization or enablement**.
+No PostgreSQL migration/rollback/trigger/concurrent claim was exercised by this
+packet, no shared canonical ingress/outbox hook was installed here, and no UI
+render/browser/provider consent/test-delivery claim is made. The owner must still
+prove actual0056→0057 and native/signed ingress/current outbox composition under
+the separately allocated serial lane. Synthetic transport evidence does not
+certify live Meta permissions, SDK/provider wire shape or recipient delivery.
+
+The runtime hash manifest compares the reviewed e897ee6 commit with these local
+files; dependency aliases are not owned feature changes. Preserve all historical
+red logs and the explicitly labelled85780 fake-predicate fixture gap.
