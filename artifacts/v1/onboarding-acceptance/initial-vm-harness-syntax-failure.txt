@@ -1,0 +1,17 @@
+file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-onboarding-acceptance/backend/tests/browser/onboarding_channel_privacy_repro.mjs:29
+ {business_name:'SYNTHETIC_PRIVATE_BUSINESS',capabilities:['channels.connect','channels.disconnect'],channels:[{channel:'whatsapp',status:'paused',configured:true,account_hint:'••654321',checked_at:null,webhook_configured:false,automation_enabled:false}]})});
+                                                                                                                                                                                                                                                               ^
+
+SyntaxError: Unexpected token ')'
+    at compileSourceTextModule (node:internal/modules/esm/utils:354:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:91:18)
+    at #translate (node:internal/modules/esm/loader:454:20)
+    at afterLoad (node:internal/modules/esm/loader:510:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:515:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:558:36)
+    at afterResolve (node:internal/modules/esm/loader:606:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:612:12)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:631:32)
+    at TracingChannel.tracePromise (node:diagnostics_channel:363:22)
+
+Node.js v26.0.0

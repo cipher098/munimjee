@@ -1,0 +1,153 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_native_channel_provider_wait_cannot_commit_after_session_revoke[instagram_verify] _
+
+native_channels = namespace(client=<httpx.AsyncClient object at 0x10d8a6d50>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...-a903-4f95-9514-326617aed79f/imports/candidates', csrf={'X-CSRF-Token': 'xetcxEP28zHRR8DuKEjN6NQTlflOOS1IaOxKDxs27R0'})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b9704d0>
+operation = 'instagram_verify'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['instagram_verify', 'whatsapp_connect'])
+    async def test_native_channel_provider_wait_cannot_commit_after_session_revoke(native_channels, monkeypatch, operation):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def provider(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'user_id': '1234567', 'id': '7654321', 'display_phone_number': '+910000000000'}
+        if operation == 'instagram_verify':
+            async with j.sessions.begin() as db:
+                seller = await db.get(Seller, j.bid)
+                seller.instagram_id = seller.instagram_page_id = '1234567'
+                seller.instagram_token = 'synthetic-ig-token'
+                db.add(ChannelConnectionState(business_id=j.bid, channel='instagram',
+                    provider_account_id='1234567', check_status='not_checked', automation_enabled=False))
+            monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', provider)
+            path, body = '/instagram/verify', {'idempotency_key': str(uuid4())}
+        else:
+            monkeypatch.setattr('app.services.channel_connections.whatsapp_provider.verify_connection', provider)
+            path, body = '/whatsapp/connect', {'idempotency_key': str(uuid4()), 'waba_id': '1234567',
+                'phone_number_id': '7654321', 'access_token': 'synthetic-whatsapp-token'}
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        request = asyncio.create_task(j.client.post(base+path, json=body, headers=j.csrf))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            audits = await db.scalar(select(func.count()).select_from(ChannelOperation).where(ChannelOperation.business_id == j.bid))
+            account = await db.get(WhatsAppAccount, j.bid)
+            state = await db.get(ChannelConnectionState, (j.bid, 'instagram'))
+            observed = {'status': result.status_code, 'audit_count': audits,
+                'wa_credentials_saved': bool(account and account.access_token),
+                'ig_access_verified': bool(state and state.check_status == 'verified' and state.checked_at)}
+>       assert result.status_code == 401, f'Revoked native session mutation persisted: {observed}'
+E       AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': False, 'ig_access_verified': True}
+E       assert 200 == 401
+E        +  where 200 = <Response [200 OK]>.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:103: AssertionError
+_ test_native_channel_provider_wait_cannot_commit_after_session_revoke[whatsapp_connect] _
+
+native_channels = namespace(client=<httpx.AsyncClient object at 0x10dc61dd0>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...-a9f5-4403-8ae6-8b60a1be8629/imports/candidates', csrf={'X-CSRF-Token': 'cYRXuZ1Fe7HbDdHvATApyHm0AuEbRtK0pXlAU0DhVT0'})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d4cec50>
+operation = 'whatsapp_connect'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['instagram_verify', 'whatsapp_connect'])
+    async def test_native_channel_provider_wait_cannot_commit_after_session_revoke(native_channels, monkeypatch, operation):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def provider(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'user_id': '1234567', 'id': '7654321', 'display_phone_number': '+910000000000'}
+        if operation == 'instagram_verify':
+            async with j.sessions.begin() as db:
+                seller = await db.get(Seller, j.bid)
+                seller.instagram_id = seller.instagram_page_id = '1234567'
+                seller.instagram_token = 'synthetic-ig-token'
+                db.add(ChannelConnectionState(business_id=j.bid, channel='instagram',
+                    provider_account_id='1234567', check_status='not_checked', automation_enabled=False))
+            monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', provider)
+            path, body = '/instagram/verify', {'idempotency_key': str(uuid4())}
+        else:
+            monkeypatch.setattr('app.services.channel_connections.whatsapp_provider.verify_connection', provider)
+            path, body = '/whatsapp/connect', {'idempotency_key': str(uuid4()), 'waba_id': '1234567',
+                'phone_number_id': '7654321', 'access_token': 'synthetic-whatsapp-token'}
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        request = asyncio.create_task(j.client.post(base+path, json=body, headers=j.csrf))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            audits = await db.scalar(select(func.count()).select_from(ChannelOperation).where(ChannelOperation.business_id == j.bid))
+            account = await db.get(WhatsAppAccount, j.bid)
+            state = await db.get(ChannelConnectionState, (j.bid, 'instagram'))
+            observed = {'status': result.status_code, 'audit_count': audits,
+                'wa_credentials_saved': bool(account and account.access_token),
+                'ig_access_verified': bool(state and state.check_status == 'verified' and state.checked_at)}
+>       assert result.status_code == 401, f'Revoked native session mutation persisted: {observed}'
+E       AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': True, 'ig_access_verified': False}
+E       assert 200 == 401
+E        +  where 200 = <Response [200 OK]>.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:103: AssertionError
+___ test_native_instagram_callback_rechecks_session_after_consumed_exchange ____
+
+native_channels = namespace(client=<httpx.AsyncClient object at 0x10dd20bd0>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...-8782-40a0-b9b0-4fd0f938ad84/imports/candidates', csrf={'X-CSRF-Token': '5dcCAN88CCVXG5JGVJ7CUDARvUpQYPeSZWAsaO1LTWk'})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d7ce710>
+
+    @pytest.mark.asyncio
+    async def test_native_instagram_callback_rechecks_session_after_consumed_exchange(native_channels, monkeypatch):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def exchange(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'access_token': 'synthetic-short-token'}
+        async def long_token(*args, **kwargs): return 'synthetic-long-token'
+        async def principal(*args, **kwargs): return {'user_id': '1234567', 'account_type': 'BUSINESS'}
+        monkeypatch.setattr('app.services.channel_connections.ig.exchange_code_for_user_token', exchange)
+        monkeypatch.setattr('app.services.channel_connections.ig.exchange_for_long_lived_token', long_token)
+        monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', principal)
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        start = await j.client.post(base+'/instagram/connect', json={'idempotency_key': str(uuid4())}, headers=j.csrf)
+        assert start.status_code == 200, start.text
+        state = parse_qs(urlsplit(start.json()['authorization_url']).query)['state'][0]
+        request = asyncio.create_task(j.client.get(base+'/instagram/callback', params={'state': state, 'code': 'synthetic-one-use-code'}))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            seller = await db.get(Seller, j.bid)
+            saved = bool(seller.instagram_token or seller.instagram_page_id)
+>       assert result.status_code == 401, f'Revoked-session OAuth returned {result.status_code}; credentials_saved={saved}'
+E       AssertionError: Revoked-session OAuth returned 303; credentials_saved=True
+E       assert 303 == 401
+E        +  where 303 = <Response [303 See Other]>.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:137: AssertionError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-onboarding-acceptance/artifacts/v1/onboarding-acceptance/channel-session-original-repros.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_onboarding_acceptance_db.py::test_native_channel_provider_wait_cannot_commit_after_session_revoke[instagram_verify]
+FAILED backend/tests/test_v1_onboarding_acceptance_db.py::test_native_channel_provider_wait_cannot_commit_after_session_revoke[whatsapp_connect]
+FAILED backend/tests/test_v1_onboarding_acceptance_db.py::test_native_instagram_callback_rechecks_session_after_consumed_exchange
+3 failed, 1 warning in 4.24s

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="4.237" timestamp="2026-10-18T14:28:03.783515" hostname="MacBook-Air-3.local"><testcase classname="tests.test_v1_onboarding_acceptance_db" name="test_native_channel_provider_wait_cannot_commit_after_session_revoke[instagram_verify]" time="1.857"><failure message="AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': False, 'ig_access_verified': True}&#10;assert 200 == 401&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">native_channels = namespace(client=&lt;httpx.AsyncClient object at 0x10d8a6d50&gt;, sessions=async_sessionmaker(class_='AsyncSession', bind=&lt;s...-a903-4f95-9514-326617aed79f/imports/candidates', csrf={'X-CSRF-Token': 'xetcxEP28zHRR8DuKEjN6NQTlflOOS1IaOxKDxs27R0'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10b9704d0&gt;
+operation = 'instagram_verify'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['instagram_verify', 'whatsapp_connect'])
+    async def test_native_channel_provider_wait_cannot_commit_after_session_revoke(native_channels, monkeypatch, operation):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def provider(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'user_id': '1234567', 'id': '7654321', 'display_phone_number': '+910000000000'}
+        if operation == 'instagram_verify':
+            async with j.sessions.begin() as db:
+                seller = await db.get(Seller, j.bid)
+                seller.instagram_id = seller.instagram_page_id = '1234567'
+                seller.instagram_token = 'synthetic-ig-token'
+                db.add(ChannelConnectionState(business_id=j.bid, channel='instagram',
+                    provider_account_id='1234567', check_status='not_checked', automation_enabled=False))
+            monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', provider)
+            path, body = '/instagram/verify', {'idempotency_key': str(uuid4())}
+        else:
+            monkeypatch.setattr('app.services.channel_connections.whatsapp_provider.verify_connection', provider)
+            path, body = '/whatsapp/connect', {'idempotency_key': str(uuid4()), 'waba_id': '1234567',
+                'phone_number_id': '7654321', 'access_token': 'synthetic-whatsapp-token'}
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        request = asyncio.create_task(j.client.post(base+path, json=body, headers=j.csrf))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            audits = await db.scalar(select(func.count()).select_from(ChannelOperation).where(ChannelOperation.business_id == j.bid))
+            account = await db.get(WhatsAppAccount, j.bid)
+            state = await db.get(ChannelConnectionState, (j.bid, 'instagram'))
+            observed = {'status': result.status_code, 'audit_count': audits,
+                'wa_credentials_saved': bool(account and account.access_token),
+                'ig_access_verified': bool(state and state.check_status == 'verified' and state.checked_at)}
+&gt;       assert result.status_code == 401, f'Revoked native session mutation persisted: {observed}'
+E       AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': False, 'ig_access_verified': True}
+E       assert 200 == 401
+E        +  where 200 = &lt;Response [200 OK]&gt;.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:103: AssertionError</failure></testcase><testcase classname="tests.test_v1_onboarding_acceptance_db" name="test_native_channel_provider_wait_cannot_commit_after_session_revoke[whatsapp_connect]" time="1.091"><failure message="AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': True, 'ig_access_verified': False}&#10;assert 200 == 401&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">native_channels = namespace(client=&lt;httpx.AsyncClient object at 0x10dc61dd0&gt;, sessions=async_sessionmaker(class_='AsyncSession', bind=&lt;s...-a9f5-4403-8ae6-8b60a1be8629/imports/candidates', csrf={'X-CSRF-Token': 'cYRXuZ1Fe7HbDdHvATApyHm0AuEbRtK0pXlAU0DhVT0'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10d4cec50&gt;
+operation = 'whatsapp_connect'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['instagram_verify', 'whatsapp_connect'])
+    async def test_native_channel_provider_wait_cannot_commit_after_session_revoke(native_channels, monkeypatch, operation):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def provider(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'user_id': '1234567', 'id': '7654321', 'display_phone_number': '+910000000000'}
+        if operation == 'instagram_verify':
+            async with j.sessions.begin() as db:
+                seller = await db.get(Seller, j.bid)
+                seller.instagram_id = seller.instagram_page_id = '1234567'
+                seller.instagram_token = 'synthetic-ig-token'
+                db.add(ChannelConnectionState(business_id=j.bid, channel='instagram',
+                    provider_account_id='1234567', check_status='not_checked', automation_enabled=False))
+            monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', provider)
+            path, body = '/instagram/verify', {'idempotency_key': str(uuid4())}
+        else:
+            monkeypatch.setattr('app.services.channel_connections.whatsapp_provider.verify_connection', provider)
+            path, body = '/whatsapp/connect', {'idempotency_key': str(uuid4()), 'waba_id': '1234567',
+                'phone_number_id': '7654321', 'access_token': 'synthetic-whatsapp-token'}
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        request = asyncio.create_task(j.client.post(base+path, json=body, headers=j.csrf))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            audits = await db.scalar(select(func.count()).select_from(ChannelOperation).where(ChannelOperation.business_id == j.bid))
+            account = await db.get(WhatsAppAccount, j.bid)
+            state = await db.get(ChannelConnectionState, (j.bid, 'instagram'))
+            observed = {'status': result.status_code, 'audit_count': audits,
+                'wa_credentials_saved': bool(account and account.access_token),
+                'ig_access_verified': bool(state and state.check_status == 'verified' and state.checked_at)}
+&gt;       assert result.status_code == 401, f'Revoked native session mutation persisted: {observed}'
+E       AssertionError: Revoked native session mutation persisted: {'status': 200, 'audit_count': 1, 'wa_credentials_saved': True, 'ig_access_verified': False}
+E       assert 200 == 401
+E        +  where 200 = &lt;Response [200 OK]&gt;.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:103: AssertionError</failure></testcase><testcase classname="tests.test_v1_onboarding_acceptance_db" name="test_native_instagram_callback_rechecks_session_after_consumed_exchange" time="1.084"><failure message="AssertionError: Revoked-session OAuth returned 303; credentials_saved=True&#10;assert 303 == 401&#10; +  where 303 = &lt;Response [303 See Other]&gt;.status_code">native_channels = namespace(client=&lt;httpx.AsyncClient object at 0x10dd20bd0&gt;, sessions=async_sessionmaker(class_='AsyncSession', bind=&lt;s...-8782-40a0-b9b0-4fd0f938ad84/imports/candidates', csrf={'X-CSRF-Token': '5dcCAN88CCVXG5JGVJ7CUDARvUpQYPeSZWAsaO1LTWk'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10d7ce710&gt;
+
+    @pytest.mark.asyncio
+    async def test_native_instagram_callback_rechecks_session_after_consumed_exchange(native_channels, monkeypatch):
+        j = native_channels
+        setup_settings(monkeypatch)
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def exchange(*args, **kwargs):
+            entered.set()
+            await release.wait()
+            return {'access_token': 'synthetic-short-token'}
+        async def long_token(*args, **kwargs): return 'synthetic-long-token'
+        async def principal(*args, **kwargs): return {'user_id': '1234567', 'account_type': 'BUSINESS'}
+        monkeypatch.setattr('app.services.channel_connections.ig.exchange_code_for_user_token', exchange)
+        monkeypatch.setattr('app.services.channel_connections.ig.exchange_for_long_lived_token', long_token)
+        monkeypatch.setattr('app.services.channel_connections.ig.fetch_ig_user', principal)
+        base = f'/api/v1/businesses/{j.bid}/channels'
+        start = await j.client.post(base+'/instagram/connect', json={'idempotency_key': str(uuid4())}, headers=j.csrf)
+        assert start.status_code == 200, start.text
+        state = parse_qs(urlsplit(start.json()['authorization_url']).query)['state'][0]
+        request = asyncio.create_task(j.client.get(base+'/instagram/callback', params={'state': state, 'code': 'synthetic-one-use-code'}))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(revoke_session(j), 5)
+        finally:
+            release.set()
+        result = await asyncio.wait_for(request, 5)
+        async with j.sessions() as db:
+            seller = await db.get(Seller, j.bid)
+            saved = bool(seller.instagram_token or seller.instagram_page_id)
+&gt;       assert result.status_code == 401, f'Revoked-session OAuth returned {result.status_code}; credentials_saved={saved}'
+E       AssertionError: Revoked-session OAuth returned 303; credentials_saved=True
+E       assert 303 == 401
+E        +  where 303 = &lt;Response [303 See Other]&gt;.status_code
+
+backend/tests/test_v1_onboarding_acceptance_db.py:137: AssertionError</failure></testcase></testsuite></testsuites>

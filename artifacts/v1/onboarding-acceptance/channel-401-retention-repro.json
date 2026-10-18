@@ -1,0 +1,10 @@
+{
+  "source_sha256": "dc3d8d5fc5eb9b924c503852c35a1c5078427b7ce7cd6c56e3f76cae6c42ca7f",
+  "evidence_kind": "VM actual script with minimal DOM/API doubles; no rendered or database claim",
+  "observed_401_error": true,
+  "business_retained": true,
+  "customer_text_retained": true,
+  "connections_retained": true,
+  "secret_input_retained": true,
+  "secret_dialog_open": true
+}

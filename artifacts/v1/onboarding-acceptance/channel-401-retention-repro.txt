@@ -1,0 +1,1 @@
+CONFIRMED: actual channel script retains private business/message/connection/secret-input DOM after401. VM evidence only; no DB/browser/provider calls.

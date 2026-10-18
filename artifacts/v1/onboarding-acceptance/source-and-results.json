@@ -1,0 +1,23 @@
+{
+  "audit_head": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "test_lane": "payment_w6",
+  "loopback_port": 55443,
+  "migration_head": "0053_v1_csv_import",
+  "db_desired_safety_failures": 3,
+  "db_probe_seconds": 4.24,
+  "provider_transport": "synthetic async functions only",
+  "actual_main_native_session_and_db": true,
+  "rendered_browser_checks": null,
+  "vm_actual_script_privacy_reproduced": true,
+  "production_or_live_provider": false,
+  "source_sha256": {
+    "backend/static/channel_operator.js": "dc3d8d5fc5eb9b924c503852c35a1c5078427b7ce7cd6c56e3f76cae6c42ca7f",
+    "backend/static/channel_operator.html": "b325fe1881166556d03c29c7c7cb414e18e19763e07ae85f9414631a38911e2d",
+    "backend/app/api/v1/channel_operator.py": "0b641d44b0ef603ad0d48ce2ef215eb7594a6c0591628e96c2e6ba4bd80ee209",
+    "backend/app/services/channel_connections.py": "ed4ff275efcbbc94896f8577f4ea164b736760a585761761b227cf8dd47e5819",
+    "backend/app/services/channel_operator.py": "5cfa09c001573ed7bf90d35039cc29b4c5fe6646d4eb5252bb248f8d555cd492",
+    "backend/app/services/identity_auth.py": "a7392c593b41ca33de46bae360a18c3809c48700facfc179f5a1fb713ca1969c",
+    "backend/static/v1_app.js": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
+    "backend/app/services/onboarding.py": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9"
+  }
+}
