@@ -14,7 +14,7 @@ DDL = (
  source_classification VARCHAR(24) NOT NULL, source_fingerprint VARCHAR(64) NOT NULL,
  quoted_message_id UUID REFERENCES whatsapp_messages(id), quoted_fingerprint VARCHAR(64),
  shortcode VARCHAR(100) NOT NULL, source_url VARCHAR(300) NOT NULL, product_id UUID NOT NULL,
- connection_version INTEGER NOT NULL, credential_fingerprint VARCHAR(64) NOT NULL,
+ connection_version INTEGER NOT NULL, credential_fingerprint VARCHAR(64) NOT NULL, recipient_fingerprint VARCHAR(64) NOT NULL,
  expected_fingerprint VARCHAR(64) NOT NULL, expected_mapping_fingerprint VARCHAR(64) NOT NULL,
  accepted_mapping_fingerprint VARCHAR(64) NOT NULL, reply_context JSONB NOT NULL, result JSONB NOT NULL,
  created_at TIMESTAMPTZ DEFAULT clock_timestamp() NOT NULL,
@@ -29,7 +29,7 @@ DDL = (
  CONSTRAINT wa_reel_command_versions CHECK(actor_auth_version>=0 AND connection_version>=0),
  CONSTRAINT wa_reel_command_reference CHECK(shortcode ~ '^[A-Za-z0-9_-]{1,100}$' AND length(provider_mid) BETWEEN 1 AND 255),
  CONSTRAINT wa_reel_command_hashes CHECK(request_hash ~ '^[a-f0-9]{64}$' AND source_fingerprint ~ '^[a-f0-9]{64}$'
- AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$'
+ AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND recipient_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$'
  AND expected_mapping_fingerprint ~ '^[a-f0-9]{64}$' AND accepted_mapping_fingerprint ~ '^[a-f0-9]{64}$'),
  CONSTRAINT wa_reel_command_quote CHECK((source_classification='quoted_message')=(quoted_message_id IS NOT NULL) AND ((quoted_message_id IS NULL AND quoted_fingerprint IS NULL)
  OR (quoted_message_id IS NOT NULL AND quoted_fingerprint IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$'))),
@@ -74,10 +74,11 @@ DDL = (
  AND m.is_active AND m.revoked_at IS NULL AND m.role IN ('owner','manager') AND b.is_active AND seller.is_active) THEN
  RAISE EXCEPTION 'Current native reviewer session required' USING ERRCODE='23514'; END IF;
  IF NOT EXISTS (SELECT 1 FROM whatsapp_messages src JOIN whatsapp_accounts a ON a.seller_id=src.seller_id
+ JOIN whatsapp_contacts recipient ON recipient.seller_id=src.seller_id AND recipient.id=src.contact_id
  JOIN channel_connection_states control ON control.business_id=a.seller_id AND control.channel='whatsapp'
  JOIN products p ON p.seller_id=src.seller_id AND p.id=NEW.product_id
  WHERE src.id=NEW.inbound_message_id AND src.seller_id=NEW.business_id AND src.contact_id=NEW.contact_id
- AND src.phone_number_id=NEW.phone_number_id AND src.direction='inbound' AND src.provider_message_id=NEW.provider_mid
+ AND src.phone_number_id=NEW.phone_number_id AND encode(sha256(convert_to(recipient.phone,'UTF8')),'hex')=NEW.recipient_fingerprint AND src.direction='inbound' AND src.provider_message_id=NEW.provider_mid
  AND src.payload->'reel_context'->>'source'=NEW.source_classification
  AND jsonb_array_length(src.payload->'reel_context'->'references')=1
  AND src.payload->'reel_context'->'references'->0->>'shortcode'=NEW.shortcode
