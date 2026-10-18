@@ -194,7 +194,7 @@ async def test_delayed_inbound_uses_documented_per_source_time_and_replay_never_
 async def test_report_uses_guarded_source_cohort_current_canonical_states_and_excludes_test_manual(sessions,monkeypatch):
     bid=await prepared(sessions,monkeypatch)
     async with sessions.begin() as db:
-        ids=[await inbound(db,bid,kind='outbound') for _ in range(5)]
+        ids=[await inbound(db,bid,kind='outbound',mid=False) for _ in range(5)]
         for sid in ids[:3]:assert await activity.record_source(db,bid,'wa_outbound',sid,origin='automated',is_new=True)
         assert await activity.record_source(db,bid,'wa_outbound',ids[3],origin='operator',is_new=True)
         assert await activity.record_source(db,bid,'wa_outbound',ids[4],origin='automated',is_new=True,test_evidence=True)
