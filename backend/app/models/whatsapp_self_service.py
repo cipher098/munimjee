@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from sqlalchemy import (
     CheckConstraint, Column, DateTime, ForeignKey, ForeignKeyConstraint, Index,
-    Integer, String, Text, UniqueConstraint,
+    Integer, String, Text, UniqueConstraint, text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
@@ -37,6 +37,7 @@ class WhatsAppSignupAttempt(Base):
     token_expires_at = Column(DateTime(timezone=True))
     verified_app_id = Column(String(40))
     selected_choice_id = Column(UUID(as_uuid=True))
+    selected_phone_number_id = Column(String(40))
     selected_key = Column(UUID(as_uuid=True))
     selected_hash = Column(String(64))
     subscription_state = Column(String(20), nullable=False, default="not_started", server_default="not_started")
@@ -45,8 +46,8 @@ class WhatsAppSignupAttempt(Base):
     __table_args__ = (
         UniqueConstraint("business_id", "idempotency_key", name="wa_signup_key"),
         UniqueConstraint("id", "business_id", name="wa_signup_tenant"),
-        ForeignKeyConstraint(["selected_choice_id", "id", "business_id"],
-            ["whatsapp_signup_choices.id", "whatsapp_signup_choices.attempt_id", "whatsapp_signup_choices.business_id"],
+        ForeignKeyConstraint(["selected_choice_id", "id", "business_id", "selected_phone_number_id"],
+            ["whatsapp_signup_choices.id", "whatsapp_signup_choices.attempt_id", "whatsapp_signup_choices.business_id", "whatsapp_signup_choices.phone_number_id"],
             name="wa_signup_selected_choice", use_alter=True),
         CheckConstraint("actor_auth_version >= 0 AND connection_version >= 0", name="wa_signup_versions"),
         CheckConstraint("request_hash ~ '^[0-9a-f]{64}$' AND nonce_digest ~ '^[0-9a-f]{64}$'", name="wa_signup_digests"),
@@ -56,8 +57,10 @@ class WhatsAppSignupAttempt(Base):
         CheckConstraint("subscription_state IN ('not_started','requesting','unknown','confirmed','failed') AND registration_state IN ('not_started','requesting','unknown','confirmed','failed')", name="wa_signup_steps"),
         CheckConstraint("token_expiry_kind IN ('unknown','at','permanent') AND ((token_expiry_kind = 'at' AND token_expires_at IS NOT NULL) OR (token_expiry_kind <> 'at' AND token_expires_at IS NULL))", name="wa_signup_token_expiry"),
         CheckConstraint("verified_app_id IS NULL OR verified_app_id ~ '^[0-9]{1,40}$'", name="wa_signup_app_id"),
-        CheckConstraint("(selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL)", name="wa_signup_selection"),
+        CheckConstraint("(selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL AND selected_phone_number_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL AND selected_phone_number_id IS NOT NULL AND selected_phone_number_id ~ '^[0-9]{1,40}$')", name="wa_signup_selection"),
         Index("ix_wa_signup_cleanup", "token_delete_after"),
+        Index("wa_signup_phone_claim", "selected_phone_number_id", unique=True,
+              postgresql_where=text("state IN ('setting_up','setup_unknown')")),
     )
 
 
@@ -77,6 +80,7 @@ class WhatsAppSignupChoice(Base):
         ForeignKeyConstraint(["attempt_id", "business_id"], ["whatsapp_signup_attempts.id", "whatsapp_signup_attempts.business_id"], name="wa_choice_attempt"),
         UniqueConstraint("attempt_id", "waba_id", "phone_number_id", name="wa_choice_phone"),
         UniqueConstraint("id", "attempt_id", "business_id", name="wa_choice_tenant"),
+        UniqueConstraint("id", "attempt_id", "business_id", "phone_number_id", name="wa_choice_phone_tenant"),
         CheckConstraint("waba_id ~ '^[0-9]{1,40}$' AND phone_number_id ~ '^[0-9]{1,40}$'", name="wa_choice_ids"),
         CheckConstraint("fingerprint ~ '^[0-9a-f]{64}$'", name="wa_choice_fingerprint"),
         CheckConstraint("provider_registration_status IN ('unknown','registered','unregistered')", name="wa_choice_registration"),
