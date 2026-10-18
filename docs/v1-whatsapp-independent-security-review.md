@@ -96,3 +96,23 @@ denial cannot mask regression of the rollout check. With both corrections, the
 original6a8 source still reproduces the same2 intended failures
 (`coherent-6a8-fixture-correction-still-red.txt`); assertions are unchanged. The
 author's draft5pass/1missing-fixture-field report is not our frozen-fix acceptance.
+
+
+## Fix snapshot0254ce5 portable recheck
+
+Runtime dependency0254ce5 is local aliasbadb461, not an owned runtime change.
+The independent suite now passes8 source-only cases (the previous6 plus paired
+non-revoked positive controls for exchange/subscription). Each revoked commit
+requires401 and zero attempted fake operations; each otherwise-identical current
+control succeeds with exactly one fake operation and no unknown-effect cleanup.
+Fixtures provide valid native binding, current scalar projection and requested/
+verified AppID123. This prevents missing fixture data or unrelated failure from
+masking the ordering regression. Historical failure logs remain unchanged.
+
+The final flag/TTL/MID fixes are coherent in this snapshot. This does not certify
+real PostgreSQL claims, rollback, immutable DDL or mounted native composition.
+A separate valid AppID rotation during claim commit remains a confirmed source
+gap at0254: the final configuration shape check does not bind the already-built
+client/attempt to the currently configured app. Catalogue accepted an immutable
+requested-App binding; its next coherent freeze remains pending. No provider,
+DB or browser operation was performed by this recheck.
