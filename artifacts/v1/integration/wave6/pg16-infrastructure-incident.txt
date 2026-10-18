@@ -1,0 +1,5 @@
+2026-10-18 08:16:28.567 UTC [1] LOG:  background writer process (PID 64) was terminated by signal 9: Killed
+2026-10-18 08:16:28.567 UTC [1] LOG:  terminating any other active server processes
+2026-10-18 08:16:28.601 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-10-18 08:16:29.021 UTC [87421] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-10-18 08:16:45.597 UTC [1] LOG:  database system is ready to accept connections

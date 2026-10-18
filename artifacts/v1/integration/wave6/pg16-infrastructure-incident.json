@@ -1,0 +1,33 @@
+{
+  "incident_utc": "2026-10-18T08:16:28Z",
+  "prior_container": "munimjee-v1-wave2-pg16",
+  "prior_cgroup_memory_bytes": 1073741824,
+  "prior_cgroup_oom_kill_count_observed": 2,
+  "prior_pgdata": "tmpfs; observed1.7GiB used",
+  "prior_container_changed": false,
+  "prior_databases_or_archives_removed": false,
+  "interrupted_central_source": "0e658fc",
+  "interrupted_result": {
+    "passed": 1278,
+    "skipped": 8,
+    "fixture_errors": 72,
+    "keyboard_interrupt": true,
+    "acceptance": false
+  },
+  "new_container": "munimjee-v1-wave6-pg16",
+  "new_container_id": "2ad5242f532bd64334caa9ddb3152a3916caf2f35c827b2f794e755cb97ae794",
+  "new_pgdata_volume": "munimjee-v1-wave6-pg16-data",
+  "new_pgdata_type": "disk-backed named Docker volume",
+  "port": 55443,
+  "memory_bytes": 2147483648,
+  "cpu_limit": 2,
+  "server_image": "postgres:16",
+  "new_volume_created_utc": "2026-10-18T08:19:05Z",
+  "new_lanes": {
+    "central": "wave6_integration",
+    "owned_instagram": "instagram_w6"
+  },
+  "peer_heavy_tests": "held pending serial allocation",
+  "new_restore_copies": "not authorized by this evidence; reserve disk headroom first",
+  "completed_preincident_evidence": "372focused /74CSVbrowser /28SEOHTTP /53freshrestore remain separate completed runs; interrupted fullgate is not acceptance"
+}

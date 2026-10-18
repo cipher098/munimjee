@@ -4,6 +4,18 @@ Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified f
 
 ## Wave6 in progress
 
+Test-infrastructure interruption,18 October08:16UTC: the old dedicated PG16
+container's1GiB memory cgroup held RAM-backed PGDATA (observed1.7GiB retained
+data/WAL), and a signal9 backend termination triggered recovery. The full
+`0e658fc` gate was interrupted with1278 passed/8 skipped/72 migration-fixture
+errors; it is **not acceptance**. Raw full logs/XML and cgroup/container evidence
+remain under `artifacts/v1/integration/wave6/`. Earlier completed gates below
+remain separate. No old container/database/archive was modified or removed.
+A new bounded2GiB disk-backed dedicated PG16 container uses loopback55443;
+`wave6_integration` and `instagram_w6` are its guarded lanes. DB-heavy runs are
+serialized across peers. A fresh complete candidate gate is required; no tests
+resume on the unstable old tmpfs instance.
+
 Base verified/pushed32de1ac. Reviewed release tooling, CSV0053 and SEO/legacy
 redirects are composed locally; no new release claim. Actual0053
 focused gate passes372 checks after repairing the shared native import fixture's
