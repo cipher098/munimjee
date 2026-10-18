@@ -40,7 +40,7 @@ test('expired native identity clears private commands and old CSRF while ordinar
   vm.runInNewContext(source,context);
   await context.window.V1.session();
   await context.window.V1.api('/api/v1/businesses/own/catalogue/storefront');
-  assert.equal(entries.size,6);
+  assert.equal(entries.size,8);
   await assert.rejects(context.window.V1.session(),error=>error.status===401);
   assert.equal(entries.size,0);
   assert.equal(context.window.V1.csrf,null);
