@@ -1,0 +1,15 @@
+$ env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -c 'from tests.safety import install_test_safety; install_test_safety(); import app.v1.imports; app.v1.imports.__path__.append("/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-provider/backend/app/v1/imports"); import pytest; raise SystemExit(pytest.main(['"'"'-q'"'"', '"'"'tests/test_v1_instagram_owned_pipeline.py'"'"', '"'"'tests/test_v1_instagram_owned_pipeline_db.py'"'"', '"'"'tests/test_v1_instagram_owned_pipeline_provider.py'"'"', '"'"'-rs'"'"']))'
+
+........................................ssssss...........                [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_v1_instagram_owned_pipeline_db.py:62: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] tests/test_v1_instagram_owned_pipeline_db.py:92: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+51 passed, 6 skipped, 1 warning in 0.29s
+
+exit_code=0
