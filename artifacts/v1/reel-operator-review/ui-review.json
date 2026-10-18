@@ -1,0 +1,45 @@
+{
+  "source_checkpoint": "57b13cd5b751704d03d4a22b40dc43f52692d164",
+  "original_ui": "9aaf659fc9f3288f126aed4f31c4534be20b3ef4",
+  "source_only": true,
+  "execution": "none",
+  "files": [
+    {
+      "path": "backend/static/comment_operator.html",
+      "sha256": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11",
+      "git_blob": "4d15c38dfbfa74a7aa6d299e7a12f218cff40c74"
+    },
+    {
+      "path": "backend/static/comment_operator.css",
+      "sha256": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb",
+      "git_blob": "2fb6fdf3b8a149d6f859e7410af641264850572d"
+    },
+    {
+      "path": "backend/static/comment_operator.js",
+      "sha256": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6",
+      "git_blob": "93af9fea4169bd02407a7cb761cbad737543147a"
+    },
+    {
+      "path": "backend/static/comment_operator_contract.js",
+      "sha256": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8",
+      "git_blob": "7e49b5419d5addf228502f1de0a44921db560afe"
+    }
+  ],
+  "reviewed": [
+    "one-inbound source/product; no selected default",
+    "confirmation unchecked/reset after product change",
+    "exact immutable receipt and typed pre-mutation409 binding",
+    "unknown result journal retained; no load retry",
+    "inferred/unknown context cannot offer resume",
+    "session/selection/list fences and private DOM scrub"
+  ],
+  "pending": [
+    "global journal cleanup and router/model/sender integrator install",
+    "actual browser/CSRF/0058/concurrency/sender acceptance"
+  ],
+  "final_source_checkpoint": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+  "followups": {
+    "f01cee5": "clears detail on close/tab change; source concern resolved",
+    "4e0f905": "allowlisted transport-only409 code bound to locally frozen canonical path/body; no rawdetail forwarding required"
+  }
+}
