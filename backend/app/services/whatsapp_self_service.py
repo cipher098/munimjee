@@ -44,10 +44,17 @@ def problem(code, message, status=409):
 class Authority:
     binding: SessionBinding
     check_request: Callable[[],Awaitable[None]]
+    expected_app_id: str | None = None
 
     async def check(self,db):
         await self.check_request()
         await current_owner_session(db,self.binding)
+        if self.expected_app_id is not None:
+            if settings.WHATSAPP_EMBEDDED_APP_ID!=self.expected_app_id:
+                problem('signup_configuration_changed','The configured Meta app changed during this request')
+            try: embedded_configuration(settings)
+            except ProtocolError:
+                problem('signup_configuration_changed','Current Meta configuration no longer authorizes this request')
 
     async def finalize(self,db):
         await db.flush()
@@ -428,8 +435,10 @@ async def attach_account(db,authority,attempt_id,payload,*,token):
     await db.flush()
     row.state='attached'; row.provisional_token_ciphertext=None; row.updated_at=timestamp
     await authority.finalize(db)
+    require_attempt_app(row,verified=True)
     result=await signup_view(db,row)
     await authority.check(db)
+    require_attempt_app(row,verified=True)
     return result
 
 
@@ -467,22 +476,24 @@ async def post_claim_authority(db,authority,attempt_id,*,stage):
     from app.models.identity import Membership
     await authority.check(db)
     attempt=WhatsAppSignupAttempt
+    queried_app=settings.WHATSAPP_EMBEDDED_APP_ID
     query=owner_session_statement(authority.binding).join(attempt,
         (attempt.business_id==Membership.business_id)&(attempt.actor_user_id==Membership.user_id)).join(
         ChannelConnectionState,(ChannelConnectionState.business_id==attempt.business_id)&(ChannelConnectionState.channel=='whatsapp')).where(
         attempt.id==attempt_id,attempt.actor_session_id==authority.binding.session_id,
         attempt.actor_auth_version==authority.binding.auth_version,attempt.expires_at>func.clock_timestamp(),
-        ChannelConnectionState.version==attempt.connection_version,attempt.requested_app_id==settings.WHATSAPP_EMBEDDED_APP_ID)
+        ChannelConnectionState.version==attempt.connection_version,attempt.requested_app_id==queried_app)
     if stage=='exchange':
         query=query.where(attempt.state=='exchanging',attempt.exchange_consumed_at.is_not(None))
     else:
         query=query.where(attempt.state=='setting_up',getattr(attempt,stage+'_state')=='requesting',
-            attempt.verified_app_id==settings.WHATSAPP_EMBEDDED_APP_ID,
+            attempt.verified_app_id==queried_app,
             attempt.provisional_token_ciphertext.is_not(None),attempt.token_expiry_kind=='at',
             attempt.token_expires_at>func.clock_timestamp(),~select(WhatsAppAccount.seller_id).where(
                 WhatsAppAccount.phone_number_id==attempt.selected_phone_number_id,
                 WhatsAppAccount.seller_id!=attempt.business_id).exists())
-    if await db.scalar(query.execution_options(autoflush=False)) is None:
+    allowed=await db.scalar(query.execution_options(autoflush=False))
+    if allowed is None or settings.WHATSAPP_EMBEDDED_APP_ID!=queried_app:
         problem('signup_authority_changed','Current native owner, connection and setup claim are required before provider dispatch')
 
 
