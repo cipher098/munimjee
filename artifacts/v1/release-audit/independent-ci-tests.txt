@@ -1,0 +1,14 @@
+........................................................................ [ 57%]
+......ss..............................................                   [100%]
+=============================== warnings summary ===============================
+../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/test_v1_startup.py::test_versioned_identity_routes_are_mounted_on_actual_application
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee-wave5-audit/artifacts/v1/release-audit/independent-ci-tests.xml -
+124 passed, 2 skipped, 2 warnings in 3.62s

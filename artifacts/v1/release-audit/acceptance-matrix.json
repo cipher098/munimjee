@@ -1,0 +1,2297 @@
+{
+  "format": "munimjee.v1.release-acceptance-audit.v1",
+  "audit_date": "2026-10-18",
+  "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "audit_base": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f",
+  "contract_source": "21e1a87",
+  "evidence_mode": "independent saved-artifact/source validation; no remote PG/container/browser rerun",
+  "release_authorized": false,
+  "release_ready": false,
+  "counts_overlap_and_must_not_be_summed": true,
+  "disposition_definitions": {
+    "source_implemented": "Audited source exists; this alone does not prove acceptance.",
+    "actual_migrated_native_verified": "Saved actual migrated/native evidence checked; not rerun by this audit.",
+    "simulated_provider": "Provider/physical inputs or transport were synthetic.",
+    "live_provider_physical_device_pending": "Authorized live provider or physical-device proof still required.",
+    "not_implemented": "Required implementation absent from audited candidate.",
+    "local_team_owned_in_progress": "Local team owns active product work; not acceptance-complete here."
+  },
+  "references": {
+    "auth": {
+      "path": "backend/app/services/identity_auth.py",
+      "line": 50,
+      "anchor": "async def signup",
+      "kind": "source",
+      "sha256": "a7392c593b41ca33de46bae360a18c3809c48700facfc179f5a1fb713ca1969c",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "identity": {
+      "path": "backend/app/services/identity.py",
+      "line": 131,
+      "anchor": "async def require_business_access",
+      "kind": "source",
+      "sha256": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "onboarding": {
+      "path": "backend/app/services/onboarding.py",
+      "line": 12,
+      "anchor": "async def onboarding_view",
+      "kind": "source",
+      "sha256": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "assistance": {
+      "path": "backend/app/services/assistance.py",
+      "line": 101,
+      "anchor": "async def businesses",
+      "kind": "source",
+      "sha256": "986e0f27a64c9661719871c6f70044f52509025abdad6ab09057032e2e594d36",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "themes": {
+      "path": "backend/app/services/storefront_theme_v1.py",
+      "line": 15,
+      "anchor": "async def",
+      "kind": "source",
+      "sha256": "58dad62d14ed4471f5d0af8cad9c516e32ccbf7b8b12b4e3f3b4ddc188f93ee0",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "publication": {
+      "path": "backend/app/services/storefront_publication.py",
+      "line": 22,
+      "anchor": "async def public_store",
+      "kind": "source",
+      "sha256": "2ac040b0b2a1c2ca2a0af455d17681768f10769b93dee2f7e966c6950c059b22",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "imports": {
+      "path": "backend/app/services/imports_v1.py",
+      "line": 342,
+      "anchor": "async def collect_claim",
+      "kind": "source",
+      "sha256": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "import_worker": {
+      "path": "backend/app/workers/v1_imports.py",
+      "line": 17,
+      "anchor": "async def _drain",
+      "kind": "source",
+      "sha256": "f212be6a865069363487b0e0dc6163e569f3f1783f7ff41c78887be6ca7f581d",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "import_schema": {
+      "path": "backend/app/schemas/imports_v1.py",
+      "line": 29,
+      "anchor": "class ImportJobCreate",
+      "kind": "source",
+      "sha256": "4499d5e70753741381a6a7a8b49809837336ac032a3b4ad87ef5fe035426ca0b",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "fetch": {
+      "path": "backend/app/v1/imports/fetching.py",
+      "line": 211,
+      "anchor": "class SafeFetcher",
+      "kind": "source",
+      "sha256": "9e3973f810cfe47dbbe82809d399de39f9169b05932eb8f94f2cd484456f485a",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "bridge": {
+      "path": "backend/app/services/import_catalogue.py",
+      "line": 69,
+      "anchor": "async def",
+      "kind": "source",
+      "sha256": "7930b6a279ccf4eb17fdbe80dfd1e3482670ebe8f5c6c7d6c483aa8c6df9da5d",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "catalogue": {
+      "path": "backend/app/services/catalogue_v1.py",
+      "line": 219,
+      "anchor": "def serialize_preview",
+      "kind": "source",
+      "sha256": "d70dc74fb0c4a8a9e3fef51fb1d38c64f6f2855c816260a8877846365b52e98f",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "checkout": {
+      "path": "backend/app/services/checkout_v1.py",
+      "line": 223,
+      "anchor": "async def create_sku_order",
+      "kind": "source",
+      "sha256": "8a979108ec73c2809feb184cbf3b1f4ae9bb82c42ec4ef2434966c4cf611c325",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "checkout_api": {
+      "path": "backend/app/api/v1/catalogue.py",
+      "line": 297,
+      "anchor": "async def collect_cod",
+      "kind": "source",
+      "sha256": "82419edf243b6280d4d8ecab0b33dd331dfbcf5de9687ee7c9491f236d53f625",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "order": {
+      "path": "backend/app/models/commerce.py",
+      "line": 38,
+      "anchor": "class CommerceOrder",
+      "kind": "source",
+      "sha256": "9490ddbd08a1d11882a43fcc81fbf279b9168334dd86d8f6c14743afcc668215",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "address": {
+      "path": "backend/app/services/commerce.py",
+      "line": 84,
+      "anchor": "class AddressInput",
+      "kind": "source",
+      "sha256": "1f0ac4fea269956048f589aa5f073e5c214013c93681337503a79f1e1f887577",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "payment": {
+      "path": "backend/app/services/sku_payments.py",
+      "line": 29,
+      "anchor": "async def ensure_gateway_order",
+      "kind": "source",
+      "sha256": "adf101c947b561dd8579aa96bcacf3ab4035be2eb9953af70abc5de062c7475a",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "payment_settings": {
+      "path": "backend/app/api/v1/payment_settings.py",
+      "line": 12,
+      "anchor": "router =",
+      "kind": "source",
+      "sha256": "5cb821a567c4854d03c930f4ccc4f4f7ada6d814d4fa3c26f2b711d9e72a2bdf",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "channels": {
+      "path": "backend/app/services/channel_connections.py",
+      "line": 208,
+      "anchor": "async def start_instagram",
+      "kind": "source",
+      "sha256": "ed4ff275efcbbc94896f8577f4ea164b736760a585761761b227cf8dd47e5819",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "operator": {
+      "path": "backend/app/services/channel_operator.py",
+      "line": 41,
+      "anchor": "async def",
+      "kind": "source",
+      "sha256": "5cfa09c001573ed7bf90d35039cc29b4c5fe6646d4eb5252bb248f8d555cd492",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "context": {
+      "path": "backend/app/services/whatsapp_context.py",
+      "line": 104,
+      "anchor": "async def reel_catalogue_reply",
+      "kind": "source",
+      "sha256": "f47ef4cd1e96dfebeb5cebdd58a9ad61354fe9e49b525c2dd71b0c09608131c2",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "unknown": {
+      "path": "backend/app/services/whatsapp_reel_queue.py",
+      "line": 36,
+      "anchor": "async def",
+      "kind": "source",
+      "sha256": "a36168b9efcfa2ced9a1a47438f62a35b56670d89a80be31e2f4115b9bb2a091",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "parcel": {
+      "path": "backend/app/services/parcel_tracking.py",
+      "line": 75,
+      "anchor": "async def confirm",
+      "kind": "source",
+      "sha256": "a8658576a5505d4f9630041539d2e44191e8fff593020ab63e2b3dfdabaf16fc",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "parcel_review": {
+      "path": "backend/app/services/parcel_reviews.py",
+      "line": 23,
+      "anchor": "async def",
+      "kind": "source",
+      "sha256": "ccedd01c4f8079d4b31596dba881f48bcf1c90379567c7bbea7faf8a868057ce",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "ssr": {
+      "path": "backend/app/api/v1/storefront.py",
+      "line": 33,
+      "anchor": "def create_router",
+      "kind": "source",
+      "sha256": "5b15e389bb777213e2df7d6770e4f83146f5257a1dae2685b50dff785473214b",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "render": {
+      "path": "backend/app/v1/storefront/rendering.py",
+      "line": 92,
+      "anchor": "def render_storefront",
+      "kind": "source",
+      "sha256": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "guard": {
+      "path": "backend/tests/safety.py",
+      "line": 39,
+      "anchor": "def validate_test_database",
+      "kind": "source",
+      "sha256": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "lease": {
+      "path": "backend/tests/isolated_database.py",
+      "line": 50,
+      "anchor": "async def migrated_database",
+      "kind": "source",
+      "sha256": "3c3248dca9547ed70d7fa57cecacae9214f7f75c41e39888746c322c1f403e06",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "package": {
+      "path": "scripts/v1_runtime_package.py",
+      "line": 78,
+      "anchor": "def create_context",
+      "kind": "source",
+      "sha256": "60fc12fe2a776135f66a4682e0481e8da5082e1a4559b4ffb7a9f8400d757eae",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "smoke": {
+      "path": "scripts/smoke_v1_runtime.py",
+      "line": 98,
+      "anchor": "def cleanup_created_container",
+      "kind": "source",
+      "sha256": "5493cbd2dc0cc19c1902dce5ccbfd13d89a8f0b161c75228369df2145132f14e",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "workflow": {
+      "path": ".github/workflows/tests.yml",
+      "line": 6,
+      "anchor": "permissions:",
+      "kind": "source",
+      "sha256": "27353b4a8456ed33ce86f13387277284dc8bf957514909645d29d4f47dec9bb5",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "docker": {
+      "path": "deploy/v1/Dockerfile",
+      "line": 2,
+      "anchor": "FROM ",
+      "kind": "source",
+      "sha256": "d2c7a4c0a3ab524fd95e70edd81a3031100355dccfd0741a422c13b8146a6d86",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "migration_identity": {
+      "path": "backend/alembic/versions/0040_v1_identity.py",
+      "line": 13,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "sha256": "c39728689dc28e6d20bb92277a27d0dc3ff39cbdcea7f8758de0130b253f8ce0",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "migration_catalogue": {
+      "path": "backend/alembic/versions/0041_v1_catalogue.py",
+      "line": 16,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "sha256": "94f81c146bef1bfc286dc15e57ad04d93ad2f95f21bc68f42d4e8d2007685536",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "migration_checkout": {
+      "path": "backend/alembic/versions/0044_v1_checkout.py",
+      "line": 16,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "sha256": "54c4b54bdf4f270e2526e1397bc637b1bd3f325bbc33c6e5f75191052b8d0a2c",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "migration_head": {
+      "path": "backend/alembic/versions/0050_v1_assistance.py",
+      "line": 12,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "sha256": "d1bedfed3e29210f895e668e307e4739d97e9fc8ce5f4208948ee809ef6f2dbe",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "startup": {
+      "path": "backend/app/config.py",
+      "line": 8,
+      "anchor": "V1_AUTH_ENABLED",
+      "kind": "source",
+      "sha256": "6f079524aa32638be65754bed23b5b6289af2d0dcb110c0db7ea04a6dab7c2c6",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "channel_tests": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "line": 334,
+      "anchor": "async def test_activated_catalogue_handoffs",
+      "kind": "source",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "e_full": {
+      "path": "artifacts/v1/integration/wave4/full.xml",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "c09434fea301124e1822ddecc9354dd493c9fb60182943aa0eaf685b2577a92e",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_full_log": {
+      "path": "artifacts/v1/integration/wave4/full.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "fd6846d2d2d1fbcacc646d0108619bf0c636e500c3806cc933e90222412bd9e9",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_gates": {
+      "path": "artifacts/v1/integration/wave4/final-gates.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "e54b1e3165830912b3278201987bc604066be710e18c4b2f1e72218eede1752f",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_assistance": {
+      "path": "artifacts/v1/integration/wave4/assistance-browser.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "4c7c55dbb6034959654ee392bbac3968f387b40a1b9ecb7164b7383dc9b07729",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_import": {
+      "path": "artifacts/v1/integration/wave4/import-mounted-browser-final.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "f02c475576b59ee0baf01aa0e536a90b641c3efe6287fb47a6f3ee3e937789b6",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_themes": {
+      "path": "artifacts/v1/integration/wave4/native-mounted-browser.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "5abff2a521deaae230808abfb0ab27cc281012da4a54a6ca920b432a442960bb",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_recovery": {
+      "path": "artifacts/v1/integration/wave4/native-recovery-mounted/browser-results.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "93ab5e00af4bb4a334d4b7521471db7b24c616fe3d0d4a7d480b4f8afd65f57c",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_recovery_source": {
+      "path": "artifacts/v1/integration/wave4/native-recovery-mounted-source.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "caa5d49df3553597e5c4ebd54b9a5744dead6d140894874183f595590e3bb648",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_payment": {
+      "path": "artifacts/v1/integration/wave4/payment-settings-mounted-review.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "b005982a1eabf5f5bf377d699df767a6a9b481aa7f81a42bf7842bdd0f08354c",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_payment_browser": {
+      "path": "artifacts/v1/public-payment/browser-results.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "001f7d1cf1f8faa67c9ee3f346997a013722eda639ab52b2e7625ce08c3848e8",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_parcel": {
+      "path": "artifacts/v1/integration/wave4/parcel-review-mounted-browser.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "3d581750f391739ac7f93bbe902907dd011d176f2e97fb978885cac352cf5aad",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_channel": {
+      "path": "artifacts/v1/channel-operator/verification.md",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "0ccaf8bd0f6fd3b9d57740a95ffd7860e04127e3f0d7cd794c84dc44b4d131a6",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_onboarding": {
+      "path": "docs/v1-execution-status.md",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "e2d3f380db5ba79ce01d26834c2e9d770c037f942786e5ee2a61f3c692d598d6",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_runtime": {
+      "path": "artifacts/v1/runtime-package/wave4-final-manifest.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "3ac85b7625d1405a76533f978dbefc0bb899e2418104cd0822b89702cac26162",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_image": {
+      "path": "artifacts/v1/runtime-package/wave4-final-image-verification.json",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "74d7f88fe54f572ab377917670cc2dbb3f164c409a1e45228fa6d8c1c389389d",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_image_smoke": {
+      "path": "artifacts/v1/integration/wave4/image-smoke-final.txt",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "e0e377a818474c7e14de9f8daa80238a0e47c674fc7d9083f6921dbe3f140ce6",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_history": {
+      "path": "docs/v1-execution-status.md",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "e2d3f380db5ba79ce01d26834c2e9d770c037f942786e5ee2a61f3c692d598d6",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "e_validation": {
+      "path": "docs/v1-wave4-validation.md",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "sha256": "7283213de5dcc91490b61e55969ee9b9ce5f117900dc8b700d1a60737f8c4e4f",
+      "saved_artifact_snapshot": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f"
+    },
+    "t_auth": {
+      "path": "backend/tests/test_v1_auth_onboarding.py",
+      "line": 66,
+      "anchor": "test_fresh_signup_profile_and_resumed_checklist",
+      "test_name": "test_fresh_signup_profile_and_resumed_checklist",
+      "kind": "test",
+      "sha256": "d310ba5029ad441b6d56340dc314684af2085c68fe9178f51dcf02dc3ece4ba3",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_identity": {
+      "path": "backend/tests/test_v1_identity_db.py",
+      "line": 100,
+      "anchor": "test_tenant_isolation_and_revocation",
+      "test_name": "test_tenant_isolation_and_revocation",
+      "kind": "test",
+      "sha256": "efc230acc43ac989488f2a8b7a6e568fc8609c520052c1aa2cc3fbb6a85d1cb9",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_onboarding": {
+      "path": "backend/tests/test_v1_identity.py",
+      "line": 113,
+      "anchor": "test_readiness_does_not_claim_complete_onboarding",
+      "test_name": "test_readiness_does_not_claim_complete_onboarding",
+      "kind": "test",
+      "sha256": "33b97efeda5286e14e97ca0928fdd8f493eed2c912ab327fd56e6dd47bddb163",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_assistance": {
+      "path": "backend/tests/test_assistance.py",
+      "line": 33,
+      "anchor": "test_actual_chain_and_private_readiness_projection",
+      "test_name": "test_actual_chain_and_private_readiness_projection",
+      "kind": "test",
+      "sha256": "3e626ad87dd5acc77781b30cffcab59eee0e22203119a25642082f5651a14815",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_themes": {
+      "path": "backend/tests/test_v1_theme_publication.py",
+      "line": 28,
+      "anchor": "test_actual_ssr_uses_strict_published_allowlist_and_defaults",
+      "test_name": "test_actual_ssr_uses_strict_published_allowlist_and_defaults",
+      "kind": "test",
+      "sha256": "7d3572aec9ab98ab36fadc73c49f077eb20d2c952d2cb61a7cd0af80186da339",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_publication": {
+      "path": "backend/tests/test_storefront_publication.py",
+      "line": 63,
+      "anchor": "test_native_setup_published_activated_sku_ssr_and_cod_replay",
+      "test_name": "test_native_setup_published_activated_sku_ssr_and_cod_replay",
+      "kind": "test",
+      "sha256": "6116195bffd426bf20deb97eee21bc5b9287eafa61460007f6285b7271ed8019",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_imports": {
+      "path": "backend/tests/test_v1_import_jobs_db.py",
+      "line": 53,
+      "anchor": "test_migrated_concurrent_job_idempotency_and_durable_recovery",
+      "test_name": "test_migrated_concurrent_job_idempotency_and_durable_recovery",
+      "kind": "test",
+      "sha256": "e840f6843f23ccf40c722131b46ebaaf518983086c19cd00b4efa8a253c336bf",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_fetch": {
+      "path": "backend/tests/test_v1_import_jobs_fetch.py",
+      "line": 36,
+      "anchor": "test_fetch_pins_ip_and_revalidates_every_redirect",
+      "test_name": "test_fetch_pins_ip_and_revalidates_every_redirect",
+      "kind": "test",
+      "sha256": "483dde9098b3bad5ba6a850c04ac148b7e437d4bb8e9c102a311dd3a09c1acc3",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_bridge": {
+      "path": "backend/tests/test_import_catalogue.py",
+      "line": 59,
+      "anchor": "test_atomic_approval_private_creation_and_exact_replay",
+      "test_name": "test_atomic_approval_private_creation_and_exact_replay",
+      "kind": "test",
+      "sha256": "a4a56c6e4961788a13807cfb85a57efa841164e7cfc196139563b8baae54a3fb",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_catalogue": {
+      "path": "backend/tests/test_v1_catalogue_db.py",
+      "line": 132,
+      "anchor": "test_actual_fk_and_service_both_reject_cross_tenant_product",
+      "test_name": "test_actual_fk_and_service_both_reject_cross_tenant_product",
+      "kind": "test",
+      "sha256": "8ff6e47c36d1b840583e0fdaf8a0473256ac75d1ad46eae4126bab074ad3dd8f",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_checkout": {
+      "path": "backend/tests/test_v1_checkout.py",
+      "line": 76,
+      "anchor": "test_actual_single_sku_contention_never_oversells",
+      "test_name": "test_actual_single_sku_contention_never_oversells",
+      "kind": "test",
+      "sha256": "055747c0a4a2fd3d8406d0e3820effb8ecf732a787f7830f579f41263c2e9d21",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_checkout_api": {
+      "path": "backend/tests/test_v1_checkout_api.py",
+      "line": 72,
+      "anchor": "test_reviewed_create_activation_public_browse_checkout_and_protected_status",
+      "test_name": "test_reviewed_create_activation_public_browse_checkout_and_protected_status",
+      "kind": "test",
+      "sha256": "932b1a9293b17b1e87f2040df1e9c9d94544b188e971fcc8645fafcedb2aab84",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_payment": {
+      "path": "backend/tests/test_v1_checkout_api.py",
+      "line": 188,
+      "anchor": "test_gateway_unknown_attempt_is_durable_no_blind_retry_and_exact_reconciliation",
+      "test_name": "test_gateway_unknown_attempt_is_durable_no_blind_retry_and_exact_reconciliation",
+      "kind": "test",
+      "sha256": "932b1a9293b17b1e87f2040df1e9c9d94544b188e971fcc8645fafcedb2aab84",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_payment_settings": {
+      "path": "backend/tests/test_payment_settings.py",
+      "line": 44,
+      "anchor": "test_absent_revision_is_tenant_bound_and_full_response_never_contains_secrets",
+      "test_name": "test_absent_revision_is_tenant_bound_and_full_response_never_contains_secrets",
+      "kind": "test",
+      "sha256": "e0371b6d9381a8a5afa03286ef2b8cdff512d38ee8a5534fde43bd69000c5f7c",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_channels": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "line": 281,
+      "anchor": "test_owner_oauth_uses_actor_browser_and_current_generation_and_no_live_provider",
+      "test_name": "test_owner_oauth_uses_actor_browser_and_current_generation_and_no_live_provider",
+      "kind": "test",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_operator": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "line": 187,
+      "anchor": "test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation",
+      "test_name": "test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation",
+      "kind": "test",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_context": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "line": 353,
+      "anchor": "test_whatsapp_activated_context_handoffs_without_frozen_price_or_stock",
+      "test_name": "test_whatsapp_activated_context_handoffs_without_frozen_price_or_stock",
+      "kind": "test",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_unknown": {
+      "path": "backend/tests/test_whatsapp.py",
+      "line": 623,
+      "anchor": "test_unlinked_queue_groups_messages_and_resumes_once_per_customer",
+      "test_name": "test_unlinked_queue_groups_messages_and_resumes_once_per_customer",
+      "kind": "test",
+      "sha256": "cd1240647f241009e77b93193dd7044eeb15646850edb07618c7457388162b38",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_parcel": {
+      "path": "backend/tests/test_parcel_tracking.py",
+      "line": 87,
+      "anchor": "test_actual_two_service_confirm_replay_poll_history_no_order_transition",
+      "test_name": "test_actual_two_service_confirm_replay_poll_history_no_order_transition",
+      "kind": "test",
+      "sha256": "16251c8ca7cb07244d76c67bb3b1660e5469e35938dcad25827933abea7c9a70",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_parcel_review": {
+      "path": "backend/tests/test_parcel_reviews.py",
+      "line": 52,
+      "anchor": "test_review_resume_preserves_history_no_order_change_no_notification_and_replays",
+      "test_name": "test_review_resume_preserves_history_no_order_change_no_notification_and_replays",
+      "kind": "test",
+      "sha256": "aa07bbffe925d6abfb89aabbab206d8647108088e00c3fe3dfad9f97a689a1b8",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_ssr": {
+      "path": "backend/tests/test_v1_storefront_rendering.py",
+      "line": 28,
+      "anchor": "test_public_projection_escapes_html_json_and_excludes_every_private_extra",
+      "test_name": "test_public_projection_escapes_html_json_and_excludes_every_private_extra",
+      "kind": "test",
+      "sha256": "88be379201bf830deae6f934cc388a14e85ee8ede7164c1e7b264a8ffd1dbfac",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_render": {
+      "path": "backend/tests/test_v1_wave2_storefront.py",
+      "line": 92,
+      "anchor": "test_canonical_origin_is_configuration_bound_and_foreign_ids_are_404",
+      "test_name": "test_canonical_origin_is_configuration_bound_and_foreign_ids_are_404",
+      "kind": "test",
+      "sha256": "7149d19391c2c7de0f41dc6a42b9c2367a5c5defd78282f5a9bde38ed53c7928",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_guard": {
+      "path": "backend/tests/test_test_safety.py",
+      "line": 86,
+      "anchor": "test_no_runtime_or_admin_fallback",
+      "test_name": "test_no_runtime_or_admin_fallback",
+      "kind": "test",
+      "sha256": "08066383c20654de4d9cb123fbeab8dbfe1c0a966a3a642ae49aa91962549785",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_lease": {
+      "path": "backend/tests/test_test_safety.py",
+      "line": 26,
+      "anchor": "test_accepts_only_explicit_literal_lane_target",
+      "test_name": "test_accepts_only_explicit_literal_lane_target",
+      "kind": "test",
+      "sha256": "08066383c20654de4d9cb123fbeab8dbfe1c0a966a3a642ae49aa91962549785",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_migration_identity": {
+      "path": "backend/tests/test_v1_identity_db.py",
+      "line": 76,
+      "anchor": "test_domain_migration_backfill_and_rerun_preserve_revocation",
+      "test_name": "test_domain_migration_backfill_and_rerun_preserve_revocation",
+      "kind": "test",
+      "sha256": "efc230acc43ac989488f2a8b7a6e568fc8609c520052c1aa2cc3fbb6a85d1cb9",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_migration_catalogue": {
+      "path": "backend/tests/test_v1_catalogue_db.py",
+      "line": 54,
+      "anchor": "test_real_migration_backfill_preserves_pending_reservations_and_replays",
+      "test_name": "test_real_migration_backfill_preserves_pending_reservations_and_replays",
+      "kind": "test",
+      "sha256": "8ff6e47c36d1b840583e0fdaf8a0473256ac75d1ad46eae4126bab074ad3dd8f",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_migration_checkout": {
+      "path": "backend/tests/test_v1_checkout.py",
+      "line": 236,
+      "anchor": "test_pending_legacy_reservation_blocks_activation_then_requires_fresh_review",
+      "test_name": "test_pending_legacy_reservation_blocks_activation_then_requires_fresh_review",
+      "kind": "test",
+      "sha256": "055747c0a4a2fd3d8406d0e3820effb8ecf732a787f7830f579f41263c2e9d21",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_package": {
+      "path": "backend/tests/test_v1_runtime_package.py",
+      "line": 35,
+      "anchor": "test_context_excludes_tracked_and_untracked_sensitive_sentinels",
+      "test_name": "test_context_excludes_tracked_and_untracked_sensitive_sentinels",
+      "kind": "test",
+      "sha256": "e3bf6357904e614f1b1f2898224cb736429b01b7e5f24ad98d6c237ba4cc8ba5",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_startup": {
+      "path": "backend/tests/test_v1_startup.py",
+      "line": 8,
+      "anchor": "test_all_foundation_models_are_registered",
+      "test_name": "test_all_foundation_models_are_registered",
+      "kind": "test",
+      "sha256": "4bd9fcd8d14a8cc653553ba0b2e41d12725d4642b6585b27656cfb42a1d10621",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    },
+    "t_channel_tests": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "line": 334,
+      "anchor": "test_activated_catalogue_handoffs_before_legacy_fact_reply",
+      "test_name": "test_activated_catalogue_handoffs_before_legacy_fact_reply",
+      "kind": "test",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+    }
+  },
+  "rows": [
+    {
+      "id": "V01",
+      "group": "outcome",
+      "requirement": "Seller and sales-team onboarding",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Native signup/invitation, persistent sessions, business profile and resumable checklist exist; historical mounted onboarding and current assistance evidence exercise scoped membership.",
+      "remaining": "Complete fresh seller journey and audited expiring support access; current onboarding_complete is always false. Local team owns support grants/global sales.",
+      "source_refs": [
+        "auth",
+        "onboarding",
+        "identity",
+        "assistance"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_onboarding",
+        "e_assistance"
+      ],
+      "owner": "Local foundation/support team + acceptance owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_auth",
+        "t_onboarding",
+        "t_identity",
+        "t_assistance"
+      ]
+    },
+    {
+      "id": "V02",
+      "group": "outcome",
+      "requirement": "Three premium website templates",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "All three persisted published designs render through actual API/SSR/JS and local COD fixtures; private draft/public publication remain distinct.",
+      "remaining": "Full desktop/phone parity, real approved media, keyboard/focus/contrast acceptance across all critical states and physical phone evidence.",
+      "source_refs": [
+        "themes",
+        "publication",
+        "render"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_full"
+      ],
+      "owner": "Storefront/QA + owner devices",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_themes",
+        "t_publication",
+        "t_render"
+      ]
+    },
+    {
+      "id": "V03",
+      "group": "outcome",
+      "requirement": "Catalogue import",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Durable bounded website JSON-LD and JPEG/PNG/MP4 upload review/recovery exist. 47 mounted native checks use synthetic retrieval. Instagram owned-media is an injected interface only.",
+      "remaining": "Implement/wire owned-media retrieval adapter and native CSV fallback. Production _drain passes no instagram_provider; collect_claim fails provider_capability_pending. Then verify seller-authorized real website/Instagram sources; uploaded fallback does not prove API import.",
+      "source_refs": [
+        "imports",
+        "import_worker",
+        "import_schema",
+        "fetch"
+      ],
+      "evidence_refs": [
+        "e_import",
+        "e_full"
+      ],
+      "owner": "Imports + provider/account owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports",
+        "t_fetch"
+      ]
+    },
+    {
+      "id": "V04",
+      "group": "outcome",
+      "requirement": "Catalogue review and maintenance",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Draft provenance, seller overrides, duplicate/source identity, explicit SKU allocation and private receipt recovery are represented in source and saved migrated/native cases.",
+      "remaining": "Actual complete seller maintenance/reimport journey with approved real source/media, multi-product reel mapping and correction review remains acceptance work.",
+      "source_refs": [
+        "imports",
+        "bridge",
+        "catalogue"
+      ],
+      "evidence_refs": [
+        "e_import",
+        "e_full",
+        "e_recovery"
+      ],
+      "owner": "Catalogue/imports + acceptance owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports",
+        "t_bridge",
+        "t_catalogue"
+      ]
+    },
+    {
+      "id": "V05",
+      "group": "outcome",
+      "requirement": "Storefront and purchase",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Product/category SSR routes, current SKU/cart/COD/status, conditional payment settings and synthetic online handoff exist; three local COD orders cover three themes.",
+      "remaining": "Real Razorpay SDK/domain/CSP/callback/webhook/capture canary; full checkout failure paths and supported-device product acceptance.",
+      "source_refs": [
+        "ssr",
+        "render",
+        "checkout",
+        "payment",
+        "payment_settings"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_payment",
+        "e_payment_browser",
+        "e_full"
+      ],
+      "owner": "Commerce + provider/account/device owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_ssr",
+        "t_render",
+        "t_checkout",
+        "t_payment",
+        "t_payment_settings"
+      ]
+    },
+    {
+      "id": "V06",
+      "group": "outcome",
+      "requirement": "Orders and customer CRM",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Tenant orders, protected bearer status, transitions, COD collection, payment recovery and channel inbox exist. Channel-independent identity provenance is not established by matching phone.",
+      "remaining": "Verified customer identity links and unified conversation/order history remain local-team-owned; demonstrate full fulfilment/cancellation/customer-history acceptance.",
+      "source_refs": [
+        "order",
+        "checkout_api",
+        "identity",
+        "operator"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_payment_browser",
+        "e_parcel"
+      ],
+      "owner": "Local identity/CRM team + commerce",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout_api",
+        "t_identity",
+        "t_operator"
+      ]
+    },
+    {
+      "id": "V07",
+      "group": "outcome",
+      "requirement": "Self-service Instagram and WhatsApp",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Bound OAuth, credential check/save/disconnect/reconnect and readiness states exist; provider verification in saved tests is synthetic.",
+      "remaining": "Actual supported seller authorization/account selection/Meta access and authorized connection/reconnect/delivery acceptance. WhatsApp manual credential flow alone is not a complete supported embedded signup proof.",
+      "source_refs": [
+        "channels",
+        "operator"
+      ],
+      "evidence_refs": [
+        "e_channel",
+        "e_full"
+      ],
+      "owner": "Channels + account owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_channels",
+        "t_operator"
+      ]
+    },
+    {
+      "id": "V08",
+      "group": "outcome",
+      "requirement": "Catalogue-aware messaging and comments",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Durable ingress, unknown queue, context, comment policy, takeover and replay guards exist for legacy paths. Activated SKU enquiries deliberately hand off before legacy facts.",
+      "remaining": "Implement authoritative current-SKU catalogue-aware responses and demonstrate native rule enable/pause/handoff/resume plus regression set. Real comment/DM/WhatsApp canaries remain separate. Safe handoff is partial implementation, not complete V08.",
+      "source_refs": [
+        "context",
+        "operator",
+        "unknown",
+        "channel_tests"
+      ],
+      "evidence_refs": [
+        "e_channel",
+        "e_full"
+      ],
+      "owner": "Channels/catalogue + provider + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_context",
+        "t_operator",
+        "t_unknown",
+        "t_channel_tests"
+      ]
+    },
+    {
+      "id": "V09",
+      "group": "outcome",
+      "requirement": "Parcel tracking and customer updates",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Order-first scan/confirmation, tenant HMAC Worker/SQLite connector, review replacement/history and deduplicated monotone reconciliation are locally exercised. Carrier/cache and customer-send transports are synthetic.",
+      "remaining": "Private connector provisioning/D1/TLS, authorized existing-parcel refresh and permitted utility delivery canary; physical camera/touch; no shipment booking required.",
+      "source_refs": [
+        "parcel",
+        "parcel_review"
+      ],
+      "evidence_refs": [
+        "e_parcel",
+        "e_full"
+      ],
+      "owner": "Parcel + private connector/account/device owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_parcel",
+        "t_parcel_review"
+      ]
+    },
+    {
+      "id": "V10",
+      "group": "outcome",
+      "requirement": "Basic analytics",
+      "dispositions": [
+        "local_team_owned_in_progress"
+      ],
+      "observed": "No V1 reconciled analytics event/metric surface in audited application source; current team explicitly owns ongoing work.",
+      "remaining": "Visits/views/enquiries/checkout/placed/paid/cancelled/revenue/conversion/automation metrics, attribution limits and test exclusion need implemented source plus exact dataset reconciliation.",
+      "source_refs": [
+        "order",
+        "checkout"
+      ],
+      "evidence_refs": [
+        "e_history",
+        "e_validation"
+      ],
+      "owner": "Local analytics team",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "V11",
+      "group": "outcome",
+      "requirement": "Sales onboarding console",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Membership-scoped board exposes readiness, assigned eligible owner/manager, import issues and current channel checks; 37 mounted checks. Assignment never grants access.",
+      "remaining": "Expiring support grants/global sales authorization and full assisted onboarding acceptance remain local-team-owned. Existing membership is not sales/support access acceptance.",
+      "source_refs": [
+        "assistance",
+        "identity"
+      ],
+      "evidence_refs": [
+        "e_assistance",
+        "e_full"
+      ],
+      "owner": "Local support/sales team + acceptance owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_assistance",
+        "t_identity"
+      ]
+    },
+    {
+      "id": "V12",
+      "group": "outcome",
+      "requirement": "Search visibility and migration",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "not_implemented"
+      ],
+      "observed": "Search-readable product/category HTML, configured canonical origin, metadata and JSON-LD exist.",
+      "remaining": "Sitemap, legacy URL inventory/redirect implementation and actual domain-owner redirect validation; full migration/order-link reconciliation and safe rollback rehearsal.",
+      "source_refs": [
+        "ssr",
+        "render",
+        "publication"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_full",
+        "e_history"
+      ],
+      "owner": "SEO/storefront + migration/domain owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_ssr",
+        "t_render",
+        "t_publication"
+      ]
+    },
+    {
+      "id": "V13",
+      "group": "outcome",
+      "requirement": "International pilot support (conditional Dharaa migration)",
+      "dispositions": [
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Canonical checkout address is IN-only with six-digit Indian postcode; current-SKU/render currency is INR-only. No confirmed Dharaa destination acceptance artifact found.",
+      "remaining": "If Dharaa migrates, confirm countries/address/shipping/charges/payment/display requirements and pass each destination before cutover. Otherwise retain existing international route or defer that migration; worldwide support is not claimed.",
+      "source_refs": [
+        "address",
+        "checkout",
+        "render"
+      ],
+      "evidence_refs": [
+        "e_history",
+        "e_validation"
+      ],
+      "owner": "Business owner + commerce/migration",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_render"
+      ]
+    },
+    {
+      "id": "A01",
+      "group": "acceptance",
+      "requirement": "Fresh seller onboarding",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Native fragments exist; saved mounted signup/profile and import/theme/COD journeys use synthetic tenants.",
+      "remaining": "No complete invitation/signup\u2192settings\u2192approved source\u2192theme\u2192publication\u2192logout resume matrix on integrated release candidate; support local work pending.",
+      "source_refs": [
+        "auth",
+        "onboarding",
+        "imports",
+        "themes"
+      ],
+      "evidence_refs": [
+        "e_onboarding",
+        "e_import",
+        "e_themes"
+      ],
+      "owner": "Acceptance + local onboarding",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_auth",
+        "t_onboarding",
+        "t_imports",
+        "t_themes"
+      ]
+    },
+    {
+      "id": "A02",
+      "group": "acceptance",
+      "requirement": "Sales assistance",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Board denies foreign membership and audits assignment; current source requires active membership.",
+      "remaining": "Assigned sales rep using explicit expiring support grant and credential-safe tools across complete journey.",
+      "source_refs": [
+        "assistance",
+        "identity"
+      ],
+      "evidence_refs": [
+        "e_assistance",
+        "e_full"
+      ],
+      "owner": "Local support/sales + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_assistance",
+        "t_identity"
+      ]
+    },
+    {
+      "id": "A03",
+      "group": "acceptance",
+      "requirement": "Website import",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Website JSON-LD fetch/reimport/override domain tests and native synthetic retrieval exist.",
+      "remaining": "Approved seller-owned actual website retrieval and repeat/correction acceptance.",
+      "source_refs": [
+        "imports",
+        "fetch"
+      ],
+      "evidence_refs": [
+        "e_import",
+        "e_full"
+      ],
+      "owner": "Imports + seller owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports",
+        "t_fetch"
+      ]
+    },
+    {
+      "id": "A04",
+      "group": "acceptance",
+      "requirement": "Instagram/media import",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Synthetic owned-media provider and actual upload bytes/review are distinct fixture paths.",
+      "remaining": "Production owned-media adapter and native CSV; expired real access and multi-product supported media acceptance.",
+      "source_refs": [
+        "imports",
+        "import_worker",
+        "import_schema"
+      ],
+      "evidence_refs": [
+        "e_import",
+        "e_full"
+      ],
+      "owner": "Imports + provider",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports"
+      ]
+    },
+    {
+      "id": "A05",
+      "group": "acceptance",
+      "requirement": "Three-theme parity",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "29 actual mounted checks include all three SSR/JS themes and one local COD order per design.",
+      "remaining": "Every browse/variant/cart/checkout/confirmation and theme-switch semantics on required layouts plus physical phone.",
+      "source_refs": [
+        "themes",
+        "publication",
+        "render"
+      ],
+      "evidence_refs": [
+        "e_themes"
+      ],
+      "owner": "Storefront + acceptance/device",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_themes",
+        "t_publication",
+        "t_render"
+      ]
+    },
+    {
+      "id": "A06",
+      "group": "acceptance",
+      "requirement": "Product integrity",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Migrated tests cover sold out/unknown stock, floor-price projection, inactive product and tenant boundaries.",
+      "remaining": "Complete release-candidate UI/API matrix with approved catalogue fixtures.",
+      "source_refs": [
+        "catalogue",
+        "checkout",
+        "publication"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_themes"
+      ],
+      "owner": "Catalogue + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_catalogue",
+        "t_checkout",
+        "t_publication"
+      ]
+    },
+    {
+      "id": "A07",
+      "group": "acceptance",
+      "requirement": "COD purchase",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Actual mounted COD placement/status for three themes; migrated transition/release authority tests exist.",
+      "remaining": "Full customer/seller confirm\u2192pack\u2192ship\u2192deliver\u2192collect consistency journey on release candidate.",
+      "source_refs": [
+        "checkout",
+        "checkout_api",
+        "order"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_full"
+      ],
+      "owner": "Commerce + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_checkout_api"
+      ]
+    },
+    {
+      "id": "A08",
+      "group": "acceptance",
+      "requirement": "Razorpay test purchase",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Synthetic SDK/provider payment handoff, unknown creation and exact reconciliation are exercised.",
+      "remaining": "Actual provider test checkout, callback/webhook/capture and failed/cancelled/late paths; domain/CSP.",
+      "source_refs": [
+        "payment",
+        "payment_settings",
+        "checkout"
+      ],
+      "evidence_refs": [
+        "e_payment_browser",
+        "e_payment",
+        "e_full"
+      ],
+      "owner": "Commerce + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_payment",
+        "t_payment_settings",
+        "t_checkout"
+      ]
+    },
+    {
+      "id": "A09",
+      "group": "acceptance",
+      "requirement": "Stock contention",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Saved full XML includes actual single-SKU contention and competing cancellation/release cases.",
+      "remaining": "Repeat relevant cases on final integrated release candidate/hosted PG16 CI, preserving actual migrated fixture guard.",
+      "source_refs": [
+        "checkout",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Commerce + CI/QA",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "A10",
+      "group": "acceptance",
+      "requirement": "Instagram comment",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Comment/ingress replay and permission guards tested with blocked provider sockets.",
+      "remaining": "Authorized actual linked-media comment/action and duplicate observation.",
+      "source_refs": [
+        "operator",
+        "channels"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_operator",
+        "t_channels"
+      ]
+    },
+    {
+      "id": "A11",
+      "group": "acceptance",
+      "requirement": "Instagram DM",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Durable inbox/handoff fixture paths; activated SKU response hands off.",
+      "remaining": "Current-SKU catalogue reply implementation + authorized actual inbound/correct reply and handoff observation.",
+      "source_refs": [
+        "operator",
+        "context",
+        "channel_tests"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_operator",
+        "t_context",
+        "t_channel_tests"
+      ]
+    },
+    {
+      "id": "A12",
+      "group": "acceptance",
+      "requirement": "WhatsApp connection and reply",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Synthetic account membership/credential and outbound policy tests.",
+      "remaining": "Correct real authorized account and test recipient with inbound/outbound provider status; account/approval evidence.",
+      "source_refs": [
+        "channels",
+        "context"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_channels",
+        "t_context"
+      ]
+    },
+    {
+      "id": "A13",
+      "group": "acceptance",
+      "requirement": "Unknown reel",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "observed": "Unlinked queue, deduplicated eligible legacy resume and policy exclusions have saved cases.",
+      "remaining": "Complete native unknown\u2192link\u2192current SKU reply/resume journey; activated-SKU handoff limit and live delivery.",
+      "source_refs": [
+        "unknown",
+        "operator",
+        "context"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels/catalogue + acceptance/provider",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_unknown",
+        "t_operator",
+        "t_context"
+      ]
+    },
+    {
+      "id": "A14",
+      "group": "acceptance",
+      "requirement": "Product context switch",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "observed": "Legacy context tests distinguish new/unknown/ambiguous references and contact scope.",
+      "remaining": "Current-SKU-aware reply implementation and mixed-language/multi-product integrated acceptance with declared quality thresholds.",
+      "source_refs": [
+        "context",
+        "unknown"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Channels + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_context",
+        "t_unknown"
+      ]
+    },
+    {
+      "id": "A15",
+      "group": "acceptance",
+      "requirement": "Messaging policy",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Window, opt-out, pause, disconnection, revoked actor and unknown-send guards have controlled fixtures.",
+      "remaining": "Current supported provider policy/account mode and authorized live withheld/delivery evidence; cannot infer live policy readiness from fixtures.",
+      "source_refs": [
+        "operator",
+        "channels"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_operator",
+        "t_channels"
+      ]
+    },
+    {
+      "id": "A16",
+      "group": "acceptance",
+      "requirement": "Parcel association and updates",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "20 actual mounted review cases, real local Worker/HMAC/SQLite; no external courier/customer sends.",
+      "remaining": "Private connector/authorized existing parcel + permitted actual update and physical scan; booking excluded.",
+      "source_refs": [
+        "parcel",
+        "parcel_review"
+      ],
+      "evidence_refs": [
+        "e_parcel",
+        "e_full"
+      ],
+      "owner": "Parcel + private/device/provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_parcel",
+        "t_parcel_review"
+      ]
+    },
+    {
+      "id": "A17",
+      "group": "acceptance",
+      "requirement": "Order privacy and history",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "observed": "Protected session-held order status, no token URL, tenant order view and local parcel history verified.",
+      "remaining": "Unified verified identity/conversation history is local-team work; full release-candidate customer/seller history matrix.",
+      "source_refs": [
+        "order",
+        "checkout_api",
+        "identity"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_themes",
+        "e_payment_browser"
+      ],
+      "owner": "Local identity/CRM + acceptance",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout_api",
+        "t_identity"
+      ]
+    },
+    {
+      "id": "A18",
+      "group": "acceptance",
+      "requirement": "Analytics reconciliation",
+      "dispositions": [
+        "local_team_owned_in_progress"
+      ],
+      "observed": "No completed reconciled analytics artifact found in audited source.",
+      "remaining": "Exact known dataset, excluded synthetic/test activity and unknown attribution display after local implementation.",
+      "source_refs": [
+        "order",
+        "checkout"
+      ],
+      "evidence_refs": [
+        "e_history",
+        "e_validation"
+      ],
+      "owner": "Local analytics team",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "A19",
+      "group": "acceptance",
+      "requirement": "Disconnect/reconnect",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Bound OAuth generation/revocation/replay and different-account denial source/tests.",
+      "remaining": "Authorized real revoke/reconnect and queued delivery state; full UI journey.",
+      "source_refs": [
+        "channels",
+        "operator"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels + provider owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_channels",
+        "t_operator"
+      ]
+    },
+    {
+      "id": "A20",
+      "group": "acceptance",
+      "requirement": "Import/worker restart",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "observed": "Durable lease/retry/receipt and unknown operation tests plus 30 native recovery cases exist.",
+      "remaining": "Combined real process/worker/Redis restart acceptance across imports/messages/payment/parcel without duplicate effects; CI Redis cases remain skipped.",
+      "source_refs": [
+        "imports",
+        "import_worker",
+        "operator",
+        "payment",
+        "parcel"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_recovery",
+        "e_recovery_source"
+      ],
+      "owner": "QA + runtime/domain owners",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports",
+        "t_operator",
+        "t_payment",
+        "t_parcel"
+      ]
+    },
+    {
+      "id": "A21",
+      "group": "acceptance",
+      "requirement": "Search and migration",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "not_implemented"
+      ],
+      "observed": "SSR canonical/meta are exercised; old order capability shell remains usable after unpublish in saved native cases.",
+      "remaining": "Sitemap, redirect source/inventory/domain acceptance, migration ledger and existing order-link compatibility.",
+      "source_refs": [
+        "ssr",
+        "render",
+        "publication"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_full",
+        "e_history"
+      ],
+      "owner": "SEO + migration/domain owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_ssr",
+        "t_render",
+        "t_publication"
+      ]
+    },
+    {
+      "id": "A22",
+      "group": "acceptance",
+      "requirement": "International pilot",
+      "dispositions": [
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "IN address and INR guards explicitly bound current checkout.",
+      "remaining": "Conditional on selected pilot: all confirmed supported destinations/payment/shipping/confirmation tested; retain legacy international route if deferred.",
+      "source_refs": [
+        "address",
+        "checkout",
+        "render"
+      ],
+      "evidence_refs": [
+        "e_history"
+      ],
+      "owner": "Commerce + business owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_render"
+      ]
+    },
+    {
+      "id": "A23",
+      "group": "acceptance",
+      "requirement": "Backup and rollback",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Additive migrated-schema evidence is historical; new disposable rehearsal lane owns tooling.",
+      "remaining": "No actual backup/restore/reconciliation/application rollback executed here. Review stable rehearsal source, then actual allocated synthetic PG16 run; no destructive downgrade/old snapshot overwrite.",
+      "source_refs": [
+        "migration_identity",
+        "migration_catalogue",
+        "migration_checkout",
+        "migration_head",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_history"
+      ],
+      "owner": "Release rehearsal + operations/owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_migration_identity",
+        "t_migration_catalogue",
+        "t_migration_checkout",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "G0",
+      "group": "gate",
+      "requirement": "Baseline",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Preserved baseline/application commits and saved failure runs exist; source hashes are independently checked in this audit.",
+      "remaining": "No whole-repo credential absence claim; limited path/fixture scan is distinct from secret provenance review.",
+      "source_refs": [
+        "startup",
+        "guard"
+      ],
+      "evidence_refs": [
+        "e_gates",
+        "e_history"
+      ],
+      "owner": "Coordinator/security",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_startup",
+        "t_guard"
+      ]
+    },
+    {
+      "id": "G1",
+      "group": "gate",
+      "requirement": "Parallel readiness",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Ownership contract and exact P01 lane/reset/lease policy exist.",
+      "remaining": "New release CI/rehearsal stable source and adversarial checks, hosted allocated environments/PG16 must pass.",
+      "source_refs": [
+        "guard",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_history"
+      ],
+      "owner": "Coordinator + release CI/rehearsal",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_guard",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "G2",
+      "group": "gate",
+      "requirement": "Functional integration",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Historical actual 0050 PG16 and native composed slices exist.",
+      "remaining": "Every in-scope module still includes implementation gaps: Instagram adapter/CSV, SKU replies, SEO, local support/CRM/analytics, conditional international; no placeholder waiver.",
+      "source_refs": [
+        "imports",
+        "context",
+        "ssr",
+        "assistance"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_gates"
+      ],
+      "owner": "All product owners + QA",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_imports",
+        "t_context",
+        "t_ssr",
+        "t_assistance"
+      ]
+    },
+    {
+      "id": "G3",
+      "group": "gate",
+      "requirement": "Provider readiness",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Only synthetic transport and real local connector evidence reviewed.",
+      "remaining": "Actual supported Meta connection/comment/DM/WA, Razorpay test SDK/capture, private ParcelDesk and permitted delivery canaries all pending.",
+      "source_refs": [
+        "channels",
+        "payment",
+        "parcel"
+      ],
+      "evidence_refs": [
+        "e_channel",
+        "e_payment_browser",
+        "e_parcel"
+      ],
+      "owner": "Provider/account/private connector owners",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_channels",
+        "t_payment",
+        "t_parcel"
+      ]
+    },
+    {
+      "id": "G4",
+      "group": "gate",
+      "requirement": "Product readiness",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Bounded mounted browsers and viewport fixtures available.",
+      "remaining": "All 23 full acceptance rows on final integrated candidate, real media and physical-device evidence; full assisted/self-service onboarding.",
+      "source_refs": [
+        "auth",
+        "themes",
+        "assistance"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_assistance",
+        "e_import",
+        "e_recovery"
+      ],
+      "owner": "Acceptance/device owners",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_auth",
+        "t_themes",
+        "t_assistance"
+      ]
+    },
+    {
+      "id": "G5",
+      "group": "gate",
+      "requirement": "Pilot readiness",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Default-off flags and preserved schema chain exist; release engineering source work is ongoing.",
+      "remaining": "Named pilot destinations/traffic/thresholds, restore/rollback actual run, alerts, quotas/usage limits, operational support runbooks and deployment rehearsal.",
+      "source_refs": [
+        "startup",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_history",
+        "e_validation"
+      ],
+      "owner": "Operations/business/QA + release owners",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_startup",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "G6",
+      "group": "gate",
+      "requirement": "Production cutover",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "No cutover was authorized or executed.",
+      "remaining": "Owner approval after evidence, production provider readiness, final backup, controlled rollout, production smoke and reconciliation.",
+      "source_refs": [
+        "startup"
+      ],
+      "evidence_refs": [
+        "e_history",
+        "e_validation"
+      ],
+      "owner": "Owner + operations",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "M01",
+      "group": "migration_rollback",
+      "requirement": "Preserve stable IDs and provenance",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Additive identity/catalogue migrations preserve tenant/product IDs and explicit legacy bridges.",
+      "remaining": "Actual selected-store migration inventory/reconciliation, verified customer provenance.",
+      "source_refs": [
+        "migration_identity",
+        "migration_catalogue",
+        "identity"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Migration + local identity",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_migration_identity",
+        "t_migration_catalogue",
+        "t_identity"
+      ]
+    },
+    {
+      "id": "M02",
+      "group": "migration_rollback",
+      "requirement": "Historic orders/payment credentials",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Order lines/totals, encrypted credential snapshots and pending/unknown payment state source exist.",
+      "remaining": "Reconcile sanitized source\u2192target order/payment/customer IDs, totals, evidence and credential references; do not publish secrets.",
+      "source_refs": [
+        "order",
+        "payment"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_payment_browser"
+      ],
+      "owner": "Migration/commerce",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_payment"
+      ]
+    },
+    {
+      "id": "M03",
+      "group": "migration_rollback",
+      "requirement": "Reservations/stock",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "SKU reservation/once-release checks and legacy pending-reservation activation block exist.",
+      "remaining": "Real store inventory mapping and ledger reconciliation before activating SKU writer; unknown stock must remain unknown.",
+      "source_refs": [
+        "checkout",
+        "migration_checkout"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Catalogue/migration",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_migration_checkout"
+      ]
+    },
+    {
+      "id": "M04",
+      "group": "migration_rollback",
+      "requirement": "Consents and pending/unknown sends",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Durable ingress, quarantine and consent-aware outbox are source-implemented with synthetic transports.",
+      "remaining": "Backup/reconcile consents, pending/unknown actions and side-effect-free forward recovery across workers; never blindly replay unknown sends.",
+      "source_refs": [
+        "operator",
+        "parcel"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_channel"
+      ],
+      "owner": "Channels/migration/operations",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_operator",
+        "t_parcel"
+      ]
+    },
+    {
+      "id": "M05",
+      "group": "migration_rollback",
+      "requirement": "Backfill before reader switch",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Legacy identity/catalogue actual migration tests include backfill/idempotence and revocation preservation.",
+      "remaining": "Selected store side-effect-free reconciliation and staged reader switch evidence.",
+      "source_refs": [
+        "migration_identity",
+        "migration_catalogue"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Migration/QA",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_migration_identity",
+        "t_migration_catalogue"
+      ]
+    },
+    {
+      "id": "M06",
+      "group": "migration_rollback",
+      "requirement": "One authoritative writer/feature flags",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Activation rejects legacy SKU checkout; flags default off.",
+      "remaining": "Operational switch/rollback and worker fencing proving no double reserve/send after cutover.",
+      "source_refs": [
+        "checkout",
+        "startup",
+        "operator"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Operations/commerce/channels",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_checkout",
+        "t_startup",
+        "t_operator"
+      ]
+    },
+    {
+      "id": "M07",
+      "group": "migration_rollback",
+      "requirement": "URL inventory and ownership",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Canonical origin/SSR routes exist.",
+      "remaining": "Supported legacy URL inventory, owner/provider routing authority, redirects/sitemap and existing customer order-link preservation.",
+      "source_refs": [
+        "ssr",
+        "render"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_history"
+      ],
+      "owner": "SEO/domain/migration owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_ssr",
+        "t_render"
+      ]
+    },
+    {
+      "id": "M08",
+      "group": "migration_rollback",
+      "requirement": "Isolated backup/restore",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Actual migrations are historical evidence, not backup/restore evidence.",
+      "remaining": "New rehearsal tool source review and explicitly allocated synthetic source\u2192distinct empty target execution with IDs/totals/reservations/pending-action reconciliation.",
+      "source_refs": [
+        "guard",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_history"
+      ],
+      "owner": "Release rehearsal + operations",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_guard",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "M09",
+      "group": "migration_rollback",
+      "requirement": "Application rollback preserves newer transactions",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Routine rollback must be application switch or forward fix. Destructive schema downgrade is not acceptable.",
+      "remaining": "Actual forward-fix/schema compatibility rehearsal; demonstrate preserved post-cutover orders, reservations, identity and pending actions. Offline downgrade planning is not execution.",
+      "source_refs": [
+        "order",
+        "migration_head"
+      ],
+      "evidence_refs": [
+        "e_history"
+      ],
+      "owner": "Release rehearsal + operations",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "M10",
+      "group": "migration_rollback",
+      "requirement": "Pilot-specific cutover approval",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "No release/production operation performed by this audit.",
+      "remaining": "Named seller scope, conditional Dharaa international evidence or retained route, final backup, owner approval and controlled reconciliation.",
+      "source_refs": [
+        "address",
+        "startup"
+      ],
+      "evidence_refs": [
+        "e_history"
+      ],
+      "owner": "Business/operations owner",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "X01",
+      "group": "cross_cutting",
+      "requirement": "AI regression and factual safety",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "observed": "Saved deterministic safeguards/context tests exist; five historical scenario cassettes skipped.",
+      "remaining": "Declared hard/soft thresholds and complete current-SKU, mixed-language, multi-product, malicious-source regression set on final candidate.",
+      "source_refs": [
+        "context",
+        "imports"
+      ],
+      "evidence_refs": [
+        "e_full"
+      ],
+      "owner": "Channels/AI QA",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_context",
+        "t_imports"
+      ]
+    },
+    {
+      "id": "X02",
+      "group": "cross_cutting",
+      "requirement": "Load/performance/recovery envelope",
+      "dispositions": [
+        "not_implemented"
+      ],
+      "observed": "No agreed pilot envelope or saved latency/error/backlog/mobile budget report located.",
+      "remaining": "Agree synthetic traffic/latency/error/backlog thresholds and run bounded fake-provider load/restart checks; field/device metrics separate.",
+      "source_refs": [
+        "startup"
+      ],
+      "evidence_refs": [
+        "e_history"
+      ],
+      "owner": "Operations/QA/business",
+      "acceptance_complete": false,
+      "test_refs": [],
+      "test_gap": "No passing acceptance test proves this missing/in-progress/owner-gated requirement in the audited candidate."
+    },
+    {
+      "id": "X03",
+      "group": "cross_cutting",
+      "requirement": "Reproducible source package versus image",
+      "dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "observed": "Historical 286-file arm64 package/image hashes and offline smoke verified as saved artifacts.",
+      "remaining": "New pinned lock/base/action changes need new image build/smoke. Deterministic context is not reproducible OCI image; amd64/arm64 execution still pending.",
+      "source_refs": [
+        "package",
+        "docker",
+        "smoke"
+      ],
+      "evidence_refs": [
+        "e_runtime",
+        "e_image",
+        "e_image_smoke"
+      ],
+      "owner": "Release CI/runtime",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_package"
+      ]
+    },
+    {
+      "id": "X04",
+      "group": "cross_cutting",
+      "requirement": "Hosted CI and mandatory migrated gate",
+      "dispositions": [
+        "source_implemented"
+      ],
+      "observed": "Existing workflow has read-only permissions, synthetic PG16 and guarded tests; it is not new workflow execution proof.",
+      "remaining": "Independent stable workflow review, mandatory actual migrated/held-lease testcase passing in JUnit, pinned dependencies/actions and CI evidence; all-DB-skipped pytest cannot pass release gate.",
+      "source_refs": [
+        "workflow",
+        "guard",
+        "lease"
+      ],
+      "evidence_refs": [
+        "e_full",
+        "e_history"
+      ],
+      "owner": "Release CI",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_guard",
+        "t_lease"
+      ]
+    },
+    {
+      "id": "X05",
+      "group": "cross_cutting",
+      "requirement": "Physical-device/accessibility acceptance",
+      "dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "observed": "Mounted Chromium emulates viewports; no physical device result is claimed.",
+      "remaining": "Real iPhone/Android login/checkout/camera/touch and 360/390/768/1440, keyboard/focus/labels/contrast/error/long-name checks.",
+      "source_refs": [
+        "themes",
+        "ssr"
+      ],
+      "evidence_refs": [
+        "e_themes",
+        "e_parcel"
+      ],
+      "owner": "Device/acceptance owner",
+      "acceptance_complete": false,
+      "test_refs": [
+        "t_themes",
+        "t_ssr"
+      ]
+    }
+  ],
+  "peer_reviews": {
+    "ci": {
+      "status": "source_reviewed_execution_pending",
+      "source_commit": "3846fffc66525a481fa26c64560d1d6de0e402ee",
+      "branch_head": "5b4cc41e2e99c18b4400d51f383de035747d7d33",
+      "review_artifact": "artifacts/v1/release-audit/peer-release-review.json"
+    },
+    "rehearsal": {
+      "status": "source_reviewed_actual_restore_and_app_switch_pending",
+      "source_commit": "0e2996fc27feca5255c5c386f6a650ede5e3015a",
+      "review_artifact": "artifacts/v1/release-audit/peer-release-review.json"
+    }
+  },
+  "provenance_notes": [
+    {
+      "artifact": "artifacts/v1/integration/wave4/final-gates.json",
+      "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+      "harness_source": "47b1b83103ef7c7728ec350c4cc415d27f235ca2",
+      "path": "backend/tests/browser/import_workspace_native.mjs",
+      "reason": "Recorded bf6445ca hash matches post-application evidence-only screenshot scroll/paint harness at47b1b83; dd36b0d product source stays unchanged. Do not attribute every harness byte to dd36b0d.",
+      "minimal_refresh": "Rerun only47 native import checks on final candidate and allocated PG16, with pre/post app+harness hashes and capture manifest; no full1417 rerun required solely by screenshot harness delta."
+    }
+  ]
+}
