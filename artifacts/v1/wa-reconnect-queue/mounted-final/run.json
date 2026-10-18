@@ -1,0 +1,13 @@
+{
+  "source_commit": "85d93906bc0b61b2ffbd21eb55c4b33266f0035a",
+  "runner_exit_code": 0,
+  "elapsed_seconds": 12.49,
+  "tracked_files": 1823,
+  "tracked_hash_mismatches": [],
+  "generated_artifacts": [
+    "browser-results.json"
+  ],
+  "historical_artifacts_restored": true,
+  "printed_proof_scope_correction": "Runner says PG0052; actual Alembic head must be separately queried. No historical text rewritten.",
+  "scope": "Actual app.main + native catalogue/browser + synthetic signed provider ingress/in-process send adapters; no real Meta/customer send."
+}
