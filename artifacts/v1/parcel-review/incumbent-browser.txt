@@ -1,0 +1,14 @@
+PARCEL_FIXTURE_READY
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments:resolve?awb=5901234123457&courier_id=shree_maruti "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8155/integration/v1/shipments:ensure "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments/d1c6c8ea-2bcf-4ec6-8ff2-e500e39f7231 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments:resolve?awb=44600000002&courier_id=skyking "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8155/integration/v1/shipments:ensure "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments/f76f9475-c41f-4865-9bae-2b5ad8e566f2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments:resolve?awb=44600000003&courier_id=skyking "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8155/integration/v1/shipments:ensure "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments/7bfde858-4792-4d58-b3d6-3f7dee178908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments:resolve?awb=44600000004&courier_id=skyking "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8155/integration/v1/shipments:resolve?awb=44600000005&courier_id=skyking "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8155/integration/v1/shipments:ensure "HTTP/1.1 201 Created"
+PASS 18 native parcel Chromium checks: actual signup/SKU/order, real ZXing synthetic camera, ambiguous courier confirmation, no implicit link, manual camera-denied fallback, actual two-service linking/history, consent-independent tracking, unchanged order truth, lost native response/reload/exact retry. No external requests or customer sends.
