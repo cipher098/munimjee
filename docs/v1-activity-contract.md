@@ -1,0 +1,78 @@
+# V10 first-party activity contract
+
+Status: definitions, conservative checkout seam and policy frozen with integrator on2026-10-18; shared hook integration remains separately owned. Base515c538;0053 CSV is a reviewed dependency. Reserved0054_v1_activity follows actual0053_v1_csv_import. No analytics claim predates its measured coverage.
+
+## Audit and purpose
+
+Existing seller-analytics.v1 reports canonical commerce_orders by UTC order-created cohort/current states. Its money definitions remain unchanged. It cannot supply visits, product views, checkout opens or attribution: no trustworthy browser event ledger exists. Existing Instagram ingress, WhatsApp messages and comment outboxes hold operational states; they lack immutable test provenance and do not prove buying intent, successful resolution or attributable sales. Conversation.messages JSON is not an analytics source.
+
+This additive slice supplies first-party observed activity and immutable new-order classification. It does not infer historical events, visitors from customers, people from browsers, payment from SDK callbacks, attribution from timestamps, or production status from current gateway configuration. Legacy/unclassified facts remain visibly separate. Existing purchase metrics are retained as defined, with their historical test-classification limits displayed.
+
+## Policy and authority
+
+Per-business measurement mode is off/test/live, initially off. Only a current native owner may change policy, including enabling live after an explicit first-party collection notice and exact conditional revision. Managers/viewers with analytics.read may read; they cannot authorize tracking. Entry AND final precommit guards recheck current native session, active business/seller and owner role, including lock waits. No sales-support grant creates membership or analytics access.
+
+A policy change has an immutable timestamped receipt/history. Off does not manufacture zero activity. Test does not flow into production totals. Server-known native seller, preview, nonproduction deployment, explicit test and known gateway-test evidence always wins over a client assertion. A previously test/unknown context cannot be promoted to live. All client bodies omit mode, tenant, native identity and paid/outcome claims. Unknown historical/unproven requests stay unknown.
+
+## Definitions
+
+Activity dates are UTC context-start/event-received dates, independent of the order-created/current-state money cohort. Default last30 calendar dates, maximum90. Definitions and availability accompany each result.
+
+| Metric | Exact counted fact |
+| --- | --- |
+| Observed visits | Distinct server-issued contexts with an accepted visible published-store browser context-start POST. A context lasts at most30 minutes. It is not a person or a complete visitor count; storage cloning, refusal, blockers, non-JS clients and bots limit coverage. |
+| Product views | Distinct context+tenant-owned public activated product after its detail view is visible. Reopens/reloads within the same context count once. A listing impression is not a detail view. |
+| Checkout starts | Distinct eligible context with its checkout form actually visible. Reopen/retry within that context counts once. Opening a bag is not a checkout start. |
+| Accepted placements | New canonical SKU orders accepted by the existing order transaction. Replay does not add a placement. Pending, cancelled or expired orders still represent placement; this is not paid revenue. |
+| Observed placement conversion | Distinct eligible visited contexts with at least one same-context accepted placement / eligible visited contexts, using context-start cohort and the original bounded context window. It is not paid conversion, customer conversion, attribution or causal lift. Numerator cannot exceed denominator. |
+| Enquiry messages | Future classified accepted, deduplicated non-echo inbound customer text/media messages from the actual channel producer. This does not establish buying intent, a lead, unique customer or product interest. |
+| Automation outcomes | Future classified local queued/provider-accepted/failed/uncertain action facts, with exact operational source definitions. Processing success alone is not a reply, delivery or resolution. Unsupported outcomes remain unavailable. |
+
+No marketing/referral/cross-channel attribution, page URL/referrer, enquiry-to-sale link, autonomous resolution, completed refunds or fees is inferred. Those fields remain null with reason. Public client reports cannot create enquiry, order, payment, delivery or automation facts.
+
+Conversion is null when denominator is0 or context-cohort coverage is disabled/not_started/incomplete/retention-truncated/ingestion-capped. Known partial counts may be shown with their interval and explanation; no rate silently treats missing time as zero. Coverage includes policy history, retention window, observed ingestion losses and producer installation. Zero is valid only for a supported covered count with no qualifying facts. Historical/unclassified orders and channel rows are diagnostic counts, never silently merged into live totals.
+
+## Minimal retained data and exclusions
+
+Raw activity contains only internal business/context/product/source-row IDs, allowlisted event kind, server timestamps, policy revision and immutable live/test/unknown classification/reason. No IP address, full user-agent, fingerprint, full URL/query/referrer, customer/session user identity, email/phone/address, message/body/media/provider payload/ID, credentials, order bearer, JWT or SDK token is persisted in this ledger or emitted in analytics DTOs. User-agent may be examined transiently for an explicit known crawler/prefetch exclusion; it is never stored. GPC/DNT or unavailable storage means no browser collection. Shopping still works.
+
+Known bot/prefetch/native/preview/test activity is excluded from live metrics. Human-like bots and untagged QA cannot be perfectly identified; the UI says observed activity and states this limitation. There is no human-verification or complete bot/test detection claim. Server policy and immutable evidence, not a client is_test boolean, classify facts. Any trustworthy test evidence excludes a fact from live metrics. Unknown has its own coverage count.
+
+Raw contexts/events have a90-day technical retention maximum. The owned bounded deletion/reconciliation helper must delete expired raw rows without deleting/reclassifying canonical orders or lifetime minimal order classification/link provenance. The integrator owns scheduled invocation and deployment evidence. No claim that a deployed scheduler exists follows from this contract; runtime enablement/retention readiness must be explicit. Historical data older than the available ledger is unavailable, not zero.
+
+## Public transport and idempotency
+
+Proposed endpoints under /api/v1/storefronts/{slug}/activity:
+
+- POST /contexts: strict body containing only idempotency_key UUID. Published active store and valid same-origin browser context required. Server records that visible visit/start once per exact key and returns an ephemeral signed purpose-only capability, context_id, expires_at and allowlisted measurement state. Token is memory-only, no URL, SDK notes or browser storage. Responses no-store/no-referrer. Mode is derived only by the server.
+- POST /events: capability bound to business+context+purpose; strict body event_kind product_view/checkout_opened and optional product_id only for product_view. Server time is authoritative. Validate current store/public product, origin, expiry, per-context bounds and capacity. Unique business/context/kind/product identity deduplicates lost responses/reload/retry. Event submission grants no seller/order/payment authority.
+
+The client persists only a bounded nonsecret context command key/ID/expiry, scoped to canonical origin+store. It can reacquire an ephemeral capability for that exact context while valid; no silent promotion of a prior context. A new context after its window is new observed activity. Invalid/foreign/malformed contexts cannot attach to another tenant. Strict body/time/event bounds and per-store/context capacity avoid an unbounded public collector; rejected/capped ingestion is reflected in coverage. Measurement failure never disables shopping or silently manufactures confirmed events.
+
+New checkout optional field: activity_context_id UUID|null, in the canonical CheckoutWrite/encodeCheckout/CheckoutAttempt payload. It is frozen before the first order POST with the existing idempotency key; retries/reloads preserve it exactly. No bearer/JWT belongs in that body. Ephemeral measurement proof travels separately as a narrow header. Existing payloads without the field preserve their old request hash (exclude only the absent/null new field, not unrelated null fields). Non-null changed context under the same accepted key conflicts. Replay never replaces or backfills an order's original provenance.
+
+On new accepted order creation only, an approved server helper writes immutable minimal classification and proven same-context link in the caller-owned transaction. Existing payment/stock/order writer remains authoritative; no second order writer is added. Invalid/expired/missing context never becomes a guessed link or live assertion. Missing, expired or foreign optional proof must never block financial checkout or alter an exact accepted replay: record unknown/unlinked without exposing why. Accepted replay lookup precedes new-context eligibility. The shared public hook will be reviewed before writer edits. A context capability cannot authorize order status or mutate payment. Gateway test evidence remains excluded even if the account later rotates; no historical classification uses current account state.
+
+## Native reporting and hook boundaries
+
+Proposed native routes: GET /api/v1/businesses/{bid}/analytics/activity and GET/PUT /api/v1/businesses/{bid}/analytics/measurement-policy. Activity read requires current native analytics.read at entry and after query; policy mutation additionally requires current owner at both boundaries. Safe typed aggregate DTOs only, no context-level browsing history or customer identity exposed. Same session/query ordering and physical ended-access scrub as the existing analytics UI.
+
+Owned proposed paths: new models/schemas/services/API activity_v1 modules; new storefront activity-client.js; owned analytics UI extension; own0054/tests/docs/fixtures. Integrator owns main/config/model registry/runtime package/nav and all shared public shell/writer registration. Public hooks proposed: visible mount, detail open and checkout form open in live-app; client injection/checkout header+frozen optional field in live-entry/live-api/canonical-contract/checkout-attempt. No SSR request/crawler fetch is counted as a visit, and no metadata/canonical/SEO behavior changes. Remote SEO owner receives these exact seams through integrator.
+
+Channel producer hooks remain proposed to integrator/social/remote adapter owner. They mark actual future deduplicated inbound/action facts transactionally, using only internal row IDs and server classification. Uninstrumented historical/operational rows remain unclassified; source installation/coverage is explicit. No parser of Conversation.messages, guessed IG send success or fabricated fixture delivery fills this gap.
+
+## Acceptance and remaining precision checks
+
+The policy/definition freeze includes DTO fixtures, owner notice/gate, immutable checkout context body field, conservative context-proof handling, source hooks and0054 allocation. Shared production hooks and deployment remain independent review gates. Actual tests use exclusive payment_w3 P01 lane and real0053→0054, never create_all. No source/target release DB or live provider is authorized.
+
+Required checks: strict fields/bool/UUID/origin/token purpose/expiry/product tenant/publication; exact context/event and order retries; no native/test promotion; missing/expired context never changes financial retry body or authorizes foreign order; COD and gateway-test provenance; owner→manager/session revoke during policy wait rolls back; current analytics.read and late-response DOM privacy; context-start UTC boundary and bounded same-context conversion; disabled/not_started/partial/zero distinction; classification/retention deletion preserves lifetime order facts; capped/failed ingestion flags coverage; concurrent duplicates; and actual mounted theme browse→view→checkout→COD with synthetic fixture classification plus optional measurement failure. Provider calls remain forbidden. All browser outcomes are synthetic local evidence, not live customer traffic.
+
+## Fixed bounds and versioned seams
+
+Context/event JSON bodies are limited to1,024 bytes, strictly UTF-8 JSON with no extra fields or client timestamp. Capability purpose is storefront.activity.v1 with a distinct public_activity_context role, business+context binding and expiry at original start+30 minutes; never a seller or order role. Public origin is configured canonical origin, not Host. Invalid/foreign event capabilities are denied uniformly. Optional financial proof failure is only unknown/unlinked measurement, as above.
+
+At most300 new contexts per business/classification per server minute, and200 distinct product views plus one checkout_opened per context. Exact accepted replays do not consume another slot. Known capacity loss creates a bounded minute/classification gap marker and makes affected conversion unavailable. Native raw event/aggregate filters have a90-day maximum; count/value fields are bounded/strict and rates use exact numerator/denominator with a decimal percentage string. A zero denominator returns null. These are collector bounds, not traffic/availability guarantees.
+
+New global gate proposed to integrator: V1_ACTIVITY_ENABLED=False. Both that gate and explicit owner policy are required for collection. New client module is optional and no catalogue/public SEO DTO field is added. Initial policy notice version is first-party.v1; policy commands use exact idempotency key/body plus expected_revision, with receipt-first replay and strict acknowledgement true for collection modes. Native policy commands are nonsecret but still journaled per current native user/business/session; shared logout/401 cleanup prefix is proposed as munimjee.activity-policy:.
+
+Internal producer contract: server-only record_source helper takes business_id, an allowlisted source kind and the actual internal row UUID plus an explicit internal automated/operator origin. It validates tenant ownership and immutable server classification, never caller JSON or body text. Future WA/comment automated outboxes are grouped by current local status; provider-accepted requires a nonempty provider association. IG processed rows only supply processing state, never a send. Uninstalled producer metrics stay null with a reason. No matching of message text, provider customer identities or timestamps to sales.
