@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 import pytest
 import pytest_asyncio
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.config import settings
 from app.models.catalogue_v1 import CatalogueProductMapping, CatalogueSKU
@@ -480,3 +480,43 @@ async def test_exact_reel_keeps_sku_store_writers_free_but_documents_incumbent_f
     await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
     assert observed==['incumbent Product focus FK blocks FOR UPDATE']
     async with j.sessions() as db:assert (await db.get(InstagramIngress,rid)).status=='completed'
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',['activation','rollout','vision'])
+async def test_batch_cannot_admit_new_fact_authority_after_its_preflight(sku_lane,monkeypatch,change):
+    from app.workers import instagram_ingress as worker
+    j=sku_lane;cid,rid=await instagram_turn(j,status='pending');cycle=uuid4();sent=[]
+    monkeypatch.setattr(worker,'worker_session',session_factory(j))
+    async with j.sessions.begin() as db:
+        db.add(ConversationProduct(id=cycle,conversation_id=cid,product_id=j.pid,state='waiting_for_tag',
+            active_variant_label='Preserved',last_counter_price=99))
+        if change=='activation':await db.execute(delete(CatalogueActivation).where(CatalogueActivation.business_id==j.bid))
+        elif change=='vision':
+            (await db.get(Conversation,cid)).product_id=None
+            (await db.get(InstagramIngress,rid)).events=[{'type':'image','image_url':'https://fixture.invalid/synthetic-image','mid':'synthetic-image'}]
+    if change=='rollout':monkeypatch.setattr(settings,'V1_SKU_FACT_REPLIES_ENABLED',False)
+    original=service.instagram_batch_context
+    async def changed(*args,**kwargs):
+        selected=await original(*args,**kwargs)
+        assert selected is None
+        if change=='activation':
+            async with j.sessions.begin() as writer:
+                await writer.execute(select(Product.id).where(Product.id==j.pid).with_for_update(nowait=True))
+                writer.add(CatalogueActivation(business_id=j.bid,product_id=j.pid,reviewed_revision=1,
+                    legacy_fingerprint='a'*64,actor_id=j.uid))
+        elif change=='rollout':monkeypatch.setattr(settings,'V1_SKU_FACT_REPLIES_ENABLED',True)
+        return selected
+    monkeypatch.setattr(service,'instagram_batch_context',changed)
+    if change=='vision':
+        async def inferred(conversation,seller,url,db,send_reply=False):
+            conversation.product_id=j.pid  # Controlled legacy identification result, never explicit SKU authority.
+        monkeypatch.setattr('app.bot.conversation.handle_product_image',inferred)
+    async def send(client,recipient,text):sent.append(text);return {'message_id':'must-not-send'}
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',send)
+    await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
+    assert sent==[]
+    async with j.sessions() as db:
+        row=await db.get(ConversationProduct,cycle)
+        assert (row.state,row.active_variant_label,row.last_counter_price)==('waiting_for_tag','Preserved',99)
+        assert (await db.get(InstagramIngress,rid)).error_code=='authoritative_catalogue_handoff'

@@ -149,6 +149,8 @@ async def _send_and_tag(
     else:
         from app.services import sku_fact_replies as facts
         from app.services.channel_readiness import CatalogueAuthorityHandoff
+        if getattr(conversation, "_sku_batch_facts_allowed", True) is not True:
+            raise CatalogueAuthorityHandoff("Buffered turn was not eligible for explicit SKU facts")
         selected = getattr(conversation, "_sku_batch_product", None)
         if selected and str(selected) != str(conversation.product_id):
             raise CatalogueAuthorityHandoff("Buffered product selection changed")
