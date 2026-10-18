@@ -110,7 +110,7 @@
             "business_id": "10000000-0000-4000-8000-000000000081",
             "name": "Synthetic QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -164,7 +164,7 @@
             "business_id": "10000000-0000-4000-8000-000000000082",
             "name": "Second QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -270,7 +270,7 @@
             "business_id": "10000000-0000-4000-8000-000000000081",
             "name": "Synthetic QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -324,7 +324,7 @@
             "business_id": "10000000-0000-4000-8000-000000000082",
             "name": "Second QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -422,7 +422,7 @@
             "business_id": "10000000-0000-4000-8000-000000000081",
             "name": "Synthetic QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -476,7 +476,7 @@
             "business_id": "10000000-0000-4000-8000-000000000082",
             "name": "Second QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -572,7 +572,7 @@
             "business_id": "10000000-0000-4000-8000-000000000081",
             "name": "Synthetic QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },
@@ -626,7 +626,7 @@
             "business_id": "10000000-0000-4000-8000-000000000082",
             "name": "Second QA Atelier",
             "profile": {
-              "support_email": "qa@example.invalid",
+              "support_email": "qa@example.com",
               "phone": "",
               "website": ""
             },

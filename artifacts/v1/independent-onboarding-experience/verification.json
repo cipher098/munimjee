@@ -17,9 +17,9 @@
     }
   ],
   "owned_source_sha256": {
-    "backend/tests/independent_onboarding_experience_qa.py": "6cda62573c3c396b8384c112893b9a639937051b33250157a723b721d31de843",
-    "backend/tests/independent_onboarding_experience_qa.mjs": "e45fe489f453cb4fdb3686de010ac5040d81eaff2fde1222006084bb57fd2439",
-    "docs/v1-independent-onboarding-experience-qa.md": "5dff5f82441c1b32328ee2f50e402d445f63c14d4908803bf6052bb8f0670054"
+    "backend/tests/independent_onboarding_experience_qa.py": "85a7a51b1d067593704783fdaa35b369eaefd6f3321d6ebd1295bca1e5816f76",
+    "backend/tests/independent_onboarding_experience_qa.mjs": "0f673f66c91eca69d4e4ec682e0eeae7e827a7c2124b248d19c211aabf4fd210",
+    "docs/v1-independent-onboarding-experience-qa.md": "ea65eb5d5c13c87fb4a6c289f4d4a0eaf8de4e211200169cd269b9c8f17ebfe9"
   },
   "existing_source_sha256": {
     "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
@@ -32,20 +32,20 @@
   },
   "artifact_sha256": {
     "contrast-focus.png": "7341d9e57e336b056f0d85121639c24f20f574afae6408c2e0c49a777bdc84a3",
-    "cross-identity-error.png": "7dae92b792be456ea40743d5c7cefc120e2b5c942a0dd2dd77bc078e86e3a2f8",
-    "fixtures.json": "461ec6df7680fd0b93fe5bd2fbd9b6f3edf012e416f07c29f5b17add755808ce",
-    "keyboard-transition.png": "55a9db12ce7cc8e4b985733d65377cce208f9ece5cec9b35cb6483fcc4146b74",
+    "cross-identity-error.png": "3b1c9f4ee87aeb573a4b9cb8d536bb9366a4182d4f0bffeaf030bb795d4de30f",
+    "fixtures.json": "2ebbe85908e995094fdc0b3ad3242833a59e95383a9f49d0ca6bae4c1aeb2275",
+    "keyboard-transition.png": "5de448a7ae5befe04748d7106606a40c3b3b3dd4793b026732f1845a8f7f431d",
     "logout-focus.png": "457afc20417df6d300f8a80e209a4aea11c974d3d66ee68aa6f70e8a5cd0ca35",
-    "long-business-name.png": "a80e822c4115fb284a240cdda617787022c68d1e5fcd2c4c91e184abf69b09d0",
-    "owner-1440.png": "195c57296b8b990e4bcf0483f6f29028a8b6f1cd7c9e08b8bd6166fbcc7af954",
-    "owner-360.png": "33c4ff7fe3d371807500900cf4c45589aac67e64dc61509fde8b84bec1d6c229",
-    "owner-390.png": "6dc974e0d9fe8eaf52fb2b6be74937e0e52fa99e8c45dfbc6090c99dc282e4f5",
-    "owner-768.png": "b28c3a1f46b168d2f6c608793f4b09a56fbbfb8302444e2ddd11a186e28bb529",
-    "result.json": "c924d1b7b9b706bf6efda04040daaff608dceda05fd63c208f0044a96d952d40",
-    "role-focus.png": "55a9db12ce7cc8e4b985733d65377cce208f9ece5cec9b35cb6483fcc4146b74",
-    "run.txt": "3ddfb85589dd253caabb7f77d42428b2a73020fdc4224e105bc742840dc7852e",
-    "session-focus.png": "6dc974e0d9fe8eaf52fb2b6be74937e0e52fa99e8c45dfbc6090c99dc282e4f5",
-    "session-revoke-401.png": "991eabb1bdc3da587d5312697a321343d6527f72a07e74e625e3bd6a6de0e7bb",
+    "long-business-name.png": "4d1f9d41582ecefcf828c1dad303e66e716bcc0a4a80d01feedc647a0dfa9641",
+    "owner-1440.png": "1192d052f30ecbfc6f42599ec1c0154763b2e2f8b6a3fc338090c4f596722bfa",
+    "owner-360.png": "4f391c829ec4b75eccadacdef79032d0aa9164104f20cbd10ab6b032af409c27",
+    "owner-390.png": "570f1c0361b42f70fad9ba860682ca1d9ce400b7a882a267ec080f75e6ab6138",
+    "owner-768.png": "1442ef5fa0018d9734c04163321f59debc20f064f3a91463c6a4362d0671d4f5",
+    "result.json": "393140f54a72828e9e9d3ccae74d201e94a34e1ac290cd26ee7f2f30604f473f",
+    "role-focus.png": "5de448a7ae5befe04748d7106606a40c3b3b3dd4793b026732f1845a8f7f431d",
+    "run.txt": "363e79bb7b8a86daac06a905bbb85c8fde4aa525ee221bf5fe720db75837bdd0",
+    "session-focus.png": "570f1c0361b42f70fad9ba860682ca1d9ce400b7a882a267ec080f75e6ab6138",
+    "session-revoke-401.png": "bac75ce829addaa5c3181909cc942c5354d7816ddc512776a04f2cd813150525",
     "session-switch-401.png": "7c1797447b28312756cccdb1ee06380ef07c55f73fa0df5cb68584891a939665",
     "signup-1440.png": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d",
     "signup-360.png": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49",
@@ -64,8 +64,11 @@
     "complete contrast/WCAG audit",
     "production/provider behavior"
   ],
-  "peer_review": "Committed checkpoint pending recovery/security peer review",
+  "peer_review": "Original d92406e reviewed read-only by recovery/security; no network/effect blocker; tiny fidelity/freshness corrections pending exact follow-up review",
   "server_started": false,
   "actual_db_connections": 0,
-  "real_provider_calls": 0
+  "real_provider_calls": 0,
+  "qa_head_at_run": "d92406e2f2d62c7db859cd4d0bf0e91544c24376",
+  "fixture_sources_verified_before_browser": true,
+  "source_matches_frozen_commit": true
 }
