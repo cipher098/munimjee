@@ -55,7 +55,7 @@ New app Python modules enter the existing runtime allowlist automatically.
 
 Frozen implementation seam: new `app.v1.storefront.seo.create_seo_router(*,
 canonical_base, provider_dependency, legacy_redirects=())` exposes `/sitemap.xml`
-and `/stores/{slug}/sitemap.xml`; provider adds bounded `public_store_slugs()`.
+and `/sitemap-store-{slug}.xml`; provider adds bounded `public_store_slugs()`.
 The configured inventory field is `V1_STOREFRONT_LEGACY_REDIRECTS`, default `[]`.
 `parse_legacy_redirects(raw, canonical_base)` returns validated `LegacyRedirect`
 entries with `source_origin`, `source_path`, `target_path`, `store_slug`,
@@ -64,6 +64,13 @@ scheme/Host/raw path without query; destinations are the configured canonical
 store/product/category paths, rechecked for current public existence. `/shop`
 and all order/auth/API/static/editor routes are protected from legacy overrides.
 No inferred production mappings are part of this batch.
+
+Protocol correction: the per-store file lives at the origin root because its
+canonical store home is `/stores/{slug}` without a trailing slash. A file below
+`/stores/{slug}/` would put that home outside its allowed directory prefix. This
+follows the [Sitemaps protocol location rule](https://www.sitemaps.org/protocol.html#location).
+Every generated location remains below the sitemap file's directory and shorter
+than 2,048 characters; no deployment or crawler submission is authorized here.
 
 ## Verification and handoff
 
