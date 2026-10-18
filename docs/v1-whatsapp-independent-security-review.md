@@ -128,3 +128,26 @@ with401/provider0. The expanded source-only run is10pass/3intendedfail, retained
 `fixed-0254-app-rotation-negative.txt`. No SQL persistence or live transport is
 claimed. The new fixture already supplies immutable requested/verified App123;
 owner repair and actual migrated App-rotation proof remain pending.
+
+
+## Requested-App freeze85780f4 source recheck
+
+Dependency85780f4 is localalias982296e. Its final SQL projection now compares the
+immutable requested/verified App to current configured App, and preclaim, returned
+exchange grants, browser-state and attachment checks preserve that binding.
+
+The first rerun (`fixed-85780-independent.txt`) still had an always-positive fake
+scalar that did not evaluate these new predicates. Its three failures are a
+fixture gap, not evidence that the commit-time repair failed. The corrected
+fixture evaluates actual compiled requested/verified-App bound predicates; if
+those predicates are absent, it does not invent a denial. Original commit-time
+rotations now withhold and matching-App positive controls still dispatch once.
+
+A remaining tail independently reproduces coordinator's source finding: rotate
+the valid configured App while the last scalar completes. That query captured
+App123, so its valid result can return after current config becomes456; current
+shape validation alone allows the old client's NEW operation. Exchange, subscribe
+and registration each attempt one fake method. Expanded run13pass/3intendedfail
+(`fixed-85780-app-final-scalar.txt`). Capture queried-App and compare synchronously
+after the last await, before client dispatch. Owner notified; no additional policy
+or runtime edit was made. No actualSQL/provider/browser execution is claimed.

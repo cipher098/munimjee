@@ -1,0 +1,244 @@
+.............FFF                                                         [100%]
+=================================== FAILURES ===================================
+_ test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-subscription] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c7a3e10>
+operation = 'subscription', transition = 'app-rotation-at-final-scalar'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['subscription', 'registration', 'exchange'])
+    @pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation', 'app-rotation-at-final-scalar'])
+    async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, transition):
+        """Ordering proof only: a committed claim must not bypass later authority."""
+        from datetime import timedelta
+        from fastapi import HTTPException
+        from app.services import whatsapp_self_service as service
+        at = datetime(2026, 10, 18, tzinfo=timezone.utc)
+        key = UUID(int=10)
+        state = {'revoked': False}
+        row = SimpleNamespace(id=UUID(int=5), state='pending' if operation=='exchange' else 'setting_up',
+            idempotency_key=key, selected_key=key, connection_version=1,
+            expires_at=at+timedelta(minutes=5), provisional_token_ciphertext='synthetic-only',
+            token_expires_at=at+timedelta(hours=1), subscription_state='not_started',
+            registration_state='not_started', evidence_kind='provider', requested_app_id='123', verified_app_id='123')
+        class NativeAuthority:
+            async def check(self, db):
+                if state['revoked']:
+                    raise HTTPException(401, 'Synthetic native session ended')
+            async def finalize(self, db):
+                await self.check(db)
+        auth = NativeAuthority()
+        auth.binding = SessionBinding(UUID(int=1), UUID(int=2), UUID(int=3), 0)
+        async def lock(db, authority):
+            await authority.check(db)
+            return SimpleNamespace(version=1), None
+        async def claim_commit():
+            state['revoked'] = transition == 'revoked'
+            if transition == 'app-rotation':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+        async def current_projection(statement, **kwargs):
+            # Simulate only the exact DB App predicates; do not deny merely because
+            # settings changed. Their absence must still reproduce the old defect.
+            params = statement.compile().params
+            for field in ('requested_app_id', 'verified_app_id'):
+                if any(value != getattr(row, field) for name, value in params.items()
+                       if name.startswith(field + '_')):
+                    return None
+            if transition == 'app-rotation-at-final-scalar':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+            return None if state['revoked'] else auth.binding.session_id
+        db = SimpleNamespace(commit=AsyncMock(side_effect=claim_commit),
+            scalar=AsyncMock(side_effect=current_projection))
+        client = SimpleNamespace(subscribe=AsyncMock(), register=AsyncMock(), exchange=AsyncMock(return_value=SimpleNamespace(
+            token='synthetic-only', expires_at=at+timedelta(hours=1), app_id='123')), evidence_kind='provider')
+        payload = SimpleNamespace(idempotency_key=key, waba_id='12345', phone_number_id='67890', registration_pin='123456')
+        monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '123')
+        monkeypatch.setattr(service, 'embedded_configuration', lambda value: {})
+        monkeypatch.setattr(service, 'encrypt', lambda value: 'synthetic-cipher-only')
+        monkeypatch.setattr(service, 'signup_view', AsyncMock(return_value=SimpleNamespace()))
+        monkeypatch.setattr(service, 'locked_configuration', lock)
+        monkeypatch.setattr(service, 'owned_attempt', AsyncMock(return_value=row))
+        monkeypatch.setattr(service, 'verify_browser', lambda *args: None)
+        monkeypatch.setattr(service, 'effect_unknown', AsyncMock())
+        monkeypatch.setattr(service, 'now', lambda: at)
+        async def invoke():
+            if operation in ('subscription', 'registration'):
+                await service.provider_step(db, auth, row.id, payload, client, stage=operation, token='synthetic-only')
+            else:
+                payload.code = 'synthetic-only'
+                await service.exchange_signup(db, auth, row.id, payload, 'synthetic-only', provider=client)
+        error = None
+        try:
+            await invoke()
+        except HTTPException as caught:
+            error = caught
+        attempts = client.subscribe.await_count + client.register.await_count + client.exchange.await_count
+>       assert attempts == (1 if transition == 'current-positive-control' else 0)
+E       assert 1 == 0
+
+backend/tests/test_v1_whatsapp_independent.py:232: AssertionError
+_ test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-registration] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c8c4090>
+operation = 'registration', transition = 'app-rotation-at-final-scalar'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['subscription', 'registration', 'exchange'])
+    @pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation', 'app-rotation-at-final-scalar'])
+    async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, transition):
+        """Ordering proof only: a committed claim must not bypass later authority."""
+        from datetime import timedelta
+        from fastapi import HTTPException
+        from app.services import whatsapp_self_service as service
+        at = datetime(2026, 10, 18, tzinfo=timezone.utc)
+        key = UUID(int=10)
+        state = {'revoked': False}
+        row = SimpleNamespace(id=UUID(int=5), state='pending' if operation=='exchange' else 'setting_up',
+            idempotency_key=key, selected_key=key, connection_version=1,
+            expires_at=at+timedelta(minutes=5), provisional_token_ciphertext='synthetic-only',
+            token_expires_at=at+timedelta(hours=1), subscription_state='not_started',
+            registration_state='not_started', evidence_kind='provider', requested_app_id='123', verified_app_id='123')
+        class NativeAuthority:
+            async def check(self, db):
+                if state['revoked']:
+                    raise HTTPException(401, 'Synthetic native session ended')
+            async def finalize(self, db):
+                await self.check(db)
+        auth = NativeAuthority()
+        auth.binding = SessionBinding(UUID(int=1), UUID(int=2), UUID(int=3), 0)
+        async def lock(db, authority):
+            await authority.check(db)
+            return SimpleNamespace(version=1), None
+        async def claim_commit():
+            state['revoked'] = transition == 'revoked'
+            if transition == 'app-rotation':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+        async def current_projection(statement, **kwargs):
+            # Simulate only the exact DB App predicates; do not deny merely because
+            # settings changed. Their absence must still reproduce the old defect.
+            params = statement.compile().params
+            for field in ('requested_app_id', 'verified_app_id'):
+                if any(value != getattr(row, field) for name, value in params.items()
+                       if name.startswith(field + '_')):
+                    return None
+            if transition == 'app-rotation-at-final-scalar':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+            return None if state['revoked'] else auth.binding.session_id
+        db = SimpleNamespace(commit=AsyncMock(side_effect=claim_commit),
+            scalar=AsyncMock(side_effect=current_projection))
+        client = SimpleNamespace(subscribe=AsyncMock(), register=AsyncMock(), exchange=AsyncMock(return_value=SimpleNamespace(
+            token='synthetic-only', expires_at=at+timedelta(hours=1), app_id='123')), evidence_kind='provider')
+        payload = SimpleNamespace(idempotency_key=key, waba_id='12345', phone_number_id='67890', registration_pin='123456')
+        monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '123')
+        monkeypatch.setattr(service, 'embedded_configuration', lambda value: {})
+        monkeypatch.setattr(service, 'encrypt', lambda value: 'synthetic-cipher-only')
+        monkeypatch.setattr(service, 'signup_view', AsyncMock(return_value=SimpleNamespace()))
+        monkeypatch.setattr(service, 'locked_configuration', lock)
+        monkeypatch.setattr(service, 'owned_attempt', AsyncMock(return_value=row))
+        monkeypatch.setattr(service, 'verify_browser', lambda *args: None)
+        monkeypatch.setattr(service, 'effect_unknown', AsyncMock())
+        monkeypatch.setattr(service, 'now', lambda: at)
+        async def invoke():
+            if operation in ('subscription', 'registration'):
+                await service.provider_step(db, auth, row.id, payload, client, stage=operation, token='synthetic-only')
+            else:
+                payload.code = 'synthetic-only'
+                await service.exchange_signup(db, auth, row.id, payload, 'synthetic-only', provider=client)
+        error = None
+        try:
+            await invoke()
+        except HTTPException as caught:
+            error = caught
+        attempts = client.subscribe.await_count + client.register.await_count + client.exchange.await_count
+>       assert attempts == (1 if transition == 'current-positive-control' else 0)
+E       assert 1 == 0
+
+backend/tests/test_v1_whatsapp_independent.py:232: AssertionError
+_ test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-exchange] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c778090>
+operation = 'exchange', transition = 'app-rotation-at-final-scalar'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('operation', ['subscription', 'registration', 'exchange'])
+    @pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation', 'app-rotation-at-final-scalar'])
+    async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, transition):
+        """Ordering proof only: a committed claim must not bypass later authority."""
+        from datetime import timedelta
+        from fastapi import HTTPException
+        from app.services import whatsapp_self_service as service
+        at = datetime(2026, 10, 18, tzinfo=timezone.utc)
+        key = UUID(int=10)
+        state = {'revoked': False}
+        row = SimpleNamespace(id=UUID(int=5), state='pending' if operation=='exchange' else 'setting_up',
+            idempotency_key=key, selected_key=key, connection_version=1,
+            expires_at=at+timedelta(minutes=5), provisional_token_ciphertext='synthetic-only',
+            token_expires_at=at+timedelta(hours=1), subscription_state='not_started',
+            registration_state='not_started', evidence_kind='provider', requested_app_id='123', verified_app_id='123')
+        class NativeAuthority:
+            async def check(self, db):
+                if state['revoked']:
+                    raise HTTPException(401, 'Synthetic native session ended')
+            async def finalize(self, db):
+                await self.check(db)
+        auth = NativeAuthority()
+        auth.binding = SessionBinding(UUID(int=1), UUID(int=2), UUID(int=3), 0)
+        async def lock(db, authority):
+            await authority.check(db)
+            return SimpleNamespace(version=1), None
+        async def claim_commit():
+            state['revoked'] = transition == 'revoked'
+            if transition == 'app-rotation':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+        async def current_projection(statement, **kwargs):
+            # Simulate only the exact DB App predicates; do not deny merely because
+            # settings changed. Their absence must still reproduce the old defect.
+            params = statement.compile().params
+            for field in ('requested_app_id', 'verified_app_id'):
+                if any(value != getattr(row, field) for name, value in params.items()
+                       if name.startswith(field + '_')):
+                    return None
+            if transition == 'app-rotation-at-final-scalar':
+                monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
+            return None if state['revoked'] else auth.binding.session_id
+        db = SimpleNamespace(commit=AsyncMock(side_effect=claim_commit),
+            scalar=AsyncMock(side_effect=current_projection))
+        client = SimpleNamespace(subscribe=AsyncMock(), register=AsyncMock(), exchange=AsyncMock(return_value=SimpleNamespace(
+            token='synthetic-only', expires_at=at+timedelta(hours=1), app_id='123')), evidence_kind='provider')
+        payload = SimpleNamespace(idempotency_key=key, waba_id='12345', phone_number_id='67890', registration_pin='123456')
+        monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '123')
+        monkeypatch.setattr(service, 'embedded_configuration', lambda value: {})
+        monkeypatch.setattr(service, 'encrypt', lambda value: 'synthetic-cipher-only')
+        monkeypatch.setattr(service, 'signup_view', AsyncMock(return_value=SimpleNamespace()))
+        monkeypatch.setattr(service, 'locked_configuration', lock)
+        monkeypatch.setattr(service, 'owned_attempt', AsyncMock(return_value=row))
+        monkeypatch.setattr(service, 'verify_browser', lambda *args: None)
+        monkeypatch.setattr(service, 'effect_unknown', AsyncMock())
+        monkeypatch.setattr(service, 'now', lambda: at)
+        async def invoke():
+            if operation in ('subscription', 'registration'):
+                await service.provider_step(db, auth, row.id, payload, client, stage=operation, token='synthetic-only')
+            else:
+                payload.code = 'synthetic-only'
+                await service.exchange_signup(db, auth, row.id, payload, 'synthetic-only', provider=client)
+        error = None
+        try:
+            await invoke()
+        except HTTPException as caught:
+            error = caught
+        attempts = client.subscribe.await_count + client.register.await_count + client.exchange.await_count
+>       assert attempts == (1 if transition == 'current-positive-control' else 0)
+E       assert 1 == 0
+
+backend/tests/test_v1_whatsapp_independent.py:232: AssertionError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-subscription]
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-registration]
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_native_revocation_at_claim_commit_starts_no_new_provider_operation[app-rotation-at-final-scalar-exchange]
+3 failed, 13 passed, 1 warning in 0.51s
