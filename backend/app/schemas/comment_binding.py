@@ -50,8 +50,8 @@ def valid_proof(value):
 def event_facts(event):
     return {key:str(getattr(event,key)) if key in {'id','seller_id','rule_id'} else getattr(event,key)
         for key in ('id','seller_id','rule_id','comment_id','media_id','actor_id','text','source_account_id','source_verification')} | {
-        'commented_at':event.commented_at.isoformat() if event.commented_at else None,
-        'source_verified_at':event.source_verified_at.isoformat() if event.source_verified_at else None}
+        'commented_at':event.commented_at.astimezone(timezone.utc).isoformat() if event.commented_at else None,
+        'source_verified_at':event.source_verified_at.astimezone(timezone.utc).isoformat() if event.source_verified_at else None}
 
 
 def accepted_claim(event, kind, body, config):
