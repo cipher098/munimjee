@@ -1,0 +1,17 @@
+{
+  "source_revision": "000d0fdccf641041f55c9b9ebcd709b8ad3741d6",
+  "python": "3.11.16",
+  "passed": 896,
+  "skipped": 562,
+  "failed": 0,
+  "errors": 0,
+  "actual_database": false,
+  "actual_container": false,
+  "reviewed_peer_hashes_match_composed_source": true,
+  "ci_branch": "codex/v1-release-ci",
+  "ci_head": "5b4cc41e2e99c18b4400d51f383de035747d7d33",
+  "rehearsal_branch": "codex/v1-release-rehearsal",
+  "rehearsal_head": "0e2996fc27feca5255c5c386f6a650ede5e3015a",
+  "audit_branch": "codex/v1-release-audit",
+  "audit_head": "9a417c95c2ea7ff12a718584bd9ea26f77417fa3"
+}
