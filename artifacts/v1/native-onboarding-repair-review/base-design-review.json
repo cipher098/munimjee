@@ -1,0 +1,32 @@
+{
+  "base_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "review_stage": "design-only; runtime transfer pending; no patch applied",
+  "runtime_files_needed": [
+    "backend/static/v1_app.js",
+    "backend/static/v1_app.css"
+  ],
+  "third_runtime_file_required": false,
+  "sha256": {
+    "backend/static/v1_app.js": "a2e6a63f923c19b1eb5f5a822a8eaf150dea3e3707611e2b1a378fa22ff6d766",
+    "backend/static/v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "backend/static/v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "backend/static/commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+    "backend/static/parcel_tracking.html": "6dd5f3060ae2e8d47a0dd2e46d7503bb5e5567f85f148d27caf53d123850cb54",
+    "backend/static/customer_links.html": "612f5e6eab5c789dc53fec733b406c87e344fe88db71c5bff059fd6361aa8de9",
+    ".impeccable/review/packet.md": "35cd7046917e118dcdd3c9db6654761c59abddf470d9c066d32f75fb6d578580",
+    ".impeccable/review/documentation.md": "1f16c096266037152d5a29b6d9dd39c48f60640106f24efb7a1fbb8b042cd18e",
+    ".impeccable/review/finish-review.md": "b0a6a3d3eeff7b7ef764225fab86fac29916cbbaa9e09bb11635d14108d15760"
+  },
+  "matching_installed_skill_found": false,
+  "other_host_craft_floor_available": false,
+  "primary_references": [
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+    "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html",
+    "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html"
+  ],
+  "runtime_edits": false,
+  "test_edits": false,
+  "browser_server_database_provider_executed": false
+}
