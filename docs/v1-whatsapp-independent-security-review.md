@@ -177,3 +177,37 @@ certify live Meta permissions, SDK/provider wire shape or recipient delivery.
 The runtime hash manifest compares the reviewed e897ee6 commit with these local
 files; dependency aliases are not owned feature changes. Preserve all historical
 red logs and the explicitly labelled85780 fake-predicate fixture gap.
+
+
+## Shared installation source review d541311 against64d9c47
+
+Read-only exact-commit review clears this bounded diff: reserved interception
+precedes ordinary identifier/dedupe/transcript/customer-link/activity processing;
+the existing worker's paused exception requires exact immutable Message-FK proof,
+and fixed text has no subsequent asynchronous template/reel/parcel branch before
+the existing provider. A shaped key alone remains denied. No second sender or
+authorized-test activity classification is added. Ungated cleanup is bounded and
+commits its own session; task registration does not prove deployed execution.
+Model/named Message unique and explicit three-asset allowlist match0057; owner
+links are contained in incumbent physical session-fenced containers.
+
+This is source-only review, not a new execution claim. Shared installation still
+requires actual0057 migration, signed ingress/canonical worker and mounted proof.
+
+## Prepared actual0057 independent race cases
+
+Owner fixture927ccf1 is dependency alias71a7ae1, not owned runtime or test setup.
+The new independent DB file imports its actual P01/main-mounted fixture and
+preparation helpers without fallback registration. Six cases collect only:
+exchange/subscribe/register crossed with SID revoke immediately after real claim
+commit or valid App rotation during the real final scalar. The first uses a
+separate committed revoker transaction; the second changes configuration after
+the actual joined SQL returns. No fake DB scalar/authority/outbox is installed.
+Each requires zero NEW targeted provider method, preserved unknown/partial effect
+history, no attached credentials and no repeat on exact replay. Earlier confirmed
+subscription may remain when registration is withheld. This is not a blanket
+revocation of an external effect already invoked.
+
+These6 have NOT run on PostgreSQL. Owner actual fixture/shared mounting fixes and
+explicit serial allocation remain prerequisites. Catalogue currently owns the
+sole actual0057 lane; no parallel database/browser run was started here.

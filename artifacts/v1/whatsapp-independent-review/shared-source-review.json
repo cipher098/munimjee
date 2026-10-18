@@ -1,0 +1,22 @@
+{
+  "review_snapshot": "d541311",
+  "base": "64d9c47",
+  "mode": "independent read-only exact git diff; no execution",
+  "source_sha256": {
+    "backend/app/main.py": "b433051d156b9347124e9559a8c2facd88bb85dcfa658725fdd9e2545b438a6a",
+    "backend/app/models/__init__.py": "d28549ae3ca7d18c88b503f22cf632a94cb7fd8607d847dd35c440a54f043f56",
+    "backend/app/models/whatsapp.py": "3962ab76b7ca91475c2a367d68a02304f53717ce52deee7efef353875ab39133",
+    "backend/app/services/whatsapp.py": "0c1d041c721da43095403369942a119d412d52f46e885018915686e3ce6a17f7",
+    "backend/app/workers/celery_app.py": "89fa5ac1032bebf14a689449ea4928f3630a938a986b4007f3eeb4c276b13bc7",
+    "backend/app/workers/whatsapp.py": "9c5dcdfe18f0febc6040b431645ec84aabc830bf4591d4617451d94aa7f5a02a",
+    "backend/static/channel_operator.js": "00ce248186657f60bb49e446bda2b3df61ff8821fc22db3160886ac1b89fb7f7",
+    "backend/static/v1_app.js": "49db6df90b77fd3f357e904de697bdbbee04195c63005c66343557b05cb08ce3",
+    "backend/tests/test_v1_runtime_package.py": "1e387ac6b4691b65ff4cc9985ac9b4493b98cc33eefcda76cb0e0b3b8374fa74",
+    "backend/tests/test_v1_startup.py": "72e8d24170542934bb8174febf4f8cd27580e2aa3763999297b62b1966cc49a3",
+    "backend/tests/test_v1_whatsapp_shared_hooks.py": "d13b37a5f80f4abb96e9856efb4b8b5eebf11547b02c0710b8b53a4b7a604530",
+    "docs/v1-whatsapp-shared-installation.md": "63875127f6f768c8d87d91e8a6074ba516df19160181ff19e0e20e77d22341a6",
+    "scripts/v1_runtime_package.py": "30f5397b815b05c216c3fbd6e07efd01bd875abc36dd25d182eb29f8068b5404"
+  },
+  "prepared_actual_db_collection": 6,
+  "prepared_actual_db_executed": false
+}
