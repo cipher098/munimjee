@@ -25,7 +25,8 @@ async def context(j,db,*,at=None,classification='live',reason='live_policy'):
 async def test_activity_actual_head_and_model_column_parity(native_import):
     j=native_import
     async with j.sessions() as db:
-        assert await db.scalar(text('SELECT version_num FROM alembic_version'))=='0054_v1_activity'
+        from tests.isolated_database import current_migration_head
+        assert await db.scalar(text('SELECT version_num FROM alembic_version'))==current_migration_head()
         connection=await db.connection()
         from app.models.activity_v1 import Base
         for name,table in Base.metadata.tables.items():
