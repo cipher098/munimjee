@@ -87,3 +87,12 @@ A follow-up actual migrated test must reproduce revocation around real committed
 claims and assert zero provider operations, durable safe disposition and exact
 replay/no duplicate effects. Native services/shared ingress/outbox UI composition
 and current credential-fingerprint provenance remain independently pending.
+
+
+Portable fixture correction: the TTL source row now includes its immutable real
+`inbound_provider_at`, which the contract minimum uses. The final-flag test supplies
+valid synthetic matching app/webhook configuration, so a separate configuration
+denial cannot mask regression of the rollout check. With both corrections, the
+original6a8 source still reproduces the same2 intended failures
+(`coherent-6a8-fixture-correction-still-red.txt`); assertions are unchanged. The
+author's draft5pass/1missing-fixture-field report is not our frozen-fix acceptance.
