@@ -80,6 +80,9 @@ def create_context(root: Path, output: Path) -> dict:
     names = tracked_sources(root)
     required = {'backend/requirements.txt', 'backend/alembic.ini', 'backend/app/main.py',
                 'backend/alembic/env.py', 'backend/static/v1_client.js', 'deploy/v1/Dockerfile'}
+    required.update('backend/static/' + prefix + '.' + suffix
+                    for prefix in ('import_workspace', 'theme_settings')
+                    for suffix in ('html', 'css', 'js'))
     required.update('frontend/storefront/src/' + name for name in STOREFRONT)
     if not required.issubset(names):
         raise ValueError('Required tracked runtime files are missing')

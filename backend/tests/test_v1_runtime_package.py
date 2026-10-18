@@ -61,6 +61,14 @@ def test_context_rejects_symlink_reads_and_preserves_existing_destination(source
     with pytest.raises(ValueError,match='already exist'):package.create_context(source,existing)
     assert sentinel.read_text()=='keep'
 
+
+@pytest.mark.parametrize('missing',['import_workspace.js','theme_settings.html'])
+def test_missing_native_runtime_assets_refuse_packaging(source,tmp_path,missing):
+    (source/'backend/static'/missing).unlink()
+    subprocess.run(['git','-C',str(source),'add','-u'],check=True)
+    with pytest.raises(ValueError,match='Required tracked runtime files'):
+        package.create_context(source,tmp_path/'context')
+
 @pytest.mark.parametrize('bad',['--extra-index-url https://secret.example','private @ https://secret.example/private.whl','-r runtime.env','./private.whl'])
 def test_dependency_paths_urls_and_options_never_enter_context(source,tmp_path,bad):
     (source/'backend/requirements.txt').write_text(bad+'\n')
