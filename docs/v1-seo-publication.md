@@ -128,6 +128,14 @@ allocated. They preserve P01's exact numeric-loopback URL, matching database nam
 explicit reset opt-in, blocked provider networking and held migration/reset lease.
 No alternate DB, Docker probe, reset or service restart was attempted.
 
+At application checkpoint `387268e` (implementation `b57934a` plus reviewed alias
+fix), the focused SEO/baseline/P01 selection passed **255**, with **20 explicit
+actual-DB skips** (seven new SEO, eleven baseline publication, two P01 lease/DB).
+The runtime-package/release-CI source checks separately passed **41**. Raw output,
+JUnit, exact commands and SHA-256 file evidence are saved in
+`artifacts/v1/seo-publication/`. No actual PG16 execution or runtime-image build is
+included. The independent QA lane retains its own checkpoint failures and reruns.
+
 From `backend/`, source-only regression:
 
 ```sh
