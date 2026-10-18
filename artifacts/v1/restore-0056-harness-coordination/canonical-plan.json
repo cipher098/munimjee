@@ -1,0 +1,28 @@
+{
+  "alembic_head": "0056_v1_comment_operator",
+  "application_switch": "pending: requires actual reviewed old/current application packages and mounted journey",
+  "container_effects": false,
+  "database_effects": false,
+  "execute_contract": "two allocated initially empty P01 lanes; private ownership attestation; new private archive directory",
+  "fixture_sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+  "fixture_version": 1,
+  "format": "munimjee.release-rehearsal.v1",
+  "mode": "plan",
+  "post_cutover_target_rows": 58,
+  "required_postgresql_major": 16,
+  "routine_rollback": "preserve post-cutover writes; compatibility preflight/forward fix; no snapshot overwrite or downgrade",
+  "source_rows": 52,
+  "stages": [
+    "validate inputs without connecting",
+    "hold both P01 leases",
+    "verify PG16 and empty source/target",
+    "migrate source using P01 and seed fixed synthetic fixture",
+    "rollback-only exact tenant-FK enforcement probe on source",
+    "export read-only consistent snapshot",
+    "private bounded pg_dump",
+    "recheck empty target and pg_restore single transaction",
+    "rollback-only exact tenant-FK enforcement probe on target",
+    "reconcile all table row/identity hashes, exact schema metadata, semantics, historical offenders and totals",
+    "append newer target-only order plus four fixed records and legal policy update; read-only probe preserves all facts"
+  ]
+}

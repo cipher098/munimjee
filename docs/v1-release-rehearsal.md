@@ -1,7 +1,7 @@
 # Disposable V1 release rehearsal
 
 This release-only tool implements a guarded synthetic backup/restore acceptance
-path at the exact repository migration head, currently `0053_v1_csv_import`.
+path at the exact repository migration head, currently `0056_v1_comment_operator`.
 It changes no product models, migrations or P01 policy. Default invocation:
 
 ```sh
@@ -14,15 +14,33 @@ control-proof/association records. The dump inventory includes their constraints
 immutable triggers/functions and full rows without enabling either feature. This
 fixed fixture leaves the new support/customer domain tables empty: their schema
 restore is exercised, but populated support/customer proof restoration is not claimed.
-The explicit0053 review changes only the import asset content CHECK to acceptCSV.
+The historical explicit0053 review changed only the import asset content CHECK to acceptCSV.
 The current fixture adds one retained literal CSV original (exact bytes/hash) and
 one pending tenant-bound job. Its fresh-pair execution is recorded separately from
-the historical0052 proof; later0054 is not implicitly accepted by this constant.
+the historical0052 proof.
 
-The default and explicit `plan` action read migration source only. They import no
+The release-only0056 implementation adds the reviewed activity/source ledger,
+comment acceptance/claim/audit and no-send operator/enquiry history. Source fixture
+counts are52 rows in32 populated tables; the newer target-only order/reservation
+and four new history rows produce58 rows. Financial/reservation/pending totals
+remain explicit. The fixed `scripts/v1_release_fixture_0056.json` format is
+`munimjee.release-fixture.0056`, version1, SHA-256
+`1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3`.
+Its bounded regular-file, no-follow, exact format/version/digest preflight runs
+before tools, connections or private output. There is no caller-selected fixture
+path. See `docs/v1-restore-0056-harness.md` for source/unit evidence and limits.
+
+**Actual0056 restore remains unverified and blocked by recorded tool/disk
+capacity.** Historical0053 actual restore/package evidence below stays historical.
+The newer accepted producer runtime is `a9880c56b6a8bf7b4e20f54837a362e4432aadda`
+(full2441pass/8documented skips); direct synthetic fixture inserts do not execute
+that producer path. No application or migration change accompanies the harness.
+
+The default and explicit `plan` action read migration source and the locked fixture only. They import no
 application configuration, read no dotenv file, spawn no subprocess and connect
 to no DB/container. Their reviewable output is saved in
-`artifacts/v1/release-rehearsal/plan.json`.
+`artifacts/v1/restore-0056-harness-coordination/canonical-plan.json`; older plan
+artifacts remain historical.
 
 ## Executable ownership contract
 
@@ -96,24 +114,38 @@ passfile configuration are excluded. Do not commit the dump or private evidence.
    DBs contain no non-system objects. Empty tables are insufficient.
 3. Run the existing guarded P01 Alembic migration entry point on the **owned
    empty source** while both leases remain held. Seed only fixed deterministic
-   synthetic fixture values from `scripts/v1_release_synthetic.py`. This narrow
+   synthetic fixture values from `scripts/v1_release_synthetic.py` and its locked
+   repository JSON. Bound attempted comment actions use legal pending→sending→
+   terminal transitions; absent legacy JSON proof/claims remain SQL NULL. This narrow
    interface deliberately does not accept arbitrary existing source data based
    solely on an operator's assertion that it is sanitized.
-4. Verify the exact current head and expected synthetic table counts/totals. Hold
+4. Run the positive and exact named cross-tenant FK probes inside rollback-only
+   transactions on the owned source and verify its full snapshot unchanged.
+   Verify the exact current head and expected synthetic table counts/totals. Hold
    a read-only repeatable-read source transaction, export its snapshot and pass
-   that snapshot to actual `pg_dump`. No source write follows the fixture setup.
+   that snapshot to actual `pg_dump`. No source write follows the rolled-back probe.
 5. Recheck target emptiness immediately before actual `pg_restore`, which uses
    one transaction and exits on error, with no owner/privilege restoration.
+   Repeat the rollback-only FK probes on the restored target before reconciliation.
 6. Compare every public table's count and hash of sorted full JSON rows, covering
    every ID/value and duplicate multiplicity. Compare column/constraint schema
    fingerprints, public function bodies, non-internal trigger definitions/enabled
    states, indexes, RLS flags/policies, views, enum definitions and sequence
-   definitions/current states. Require validated constraints. Reconcile order counts,
+   definitions/current states. Require validated constraints except the exact
+   intentionally unvalidated `comment_action_event_tenant` metadata contract;
+   reject every missing/altered/extra exception. Compare full stable-name FK
+   metadata, ordered keys, definition/actions/deferral and validation state.
+   Historical offending full rows contribute a count and sorted-row digest;
+   never normalize/delete them. The fixed synthetic fixture requires zero
+   offenders and does not authorize arbitrary historical source data.
+   Reconcile retained semantic fields/links and order counts,
    placed/paid/COD-collected totals separately, reservations/quantity, unknown
    payment attempts, open manual actions and remaining available inventory. Check order arithmetic and tenant
    reservation links. Public output includes only counts/totals/digests, never
    row content. Table/row/data bounds fail closed.
-7. Insert a third, newer **target-only** synthetic paid order and reservation.
+7. Insert a third, newer **target-only** synthetic paid order and reservation,
+   plus its fixed order provenance, policy receipt, enquiry-close command/closure
+   and one legal current-policy update. Verify the full58-row target contract.
    Exercise a generic read-only persisted-data SQL probe and require the complete
    target snapshot to stay unchanged, including that newer order. Recheck the
    source snapshot unchanged. Write private evidence and release both leases.
@@ -156,8 +188,19 @@ must stay target-only and requires separate review before any mutation.
 Pure/fake-transport tests:
 
 ```sh
-python -m pytest -q tests/release/test_v1_release_rehearsal.py
+REHEARSAL_ACCEPTANCE=0 python -m pytest -q \
+  tests/release/test_v1_release_rehearsal.py \
+  tests/release/test_v1_application_compatibility.py \
+  tests/release/test_v1_release_0056.py
 ```
+
+The0056 composed source/unit gate passed107 tests with one explicit actual-PG16
+acceptance skip. Its49 new cases exercise exact metadata, rollback/cancellation,
+fixed fixture and source/target reconciliation over declared fake boundaries.
+They do not establish PostgreSQL enforcement or actual restore success. The
+canonical invocation, hashes and raw results are under
+`artifacts/v1/restore-0056-harness-coordination/`; independent QA/review packets
+are linked from `docs/v1-restore-0056-harness-handoff.md`.
 
 The optional real acceptance test is the same actual execution path, with no
 fake transport and no implicit allocation. It is skipped unless

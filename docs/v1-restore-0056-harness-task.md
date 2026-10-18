@@ -18,7 +18,7 @@ checkout copy, service, database, container, tool installation or capacity retry
 | `instagram_provider` | `codex/v1-restore-0056-harness` | `scripts/v1_release_rehearsal.py`, `scripts/v1_release_synthetic.py`, new fixed `scripts/v1_release_fixture_0056.json`, `docs/v1-restore-0056-harness.md`, `artifacts/v1/restore-0056-harness/` |
 | `instagram_contract_qa` | `codex/v1-restore-0056-harness-qa` | Necessary head/fake-catalog adaptation in existing `tests/release/test_v1_release_rehearsal.py`, new `tests/release/test_v1_release_0056.py`, `docs/v1-restore-0056-harness-qa.md`, `artifacts/v1/restore-0056-harness-qa/` |
 | `instagram_security` | `codex/v1-restore-0056-harness-review` | `docs/v1-restore-0056-harness-review.md`, `artifacts/v1/restore-0056-harness-review/`; scripts/tests read-only |
-| Root | `codex/v1-restore-0056-harness-coordination` | This task, final handoff, `artifacts/v1/restore-0056-harness-coordination/`, reviewed composition |
+| Root | `codex/v1-restore-0056-harness-coordination` | This task, final handoff, release-only `docs/v1-release-rehearsal.md` update, `artifacts/v1/restore-0056-harness-coordination/`, reviewed composition |
 
 No application, migration, dependency, existing execution-helper, package-switch
 script or other runtime ownership. If another seam is necessary, identify it
@@ -70,6 +70,13 @@ QA additions are frozen to R1 exact constraint metadata/refusals; R2 probe
 diagnostics/rollback/failure/cancellation; R3 fixed locked fixture, transitions,
 NULLs/counts/relations/totals; R4 altered fixture/reconciliation refusals; R5
 historical offender/snapshot/target mismatch and held-lease failure cleanup.
+The initial47 cases are18 metadata,7 probe,8 fixture,7 validation and7 flow cases.
+Independent review then reproduced a source defect: duplicated raw constraint
+definitions bypassed the existing legitimate PG16 cast-reparse normalizer.
+The narrow follow-up retains exact raw known-FK validation before applying the
+unchanged canonicalizer to duplicate fields. Two approved whole-schema regression
+cases bring the finite new total to49: literal cast-reparse equivalence and
+quoted-identifier meaning distinction. No other expansion is included.
 Preserve existing quoted identifier/schema-protection/P01/archive tests, adapting
 only newly required head/projection fixtures. Independent review audits exact
 patches and checks for fake-boundary assertions misrepresented as DB proof.

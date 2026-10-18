@@ -1,0 +1,60 @@
+{
+  "base": "875cdf7",
+  "source_commit": "b9d69c20a207412280ceca61633367f2720114de",
+  "protected_functions_unchanged": [
+    "repo_head",
+    "p01",
+    "targets",
+    "no_symlinks",
+    "ownership",
+    "archive_location",
+    "private_file",
+    "private_read",
+    "private_sha256",
+    "private_json",
+    "child_env",
+    "command",
+    "owned_call",
+    "pg_tools",
+    "query",
+    "empty_database",
+    "pg16",
+    "canonical_constraint",
+    "main"
+  ],
+  "protected_function_sha256": {
+    "repo_head": "a42e66734665166092e59fec90e135350455182b5dbab55e364a650ed8d7af88",
+    "p01": "98ee20ae3c737e42088cc74512e16604ac6a8d45f5bec3188982b6e05334e628",
+    "targets": "a28ab62b3a7f44f2ba62d228028c6900c8cb2c474aaaa3f5cf77f18cff13bcf5",
+    "no_symlinks": "ec1a35736ae330524b901d11d1d89bf74f55b1c2c4822ef141e3dc6ba32bfbf2",
+    "ownership": "f4075267e26591ee8dd0577f814df7ddca0a1ab329b532dc64e9e74e03ab550c",
+    "archive_location": "db40df0ca85a629dc38c51c7207ac1690f3a0ec1d73298bf270be5030429b790",
+    "private_file": "7e36c05f60c1ea848795815ee79d1b1886ef9c6f322b1b7f7b98948be9df22e3",
+    "private_read": "e16e6761e33e356e0b731010abacd7458b585b7c2c759c7448e6c6386a874e7f",
+    "private_sha256": "363e75b9a253787c81fde94ae810ebd75bfb1b9c629eb34671438e085dca87ae",
+    "private_json": "ddf791062e3023458ef23863967111822035bc64f696eaf0e618d11cb60a5d4a",
+    "child_env": "2d848a50685589e15a327d4b82cbeb8c7e047a1eacd36a0a640261e8602a9b0c",
+    "command": "a6ba88e9bd4a2fb5464b94695390227fbaab51351ebd3dc2451605915d36d8a5",
+    "owned_call": "0d1aea2f0d5076b871aba5b14334a79ef6418c34410be25ab5c831b1b7dc5b13",
+    "pg_tools": "5579aaca8ee1bada720142d83e92960613fde62f1a54a88660d3ae987895582f",
+    "query": "41d02e8657a7b55cb101c6e69acc2925577f7e805e9759bb823a3a0b53e2cf25",
+    "empty_database": "240997986d19373bb4bb517c426eb71a8d2c7c51516fef12457b041768e4c232",
+    "pg16": "e2b80612397623e36215e716841c10238b3ebc50802e1c110a1359224457e66d",
+    "canonical_constraint": "1a42cf57c66c66369b905cf3b563338765d0df0be39d2891286faf753cc3fb59",
+    "main": "b5760841525f72410962d72b439029eeb14c3178872564d40780e484d5b25f8e"
+  },
+  "old_seed_and_newer_order_bodies_unchanged_after_rename": true,
+  "unchanged_files_sha256": {
+    "scripts/v1_release_exec.py": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+    "tests/release/run_application_compatibility.py": "9d7459227e4baf5d8ba472f900a1655f00f800cbaeb283c7e4571c4bd6d56cd8",
+    "tests/release/test_v1_application_compatibility.py": "712f5a79bd779299a68951e89dae202367b19ec047b80e7b65d2ed6cc0bc7cc2"
+  },
+  "only_changed_scripts": [
+    "scripts/v1_release_fixture_0056.json",
+    "scripts/v1_release_rehearsal.py",
+    "scripts/v1_release_synthetic.py"
+  ],
+  "application_and_migrations_unchanged": true,
+  "mode": "static audit only; no DB/provider tools",
+  "initial_static_audit_correction": "First script named a nonexistent scripts/v1_application_compatibility.py path; file inventory corrected to tests/release/run_application_compatibility.py; no source/test edit or execution failure."
+}

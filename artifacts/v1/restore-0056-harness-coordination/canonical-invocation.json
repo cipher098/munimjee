@@ -1,0 +1,31 @@
+{
+  "source_commit": "049019b2105a855f88a33149f7a2e4db49d7ceae",
+  "command": [
+    "/tmp/munimjee-release-ci-py311/bin/python",
+    "-m",
+    "pytest",
+    "-p",
+    "pytest_asyncio.plugin",
+    "tests/release/test_v1_release_rehearsal.py",
+    "tests/release/test_v1_application_compatibility.py",
+    "tests/release/test_v1_release_0056.py",
+    "-q",
+    "--junitxml=/Users/user/Documents/ChatGPT/munimjee/artifacts/v1/restore-0056-harness-coordination/canonical-unit.xml"
+  ],
+  "exit_code": 0,
+  "tests": 108,
+  "passed": 107,
+  "skipped": [
+    "test_actual_pg16_backup_restore_and_newer_order_preservation"
+  ],
+  "environment": "allowlisted PATH/HOME/TMPDIR/locale only; REHEARSAL_ACCEPTANCE=0; PYTHONDONTWRITEBYTECODE=1; explicitly loaded pytest_asyncio only",
+  "sha256": {
+    "scripts/v1_release_rehearsal.py": "1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2",
+    "scripts/v1_release_synthetic.py": "551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577",
+    "scripts/v1_release_fixture_0056.json": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+    "tests/release/test_v1_release_rehearsal.py": "b68c8a08d8ddaeafb82a4965f05e9973e4a08ed8a85ed5c33410b94566321c7d",
+    "tests/release/test_v1_application_compatibility.py": "712f5a79bd779299a68951e89dae202367b19ec047b80e7b65d2ed6cc0bc7cc2",
+    "tests/release/test_v1_release_0056.py": "e0b36022bca3023461b17f7245eadd9df05e9c15843a885d9d1aebfe18e20364"
+  },
+  "actual_restore": "NOT RUN"
+}

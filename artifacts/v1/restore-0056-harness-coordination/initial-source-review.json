@@ -1,0 +1,49 @@
+{
+  "base": "875cdf7",
+  "candidate_original_commits": [
+    "992c8bf88704545117ca17b3dbc12b8f41412f15",
+    "bd24f74e541147713f0edf160f0faf5af9df03a2"
+  ],
+  "fixed_fixture_sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+  "fixture_matches_reviewed_proposal": true,
+  "unchanged_guard_functions": [
+    "p01",
+    "targets",
+    "no_symlinks",
+    "ownership",
+    "archive_location",
+    "private_file",
+    "private_read",
+    "private_sha256",
+    "private_json",
+    "child_env",
+    "command",
+    "owned_call",
+    "pg_tools",
+    "query",
+    "empty_database",
+    "pg16",
+    "canonical_constraint"
+  ],
+  "guard_sha256": {
+    "p01": "93ab8e61494703034e6365c150a3903c92a8dbc2029089343c279ba90dcfe363",
+    "targets": "3dfc58ee7deeae55a14f18c3348f043d0788c5135b699f7b36ca9dc31a596cf6",
+    "no_symlinks": "9c2b7b547a364eb76d3409de50f9c5c210bc5cc9da59a8e21202dd089a6699b2",
+    "ownership": "8d2740a3dddcb77f37206e3139350dffdb867b2a9c2aa170934642668898a85c",
+    "archive_location": "cee6097a1009c8bb8481703ad1e68fbc2f27113ad74bcea8e7697fb5e75cfdf1",
+    "private_file": "149d7a4bf43f654ba0287a69cedd698792566e1101646eb0aa20b06ad31cfbdc",
+    "private_read": "2468032769c5d4be4f050a0210a52ab193ba51aa50ab3977a1c7ae94cb698a0e",
+    "private_sha256": "55c2ff7c498c82403b3fe7c9d583f7ed0ebb50b843a41b2d2af05e9069f4313b",
+    "private_json": "631f2dd1a838902bd7ed2684618417f4808d90434476c980241c4b05598affd4",
+    "child_env": "f12e075c737483a359603bcf3bcf81ed557920ab512ba1d5a1818c241cdd9b3d",
+    "command": "0d507f47867d56a0fc1a5bd3344cbdca34bba350d80b7a38d760b40f6fb5be6e",
+    "owned_call": "44fce6aa0bfee7fa753069275d9a83faf3170184bfa60b11a79dffb9ddd3bd1c",
+    "pg_tools": "89998b82135a0390751114518114c8d29f94a61b70a29fb3304d25ed758486cf",
+    "query": "4253c3fad2d6c7c18655db67a763c7051914ddf4f5a664fb1a68e9852cc5532a",
+    "empty_database": "8151f6ff2c7777564da4838168712a43b973910b67dc6644f0cbb4c6c11b0547",
+    "pg16": "c4313f572dbeee410d7268bd21492c5e0927fc1e92b34da6f6570f8ef27f5154",
+    "canonical_constraint": "60976d860267eac54ce57287a1195d06bbbf043e62e34c41a404283ba00f599d"
+  },
+  "mode": "static source/preflight only; no DB/restore",
+  "normalization_finding": "Original candidate duplicated raw definitions; followup applies unchanged canonicalizer after exact known-FK validation."
+}
