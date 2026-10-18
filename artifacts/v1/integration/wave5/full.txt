@@ -1,0 +1,134 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+...............................................................s........ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 23%]
+........................................................................ [ 28%]
+........................................................s.......ss...... [ 32%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+..................................................ssss.................. [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 56%]
+........................................................................ [ 61%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+......................................................FF....FFFFF....... [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+.................                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_context_excludes_tracked_and_untracked_sensitive_sentinels ________
+backend/tests/test_v1_runtime_package.py:44: in test_context_excludes_tracked_and_untracked_sensitive_sentinels
+    output=tmp_path/'context';manifest=package.create_context(source,output)
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+____ test_context_rejects_symlink_reads_and_preserves_existing_destination _____
+backend/tests/test_v1_runtime_package.py:61: in test_context_rejects_symlink_reads_and_preserves_existing_destination
+    with pytest.raises(ValueError,match='symlinks'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:61: in test_context_rejects_symlink_reads_and_preserves_existing_destination
+    with pytest.raises(ValueError,match='symlinks'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'symlinks'
+E    Input: 'Required tracked runtime files are missing'
+_ test_dependency_paths_urls_and_options_never_enter_context[--extra-index-url https://secret.example] _
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'pinned index'
+E    Input: 'Required tracked runtime files are missing'
+_ test_dependency_paths_urls_and_options_never_enter_context[private @ https://secret.example/private.whl] _
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'pinned index'
+E    Input: 'Required tracked runtime files are missing'
+__ test_dependency_paths_urls_and_options_never_enter_context[-r runtime.env] __
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'pinned index'
+E    Input: 'Required tracked runtime files are missing'
+__ test_dependency_paths_urls_and_options_never_enter_context[./private.whl] ___
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:77: in test_dependency_paths_urls_and_options_never_enter_context
+    with pytest.raises(ValueError,match='pinned index'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'pinned index'
+E    Input: 'Required tracked runtime files are missing'
+___________ test_requirements_symlink_cannot_read_outside_the_source ___________
+backend/tests/test_v1_runtime_package.py:83: in test_requirements_symlink_cannot_read_outside_the_source
+    with pytest.raises(ValueError,match='symlinks'):package.create_context(source,tmp_path/'context')
+scripts/v1_runtime_package.py:93: in create_context
+    raise ValueError('Required tracked runtime files are missing')
+E   ValueError: Required tracked runtime files are missing
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_v1_runtime_package.py:83: in test_requirements_symlink_cannot_read_outside_the_source
+    with pytest.raises(ValueError,match='symlinks'):package.create_context(source,tmp_path/'context')
+E   AssertionError: Regex pattern did not match.
+E    Regex: 'symlinks'
+E    Input: 'Required tracked runtime files are missing'
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+tests/test_commerce.py: 29 warnings
+tests/test_commerce_whatsapp.py: 2 warnings
+tests/test_v1_auth_onboarding.py: 2 warnings
+tests/test_v1_identity_db.py: 1 warning
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/httpx/_client.py:1559: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    warnings.warn(message, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave5/full.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_runtime_package.py::test_context_excludes_tracked_and_untracked_sensitive_sentinels
+FAILED backend/tests/test_v1_runtime_package.py::test_context_rejects_symlink_reads_and_preserves_existing_destination
+FAILED backend/tests/test_v1_runtime_package.py::test_dependency_paths_urls_and_options_never_enter_context[--extra-index-url https:/secret.example]
+FAILED backend/tests/test_v1_runtime_package.py::test_dependency_paths_urls_and_options_never_enter_context[private @ https:/secret.example/private.whl]
+FAILED backend/tests/test_v1_runtime_package.py::test_dependency_paths_urls_and_options_never_enter_context[-r runtime.env]
+FAILED backend/tests/test_v1_runtime_package.py::test_dependency_paths_urls_and_options_never_enter_context[./private.whl]
+FAILED backend/tests/test_v1_runtime_package.py::test_requirements_symlink_cannot_read_outside_the_source
+7 failed, 1514 passed, 8 skipped, 36 warnings in 644.02s (0:10:44)

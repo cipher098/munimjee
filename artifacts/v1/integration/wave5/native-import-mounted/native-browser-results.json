@@ -1,0 +1,7 @@
+{
+  "checks": 47,
+  "database": "actual P01 migrated lane",
+  "worker": "synthetic protected worker hook",
+  "provider_calls": 0,
+  "errors": []
+}

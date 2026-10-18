@@ -1,0 +1,1 @@
+PASS 14 actual native customer-link journeys; synthetic signed ingress, no provider sends.

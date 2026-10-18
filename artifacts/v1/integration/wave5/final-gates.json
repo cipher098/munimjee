@@ -1,0 +1,63 @@
+{
+  "application_source": "515c538550a3cef635aa16e9e18709e7fb2610fb",
+  "actual_migration_head": "0052_v1_customer_links",
+  "postgresql": "16.15",
+  "backend": {
+    "passed": 1524,
+    "skipped": 8,
+    "failed": 0,
+    "errors": 0,
+    "seconds": 651.33,
+    "raw": "full-final.xml"
+  },
+  "initial_failure_run": {
+    "passed": 1514,
+    "skipped": 8,
+    "failed": 7,
+    "seconds": 644.02,
+    "raw": "full.xml",
+    "resolution": "d369656 synthetic runtime fixtures required new private pages; final complete gate passes"
+  },
+  "focused_checks": 97,
+  "node_checks": 80,
+  "mounted_browser_checks": {
+    "support": 31,
+    "analytics": 21,
+    "customer_links": 14,
+    "existing_native_import": 47
+  },
+  "counts_overlap": true,
+  "runtime_hashes": {
+    "backend/app/main.py": "7b4a7e3de38ce536f30484c3714a3d301a346e894bfba8e9390a58c60ed45959",
+    "backend/app/config.py": "e30fd1a57a7c615d9f5ff9cf635e2ba8e88c4c3ed69144f2a616d0db34b8bf73",
+    "backend/app/models/identity.py": "63918ab54d7e463d4a78943653cb47c7be7ddf9e953b512b71e7d41c70c502d7",
+    "backend/app/models/support_grants.py": "9d00fe837c95c1c1f815543d9bf954a01c985faf2e9cf49641f6dd8b4b868981",
+    "backend/app/services/support_grants.py": "51ebad3bdae081eab593bfed10e57902f765476b16f3f56f522aa73214294c22",
+    "backend/app/api/v1/support_grants.py": "d1630d57efe1993c3641cc9d1bad27531797dec294f900596075b7f1427d7d90",
+    "backend/app/services/analytics_v1.py": "310c2996af70c0247c74ff6d5838a49132f8c615cfe9ceb926b1e8bd90fae944",
+    "backend/app/services/customer_links.py": "e7ee001c4994a964a1b612bc27a5b4230f367f4e82fc25acc22c3e7be303c2e1",
+    "backend/app/api/webhooks/instagram.py": "e106ccadf5e37dbe901a737a65e57db17d35672cc8e24d57c8b286cf561d3262",
+    "backend/app/services/whatsapp.py": "be8b32ccced21d882715387cacc7812ef4d8ab03c0ff13b187b88b822b31c7cd",
+    "backend/static/v1_app.js": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
+    "backend/static/v1_client.js": "5dfecfacd325089cb86b37fad7a1e12222dfd7f1119801e4d7a76135b3331cf7",
+    "backend/static/support_grants.js": "d6f3be27f0f2b1dbe7c20eb8e685db2be624434b55628bcf685ab3df9ebb99c6",
+    "backend/static/support_grants.css": "8c158d3d073bf1ae10901f4379a12e664bed63510396f75fa558b63055329a07",
+    "backend/static/analytics_v1.js": "540924455f08b5f718b2c436f24680b067e33bc8dfbbfa8d380a4a11e379cf3f",
+    "backend/static/customer_links.js": "e87eccacf9198a4226a2e88a84daaccb179fcbd69be9c03f1078fd083ffb6b05"
+  },
+  "external_provider_requests": 0,
+  "production_deployment": false,
+  "image_gate": "Separate locked release candidate, not a central515c538 image proof",
+  "skips": [
+    "five missing historical scenario cassettes",
+    "three Redis cases unavailable under P01"
+  ],
+  "independent_review": "Existing peers source/security/render; additional fresh reviewer capacity-blocked",
+  "next_slice_not_integrated": [
+    "CSV0053",
+    "SEO/redirects",
+    "SKU fact replies",
+    "owned Instagram adapter",
+    "V10 activity instrumentation"
+  ]
+}

@@ -12,40 +12,40 @@ consent and customer links (0052), plus independent support security review. All
 workers remain GPT-6.1 Sol/high. Remote CI/restore/rollback/multi-architecture
 rehearsal is independent and cannot authorize production changes.
 
-Current combined actual PG16/0052 focused gate passed97 checks, including support
-expiry/revocation/tenant/native-final-commit negatives, analytics and signed-provider
-customer consent HTTP tests. Node80 passed. The first complete run at backend
-source7a5974f finished **1514 passed,8 skipped,7 failed in644.02s**. All seven
-failures were synthetic runtime-package fixtures missing the newly required private
-support/analytics/customer assets; d369656 repairs the fixture and adds three missing-
-asset negatives. Its17 pure packaging checks pass. A clean complete rerun is pending;
-no full-pass claim is made from the partial remediation.
+Wave5 functional source `515c538` passes the complete actualPG16.15/0052 gate:
+**1524 passed,8 skipped,0 failed in651.33s**. Five missing historical cassettes and
+three Redis/P01 cases remain the documented skips. The initial1514-pass/seven-failure
+run is preserved; all seven missing-native-asset packaging fixture failures were
+fixed by d369656 and the complete rerun is clean. Focused97 and Node80 also pass.
 
-Final central app.main mounted support31 and customer-link14 checks pass on actual
-0052. Analytics final central mounted run is active. Customer owner47 focused and14
-mounted checks are separately preserved; analytics owner22 focused/21 mounted and
-3 Node checks are separately preserved. Independent existing-peer source/render
-reviews accepted these bounded slices; a fresh additional reviewer was capacity-
-blocked and is not claimed. Default flags and trusted support allowlist remain denied
-by default. Real provider consent/delivery and physical-device proof remain external.
+Final actual app.main browser gates pass support31, analytics21, customer links14
+and existing native import47. Native import records queried0052, unchanged pre/post
+application and harness hashes and both capture hashes. Separate owner results and
+initial failures remain preserved; counts are overlapping and not summed. Exact
+sources, failure matrix and evidence paths are in `docs/v1-wave5-validation.md`.
+Independent peer source/render/security reviews accepted the bounded slices; a
+fresh additional reviewer was capacity-blocked and is not claimed.
 
-Release tooling from remotee750e5a is isolated in codex/v1-release-integration for
-review, not yet central. Two newly allocated PG16 source/target lanes executed real
-pg_dump/pg_restore: all table row hashes and totals matched, but strict schema
-fingerprinting rejected equivalent PostgreSQL literal-array CHECK cast formatting.
-A narrow outside-SQL-token canonicalization is under independent security review;
-a new empty pair must pass the full rehearsal before restore acceptance. No older
-snapshot was restored over newer data. Hosted CI has a saved zero-step billing-lock
-failure and will not be retried without that external state changing.
+Read-only owner-consented support grants and dual-inbound customer control proofs
+are default-off; trusted support allowlist defaults empty. No implicit membership,
+impersonation, source-history merge or provider/customer outcome is authorized.
+Order-cohort analytics does not yet measure visits/conversion/automation outcomes;
+missing sources and unknown test classification are explicit.
 
-Queued code-owned work is active: local CSV import (reserved0053,159 focused and74
-mounted owner checks; central integration pending) and deterministic read-only replies
-from authoritative activated-SKU facts (contract-only; no DDL); remote SEO/legacy
-redirects. Seller-authorized Instagram retrieval adapter remains queued. These are
-implementation work, not all external permission gates. Historical importer hash
-review resolved applicationdd36b0d versus screenshot-harness47b1b83 attribution; no
-product defect was demonstrated. Preserve historical artifacts and record both app
-and harness hashes in the next mounted importer rerun.
+Release tooling remains isolated in codex/v1-release-integration. Its fresh-pair
+PG16 dump/restore53-check run passes without skips and preserves a newer target-only
+order; an actual old/current package journey is separate. A hash-locked arm64 image
+passes three offline modes; the one amd64 cross-build attempt failed legacy-builder
+platform metadata. Native amd64 and hosted CI (saved billing-lock failure) remain
+open. No daemon change/prune, production restore or snapshot overwrite occurred.
+
+Next code-owned work: reviewed CSV0053 (owner159 focused/74 mounted, central gate
+pending), reviewed SEO/legacy redirects (central migrated/mounted gates pending),
+authoritative activated-SKU fact replies, owned Instagram retrieval and an explicit
+V10 first-party measurement contract. These are not all external permission gates.
+Historical importer hash review resolved applicationdd36b0d versus screenshot-
+harness47b1b83 attribution; the final47 rerun now records both hash sets. Real
+provider approvals/canaries and physical-device tests remain separate.
 
 ## Wave 4 local integration
 

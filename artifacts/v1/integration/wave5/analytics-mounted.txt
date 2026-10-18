@@ -1,0 +1,1 @@
+PASS 21 native analytics Chromium checks; real reviewed-SKU COD placement/idempotency/collection/cancellation; no provider calls.

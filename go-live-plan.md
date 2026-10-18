@@ -9,19 +9,25 @@ storefront designs, customer COD/online handoff, native payment settings, channe
 operator recovery, ParcelDesk tracking/review and a membership-scoped assisted
 onboarding board. Actual migrated PostgreSQL 16 and mounted browser checks provide
 bounded local evidence; exact source, counts and failures are recorded in
-`docs/v1-execution-status.md` and `docs/v1-wave4-validation.md`.
+`docs/v1-execution-status.md` and `docs/v1-wave5-validation.md`.
 
-Assignment does not grant membership or impersonation. The board covers current
-readiness and audited owner/manager assignment for businesses already accessible to
-the actor. Analytics, explicit expiring support grants, global sales access, verified
-customer identity links and the remaining complete onboarding matrix remain tracked
-scope. Saved credentials and local account checks do not prove provider approval.
+Assignment does not grant membership or impersonation. Wave5 adds explicit current-
+owner-consented5–60-minute read-only readiness grants for server-provisioned operators,
+truthful order-cohort analytics and dual authenticated endpoint-control customer links.
+These remain deny-by-default and do not grant general tenant access, writes, history
+merging or legal-person identity. Actual0052 full gate passes1524 tests with8 documented
+skips; mounted support31/analytics21/customer14/native-import47 pass. Exact source,
+failures and limits are in `docs/v1-wave5-validation.md`. V10 activity sources and the
+complete onboarding/acceptance matrix remain tracked implementation scope.
 
-Real SDK/payment and Meta approvals/canaries, approved import sources, private
-ParcelDesk provisioning/D1/TLS, physical-phone testing and deployment/restore rehearsal
-remain gates. Flags stay off by default. No real provider request, paid transaction,
-customer send, running-project change or production cutover is authorized or claimed.
-Current task boundaries are in `docs/v1-wave4-contracts.md`.
+Real SDK/payment and Meta approvals/canaries, private ParcelDesk provisioning/D1/TLS,
+physical-phone testing and operational deployment remain gates. Isolated real PG16
+restore tooling passes its fresh-pair reconciliation; packaged old/current compatibility,
+native multiarchitecture and hosted CI billing remain separate release gates. Flags
+stay off by default. No real provider request, charge, customer send, running-project
+change or production cutover is authorized or claimed. Reviewed CSV0053 and SEO are
+next, followed by active authoritative-SKU replies/Instagram retrieval/activity work.
+Current boundaries remain in `docs/v1-wave5-contracts.md` and the next-slice contract.
 
 ## 1. The V1 outcome
 
@@ -370,7 +376,8 @@ for three designs, native payment settings and synthetic online-payment recovery
 channel review, ParcelDesk scan/link and reviewed association recovery, and the scoped
 assistance board. Actual migrated PostgreSQL 16, mounted browser, failure-matrix and
 runtime-image evidence are recorded in docs/v1-execution-status.md and
-docs/v1-wave4-validation.md. No local proof is a release or deployment. Analytics,
-explicit support grants, global sales access, verified customer links and the complete
-V1 onboarding acceptance matrix remain tracked scope. Keep marketing claims aligned
+docs/v1-wave4-validation.md. No local proof is a release or deployment. The Wave5 extension adds bounded consented
+read-only support, order-cohort analytics and explicit endpoint-control customer links.
+Full activity analytics, unrestricted global assistance, remaining source adapters and
+the complete V1 acceptance matrix remain tracked scope. Keep marketing claims aligned
 with released features.
