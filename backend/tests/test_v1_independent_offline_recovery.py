@@ -8,10 +8,11 @@ import pytest
 
 from app.services import imports_v1 as service
 from app.v1.imports import fetching, runner
-from tests.independent_offline_recovery_qa import MemorySessions, FiniteFetcher, run_finite
+from tests.independent_offline_recovery_qa import MemorySessions, FiniteFetcher, run_finite, bounded_scenario
 
 
 @pytest.mark.asyncio
+@bounded_scenario
 async def test_finite_import_burst_active_redelivery_and_repeat_drain_have_exact_effects(monkeypatch, record_property):
     started_at = time.monotonic()
     store = MemorySessions()
@@ -50,6 +51,7 @@ async def test_finite_import_burst_active_redelivery_and_repeat_drain_have_exact
 
 
 @pytest.mark.asyncio
+@bounded_scenario
 async def test_four_interrupted_claims_expire_then_bounded_recovery_drains_without_duplicates(monkeypatch, record_property):
     started_at = time.monotonic()
     store = MemorySessions()
@@ -92,6 +94,7 @@ async def test_four_interrupted_claims_expire_then_bounded_recovery_drains_witho
 
 
 @pytest.mark.asyncio
+@bounded_scenario
 async def test_transport_burst_cancelled_work_retains_four_slots_then_admission_recovers(monkeypatch, record_property):
     started_at = time.monotonic()
     class FinitePool:
@@ -108,6 +111,7 @@ async def test_transport_burst_cancelled_work_retains_four_slots_then_admission_
     transport = fetching.PinnedHTTPTransport()
     deadline = time.monotonic() + 5
     limits = fetching.FetchLimits(max_bytes=4096, timeout_seconds=0.2)
+    resumed = None
     calls = [asyncio.create_task(transport.request("https://shop.example.com/", "93.184.216.34", limits)) for _ in range(12)]
     try:
         await asyncio.sleep(0)
@@ -142,4 +146,4 @@ async def test_transport_burst_cancelled_work_retains_four_slots_then_admission_
         for task in calls:
             if not task.done():
                 task.cancel()
-        await asyncio.gather(*calls, return_exceptions=True)
+        await asyncio.gather(*calls, *([resumed] if resumed is not None else []), return_exceptions=True)

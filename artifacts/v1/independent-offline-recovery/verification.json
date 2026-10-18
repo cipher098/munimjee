@@ -8,14 +8,14 @@
     "scoped_passed": 112,
     "scoped_skipped": 0,
     "existing_deprecation_warnings": 2,
-    "seconds": 0.68
+    "seconds": 0.67
   },
   "sha256": {
     "backend/app/services/imports_v1.py": "d21416a55658fdd1a8b8928f80546ba40e2c8cd2761267def63bb72e8b45db35",
     "backend/app/v1/imports/runner.py": "9d89b74f980f3b01ec00a607ef6ef5c8d5b87b2100299de0085eafd029a2b80f",
     "backend/app/v1/imports/fetching.py": "9e3973f810cfe47dbbe82809d399de39f9169b05932eb8f94f2cd484456f485a",
-    "backend/tests/independent_offline_recovery_qa.py": "972cbcc0f45ce541f62f2a391dd1fdc35ae8918a1800da23b56763fc87675340",
-    "backend/tests/test_v1_independent_offline_recovery.py": "eeae6e59ee062043276b9a2db3b8701f32e6980be745f1812f9564a9db4a8352",
+    "backend/tests/independent_offline_recovery_qa.py": "5430ed0f0f8ca2f6498d3eff31fce60813b84328df09a96800be497df4900b3a",
+    "backend/tests/test_v1_independent_offline_recovery.py": "416a1dea02bbb97552b501c794d205aed0c57d1d604166cf40c6438614ed955d",
     "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
     "backend/tests/conftest.py": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84"
   },
@@ -26,7 +26,7 @@
       "peak_fetch_callers": "4",
       "body_bytes": "2976",
       "drafts": "24",
-      "elapsed_seconds_informational": "0.030379624993656762"
+      "elapsed_seconds_informational": "0.03213495800446253"
     },
     "test_four_interrupted_claims_expire_then_bounded_recovery_drains_without_duplicates": {
       "interrupted_jobs": "4",
@@ -34,7 +34,7 @@
       "drain_batches": "20,4,0",
       "peak_recovery_fetch_callers": "1",
       "drafts": "24",
-      "elapsed_seconds_informational": "0.010495292008272372"
+      "elapsed_seconds_informational": "0.011205582995899022"
     },
     "test_transport_burst_cancelled_work_retains_four_slots_then_admission_recovers": {
       "burst_callers": "12",
@@ -42,7 +42,7 @@
       "expected_busy_rejections": "8",
       "recovery_admissions": "1",
       "retained_slot_ceiling": "4",
-      "elapsed_seconds_informational": "0.0005029579915571958"
+      "elapsed_seconds_informational": "0.000428374987677671"
     }
   },
   "fixed_qa_workload": {
@@ -75,5 +75,6 @@
     "Long-running soak",
     "Full V1 acceptance"
   ],
-  "release_claim": false
+  "release_claim": false,
+  "harness_followup": "Whole-scenario asyncio deadline wraps all three scenarios; finally also awaits the resumed transport wrapper after completing bounded backing futures."
 }

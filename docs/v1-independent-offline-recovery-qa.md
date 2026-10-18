@@ -50,7 +50,7 @@ proof. No provider, actual credential, DB, Redis, server or ambient service is u
 
 Three new offline scenarios passed. The focused composition with existing import
 job/service, website fetch and independent wave2 fetch tests passed **112 tests,
-zero skips**, in 0.68 seconds. Two existing Pydantic/Starlette deprecation warnings
+zero skips**, in 0.67 seconds. Two existing Pydantic/Starlette deprecation warnings
 were observed. Per-scenario informational durations and exact workload counters are
 in `artifacts/v1/independent-offline-recovery/scoped-results.xml`; the exact command,
 source/runner SHA256 values and limits are in `verification.json`.
@@ -69,7 +69,9 @@ the synthetic SELECT evaluator and cancellation cleanup before its gate. Both we
 corrected without changing production. No application failure was observed in the
 three selected scenarios. The fixture serializes synthetic transactions globally,
 does not implement commit durability, rollback, real row locks, PostgreSQL scheduling
-or actual crash recovery, and cannot certify those behaviors. The four-fetch caller
+or actual crash recovery, and cannot certify those behaviors. A self-review follow-up wraps each complete scenario in a five-second asyncio
+deadline and also awaits the resumed transport task during failure cleanup. The
+four-fetch caller
 ceiling is the load generator's explicit limit, not a production worker limit.
 The fake Future pool exercises the real transport's admission logic without creating
 threads or measuring network throughput. Existing shared byte tests cover response

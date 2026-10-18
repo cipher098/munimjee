@@ -10,6 +10,7 @@ import asyncio
 from contextlib import asynccontextmanager, nullcontext
 from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 import json
 import operator
 from types import SimpleNamespace
@@ -26,6 +27,13 @@ from app.v1.imports.fetching import FetchedSource
 
 NOW = datetime(2026, 10, 18, 12, tzinfo=timezone.utc)
 TENANTS = (UUID(int=2001), UUID(int=2002))
+
+
+def bounded_scenario(function):
+    @wraps(function)
+    async def run(*args, **kwargs):
+        return await asyncio.wait_for(function(*args, **kwargs), 5)
+    return run
 
 
 def evaluate(expression, row):
