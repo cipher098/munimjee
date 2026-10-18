@@ -24,7 +24,11 @@ does not declare release acceptance or permit live provider/customer actions.
 - Remote owns SEO/sitemap/reviewed legacy redirects and independent QA/release
   followup. No CSV or migration ownership is delegated to remote.
 - Catalogue next owns V10 activity instrumentation, reserved0054 after real0053.
-  Default-off V1_ACTIVITY_ENABLED and per-business off/test/live; only a current
+  Default-off V1_ACTIVITY_ENABLED plus V1_ACTIVITY_RETENTION_READY and per-business
+  off/test/live; collection requires both global gates. Retention readiness is
+  an explicit operational assertion after scheduled cleanup verification, not
+  inferred from helper existence. Cleanup remains runnable when collection is off.
+  Only a current
   native owner may explicitly authorize live first-party measurement. Minimal
   observed-browser contexts/events are not people or marketing attribution.
   Missing/expired/foreign optional proof never blocks checkout or promotes it to
