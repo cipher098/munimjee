@@ -53,6 +53,18 @@ New app Python modules enter the existing runtime allowlist automatically.
 - No new database schema. A schema need is a contract blocker to report, not a
   reason to invent a migration after local `0053`.
 
+Frozen implementation seam: new `app.v1.storefront.seo.create_seo_router(*,
+canonical_base, provider_dependency, legacy_redirects=())` exposes `/sitemap.xml`
+and `/stores/{slug}/sitemap.xml`; provider adds bounded `public_store_slugs()`.
+The configured inventory field is `V1_STOREFRONT_LEGACY_REDIRECTS`, default `[]`.
+`parse_legacy_redirects(raw, canonical_base)` returns validated `LegacyRedirect`
+entries with `source_origin`, `source_path`, `target_path`, `store_slug`,
+`owner_reference`, `reviewed_by`, `reviewed_at` (ISO date). Sources match exact
+scheme/Host/raw path without query; destinations are the configured canonical
+store/product/category paths, rechecked for current public existence. `/shop`
+and all order/auth/API/static/editor routes are protected from legacy overrides.
+No inferred production mappings are part of this batch.
+
 ## Verification and handoff
 
 Reuse P01 exact numeric-loopback lane validation, matching test database name,
