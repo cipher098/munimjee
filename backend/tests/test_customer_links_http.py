@@ -59,6 +59,8 @@ async def begin(j):
     body=create_body(j);response=await post(j,j.base,body)
     assert response.status_code==201,response.text
     assert response.headers['cache-control']=='no-store'
+    assert response.headers['referrer-policy']=='no-referrer'
+    assert response.headers['x-robots-tag']=='noindex, nofollow'
     row=response.json();assert row['command_id']==body['idempotency_key']
     return row,body
 
@@ -176,3 +178,17 @@ async def test_session_revoked_while_waiting_for_challenge_lock_cannot_finalize(
         await blocker.commit()
         response=await asyncio.wait_for(task,5);assert response.status_code==401,response.text
     async with j.sessions() as db:assert await db.scalar(select(func.count()).select_from(Customer))==0
+
+
+@pytest.mark.asyncio
+async def test_overview_uses_final_current_role_after_row_reads(linked_native,monkeypatch):
+    j=linked_native;await begin(j);original=service.view
+    async def downgrade_after_read(*args,**kwargs):
+        result=await original(*args,**kwargs)
+        async with j.sessions.begin() as other:
+            await other.execute(update(Membership).where(Membership.business_id==j.bid,Membership.user_id==j.uid).values(role='viewer'))
+        return result
+    monkeypatch.setattr(service,'view',downgrade_after_read)
+    response=await j.client.get(j.base)
+    assert response.status_code==200,response.text
+    assert response.json()['can_manage'] is False
