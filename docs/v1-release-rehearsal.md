@@ -1,20 +1,23 @@
 # Disposable V1 release rehearsal
 
 This release-only tool implements a guarded synthetic backup/restore acceptance
-path at the exact repository migration head, currently `0052_v1_customer_links`.
+path at the exact repository migration head, currently `0053_v1_csv_import`.
 It changes no product models, migrations or P01 policy. Default invocation:
 
 ```sh
 python scripts/v1_release_rehearsal.py
 ```
 
-The local compatibility review advances the explicit allowed head from0050 to0052.
+The first local compatibility review advanced the explicit allowed head from0050 to0052.
 0051 adds consent-bound read-only support grants/receipts;0052 adds isolated customer
 control-proof/association records. The dump inventory includes their constraints,
 immutable triggers/functions and full rows without enabling either feature. This
-fixed fixture leaves the new domain tables empty: its schema restore is exercised,
-but populated support/customer proof restoration is not claimed. CSV0053 is a
-separate next-slice compatibility review, not implicitly accepted by this constant.
+fixed fixture leaves the new support/customer domain tables empty: their schema
+restore is exercised, but populated support/customer proof restoration is not claimed.
+The explicit0053 review changes only the import asset content CHECK to acceptCSV.
+The current fixture adds one retained literal CSV original (exact bytes/hash) and
+one pending tenant-bound job. Its fresh-pair execution is recorded separately from
+the historical0052 proof; later0054 is not implicitly accepted by this constant.
 
 The default and explicit `plan` action read migration source only. They import no
 application configuration, read no dotenv file, spawn no subprocess and connect
@@ -173,7 +176,7 @@ Do not combine this acceptance with backend conftest's single-lane socket guard:
 run this dedicated test file as its own process.
 
 Remote handoff originally recorded38 safety checks and one unexecuted acceptance.
-Local execution on18 October2026 now passes **53 checks, zero skips**, including
+Historical0052 local execution on18 October2026 passes **53 checks, zero skips**, including
 real PG16.15 migrate/dump/restore with PG16.13 tools and a newly allocated empty
 source/target pair. Every restored table hash, schema protection and total matches;
 the newer target-only paid order/reservation is preserved by the generic read probe.

@@ -38,7 +38,7 @@ def test_default_plan_does_not_import_db_or_call_process_or_network(monkeypatch,
     assert result["mode"] == "plan"
     assert result["database_effects"] is False
     assert result["container_effects"] is False
-    assert result["alembic_head"] == "0052_v1_customer_links"
+    assert result["alembic_head"] == "0053_v1_csv_import"
 
 
 def test_pg16_literal_array_cast_reparse_keeps_exact_constraint_meaning():

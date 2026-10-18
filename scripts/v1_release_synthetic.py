@@ -6,6 +6,7 @@ customer placeholders and money values below are synthetic and deterministic.
 from __future__ import annotations
 
 import json
+import hashlib
 from datetime import datetime
 from uuid import NAMESPACE_URL, uuid5
 
@@ -17,7 +18,7 @@ def uid(label):
 
 
 # Each JSON field uses an explicit PostgreSQL cast, avoiding driver inference.
-JSON_FIELDS = {"customer", "address", "items", "options"}
+JSON_FIELDS = {"customer", "address", "items", "options", "source"}
 
 
 async def insert(connection, table, row):
@@ -68,13 +69,24 @@ async def seed(connection):
         customer_instagram_id="synthetic-no-provider-account", product_id=uid("product"), created_at=STAMP))
     await insert(connection, "manual_actions", dict(id=uid("action"), seller_id=uid("seller"),
         conversation_id=uid("conversation"), kind="synthetic_review", status="open", created_at=STAMP))
+    original = b'product_ref,title,price,currency,stock,options_state\nRESTORE,Synthetic CSV product,12.50,INR,0,none\n'
+    digest = hashlib.sha256(original).hexdigest()
+    await insert(connection, "v1_import_assets", dict(id=uid("csv-asset"), business_id=uid("seller"),
+        creator_id=uid("owner"), idempotency_key=uid("csv-upload-key"), content_type="text/csv",
+        sha256=digest, size_bytes=len(original), content=original, authorized_at=STAMP))
+    await insert(connection, "v1_import_jobs", dict(id=uid("csv-job"), business_id=uid("seller"),
+        creator_id=uid("owner"), idempotency_key=uid("csv-job-key"), request_hash="b"*64,
+        source={"kind":"csv", "document_id":uid("csv-document"), "document_label":"Synthetic retained CSV",
+                "media_id":"csv-document:"+uid("csv-document"), "upload_sha256":digest},
+        asset_id=uid("csv-asset"), state="pending", authorized_at=STAMP, created_at=STAMP, available_at=STAMP))
 
 
 async def validate_fixture(connection, snapshot):
     from v1_release_rehearsal import require
     expected = {"alembic_version": 1, "sellers": 1, "businesses": 1, "users": 1, "memberships": 1,
                 "products": 1, "catalogue_skus": 1, "commerce_customers": 1, "commerce_orders": 2,
-                "sku_reservations": 2, "sku_payment_attempts": 1, "conversations": 1, "manual_actions": 1}
+                "sku_reservations": 2, "sku_payment_attempts": 1, "conversations": 1, "manual_actions": 1,
+                "v1_import_assets": 1, "v1_import_jobs": 1}
     actual = {name: value["count"] for name, value in snapshot["tables"].items() if value["count"]}
     require(actual == expected, "Source contains data outside the fixed synthetic fixture")
     require(snapshot["totals"] == {"orders": 2, "placed_total_minor": 2500, "paid_total_minor": 1250,

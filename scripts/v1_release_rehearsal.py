@@ -23,7 +23,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 # Reviewed additive support/customer-link schema. Keep this explicit: a later
 # migration needs its own compatibility review rather than accepting any head.
-SUPPORTED_HEAD = "0052_v1_customer_links"
+SUPPORTED_HEAD = "0053_v1_csv_import"
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_ROWS = 1000
 MAX_TABLES = 200
