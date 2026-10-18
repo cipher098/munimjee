@@ -64,5 +64,28 @@
   "database_allocations": 0,
   "docker_operations": 0,
   "production_actions": 0,
-  "release_ready": false
+  "release_ready": false,
+  "manifest_followup": {
+    "original_commit": "e22b89f4ed22f46a207000b542b872758be1ebc1",
+    "composed_commit": "59253fe",
+    "assertions": 18,
+    "passed": true,
+    "kind": "source/ORM metadata only; no DB constraint execution",
+    "source_sha256": {
+      "backend/app/models/imports_v1.py": "222f1d856c0eaeb2f645f50e4e7537b971ecb06d9954a1462ad32830a4b1d2cd",
+      "backend/app/services/imports_v1.py": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+      "backend/app/api/v1/imports.py": "cfb72956e04e19ffd47b3aea9a66447ff0182aaa3bed0e1d775b57d79b8d0c56",
+      "backend/alembic/versions/0046_v1_import_jobs.py": "508870e08063a46b55532d4aef94ece47791d84318acc89e0fcd162482828f49",
+      "backend/app/services/import_catalogue.py": "7930b6a279ccf4eb17fdbe80dfd1e3482670ebe8f5c6c7d6c483aa8c6df9da5d",
+      "backend/app/models/import_catalogue.py": "8871668fad3f7a2f63b35e0c68aa70cf687af143a0dfdf772152beda126b68a0",
+      "backend/app/api/v1/import_catalogue.py": "0961d7048148063ed347e6cec68cd9ad7c4d8dcf66e62cd349470bc0b2eeb29a",
+      "backend/app/services/channel_connections.py": "ed4ff275efcbbc94896f8577f4ea164b736760a585761761b227cf8dd47e5819",
+      "backend/app/services/channel_operator.py": "5cfa09c001573ed7bf90d35039cc29b4c5fe6646d4eb5252bb248f8d555cd492",
+      "backend/app/workers/refresh_tokens.py": "a377901d00b038e17c12556fd040085b78ce52752affce366787dabd5890fa96",
+      "backend/app/api/routes/auth.py": "6748ca39a72f641e557ad962257e97a1d2f67183223a63cb8ef69c0c818665b4"
+    },
+    "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python artifacts/v1/instagram-owned-qa/manifest-contract-check.py",
+    "database_connections": 0,
+    "provider_calls": 0
+  }
 }

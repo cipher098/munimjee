@@ -17,8 +17,9 @@ this branch. Local social current-SKU and catalogue analytics remain locally own
 | Provider, DTOs, transport, 43 synthetic cases | `d5ab4588b651f917fd92f38c5ffc7f1fd8a7f8a6` | `c899ddc` |
 | Independent security, 103 cases | `6eabd6f79612300ae1b5155707654742f1f41c67` | `5ad7c1f` |
 | Pipeline contract QA and six pending DB cases | `5d986084750bb441d7a312a554c8e63e7b50aea8` | `fd05305` |
+| Manifest/schema/credential-writer contract follow-up | `e22b89f4ed22f46a207000b542b872758be1ebc1` | `59253fe` |
 
-Cherry-pick the three originals in that order, or their three composed equivalents;
+Cherry-pick the four originals in that order, or their four composed equivalents;
 do not replay both sets. The security branch contains its own provider cherry-pick
 `89b6586`; omit that duplicate. Coordinator contract/handoff commits are additive
 documentation and evidence. All three named workers used GPT-6.1 Sol/high.
@@ -97,7 +98,10 @@ the target-by-target contract is in `docs/v1-instagram-owned-qa.md`.
    matching original; carousel remains disabled. No migration is proposed here.
 6. Manifest details contain only IDs/hash/size/MIME/version. Audit job/candidate
    tenant FKs do not create an FK for a JSON asset UUID: every writer/reader must
-   resolve the asset under the same business and verify its metadata. Add private
+   resolve the asset under the same business and verify its metadata. Enforce
+   append-only handling explicitly: current assets/audits have no immutability
+   trigger, and the hash CHECK validates hex shape rather than content integrity.
+   Recompute content hashes in trusted persistence/read paths. Add private
    tenant-scoped manifest/byte readers to the local review API/UI before claiming
    accessible retained originals. A later catalogue media bridge needs separate
    acceptance. Never persist signed CDN URLs or credentials as evidence/identity.
@@ -120,6 +124,8 @@ cancellation/retry revisions and private review-required output.
   are in `artifacts/v1/instagram-owned-coordination/`.
 - Provider/security hashes match the original committed source; shared runtime
   remains unchanged from the reviewed base. `git diff --check` passed.
+- The follow-up's **18 source/ORM checks** also pass on the final composition;
+  these check insertion/replay/constraint contracts and do not execute PostgreSQL.
 
 Local integration must execute the six pipeline DB cases and new generation/
 original-manifest transaction cases on a separately allocated unchanged P01 lane,
