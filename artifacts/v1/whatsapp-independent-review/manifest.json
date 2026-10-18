@@ -9,9 +9,25 @@
     "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "c90a10dd061788d02ec86f774c476f2a2901823be8584a853ad038431e5b2dc6"
   },
   "owned_sha256": {
-    "backend/tests/test_v1_whatsapp_independent.py": "00723ab08b5204ebbb20b4905f4e5781225882a6aa57c3d23a190fa794d1b101",
-    "docs/v1-whatsapp-independent-security-review.md": "559d1137cf7d5ff510ce533bd32f91fce991be5107848f7dfc0c6a20e527db53",
+    "backend/tests/test_v1_whatsapp_independent.py": "2a4f63678c53d9dfd01f8f2edbaa989a8984bc1f600b3f6bf9395ca390d5b4c8",
+    "docs/v1-whatsapp-independent-security-review.md": "6f179cd69d73c6cdc7cad89d1240e9cc38144bcae3ba7ca6979c4c48d59ab4fa",
     "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
-    "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8"
+    "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8",
+    "artifacts/v1/whatsapp-independent-review/coherent-6a8-extra-negatives.txt": "210cce537f2dc9dcd3013d14ba47f741248941e3bf7cb5b30fdb5efbdc104a80",
+    "artifacts/v1/whatsapp-independent-review/coherent-6a8-independent.txt": "b913c308e8a659606bf2d9c5bc26fd18105938b624dde40c963941a9051e758e",
+    "artifacts/v1/whatsapp-independent-review/coherent-6a8-claim-revocation.txt": "6a0200d6f724a9bd59df0fbcc1369f55e28a2bb887e56b6f2b3e6b9221dfc415"
+  },
+  "coherent_snapshot": "6a8d6be95e202f30e4838ffadcaf6039e6128b60",
+  "coherent_dependency_alias": "461006e",
+  "coherent_positive_no_db": 2,
+  "coherent_negative_no_db": 4,
+  "coherent_source_sha256": {
+    "backend/app/services/whatsapp_signup_provider.py": "1221f5c2665a8b063301e47895fc41b1940a64cb14a0396874596ab220740f20",
+    "backend/app/services/whatsapp_test_protocol.py": "68e38727f28b9aa9941d272f627a48f8f3fee692cb0eea6c5f8c6baf1399ea38",
+    "backend/app/services/whatsapp_test_authority.py": "c3e6ef5243ebaf9ad6f405a886d0ac20ae937dc48181dd833cb87c9246f79dbf",
+    "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "cd3aee877f267aef31ce223c68aef7e09d27182a8233b683ec3be0a9e1a602bc",
+    "backend/app/services/whatsapp_self_service.py": "39fc9162da47a1534b9b96d36b3abafb63d0d203824889eaf9ac4286726dfc51",
+    "backend/app/services/whatsapp_connection_tests.py": "4252b8030e5ae7db3e05b591716dc1f7ffb40e39bd8f30b98ecda2eb03118ea8",
+    "backend/app/api/v1/whatsapp_self_service.py": "8085d0dc297a43f26f0f0958671c88c556ccab8d8d0521310eace8ba6a09b86d"
   }
 }
