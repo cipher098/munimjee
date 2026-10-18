@@ -1,0 +1,642 @@
+{
+  "mode": "actual-onboarding-formatter-with-fake-access-and-counts-no-database",
+  "source_sha256": {
+    "backend/app/services/onboarding.py": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9",
+    "backend/app/services/identity.py": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+    "backend/app/api/v1/identity.py": "6c7ef2d291134af9c172c3cd4d2f79990a7355d8dba7054b4eff63dbdd2c46cf",
+    "backend/app/api/v1/auth.py": "9d8c56e6d8ee9f2bce8ec06c55b3c91962679dcdaf1c6dfe8353ea7a2dccbcbc",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1"
+  },
+  "roles": {
+    "owner": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "owner",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "channels.connect",
+              "channels.disconnect",
+              "inbox.read",
+              "inbox.reply",
+              "members.manage",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "owner",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "channels.connect",
+              "channels.disconnect",
+              "inbox.read",
+              "inbox.reply",
+              "members.manage",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        }
+      }
+    },
+    "manager": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "manager",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "manager",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        }
+      }
+    },
+    "staff": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "staff",
+            "capabilities": [
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "staff",
+            "capabilities": [
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        }
+      }
+    },
+    "viewer": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "viewer",
+            "capabilities": [
+              "analytics.read",
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "orders.read",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "viewer",
+            "capabilities": [
+              "analytics.read",
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "orders.read",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "completed_steps": 2,
+          "total_steps": 5,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "Add and review your products before activating selling.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp",
+              "status": "pending_external",
+              "reason": "Connect owned accounts and complete an authorized messaging test. Provider approval is not inferred from saved credentials.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Configure the storefront, reconcile stock and enable checkout through the reviewed activation flow.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.invalid",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          }
+        }
+      }
+    }
+  },
+  "database_connections": 0,
+  "provider_calls": 0
+}
