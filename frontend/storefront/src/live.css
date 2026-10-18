@@ -9,3 +9,4 @@ html.palette-indigo{--paper:#f7f7fc;--ink:#292c47;--muted:#626582;--accent:#4e52
 .brand-tagline{font-size:12px;line-height:1.6;margin-top:8px;color:var(--muted);white-space:pre-line;overflow-wrap:anywhere;max-width:32rem}
 .published-story{grid-template-columns:1fr 1fr}.published-story h2,.published-story p,.hero-copy h1,.hero-copy p,.section-heading h2{overflow-wrap:anywhere;min-width:0;white-space:pre-line}.published-story p{max-width:40rem}
 @media(max-width:700px){.published-story{display:block}.shop-header>div{min-width:0}.shop-header .wordmark{font-size:23px;letter-spacing:3px}.shop-header nav{gap:14px}.hero-copy h1{max-width:100%}}
+html[data-theme=video] .collection{background:var(--paper)}

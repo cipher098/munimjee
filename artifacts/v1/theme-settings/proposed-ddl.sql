@@ -1,4 +1,4 @@
--- Proposed PostgreSQL DDL only. Integrator must reserve and author the actual Alembic migration.
+-- Historical DDL study, now implemented by actual Alembic 0049_v1_storefront_settings after 0048_v1_parcel_tracking.
 
 CREATE TABLE storefront_theme_settings_v1 (
 	business_id UUID NOT NULL,

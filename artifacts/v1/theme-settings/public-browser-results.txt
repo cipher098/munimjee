@@ -1,0 +1,26 @@
+✔ synthetic provider actual SSR/live editorial 390 cod canonical wire -> private status (1133.07175ms)
+✔ synthetic provider actual SSR/live editorial 390 razorpay canonical wire -> private status (570.100167ms)
+✔ synthetic provider actual SSR/live editorial 1440 cod canonical wire -> private status (760.722708ms)
+✔ synthetic provider actual SSR/live editorial 1440 razorpay canonical wire -> private status (560.380958ms)
+✔ synthetic provider actual SSR/live catalogue 390 cod canonical wire -> private status (594.847584ms)
+✔ synthetic provider actual SSR/live catalogue 390 razorpay canonical wire -> private status (585.184875ms)
+✔ synthetic provider actual SSR/live catalogue 1440 cod canonical wire -> private status (701.259458ms)
+✔ synthetic provider actual SSR/live catalogue 1440 razorpay canonical wire -> private status (525.402542ms)
+✔ synthetic provider actual SSR/live video 390 cod canonical wire -> private status (574.888834ms)
+✔ synthetic provider actual SSR/live video 390 razorpay canonical wire -> private status (514.409458ms)
+✔ synthetic provider actual SSR/live video 1440 cod canonical wire -> private status (669.76825ms)
+✔ synthetic provider actual SSR/live video 1440 razorpay canonical wire -> private status (547.334833ms)
+✔ synthetic provider editorial ambiguous COD -> reload immutable retry (464.068708ms)
+✔ synthetic provider catalogue ambiguous COD -> reload immutable retry (468.93975ms)
+✔ synthetic provider video ambiguous COD -> reload immutable retry (577.214083ms)
+✔ synthetic published provider editorial SSR without JS; presentation routes and private preview (226.424417ms)
+✔ synthetic published provider catalogue SSR without JS; presentation routes and private preview (244.115083ms)
+✔ synthetic published provider video SSR without JS; presentation routes and private preview (251.190833ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10177.312417
