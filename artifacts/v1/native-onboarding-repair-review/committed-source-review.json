@@ -1,0 +1,93 @@
+{
+  "base": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "actual_source": "8e62ea770729d04bc0982aadf64dadae41973cb9",
+  "runtime_transfer": "Root explicitly confirmed before provider runtime writes; reviewer remained read-only",
+  "source_commits": [
+    "c85e480",
+    "8e62ea7"
+  ],
+  "changed_runtime_files": [
+    "backend/static/v1_app.css",
+    "backend/static/v1_app.js"
+  ],
+  "runtime_sha256": {
+    "backend/static/v1_app.css": "6e9ca1e94315efe982654edab93ecb3e19442f71b1ec6e8a3da62777b25ef52c",
+    "backend/static/v1_app.js": "ee4a64b78b1a177e199a22f2cc1e10e146ff66120111bb2147f8bb0920ef9e91"
+  },
+  "protected_function_text": {
+    "function endWorkspace(": {
+      "unchanged": true,
+      "sha256": "5c6f8e76d97b7cb5d9b621c7294bc141a47cc642f2e1bc447cf2b9604d074468"
+    },
+    "function applyAuthority(": {
+      "unchanged": true,
+      "sha256": "53f5d2e94df485481367c8d0abcd329e1d8140639ffe34d375f50758a73ce1d6"
+    },
+    "async function checkedSession(": {
+      "unchanged": true,
+      "sha256": "186d762242cbe826e556f3da8daaa1e87406c7425d54a4e75bbdb7a9a609d192"
+    },
+    "function pathAccess(": {
+      "unchanged": true,
+      "sha256": "fdc24d6adf06144b1e0c20d2400833dbd03a9c4c4d9ea08bad0abb078bd7cbb2"
+    },
+    "async function api(": {
+      "unchanged": true,
+      "sha256": "6c337d6a709b2cf3503e39d1c38786a38e08af8fe5666f208b926669d961875c"
+    },
+    "function clearInvite(": {
+      "unchanged": true,
+      "sha256": "5a7b982ab850a809a2696ddefb1bcd87a382aa364e35933d7e731ca647ea8f78"
+    },
+    "function access(": {
+      "unchanged": true,
+      "sha256": "d31d22e60cf2ba70fa9cafd712eb295dc242bbe989e93ddcfae34b1ad0ae8e0e"
+    },
+    "async function busy(": {
+      "unchanged": true,
+      "sha256": "aa0abe4a6733a33ecfb897e0fa3631f16cf4c28a56372e3dade0eed8e6d7fc62"
+    },
+    "async function loadBusiness(": {
+      "unchanged": true,
+      "sha256": "06ed439ff36f2feb8e9010ec2a31cd6e9d5804173e1d7abed2a50b743841502a"
+    },
+    "async function loadTeam(": {
+      "unchanged": true,
+      "sha256": "db375fd01b9659f7b3d6ffa6689f427a03584654427471cee7caff3ea16eb906"
+    },
+    "async function workspace(": {
+      "unchanged": true,
+      "sha256": "335c1f08ed569ddb3861a45edf6f21cf98fac2ef7a00ca9321549be9a7d03040"
+    },
+    "async function recheck()": {
+      "unchanged": true,
+      "sha256": "f1424f65909ac3b0ac2e60f619119aff63c81c3759e1260f629850c764a30e06"
+    }
+  },
+  "existing_css_bytes_unchanged": true,
+  "all_six_added_css_rules_body_marker_scoped": true,
+  "shared_non_native_files_unchanged_sha256": {
+    "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "backend/static/v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "backend/static/commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+    "backend/static/parcel_tracking.html": "6dd5f3060ae2e8d47a0dd2e46d7503bb5e5567f85f148d27caf53d123850cb54",
+    "backend/static/customer_links.html": "612f5e6eab5c789dc53fec733b406c87e344fe88db71c5bff059fd6361aa8de9",
+    "backend/static/parcel_tracking.js": "1f424953d12327a135967552ad9d04264a3dd98addd616f6435bd217f6a0d553",
+    "backend/static/customer_links.js": "e87eccacf9198a4226a2e88a84daaccb179fcbd69be9c03f1078fd083ffb6b05"
+  },
+  "review_findings": [
+    {
+      "finding": "Held logout could clean/focus a newer identity because existing api() early logout return bypassed the usual post-response generation check.",
+      "resolution": "Final explicit logout handler captures generation before await, returns on mismatch before cleanup, and focus guard validates generation+businessLoad/current visible focused document."
+    },
+    {
+      "finding": "Initial Reload workspace button label did not match preserved startup recovery case.",
+      "resolution": "One-line followup uses Reload and try again; reload behavior unchanged; no assertion edit required."
+    }
+  ],
+  "focus_scope": "Only explicit auth-submit and confirmed logout handlers call focusCurrentView. No focus call added to passive helpers or recheck. Guard avoids background document, hidden view, changed generation/businessLoad and already-focused current view. Heading tabindex=-1 does not add ordinary tab stop.",
+  "retry_scope": "Named type=button next to existing announced error; only shown on initial non401 failure with both normal panels hidden; explicit location.reload only; no identity/cookie/request retry policy introduced.",
+  "source_review_disposition": "No static blocker found within two-file scope; await independent exact-source browser/visual/shared-style evidence.",
+  "runtime_applied_by_reviewer": false,
+  "tests_changed_or_run_by_reviewer": false
+}
