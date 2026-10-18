@@ -54,10 +54,14 @@ export function createActivityClient({slug,storage,fetchImpl=globalThis.fetch,
         if(!exact(result,['contract_version','state','context_id','expires_at','capability'])||result.contract_version!=='activity-context.v1'||
           !['ready','disabled','excluded','expired','capped'].includes(result.state))return null;
         if(result.state!=='ready'){
+          if(result.context_id!==null||result.expires_at!==null||result.capability!==null)return null;
           capability=null;
           // A refused/expired context is never silently retried with a new key
           // inside the same operation; later visible browsing may start anew.
-          if(result.state==='expired'&&current.context_id!==null)persist({...current,expires_at:now()});
+          if(result.state==='expired'){
+            try{storage.removeItem(key);current=null;}
+            catch{disabled=true;}
+          }
           return null;
         }
         const expires=Date.parse(result.expires_at);

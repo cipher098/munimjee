@@ -5,7 +5,7 @@ const first='11111111-1111-4111-8111-111111111111',second='22222222-2222-4222-82
 function fixture(changes={}){
   const values=new Map(),calls=[];let stamp=1700000000000,next=0;
   const document={visibilityState:'visible'},navigator={};
-  const storage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
+  const storage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value),removeItem:key=>values.delete(key)};
   const response=()=>({contract_version:'activity-context.v1',state:'ready',context_id:first,expires_at:new Date(stamp+1800000).toISOString(),capability:'memory-only.capability.secret'});
   let handler=async path=>path.endsWith('/contexts')?response():{contract_version:'activity-event.v1',state:'accepted',replayed:false};
   const fetchImpl=async(path,options)=>{calls.push({path,options});const result=await handler(path,options);return{ok:true,text:async()=>JSON.stringify(result)};};
@@ -75,4 +75,14 @@ test('disposal or a newly enabled privacy preference removes access to proof',as
 });
 test('product view only accepts a literal product UUID',async()=>{
   const f=fixture(),client=f.client();assert.equal(await client.productView('https://private.test?customer=x'),false);assert.equal(f.calls.length,0);assert.equal(await client.productView(product),true);assert.deepEqual(JSON.parse(f.calls[1].options.body),{event_kind:'product_view',product_id:product});
+});
+test('a definitively expired lost-ACK key permits only a later visible new context',async()=>{
+  const f=fixture();f.setHandler(async()=>{throw Error('accepted context response lost')});await f.client().start();
+  f.setHandler(async()=>({contract_version:'activity-context.v1',state:'expired',context_id:null,expires_at:null,capability:null}));
+  const loaded=f.client();assert.equal(await loaded.start(),null);assert.equal(f.calls.length,2);assert.equal(f.values.size,0);
+  f.setHandler(async()=>({...f.response(),context_id:second}));assert.equal(await loaded.start(),second);assert.equal(JSON.parse(f.calls[2].options.body).idempotency_key,second);
+});
+test('malformed expiry acknowledgement cannot discard an uncertain key',async()=>{
+  const f=fixture();f.setHandler(async()=>({contract_version:'activity-context.v1',state:'expired',context_id:first,expires_at:null,capability:null}));
+  const client=f.client();assert.equal(await client.start(),null);assert.equal(await client.start(),null);assert.equal(f.calls[0].options.body,f.calls[1].options.body);
 });

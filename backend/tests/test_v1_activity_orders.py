@@ -227,3 +227,37 @@ async def test_live_to_test_policy_cannot_reuse_old_live_context_for_production(
         row=await db.get(OrderActivity,oid)
         assert row.classification=='test' and row.context_id is None
         assert (await db.get(ActivityContext,context.context_id)).classification=='live' # immutable original
+
+
+@pytest.mark.asyncio
+async def test_utc_context_start_cohort_separates_next_day_accepted_order_cohort(sessions,monkeypatch):
+    # Synthetic original chronology, seeded against the actual immutable schema:
+    # context23:59UTC -> order00:10UTC, inside the original30-minute context.
+    # Context conversion belongs to the first day; order value to the second.
+    from app.config import settings
+    monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+    monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+    monkeypatch.setattr(settings,'V1_STOREFRONT_ENABLED',True)
+    bid,pid,skus=await seed(sessions)
+    day=datetime.now(timezone.utc).replace(hour=0,minute=0,second=0,microsecond=0)-timedelta(days=2)
+    context_start=day+timedelta(hours=23,minutes=59)
+    accepted=day+timedelta(days=1,minutes=10)
+    async with sessions.begin() as db:
+        db.add(ActivityPolicy(business_id=bid,mode='live',revision=1,updated_at=day-timedelta(days=1)))
+        db.add(ActivityPolicyCommand(business_id=bid,idempotency_key=uuid4(),actor_user_id=legacy_owner_id(bid),
+            request_hash='c'*64,mode='live',revision=1,notice_version='first-party.v1',created_at=day-timedelta(days=1)))
+        await db.flush()
+        context=ActivityContext(business_id=bid,idempotency_key=uuid4(),classification='live',reason='live_policy',policy_revision=1,
+            started_at=context_start,expires_at=context_start+timedelta(minutes=30),retained_until=context_start+timedelta(days=90))
+        db.add(context);await db.flush()
+        store=await checkout_v1.lock_store(db,bid)
+        order,_=await checkout_v1.create_sku_order(db,store,checkout(skus[0]));order.created_at=accepted;await db.flush()
+        db.add(OrderActivity(order_id=order.id,business_id=bid,classification='live',reason='live_context',context_id=context.id,accepted_at=accepted))
+    async with sessions() as db:
+        first=await activity.report(db,bid,day.date(),(day+timedelta(days=1)).date())
+        second=await activity.report(db,bid,(day+timedelta(days=1)).date(),(day+timedelta(days=2)).date())
+        assert first.counts.visits==1 and first.counts.accepted_placements==1 and first.conversion.percentage=='100.00'
+        assert first.production_orders.placed==0
+        assert second.counts.visits==0 and second.conversion.percentage is None
+        assert second.conversion.unavailable_reason=='no_observed_contexts'
+        assert second.production_orders.placed==1

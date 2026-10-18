@@ -60,9 +60,12 @@ async def owner(db, actor, business_id):
 
 
 async def policy_read(db,business_id,actor):
-    access=await require_business_access(db,actor,business_id,'analytics.read')
+    await require_business_access(db,actor,business_id,'analytics.read')
     row=(await db.execute(select(ActivityPolicy.mode,ActivityPolicy.revision,ActivityPolicy.updated_at)
         .where(ActivityPolicy.business_id==business_id).execution_options(autoflush=False))).one_or_none()
+    # analytics.read survives owner→viewer. Project can_change from a current
+    # scalar role after the awaited policy query, not the earlier capability.
+    access=await require_business_access(db,actor,business_id,'analytics.read')
     return PolicyRead(business_id=business_id,mode=row.mode if row else 'off',
         revision=row.revision if row else 0,changed_at=row.updated_at if row else None,
         can_change=access.role=='owner',collector_available=public_enabled())
