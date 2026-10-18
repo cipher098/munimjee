@@ -1,0 +1,40 @@
+{
+  "host": "isolated local QA worktrees",
+  "os": "Darwin",
+  "machine": "arm64",
+  "node": "v24.20.0",
+  "python": "Python 3.11.16",
+  "playwright_package": "1.58.2",
+  "playwright_module": "/Users/user/Documents/ChatGPT/munimjee-wave3-qa/frontend/storefront/node_modules/@playwright/test/index.mjs",
+  "browser_executable": "/Users/user/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "new_dependency_installations": 0,
+  "ambient_browser_4317_accessed": false,
+  "worker_configuration": {
+    "instagram_provider": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "reused_from_completed_instagram_assignment": true,
+      "started": true
+    },
+    "instagram_contract_qa": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "reused_from_completed_instagram_assignment": true,
+      "started": true
+    },
+    "instagram_security": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "reused_from_completed_instagram_assignment": true,
+      "started": true
+    }
+  },
+  "baseline_skip_summary": {
+    "DB_lane_unallocated": 721,
+    "Redis_unallocated": 2,
+    "missing_LLM_cassette": 1
+  },
+  "physical_device": false,
+  "screen_reader": false,
+  "production_capacity": false
+}

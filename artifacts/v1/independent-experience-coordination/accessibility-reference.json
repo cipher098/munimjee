@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-18",
+  "primary_sources": [
+    {
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html",
+      "used_for": "Author-supplied focus state indicators need sufficient contrast against adjacent background; unmodified user-agent appearance is exempt. Scoped3:1 comparison uses computed author colors and actual adjacent background."
+    },
+    {
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+      "used_for": "Keyboard focus indication is assessed in keyboard modality, separate from pointer focus."
+    },
+    {
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+      "used_for": "Reflow/overflow review reference; chosen viewport checks are a lab subset."
+    }
+  ],
+  "limits": [
+    "No overall WCAG conformance claim",
+    "No assistive-technology or physical-device certification",
+    "Representative computed color checks do not measure all text/components/states"
+  ]
+}
