@@ -1,0 +1,13 @@
+........................................................................ [ 59%]
+...............................................ss                        [100%]
+=============================== warnings summary ===============================
+tests/test_test_safety.py::test_dotenv_is_not_read_even_with_explicit_env_file
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee-wave5-ci/artifacts/v1/release-ci/pure-checks.xml -
+=========================== short test summary info ============================
+SKIPPED [1] backend/tests/test_test_safety.py:330: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_test_safety.py:350: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+119 passed, 2 skipped, 1 warning in 2.51s

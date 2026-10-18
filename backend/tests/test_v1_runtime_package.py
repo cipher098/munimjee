@@ -180,3 +180,19 @@ def test_release_archives_and_builds_refuse_dirty_runtime_while_context_marks_it
     stage(source)
     with pytest.raises(ValueError,match='clean tracked runtime'):
         package.require_clean_runtime(source)
+
+
+@pytest.mark.parametrize('operation',['delete','rename','rename_to_excluded'])
+def test_release_refuses_staged_deletion_or_rename_of_optional_runtime_source(source,operation):
+    optional=source/'backend/app/optional.py';optional.write_text('# committed optional module\n')
+    stage(source)
+    subprocess.run(['git','-C',str(source),'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','Optional module fixture'],check=True)
+    package.require_clean_runtime(source)
+    if operation=='delete':
+        subprocess.run(['git','-C',str(source),'rm','backend/app/optional.py'],check=True,capture_output=True)
+    else:
+        destination='backend/app/renamed.py' if operation=='rename' else 'backend/optional-excluded.py'
+        subprocess.run(['git','-C',str(source),'mv','backend/app/optional.py',destination],check=True)
+    assert package.runtime_source_dirty(source) is True
+    with pytest.raises(ValueError,match='clean tracked runtime'):
+        package.require_clean_runtime(source)
