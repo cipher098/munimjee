@@ -54,7 +54,7 @@ class WhatsAppMessage(Base):
     error = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
-    __table_args__ = (ForeignKeyConstraint(['contact_id','seller_id'], ['whatsapp_contacts.id','whatsapp_contacts.seller_id']), UniqueConstraint('seller_id','idempotency_key',name='wa_message_idempotency'), UniqueConstraint('seller_id','provider_message_id',name='wa_provider_message'))
+    __table_args__ = (ForeignKeyConstraint(['contact_id','seller_id'], ['whatsapp_contacts.id','whatsapp_contacts.seller_id']), UniqueConstraint('seller_id','idempotency_key',name='wa_message_idempotency'), UniqueConstraint('seller_id','provider_message_id',name='wa_provider_message'), UniqueConstraint('id','seller_id',name='wa_message_tenant_identity'))
 
 
 class WhatsAppTemplate(Base):

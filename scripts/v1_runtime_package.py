@@ -19,6 +19,7 @@ STOREFRONT = (
     'components.js', 'commerce.js', 'theme-config.js', 'payment-handoff.js', 'published-design.js',
 )
 STATIC = frozenset((
+    'whatsapp_self_service.html', 'whatsapp_self_service.js', 'whatsapp_self_service.css',
     'comment_operator.html', 'comment_operator.js', 'comment_operator.css', 'comment_operator_contract.js',
     'assistance.html', 'assistance.js', 'assistance.css',
     'payment_settings.html', 'payment_settings.js', 'payment_settings.css',

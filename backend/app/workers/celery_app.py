@@ -34,6 +34,7 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
+    "v1-whatsapp-setup-secret-cleanup": {"task": "app.workers.whatsapp.cleanup_setup_secrets", "schedule": 300},
     "v1-activity-retention": {"task": "app.workers.v1_activity.cleanup_activity", "schedule": 300},
     "v1-parcel-cache-recovery": {"task": "app.workers.v1_parcels.recover_parcels", "schedule": 30},
     "v1-import-recovery": {"task": "app.workers.v1_imports.recover_import_jobs", "schedule": 30},

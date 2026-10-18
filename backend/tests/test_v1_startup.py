@@ -20,7 +20,9 @@ def test_all_foundation_models_are_registered():
             "v1_support_grants", "v1_support_commands", "v1_customers", "v1_customer_link_challenges",
             "v1_customer_link_proofs", "v1_customer_associations", "v1_customer_link_audits",
             "v1_activity_policies", "v1_activity_contexts", "v1_activity_events", "v1_order_activity", "comment_operator_commands", "comment_operator_reviews",
-            "whatsapp_enquiry_reviews", "whatsapp_enquiry_closures"} <= set(Base.metadata.tables)
+            "whatsapp_enquiry_reviews", "whatsapp_enquiry_closures", "whatsapp_signup_attempts",
+            "whatsapp_signup_choices", "whatsapp_authorization_provenance", "whatsapp_connection_tests",
+            "whatsapp_test_authorizations"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -41,6 +43,8 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/api/v1/businesses/{business_id}/support/grants",
             "/v1/businesses/{business_id}/analytics", "/api/v1/businesses/{business_id}/analytics",
             "/v1/businesses/{business_id}/comment-automation",
+            "/v1/businesses/{business_id}/channels/whatsapp/setup",
+            "/api/v1/businesses/{business_id}/channels/whatsapp/self-service",
             "/api/v1/businesses/{business_id}/comment-automation",
             "/api/v1/businesses/{business_id}/whatsapp/enquiries",
             "/api/v1/businesses/{business_id}/analytics/activity",
@@ -63,7 +67,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0056_v1_comment_operator"]
+    assert scripts.get_heads() == ["0057_v1_whatsapp_self_service"]
+    assert scripts.get_revision("0057_v1_whatsapp_self_service").down_revision == "0056_v1_comment_operator"
     assert scripts.get_revision("0056_v1_comment_operator").down_revision == "0055_v1_comment_binding"
     assert scripts.get_revision("0055_v1_comment_binding").down_revision == "0054_v1_activity"
     assert scripts.get_revision("0054_v1_activity").down_revision == "0053_v1_csv_import"
@@ -102,4 +107,14 @@ def test_raw_activity_cleanup_remains_scheduled_with_collection_off():
     celery_app.loader.import_default_modules()
     assert 'app.workers.v1_activity.cleanup_activity' in celery_app.tasks
     assert any(item['task']=='app.workers.v1_activity.cleanup_activity' and item['schedule']==300
+               for item in celery_app.conf.beat_schedule.values())
+
+
+def test_whatsapp_setup_secret_cleanup_is_registered_with_both_rollouts_off():
+    from app.workers.celery_app import celery_app
+    from app.config import settings
+    assert not settings.V1_WHATSAPP_ONBOARDING_ENABLED and not settings.V1_CHANNEL_TESTS_ENABLED
+    celery_app.loader.import_default_modules()
+    assert 'app.workers.whatsapp.cleanup_setup_secrets' in celery_app.tasks
+    assert any(item['task']=='app.workers.whatsapp.cleanup_setup_secrets' and item['schedule']==300
                for item in celery_app.conf.beat_schedule.values())
