@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.v1.imports import FactField, SourceReference
+from app.v1.imports.contracts import clean_text
 from app.v1.imports.fetching import source_url
 
 
@@ -28,13 +29,22 @@ class Authorized(Contract):
 
 class ImportJobCreate(Authorized):
     idempotency_key: UUID
-    source_kind: Literal["website", "instagram", "uploaded_media"]
+    source_kind: Literal["website", "instagram", "uploaded_media", "csv"]
     source_url: str | None = Field(default=None, max_length=2048)
     media_id: str | None = Field(default=None, max_length=200)
     asset_id: UUID | None = None
+    document_id: UUID | None = None
+    document_label: str | None = Field(default=None, max_length=100)
 
     @model_validator(mode="after")
     def source_shape(self):
+        if self.source_kind == "csv":
+            if not self.asset_id or not self.document_id or not self.document_label or self.source_url is not None or self.media_id is not None:
+                raise ValueError("CSV requires only a tenant-owned asset and explicit document identity/label")
+            self.document_label = clean_text(self.document_label, limit=100)
+            return self
+        if self.document_id is not None or self.document_label is not None:
+            raise ValueError("Document fields are only supported for CSV")
         if self.source_kind == "website":
             if not self.source_url or self.asset_id or self.media_id:
                 raise ValueError("Website import requires only source_url")
@@ -52,7 +62,7 @@ class ImportJobCreate(Authorized):
 
 class UploadCreate(Authorized):
     idempotency_key: UUID
-    content_type: Literal["image/jpeg", "image/png", "video/mp4"]
+    content_type: Literal["image/jpeg", "image/png", "video/mp4", "text/csv"]
 
 
 class UploadRead(Contract):

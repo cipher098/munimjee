@@ -14,27 +14,33 @@
   let identity = null, access = null, stopped = false, busy = false, preparing = false, command = null, blocked = false, storageKey;
   let jobs = [], candidates = [], selected = null, baseline = null, jobsCursor = null, candidateCursor = null;
   let preview = null, previewEpoch = 0, fenceGeneration = 0;
+  const csvDocuments = new Map();
+  let sessionRequest=0, sessionApplied=0, latestSession=null;
   let jobHistory = [], candidateHistory = [], candidateNext = null, timer = null, pollCount = 0, loadEpoch = 0;
   const canWrite = () => !stopped && Boolean(access?.capabilities.includes('catalogue.write'));
   function el(tag, text, className) {const node = document.createElement(tag);if(text !== undefined)node.textContent = text;if(className)node.className = className;return node;}
   async function hash(value) {const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');}
   function clearCommands() {try {for(let i=sessionStorage.length-1;i>=0;i--){const key=sessionStorage.key(i);if(key?.startsWith(PREFIX))sessionStorage.removeItem(key);}}catch(_) {}}
   function fence(message) {
-    stopped = true;fenceGeneration++;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
+    stopped = true;latestSession=null;fenceGeneration++;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
     $('workspace').hidden=true;$('access-needed').hidden=false;$('loading').hidden=true;$('business-name').textContent='PRIVATE CATALOGUE';
     $('candidate-list').replaceChildren();$('job-list').replaceChildren();$('candidate-evidence').textContent='';$('candidate-source').textContent='';$('candidate-state').textContent='';$('review-heading').textContent='Choose a candidate';$('confirmations').replaceChildren();$('recovery-facts').textContent='';$('recovery-message').textContent='';$('recovery-file').value='';$('notice').textContent='';
-    $('allocation-form').reset();$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('receipt-details').textContent='';$('bridge-note').hidden=true;$('allocation-form').hidden=true;$('allocation-status').textContent='';$('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('option-rows').replaceChildren();$('global-error').textContent=message;
+    $('allocation-form').reset();$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('receipt-details').textContent='';$('bridge-note').hidden=true;$('allocation-form').hidden=true;$('allocation-status').textContent='';$('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('csv-form').reset();csvDocuments.clear();$('csv-document').replaceChildren(new Option('Create a new named source','new'));csvMode();$('option-rows').replaceChildren();$('global-error').textContent=message;
   }
   async function session(write=false) {
     if(stopped)throw Error('Your session ended. Sign in again.');
+    const sequence=++sessionRequest;
+    const latest=()=>{if(write&&!canWrite())throw Object.assign(Error('Your current role is read-only. Ask a manager or owner to continue.'),{status:403});return latestSession;};
     let data;try {data=await V1.session();}catch(error){if([401,403,404].includes(error.status))fence('Your session or business access ended. Sign in again.');throw error;}
     if(stopped)throw Error('Your session ended. Sign in again.');
+    if(sequence<sessionApplied)return latest();
     const membership=data.businesses?.find(b=>b.id===businessId);
     if(data.auth_method!=='v1_user'||!uuid(data.user_id)||!data.csrf_token||!membership?.capabilities?.includes('catalogue.read')) {fence('Sign in with your own V1 account for this business.');throw Error('Native business access required.');}
     const fingerprint=await hash(data.csrf_token);if(stopped)throw Error('Your session ended. Sign in again.');
+    if(sequence<sessionApplied)return latest();
     if(identity && (identity.user!==data.user_id || identity.fingerprint!==fingerprint)) {fence('Your sign-in changed. Private import details were cleared. Sign in again.');throw Error('Your sign-in changed.');}
     if(!identity) {identity={user:data.user_id,fingerprint};storageKey=PREFIX+data.user_id+':'+businessId;}
-    access=membership;$('business-name').textContent=membership.name || membership.business_name || 'PRIVATE CATALOGUE';sync();
+    sessionApplied=sequence;latestSession=data;access=membership;$('business-name').textContent=membership.name || membership.business_name || 'PRIVATE CATALOGUE';sync();
     if(write&&!canWrite())throw Object.assign(Error('Your current role is read-only. Ask a manager or owner to continue.'),{status:403});
     return data;
   }
@@ -46,7 +52,7 @@
   function message(error, target='global-error') {if(!stopped)$(target).textContent=error.status===409 ? (['import_revision_stale','candidate_already_created'].includes(error.code)?'This record changed before the saved action was accepted. Refresh and review its current facts.':'The action result is unconfirmed. Its exact request is saved. Retry that same action; ask your business owner to review repeated conflicts.') : error.message || 'The request could not be confirmed. Refresh or retry the saved action.';}
   function sync() {
     const disabled=!canWrite()||busy||preparing||Boolean(command)||blocked;
-    for(const id of ['website-fields','upload-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
+    for(const id of ['website-fields','upload-fields','csv-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
     $('role-note').hidden=canWrite();$('retry-command').disabled=!canWrite()||busy||!command||blocked;
     $('recovery').hidden=!command&&!blocked;
     $('jobs-previous').disabled=busy||!jobHistory.length;$('jobs-next').disabled=busy||jobs.length<50;
@@ -71,9 +77,9 @@
   function validateCommand(value) {
     if(!exact(value,['version','user','business','fingerprint','created','kind','path','body','digest'])||value.version!==1||value.user!==identity.user||value.business!==businessId||value.fingerprint!==identity.fingerprint||!Number.isFinite(Date.parse(value.created))||Date.now()-Date.parse(value.created)>7*86400000||Date.parse(value.created)>Date.now()+300000) return false;
     const b=value.body;
-    if(value.kind==='upload')return value.path==='/uploads'&&exact(b,['idempotency_key','job_key','content_type','size','sha256','name'])&&uuid(b.idempotency_key)&&uuid(b.job_key)&&['image/jpeg','image/png','video/mp4'].includes(b.content_type)&&Number.isInteger(b.size)&&b.size>0&&b.size<=5000000&&typeof b.name==='string'&&b.name.length<=255&&/^[a-f0-9]{64}$/.test(b.sha256);
+    if(value.kind==='upload') {const csv=b?.content_type==='text/csv';return value.path==='/uploads'&&exact(b,['idempotency_key','job_key','content_type','size','sha256','name',...(csv?['document_id','document_label']:[])])&&uuid(b.idempotency_key)&&uuid(b.job_key)&&(csv?uuid(b.document_id)&&validDocumentLabel(b.document_label):['image/jpeg','image/png','video/mp4'].includes(b.content_type))&&Number.isInteger(b.size)&&b.size>0&&b.size<=(csv?256000:5000000)&&typeof b.name==='string'&&b.name.length<=255&&/^[a-f0-9]{64}$/.test(b.sha256);}
     if(value.kind!=='json'||!object(b)||!uuid(b.idempotency_key))return false;
-    if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id)));
+    if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id','document_id','document_label'])&&b.source_kind==='csv'&&uuid(b.asset_id)&&uuid(b.document_id)&&validDocumentLabel(b.document_label)));
     if(!Number.isInteger(b.expected_revision)||b.expected_revision<1)return false;
     if(/^\/jobs\/[0-9a-f-]{36}\/(cancel|retry)$/i.test(value.path))return exact(b,['expected_revision','idempotency_key']);
     if(/^\/candidates\/[0-9a-f-]{36}\/catalogue-draft$/i.test(value.path))return exact(b,['expected_revision','idempotency_key','seller_reviewed','confirmed_fields','allocations'])&&b.seller_reviewed===true&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f))&&Array.isArray(b.allocations)&&b.allocations.length>0&&b.allocations.length<=500&&b.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000&&typeof a.active==='boolean')&&new Set(b.allocations.map(a=>optionIdentity(a.options))).size===b.allocations.length;
@@ -93,8 +99,8 @@
     const b=command?.body, labels={title:'Title',description:'Description',price:'Price',stock:'Stock',options:'Options'};
     const fact=(field,value)=>value===null?'Unknown':field==='price'?value.amount+' '+value.currency:field==='options'?(value.length?value.map(option=>option.name+': '+option.values.join(', ')).join('; '):'No options'):String(value);
     let summary='';
-    if(command?.kind==='upload')summary='Upload original media\nFile: '+b.name+'\nType: '+({'image/jpeg':'JPEG image','image/png':'PNG image','video/mp4':'MP4 video'}[b.content_type])+'\nSize: '+b.size.toLocaleString()+' bytes';
-    else if(command?.path==='/jobs')summary=b.source_kind==='website'?'Start website import\nWebsite: '+b.source_url+'\nSource permission confirmed.':'Start import from the original uploaded media.\nSource permission confirmed.';
+    if(command?.kind==='upload')summary=(b.content_type==='text/csv'?'Upload product CSV\nSource: '+b.document_label:'Upload original media')+'\nFile: '+b.name+'\nType: '+({'image/jpeg':'JPEG image','image/png':'PNG image','video/mp4':'MP4 video','text/csv':'CSV product file'}[b.content_type])+'\nSize: '+b.size.toLocaleString()+' bytes';
+    else if(command?.path==='/jobs')summary=b.source_kind==='website'?'Start website import\nWebsite: '+b.source_url+'\nSource permission confirmed.':b.source_kind==='csv'?'Start CSV import\nSource: '+b.document_label+'\nSource permission confirmed.':'Start import from the original uploaded media.\nSource permission confirmed.';
     else if(command?.path.startsWith('/jobs/'))summary=(command.path.endsWith('/cancel')?'Cancel':'Retry')+' the selected import job.\nSaved revision: '+b.expected_revision;
     else if(command?.path.endsWith('/catalogue-draft'))summary='Create the reviewed private catalogue draft.\nSaved revision: '+b.expected_revision+'\n'+b.allocations.map(row=>(Object.entries(row.options).map(([name,value])=>name+': '+value).join(' / ')||'No options')+' — '+row.stock_available+' units · '+(row.active?'Include when this product is activated':'Do not include when this product is activated')).join('\n');
     else if(command)summary=(b.action==='edit'?'Save factual changes':b.action==='approve'?'Approve the reviewed candidate':'Reject the selected candidate')+'.\nSaved revision: '+b.expected_revision+'\n'+(b.action==='edit'?b.overrides.map(value=>labels[value.field]+': '+fact(value.field,value.value)).join('\n'):b.action==='approve'?'Confirmed facts: '+b.confirmed_fields.map(field=>labels[field]).join(', '):'Reason: '+b.reason);
@@ -111,13 +117,13 @@
   function validCandidate(record) {const c=record?.candidate;return uuid(record?.candidate_id)&&Number.isInteger(record.revision)&&record.revision>0&&c?.id===record.candidate_id&&c.provenance?.business_id===businessId&&uuid(c.provenance.import_job_id)&&object(c.provenance.source)&&['pending','review_required','approved','rejected'].includes(c.state)&&validFacts(c.extracted)&&Array.isArray(c.overrides)&&c.overrides.every(o=>fields.includes(o.field)&&validFacts({...Object.fromEntries(fields.map(f=>[f,null])),[o.field]:o.value}));}
   async function rawUpload(file) {
     const generation=fenceGeneration,b=command.body;
-    if(!file||file.size!==b.size||file.type!==b.content_type||await hash(await file.arrayBuffer())!==b.sha256)throw Error('Reselect the exact original file saved for this upload. Its size, type and SHA-256 must match.');
+    if(!file||file.size!==b.size||(b.content_type==='text/csv'?csvFileType(file):file.type)!==b.content_type||await hash(await file.arrayBuffer())!==b.sha256)throw Error('Reselect the exact original file saved for this upload. Its size, type and SHA-256 must match.');
     await session(true);current(generation);
     const response=await fetch(root+'/uploads?idempotency_key='+b.idempotency_key+'&source_authorized=true',{method:'POST',body:file,headers:{'Content-Type':b.content_type,'X-CSRF-Token':V1.csrf},credentials:'same-origin',cache:'no-store',redirect:'error'});
     if(response.status===401){fence('Your session ended. Private import details were cleared. Sign in again.');throw Object.assign(Error('Session ended.'),{status:401});}
     const result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(Error(typeof result.detail==='string'?result.detail:result.detail?.message||'The upload could not be confirmed.'),{status:response.status,code:typeof result.detail?.code==='string'?result.detail.code:null});await session();current(generation);
     if(!uuid(result.asset_id)||result.sha256!==b.sha256||result.size_bytes!==b.size||result.content_type!==b.content_type)throw Error('The upload response did not confirm the original media. Retry the saved upload.');
-    const body={idempotency_key:b.job_key,source_authorized:true,source_kind:'uploaded_media',asset_id:result.asset_id};
+    const body={idempotency_key:b.job_key,source_authorized:true,source_kind:b.content_type==='text/csv'?'csv':'uploaded_media',asset_id:result.asset_id,...(b.content_type==='text/csv'?{document_id:b.document_id,document_label:b.document_label}:{})};
     const next={...command,kind:'json',path:'/jobs',body,digest:await hash(JSON.stringify(['json','/jobs',body]))};current(generation);persist(next);command=next;showRecovery();
   }
   async function sendCommand(file) {
@@ -126,10 +132,10 @@
       await session(true);const saved=await decode(readStorage());if(JSON.stringify(saved)!==JSON.stringify(command))throw Error('Saved action changed. Reload and reconcile it before continuing.');
       if(command.kind==='upload')await rawUpload(file);
       const sent=command,viewEpoch=loadEpoch,result=await api(root+sent.path,{method:'POST',body:sent.body});
-      if(sent.path==='/jobs'||sent.path.startsWith('/jobs/')) {if(!validJob(result)||(sent.path!=='/jobs'&&sent.path.split('/')[2]!==result.job_id))throw Error('The response did not confirm an import job in this business. Retry the saved action.');}
+      if(sent.path==='/jobs'||sent.path.startsWith('/jobs/')) {if(!validJob(result)||(sent.path!=='/jobs'&&sent.path.split('/')[2]!==result.job_id)||(sent.path==='/jobs'&&sent.body.source_kind==='csv'&&(result.source.kind!=='csv'||result.source.document_id!==sent.body.document_id||result.source.document_label!==sent.body.document_label||result.source.media_id!=='csv-document:'+sent.body.document_id||!/^[a-f0-9]{64}$/.test(result.source.upload_sha256))))throw Error('The response did not confirm an import job in this business. Retry the saved action.');}
       else if(sent.path.endsWith('/catalogue-draft')) {if(!validReceipt(result,sent.path.split('/')[2])||![sent.body.expected_revision,sent.body.expected_revision+1].includes(result.candidate_revision))throw Error('The response did not confirm a private draft receipt for this candidate. Retry the saved action.');}
       else if(!validCandidate(result)||result.candidate_id!==sent.path.split('/')[2]||result.revision!==sent.body.expected_revision+1)throw Error('The response did not confirm the reviewed candidate. Retry the saved action.');
-      remove();command=null;$('recovery-facts').textContent='';$('recovery-file').value='';$('website-form').reset();$('upload-form').reset();
+      remove();command=null;$('recovery-facts').textContent='';$('recovery-file').value='';$('website-form').reset();$('upload-form').reset();$('csv-form').reset();csvMode();
       if(viewEpoch===loadEpoch&&selected?.candidate_id===result.candidate_id&&sent.path.startsWith('/candidates/')&&!sent.path.endsWith('/catalogue-draft')) {selected=result;renderCandidate();}
       $('notice').textContent=sent.path.endsWith('/catalogue-draft')?'Private catalogue draft confirmed. Review it in Catalogue; activation and publication remain separate.':sent.path==='/jobs'?'Import request confirmed. Waiting for worker progress; no completion time is promised.':sent.path.startsWith('/candidates/')?'Review action confirmed. This candidate remains private.':'Job action confirmed. Refresh to check durable progress.';
       pollCount=0;await load(false);
@@ -140,13 +146,36 @@
       if(command)showRecovery();message(error,command?'recovery-error':'global-error');
     } finally {busy=false;sync();}
   }
-  function sourceLabel(source) {return source.kind==='website' ? String(source.url||'Website') : source.kind==='instagram' ? 'Instagram media · '+String(source.media_id||'') : 'Original uploaded media';}
+  function sourceLabel(source) {return source.kind==='website' ? String(source.url||'Website') : source.kind==='instagram' ? 'Instagram media · '+String(source.media_id||'') : source.kind==='csv'?'CSV · '+(source.document_label||'Product source'):'Original uploaded media';}
+  function validDocumentLabel(value) {return typeof value==='string'&&value.trim()===value&&value.length>0&&value.length<=100&&!/[\u0000-\u001f\u007f]/.test(value);}
+  function csvFileType(file) {return file&&/\.csv$/i.test(file.name)&&['','text/csv','application/vnd.ms-excel'].includes(file.type)?'text/csv':null;}
+  function csvMode() {const fresh=$('csv-document').value==='new';$('csv-name-label').hidden=!fresh;$('csv-name').required=fresh;}
+  function renderDocuments() {
+    const previous=$('csv-document').value;
+    for(const job of jobs)if(job.source.kind==='csv'&&uuid(job.source.document_id)&&validDocumentLabel(job.source.document_label)) {
+      // Bound cached history while allowing More jobs to reveal older sources.
+      // Retain the seller's explicit selection across paging and polling.
+      const id=job.source.document_id;
+      if(!csvDocuments.has(id)&&csvDocuments.size>=200){const old=[...csvDocuments.keys()].find(key=>key!==previous);if(old)csvDocuments.delete(old);}
+      csvDocuments.delete(id);csvDocuments.set(id,{label:job.source.document_label});
+    }
+    const select=$('csv-document');select.replaceChildren(new Option('Create a new named source','new'));
+    let number=0;for(const [id,doc] of csvDocuments)select.add(new Option(doc.label+' — source '+(++number),id));
+    select.value=csvDocuments.has(previous)?previous:'new';csvMode();
+  }
+  function jobError(code) {
+    const match=/^csv_([a-z_]+):line_([0-9]+)(?::([a-z_]+))?$/.exec(code);
+    if(!match)return code==='provider_capability_pending'?'Instagram retrieval is awaiting provider capability. Use original media or an authorized website.':'Import issue: '+code+'. Review source permission and format before retrying.';
+    const reasons={size:'File must be nonempty and no larger than 256,000 bytes.',encoding:'Save the file as UTF-8 CSV.',control:'Remove unsupported control characters or embedded byte-order marks.',quoting:'Check CSV quotes and comma separators.',headers:'Use supported column names exactly, including product_ref; remove duplicates.',row_limit:'Use at most 200 product records.',column_count:'Every record must match the header column count.',field_limit:'A field exceeds its supported length.',invalid_fact:'Check the literal value against the column format.',duplicate_ref:'Each trimmed product_ref must be unique within this file.',price_currency_pair:'Supply both price and a recognized currency, or leave both blank.',no_products:'Include at least one product record.',content_type:'Select a CSV original.'};
+    return 'CSV line '+match[2]+(match[3]?' · '+match[3]:'')+': '+(reasons[match[1]]||'Check the supported CSV format.')+' No candidates from this file were saved. Correct the file and start a new import for the same source.';
+  }
   function renderJobs() {
+    renderDocuments();
     const list=$('job-list');list.replaceChildren();if(!jobs.length)list.append(el('p','No import jobs on this page.','muted'));
     for(const job of jobs) {
       const row=el('article',undefined,'job-row');row.append(el('h3',sourceLabel(job.source)),el('p',job.state.replaceAll('_',' ')+' · '+job.candidate_count+' candidates'),el('p','Attempt '+job.attempts+' · revision '+job.revision,'hint'),el('small','Job '+job.job_id));
       if(job.state==='pending')row.append(el('p','Waiting for worker progress. Refresh to check.','hint'));
-      if(job.error_code)row.append(el('p',job.error_code==='provider_capability_pending'?'Instagram retrieval is awaiting provider capability. Use original media or an authorized website.':'Import issue: '+job.error_code+'. Review source permission and format before retrying.','error'));
+      if(job.error_code)row.append(el('p',jobError(job.error_code),'error'));
       const actions=el('div',undefined,'job-actions');
       for(const action of ['cancel','retry']) {
         const allowed=action==='cancel'?['pending','running','failed'].includes(job.state):job.state==='failed'&&job.attempts<3&&!['authorization_revoked','source_connection_changed','provider_capability_pending'].includes(job.error_code);
@@ -242,6 +271,15 @@
   $('catalogue-link').href=$('bridge-catalogue').href=`/v1/businesses/${businessId}/catalogue`;
   $('website-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!$('website-consent').checked)throw Error('Explicit source permission is required.');await makeCommand('json','/jobs',{idempotency_key:crypto.randomUUID(),source_authorized:true,source_kind:'website',source_url:$('website-url').value.trim()});await sendCommand();});});
   $('upload-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const file=$('upload-file').files[0];if(!$('upload-consent').checked)throw Error('Explicit media permission is required.');if(!file||!['image/jpeg','image/png','video/mp4'].includes(file.type)||!file.size||file.size>5000000)throw Error('Choose a nonempty original JPEG, PNG or MP4 no larger than 5 MB.');await makeCommand('upload','/uploads',{idempotency_key:crypto.randomUUID(),job_key:crypto.randomUUID(),content_type:file.type,size:file.size,sha256:await hash(await file.arrayBuffer()),name:file.name.slice(0,255)});await sendCommand(file);});});
+  $('csv-document').addEventListener('change',csvMode);
+  $('csv-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
+    const file=$('csv-file').files[0],id=$('csv-document').value,fresh=id==='new',label=fresh?$('csv-name').value.trim():csvDocuments.get(id)?.label;
+    if(!$('csv-consent').checked)throw Error('Explicit permission to import this CSV is required.');
+    if(!file||csvFileType(file)!=='text/csv'||!file.size||file.size>256000)throw Error('Choose a nonempty UTF-8 .csv file no larger than 256,000 bytes.');
+    if(!validDocumentLabel(label)||(!fresh&&!csvDocuments.has(id)))throw Error('Name a new source or explicitly choose an existing source.');
+    if(fresh&&[...csvDocuments.values()].some(doc=>doc.label===label))throw Error('This source name already appears in loaded activity. Choose that source to reimport, or use a distinct name for a separate source.');
+    await makeCommand('upload','/uploads',{idempotency_key:crypto.randomUUID(),job_key:crypto.randomUUID(),content_type:'text/csv',size:file.size,sha256:await hash(await file.arrayBuffer()),name:file.name.slice(0,255),document_id:fresh?crypto.randomUUID():id,document_label:label});await sendCommand(file);
+  });});
   $('retry-command').addEventListener('click',()=>run(()=>sendCommand($('recovery-file').files[0]),'recovery-error'));
   $('facts-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const facts=readFacts(),overrides=fields.filter(f=>!same(facts[f],baseline[f])).map(field=>({field,value:facts[field]}));if(!overrides.length)throw Error('No factual changes to save.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'edit',overrides});await sendCommand();},'facts-error');});
   $('approve-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!same(readFacts(),baseline))throw Error('Save factual changes first, then review and confirm the saved facts.');if(['title','price','stock','options'].some(f=>baseline[f]===null)||![...$('confirmations').querySelectorAll('input')].every(box=>box.checked))throw Error('Resolve unknown required facts and explicitly confirm all five factual fields.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'approve',confirmed_fields:fields});await sendCommand();},'review-error');});

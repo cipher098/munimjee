@@ -36,7 +36,7 @@ Text uses existing clean_text constraints. Numeric and option-state cells have s
 
 ## Review, reimport and private draft bridge
 
-Candidates enter pending/review_required with unknown facts intact. Every factual field still requires current seller review; CSV authorization is not factual approval. Existing source-version reconciliation and seller overrides are preserved on reimport, including stale-capture rejection. Never replace corrected catalogue facts or operational inventory from new file contents.
+Candidates enter pending/review_required with unknown facts intact. Every factual field still requires current seller review; CSV authorization is not factual approval. Existing source-version reconciliation and seller overrides are preserved on reimport, including stale-capture rejection. For immutable CSV originals, candidate captured_at is the server job-acceptance created_at, so an older queued file cannot become a newer source version merely by starting its worker later. Never replace corrected catalogue facts or operational inventory from new file contents.
 
 Unknown title/price/stock/options prevents the current catalogue bridge. options_state:none permits the existing explicit one-SKU review; a known zero stock creates a reviewed zero-availability draft only. Variants require each confirmed Cartesian combination allocated exactly once and allocations summing to the confirmed source total. An aggregate stock count is never copied into every SKU. This allocation does not reconcile pending reservations or enable checkout.
 
@@ -47,3 +47,7 @@ The existing bridge requires current candidate revision, five explicit factual c
 Pure parsing: quoted commas/newlines/doubled quotes/BOM; every size/header/row/field limit; duplicate refs, malformed quoting/UTF8/control data; fixed decimals and blank-vs0; no inferred options, stock or currencies. Reordering rows preserves identities; changing document/business does not merge; reimport retains manual corrections.
 
 Actual0053 chain: upload/job retry/cancel and tenant isolation, exact-key replay/conflict, native CSRF/current role/session loss during body/lock waits, CSV job claim/lease and atomic candidate persistence, stale capture handling, unknown facts and exact reviewed private bridge with no activation. Browser: human-named document selection, upload/parse errors, progress, review, variant handoff, source reimport and lost response/reload/reselection. No provider/network call, customer send, real credential or production database operation.
+
+## Migration rollback boundary
+
+0053 changes only v1_import_asset_content in the actual migration chain and its matching ORM CHECK; the original byte-size/hash/tenant constraints remain. Downgrade reinstates the old content-type CHECK and fails atomically while retained CSV originals exist. It never deletes originals, jobs, evidence or drafts to force a rollback. A forward repair is required for an installation that has accepted CSV files.

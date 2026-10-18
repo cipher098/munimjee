@@ -30,6 +30,7 @@ from app.v1.imports import (
     parse_candidate, reimport_candidate, reject,
 )
 from app.v1.imports.extraction import extract_website, validate_upload
+from app.v1.imports.csv_source import CSVSourceError, parse_csv, validate_csv_upload
 from app.v1.imports.fetching import FetchError, SafeFetcher
 
 
@@ -143,7 +144,7 @@ async def list_candidates(db, actor, business_id, *, after=None, limit=50):
 
 async def put_upload(db, actor, business_id, payload: UploadCreate, *, content: bytes):
     await _access(db, actor, business_id, write=True, lock=True)
-    sha = validate_upload(content, payload.content_type)
+    sha = validate_csv_upload(content) if payload.content_type == "text/csv" else validate_upload(content, payload.content_type)
     previous = await db.scalar(select(ImportAsset).where(
         ImportAsset.business_id == business_id, ImportAsset.idempotency_key == payload.idempotency_key))
     if previous:
@@ -161,7 +162,7 @@ async def put_upload(db, actor, business_id, payload: UploadCreate, *, content: 
 
 async def create_job(db, actor, business_id, payload: ImportJobCreate):
     access = await _access(db, actor, business_id, write=True, lock=True)
-    request_hash = digest(payload.model_dump(mode="json"))
+    request_hash = digest(payload.model_dump(mode="json", exclude={"document_id", "document_label"} if payload.source_kind != "csv" else None))
     previous = await db.scalar(select(ImportJob).where(
         ImportJob.business_id == business_id, ImportJob.idempotency_key == payload.idempotency_key))
     if previous:
@@ -183,7 +184,15 @@ async def create_job(db, actor, business_id, payload: ImportJobCreate):
             ImportAsset.business_id == business_id, ImportAsset.id == payload.asset_id))
         if asset is None:
             raise ImportNotFound("Import asset not found")
-        source["media_id"] = asset.sha256  # Stable reimport identity across upload keys/blob UUIDs.
+        if payload.source_kind == "csv":
+            if asset.content_type != "text/csv":
+                raise ValueError("CSV source requires a CSV upload")
+            source.update(document_id=str(payload.document_id), document_label=payload.document_label,
+                media_id=f"csv-document:{payload.document_id}", upload_sha256=asset.sha256)
+        else:
+            if asset.content_type == "text/csv":
+                raise ValueError("Media source cannot consume a CSV upload")
+            source["media_id"] = asset.sha256  # Stable media identity across upload keys/blob UUIDs.
     timestamp = now()
     job = ImportJob(id=uuid4(), business_id=business_id, creator_id=actor.user_id,
         idempotency_key=payload.idempotency_key, request_hash=request_hash, source=source,
@@ -336,7 +345,10 @@ async def claim_job(db, business_id, job_id) -> JobClaim | None:
     job.attempts += 1
     job.revision += 1
     await db.flush()
-    return JobClaim(job.id, business_id, job.creator_id, token, dict(job.source), timestamp, content, content_type)
+    # CSV bytes are immutable at acceptance: delayed execution must not make an
+    # older file a newer document version. Other adapters capture fresh data.
+    captured_at = job.created_at if job.source["kind"] == "csv" else timestamp
+    return JobClaim(job.id, business_id, job.creator_id, token, dict(job.source), captured_at, content, content_type)
 
 
 async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_provider=None):
@@ -345,6 +357,13 @@ async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_prov
         fetched = await fetcher.fetch(source["url"], authorized_origin=source["url"])
         items = extract_website(fetched)
         evidence = f"Literal structured Product fields; fetched {fetched.final_url}"
+    elif source["kind"] == "csv":
+        if claim.upload_content_type != "text/csv":
+            raise CSVSourceError("content_type")
+        records = parse_csv(claim.upload_content)
+        items = tuple((record.product_ref, record.facts) for record in records)
+        evidence = f"Literal CSV facts; upload SHA256 {claim.source['upload_sha256']}; seller review required"
+        source = {"kind": "csv", "media_id": source["media_id"]}
     elif source["kind"] == "uploaded_media":
         validate_upload(claim.upload_content, claim.upload_content_type)
         items = (("media-product", DraftFacts()),)
@@ -364,11 +383,11 @@ async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_prov
             raise FetchError("invalid_provider_products")
         evidence = "Connected provider structured data; seller review required"
     candidates = []
-    for key, facts in items:
+    for index, (key, facts) in enumerate(items):
         candidate = parse_candidate({"provenance": {
             "business_id": claim.business_id, "import_job_id": claim.job_id,
             "captured_at": claim.captured_at, "source": source,
-            "source_product_id": key, "evidence": evidence,
+            "source_product_id": key, "evidence": evidence + (f"; source line {records[index].line}" if source["kind"] == "csv" else ""),
         }, "facts": facts.model_dump()}, business_id=claim.business_id)
         candidates.append(begin_review(candidate, business_id=claim.business_id))
     if len({candidate.id for candidate in candidates}) != len(candidates):
@@ -464,6 +483,8 @@ async def run_job(sessions, business_id, job_id, *, fetcher=None, instagram_prov
     try:
         candidates = await collect_claim(claim, fetcher=fetcher or SafeFetcher(), instagram_provider=instagram_provider)
         error_code = None
+    except CSVSourceError as exc:
+        candidates, error_code = (), exc.code
     except FetchError as exc:
         allowed_errors = {
             "invalid_url", "credential_url_forbidden", "too_many_query_fields", "encoded_query_key_forbidden", "invalid_dns_address", "non_public_address",

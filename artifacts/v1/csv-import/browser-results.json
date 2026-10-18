@@ -1,0 +1,9 @@
+{
+  "checks": 74,
+  "actual_main_mount": true,
+  "actual_migration": "0053_v1_csv_import",
+  "worker": "actual local CSV parser through protected test trigger",
+  "provider_calls": 0,
+  "external": [],
+  "errors": []
+}

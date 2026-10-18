@@ -26,7 +26,7 @@ class ImportAsset(Base):
         UniqueConstraint("business_id", "id", name="v1_import_asset_tenant"),
         UniqueConstraint("business_id", "idempotency_key", name="v1_import_asset_idempotency"),
         CheckConstraint("size_bytes > 0 AND size_bytes <= 5000000 AND octet_length(content) = size_bytes", name="v1_import_asset_size"),
-        CheckConstraint("content_type IN ('image/jpeg','image/png','video/mp4') AND sha256 ~ '^[a-f0-9]{64}$'", name="v1_import_asset_content"),
+        CheckConstraint("content_type IN ('image/jpeg','image/png','video/mp4','text/csv') AND sha256 ~ '^[a-f0-9]{64}$'", name="v1_import_asset_content"),
     )
 
 
