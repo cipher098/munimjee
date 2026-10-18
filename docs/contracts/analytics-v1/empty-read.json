@@ -1,0 +1,49 @@
+{
+  "contract_version": "seller-analytics.v1",
+  "business_id": "00000000-0000-4000-8000-000000000001",
+  "generated_at": "2026-10-19T00:00:00Z",
+  "metric_basis": "order_created_utc_current_states",
+  "data_scope": "commerce_orders_only",
+  "filters": {
+    "from_date": "2026-10-18",
+    "to_date": "2026-10-19",
+    "payment_status": null,
+    "fulfillment_status": null,
+    "payment_method": null,
+    "include_gateway_test": false,
+    "page": 1,
+    "page_size": 25
+  },
+  "counts": {
+    "placed": 0,
+    "online_paid": 0,
+    "cod_collected": 0,
+    "payment_review": 0,
+    "cancelled": 0,
+    "expired": 0,
+    "unclassified_test_activity": 0
+  },
+  "currency_totals": [],
+  "daily": [
+    {
+      "date": "2026-10-18",
+      "placed": 0,
+      "cancelled": 0
+    }
+  ],
+  "orders": [],
+  "has_next": false,
+  "known_gateway_test_excluded": 0,
+  "unavailable": {
+    "visits": null,
+    "product_views": null,
+    "enquiries": null,
+    "checkout_starts": null,
+    "conversion_rate": null,
+    "attribution": null,
+    "completed_refunds_minor": null,
+    "payment_fees_minor": null,
+    "net_revenue_minor": null,
+    "settlement_period_cashflow": null
+  }
+}

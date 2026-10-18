@@ -1,0 +1,7 @@
+{
+  "checks": 21,
+  "mode": "actual native main APIs + new owned analytics router + P01 migrations",
+  "provider_calls": 0,
+  "page_errors": [],
+  "external_requests": []
+}
