@@ -48,6 +48,12 @@ async def retain(db, claim, candidate, batch):
             raise FetchError('instagram_asset_invalid')
 
 
+def require_integrity(condition):
+    # Runtime checks must survive python -O; never use assert for trusted reads.
+    if not condition:
+        raise ValueError('Import original integrity mismatch')
+
+
 async def originals(db, actor, business_id, candidate_id, *, asset_id=None):
     from app.services.imports_v1 import _access, digest
     await _access(db,actor,business_id)
@@ -64,20 +70,20 @@ async def originals(db, actor, business_id, candidate_id, *, asset_id=None):
         m=audit.details
         try:
             expected_keys={'contract_version','parent_media_id','asset_media_id','asset_id','sha256','size_bytes','content_type','connection_version'}
-            assert set(m)==expected_keys and m['contract_version']=='instagram-owned-manifest.v1'
-            assert job and job.creator_id==audit.actor_id and job.source['kind']=='instagram'
-            assert m['parent_media_id']==m['asset_media_id']==job.source['media_id']
-            assert type(m['connection_version']) is int and m['connection_version']==job.source['_connection']['version']
+            require_integrity(set(m)==expected_keys and m['contract_version']=='instagram-owned-manifest.v1')
+            require_integrity(job and job.creator_id==audit.actor_id and job.source['kind']=='instagram')
+            require_integrity(m['parent_media_id']==m['asset_media_id']==job.source['media_id'])
+            require_integrity(type(m['connection_version']) is int and m['connection_version']==job.source['_connection']['version'])
             key=uuid5(job.id,'instagram-original:'+m['asset_media_id']+':'+m['sha256'])
-            assert UUID(m['asset_id'])==key
-            assert audit.idempotency_key==uuid5(job.id,'instagram-manifest:'+str(candidate_id)+':'+m['asset_media_id']+':'+m['sha256'])
-            assert audit.request_hash==digest(m)
+            require_integrity(UUID(m['asset_id'])==key)
+            require_integrity(audit.idempotency_key==uuid5(job.id,'instagram-manifest:'+str(candidate_id)+':'+m['asset_media_id']+':'+m['sha256']))
+            require_integrity(audit.request_hash==digest(m))
             asset=await db.scalar(select(ImportAsset).where(ImportAsset.business_id==business_id,ImportAsset.id==key))
-            assert asset and asset.idempotency_key==key and asset.creator_id==job.creator_id
-            assert (asset.sha256,asset.size_bytes,asset.content_type)==(m['sha256'],m['size_bytes'],m['content_type'])
-            assert validate_upload(bytes(asset.content),asset.content_type)==asset.sha256
-            assert len(asset.content)==asset.size_bytes
-        except (AssertionError,KeyError,ValueError,TypeError,FetchError):
+            require_integrity(asset and asset.idempotency_key==key and asset.creator_id==job.creator_id)
+            require_integrity((asset.sha256,asset.size_bytes,asset.content_type)==(m['sha256'],m['size_bytes'],m['content_type']))
+            require_integrity(validate_upload(bytes(asset.content),asset.content_type)==asset.sha256)
+            require_integrity(len(asset.content)==asset.size_bytes)
+        except (KeyError,ValueError,TypeError,AttributeError,FetchError):
             raise HTTPException(409,'Import original integrity check failed') from None
         safe={**m,'job_id':str(job.id),'candidate_id':str(candidate_id)}
         if asset_id is None: result.append(safe)

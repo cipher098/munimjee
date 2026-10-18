@@ -105,7 +105,8 @@ async def test_original_asset_and_manifest_roll_back_with_candidate_and_job(migr
 
 
 @pytest.mark.asyncio
-async def test_actual_native_original_reader_fences_session_revoked_after_content_read(migrated_engine,monkeypatch):
+@pytest.mark.parametrize('revocation',['session','membership_after_final_session'])
+async def test_actual_native_original_reader_fences_session_revoked_after_content_read(migrated_engine,monkeypatch,revocation):
     from app.main import app
     from app.database import get_db
     from app.services.auth_sessions import issue_session
@@ -130,16 +131,29 @@ async def test_actual_native_original_reader_fences_session_revoked_after_conten
     prior=dict(app.dependency_overrides);app.dependency_overrides[get_db]=database
     monkeypatch.setattr(settings,'V1_AUTH_ENABLED',True)
     original=import_originals.originals
+    ready=False
     async def revoked(*args,**kwargs):
+        nonlocal ready
         result=await original(*args,**kwargs)
-        async with sessions.begin() as writer:await writer.execute(update(UserSession).where(UserSession.id==sid).values(revoked_at=jobs.now()))
+        if revocation=='session':
+            async with sessions.begin() as writer:await writer.execute(update(UserSession).where(UserSession.id==sid).values(revoked_at=jobs.now()))
+        ready=True
         return result
+    from app.api.v1 import imports as routes
+    current_actor=routes.current_actor
+    async def final_session(request,db):
+        actor=await current_actor(request,db)
+        if ready and revocation=='membership_after_final_session':
+            from app.models.identity import Membership
+            async with sessions.begin() as writer:await writer.execute(update(Membership).where(Membership.business_id==bid,Membership.user_id==actor.user_id).values(revoked_at=jobs.now()))
+        return actor
     try:
         async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+token}) as client:
             url=f'/api/v1/businesses/{bid}/imports/candidates/{cid}/originals/{aid}'
             valid=await client.get(url);assert valid.status_code==200 and valid.content.startswith(b'\x89PNG')
             monkeypatch.setattr(import_originals,'originals',revoked)
-            denied=await client.get(url);assert denied.status_code==401 and b'synthetic-retained-original' not in denied.content
+            monkeypatch.setattr(routes,'current_actor',final_session)
+            denied=await client.get(url);assert denied.status_code==(401 if revocation=='session' else 404) and b'synthetic-retained-original' not in denied.content
     finally:app.dependency_overrides.clear();app.dependency_overrides.update(prior)
 
 
@@ -188,3 +202,68 @@ async def test_actual_refresh_worker_discards_delayed_token_generation(migrated_
     monkeypatch.setattr(refresh_tokens,'exchange_for_long_lived_token',exchange)
     await refresh_tokens._refresh()
     async with sessions() as db:assert (await db.get(Seller,bid)).instagram_token is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('revocation',['inactive_user','membership','legacy_cutoff'])
+async def test_legacy_connection_rechecks_authority_after_network_before_commit(migrated_engine,monkeypatch,revocation):
+    from app.main import app
+    from app.database import get_db
+    from app.api.routes import auth
+    from app.models.identity import User,Membership
+    from httpx import AsyncClient,ASGITransport
+    sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+    monkeypatch.setattr(settings,'V1_ENFORCE_LEGACY_ACCESS',True)
+    async def database():
+        async with sessions() as db:
+            try:yield db;await db.commit()
+            except Exception:await db.rollback();raise
+    prior=dict(app.dependency_overrides);app.dependency_overrides[get_db]=database
+    async def exchange(_):
+        async with sessions.begin() as writer:
+            if revocation=='inactive_user':await writer.execute(update(User).where(User.id==actor.user_id).values(is_active=False))
+            elif revocation=='membership':await writer.execute(update(Membership).where(Membership.business_id==bid,Membership.user_id==actor.user_id).values(role='viewer'))
+            else:await writer.execute(update(User).where(User.id==actor.user_id).values(legacy_revoked_before=jobs.now()+timedelta(seconds=1)))
+        return 'must-roll-back-new-token'
+    async def profile(_):return {'user_id':ACCOUNT}
+    monkeypatch.setattr(auth,'exchange_for_long_lived_token',exchange);monkeypatch.setattr(auth,'fetch_ig_user',profile)
+    token=auth._create_token({'sub':str(bid),'role':'seller'})
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+            response=await client.post('/auth/seller/connect-instagram',headers={'Authorization':'Bearer '+token},json={'short_lived_token':'synthetic-input'})
+            assert response.status_code==(403 if revocation=='membership' else 401),response.text
+        async with sessions() as db:
+            assert (await db.get(Seller,bid)).instagram_token=='synthetic-only-never-real'
+            assert (await db.get(ChannelConnectionState,(bid,'instagram'))).version==7
+    finally:app.dependency_overrides.clear();app.dependency_overrides.update(prior)
+
+
+@pytest.mark.asyncio
+async def test_legacy_oauth_start_binding_cannot_cross_later_disconnect(migrated_engine,monkeypatch):
+    from app.main import app
+    from app.database import get_db
+    from app.api.routes import auth
+    from httpx import AsyncClient,ASGITransport
+    from urllib.parse import urlparse,parse_qs
+    from unittest.mock import AsyncMock
+    sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+    async def database():
+        async with sessions() as db:
+            try:yield db;await db.commit()
+            except Exception:await db.rollback();raise
+    prior=dict(app.dependency_overrides);app.dependency_overrides[get_db]=database
+    exchange=AsyncMock(side_effect=AssertionError('stale OAuth must never reach provider'))
+    monkeypatch.setattr(auth,'exchange_code_for_user_token',exchange)
+    token=auth._create_token({'sub':str(bid),'role':'seller'})
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+token}) as client:
+            start=await client.get('/auth/instagram/oauth/start');assert start.status_code==302
+            state=parse_qs(urlparse(start.headers['location']).query)['state'][0]
+            async with sessions.begin() as writer:
+                await writer.execute(update(Seller).where(Seller.id==bid).values(instagram_token=None,instagram_page_id=None))
+                await writer.execute(update(ChannelConnectionState).where(ChannelConnectionState.business_id==bid).values(version=8))
+            callback=await client.get('/auth/instagram/oauth/callback',params={'state':state,'code':'synthetic'})
+            assert callback.status_code==302 and callback.headers['location'].endswith('connection_changed')
+            exchange.assert_not_awaited()
+        async with sessions() as db:assert (await db.get(Seller,bid)).instagram_token is None
+    finally:app.dependency_overrides.clear();app.dependency_overrides.update(prior)
