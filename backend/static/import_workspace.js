@@ -39,11 +39,11 @@
     return data;
   }
   async function api(path, options={}) {
-    const write=Boolean(options.method&&options.method!=='GET');await session(write);
+    const generation=fenceGeneration,write=Boolean(options.method&&options.method!=='GET');await session(write);current(generation);
     let data;try {data=await V1.api(path,{...options,redirect:'error'});}catch(error){if(error.status===401)fence('Your session ended. Private import details were cleared. Sign in again.');else if([403,404].includes(error.status))await session();throw error;}
-    await session();return data;
+    await session();current(generation);return data;
   }
-  function message(error, target='global-error') {if(!stopped)$(target).textContent=error.status===409 ? 'This record changed or the saved action conflicts. Refresh to review the current revision before making a new decision.' : error.message || 'The request could not be confirmed. Refresh or retry the saved action.';}
+  function message(error, target='global-error') {if(!stopped)$(target).textContent=error.status===409 ? (['import_revision_stale','candidate_already_created'].includes(error.code)?'This record changed before the saved action was accepted. Refresh and review its current facts.':'The action result is unconfirmed. Its exact request is saved. Retry that same action; ask your business owner to review repeated conflicts.') : error.message || 'The request could not be confirmed. Refresh or retry the saved action.';}
   function sync() {
     const disabled=!canWrite()||busy||preparing||Boolean(command)||blocked;
     for(const id of ['website-fields','upload-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
@@ -104,10 +104,10 @@
   async function rawUpload(file) {
     const generation=fenceGeneration,b=command.body;
     if(!file||file.size!==b.size||file.type!==b.content_type||await hash(await file.arrayBuffer())!==b.sha256)throw Error('Reselect the exact original file saved for this upload. Its size, type and SHA-256 must match.');
-    await session(true);
+    await session(true);current(generation);
     const response=await fetch(root+'/uploads?idempotency_key='+b.idempotency_key+'&source_authorized=true',{method:'POST',body:file,headers:{'Content-Type':b.content_type,'X-CSRF-Token':V1.csrf},credentials:'same-origin',cache:'no-store',redirect:'error'});
     if(response.status===401){fence('Your session ended. Private import details were cleared. Sign in again.');throw Object.assign(Error('Session ended.'),{status:401});}
-    const result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(Error(typeof result.detail==='string'?result.detail:'The upload could not be confirmed.'),{status:response.status});await session();
+    const result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(Error(typeof result.detail==='string'?result.detail:result.detail?.message||'The upload could not be confirmed.'),{status:response.status,code:typeof result.detail?.code==='string'?result.detail.code:null});await session();current(generation);
     if(!uuid(result.asset_id)||result.sha256!==b.sha256||result.size_bytes!==b.size||result.content_type!==b.content_type)throw Error('The upload response did not confirm the original media. Retry the saved upload.');
     const body={idempotency_key:b.job_key,source_authorized:true,source_kind:'uploaded_media',asset_id:result.asset_id};
     const next={...command,kind:'json',path:'/jobs',body,digest:await hash(JSON.stringify(['json','/jobs',body]))};current(generation);persist(next);command=next;showRecovery();
@@ -126,9 +126,9 @@
       $('notice').textContent=sent.path.endsWith('/catalogue-draft')?'Private catalogue draft confirmed. Review it in Catalogue; activation and publication remain separate.':sent.path==='/jobs'?'Import request confirmed. Waiting for worker progress; no completion time is promised.':sent.path.startsWith('/candidates/')?'Review action confirmed. This candidate remains private.':'Job action confirmed. Refresh to check durable progress.';
       pollCount=0;await load(false);
     } catch(error) {
-      // A conflict/validation response is definitive for this immutable request;
-      // network errors and 5xx retain the exact command across reload.
-      if(command&&[403,404,409,413,415,422].includes(error.status)) {const refreshReceipt=error.status===409&&command.path.endsWith('/catalogue-draft');try{remove();command=null;}catch(storageError){blocked=true;message(storageError,'recovery-error');}if(refreshReceipt&&!blocked){try{await load(false);}catch(refreshError){message(refreshError,'allocation-error');}}}
+      // Only the server's receipt-first, pre-write stale-revision rejection
+      // proves this exact action was not accepted. Bare 4xx may be intermediaries.
+      if(command&&error.status===409&&(error.code==='import_revision_stale'||(command.path.endsWith('/catalogue-draft')&&error.code==='candidate_already_created'))) {const refreshReceipt=command.path.endsWith('/catalogue-draft');try{remove();command=null;}catch(storageError){blocked=true;message(storageError,'recovery-error');}if(refreshReceipt&&!blocked){try{await load(false);}catch(refreshError){message(refreshError,'allocation-error');}}}
       if(command)showRecovery();message(error,command?'recovery-error':'global-error');
     } finally {busy=false;sync();}
   }

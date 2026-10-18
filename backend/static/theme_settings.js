@@ -15,7 +15,8 @@
   function validConfig(c) {
     return exact(c,['theme','palette',...Object.keys(texts),'show_story','show_categories']) && ['editorial','catalogue','video'].includes(c.theme) && ['rose','forest','indigo'].includes(c.palette) && ['show_story','show_categories'].every(k=>typeof c[k]==='boolean') && Object.entries(texts).every(([k,max])=>typeof c[k]==='string' && [...c[k]].length<=max && !/[<>\x00-\x08\x0b-\x1f\x7f]/.test(c[k]));
   }
-  function validRecord(r) {return exact(r,['version','draft','published','published_revision','published_at']) && Number.isInteger(r.version) && r.version>=0 && validConfig(r.draft) && (r.published===null||validConfig(r.published)) && Number.isInteger(r.published_revision) && r.published_revision>=0 && r.published_revision<=r.version && (r.published_at===null||typeof r.published_at==='string');}
+  function configSame(a,b){return validConfig(a)&&validConfig(b)&&Object.keys(a).every(key=>a[key]===b[key]);}
+  function validRecord(r) {return exact(r,['version','draft','published','published_revision','published_at']) && Number.isInteger(r.version) && r.version>=0 && validConfig(r.draft) && (r.published===null||validConfig(r.published)) && Number.isInteger(r.published_revision) && r.published_revision>=0 && r.published_revision<=r.version && (r.published===null?(r.published_revision===0&&r.published_at===null):(r.published_revision>0&&typeof r.published_at==='string'&&Number.isFinite(Date.parse(r.published_at))));}
   function sync() {
     $('design-fields').disabled = !canEdit() || busy || blocked || Boolean(pending);
     $('publish').disabled = dirty || !record?.version;
@@ -62,10 +63,11 @@
   async function decode(raw) {
     if(typeof raw!=='string'||raw.length>20000)throw Error('Saved recovery is invalid. Reload the saved design in a new sign-in before editing.');
     let c;try{c=JSON.parse(raw);}catch(_){throw Error('Saved recovery cannot be read. Sign in again before editing.');}
-    if(!exact(c,['format','user_id','business_id','session_digest','created_at','operation','body','body_digest'])||c.format!==1)throw Error('Saved recovery format is invalid. Sign in again before editing.');
+    const keys=['format','user_id','business_id','session_digest','created_at','operation','body','body_digest'];
+    if(![1,2].includes(c.format)||!exact(c,c.format===2?[...keys,'expected_config','expected_published_revision','expected_published']:keys))throw Error('Saved recovery format is invalid. Sign in again before editing.');
     if(c.user_id!==owner||c.business_id!==businessId||c.session_digest!==fingerprint)throw Object.assign(Error('A saved action belongs to another sign-in. Its details have been withheld. Sign in again before editing.'),{identityChanged:true});
     const date=Date.parse(c.created_at), b=c.body;
-    if(!Number.isFinite(date)||date>Date.now()+300000||Date.now()-date>7*86400000||!['save','publish'].includes(c.operation)||!exact(b,c.operation==='save'?['expected_version','idempotency_key','config']:['expected_version','idempotency_key'])||!UUID.test(b.idempotency_key)||!Number.isInteger(b.expected_version)||b.expected_version<0||b.expected_version>2000000000||(c.operation==='save'&&!validConfig(b.config))||(c.operation==='publish'&&b.expected_version<1)||c.body_digest!==await digest(JSON.stringify(b)))throw Error('Saved action is expired or changed. Sign in again and review the saved design before editing.');
+    if(!Number.isFinite(date)||date>Date.now()+300000||Date.now()-date>7*86400000||!['save','publish'].includes(c.operation)||!exact(b,c.operation==='save'?['expected_version','idempotency_key','config']:['expected_version','idempotency_key'])||!UUID.test(b.idempotency_key)||!Number.isInteger(b.expected_version)||b.expected_version<0||b.expected_version>2000000000||(c.operation==='save'&&!validConfig(b.config))||(c.operation==='publish'&&b.expected_version<1)||(c.format===2&&(!validConfig(c.expected_config)||(c.operation==='save'&&!configSame(c.expected_config,b.config))||!Number.isInteger(c.expected_published_revision)||c.expected_published_revision<0||c.expected_published_revision>b.expected_version||(c.expected_published===null?c.expected_published_revision!==0:(!validConfig(c.expected_published)||c.expected_published_revision<1))))||c.body_digest!==await digest(JSON.stringify(c.format===2?[b,c.expected_config,c.expected_published_revision,c.expected_published]:b)))throw Error('Saved action is expired or changed. Sign in again and review the saved design before editing.');
     return c;
   }
   function recovery() { $('recovery-note').textContent = pending ? `The ${pending.operation==='save'?'draft save':'design publication'} may already have completed. Retry this exact saved action to confirm it. Reloading does not send it automatically.` : 'Recovery cannot be verified. Sign in again and review the saved design before editing.';sync(); }
@@ -87,6 +89,13 @@
     try {await identity(false,epoch);const data=await api(endpoint);await identity(false,epoch);assertLive(epoch);populate(data);blocked=false;$('notice').textContent='Saved design loaded.';}
     catch(error){showError(error);}finally{if(!terminal&&epoch===generation){busy=false;sync();}}
   }
+  function confirms(command,result) {
+    if(!validRecord(result)||result.version!==command.body.expected_version+1)return false;
+    if(command.operation==='save')return configSame(result.draft,command.body.config)&&(command.format===1?result.published_revision<=command.body.expected_version:result.published_revision===command.expected_published_revision&&((result.published===null&&command.expected_published===null)||configSame(result.published,command.expected_published)));
+    // Legacy publication intent did not preserve its original draft. Keep its
+    // exact key for operator reconciliation rather than guessing from a later GET.
+    return command.format===2&&result.published_revision===result.version&&result.published_at!==null&&Number.isFinite(Date.parse(result.published_at))&&configSame(result.draft,command.expected_config)&&configSame(result.published,command.expected_config);
+  }
   async function send() {
     if(!pending||blocked||terminal||sending||preparing)return;
     const epoch=generation; sending=true;busy=true;sync();$('error').textContent='';$('notice').textContent='';
@@ -94,15 +103,16 @@
       await identity(true,epoch);
       const saved=await decode(sessionStorage.getItem(storageKey));assertLive(epoch);
       if(JSON.stringify(saved)!==JSON.stringify(pending))throw Error('Recovery changed in this window. Sign in again before continuing.');
-      const result=await api(endpoint+(pending.operation==='publish'?'/publish':''),{method:pending.operation==='save'?'PUT':'POST',body:pending.body});
+      const sent=pending,result=await api(endpoint+(pending.operation==='publish'?'/publish':''),{method:pending.operation==='save'?'PUT':'POST',body:pending.body});
       await identity(false,epoch);assertLive(epoch);
-      if(!validRecord(result))throw Error('The action result is incomplete. Retry the saved action to confirm it.');
+      if(sent.format===1&&sent.operation==='publish')throw Error('This older saved publication has no original draft snapshot. Its exact command is preserved. Ask your business owner to reconcile the published design before starting another action.');
+      if(!confirms(sent,result))throw Error('The response did not confirm this exact saved design action. Retry the same saved action; do not start another.');
       const current=await api(endpoint);await identity(false,epoch);assertLive(epoch);
-      if(!validRecord(current))throw Error('The current design response is incomplete. Retry the saved action to confirm it.');
+      if(!validRecord(current)||current.version<result.version||(current.version===result.version&&(!configSame(current.draft,result.draft)||current.published_revision!==result.published_revision||!((current.published===null&&result.published===null)||configSame(current.published,result.published))||current.published_at!==result.published_at)))throw Error('The current design did not confirm the saved action. Retry the same saved action.');
       const operation=pending.operation;removeIntent();pending=null;populate(current);
-      $('notice').textContent=operation==='save'?'Draft saved. Public design is unchanged.':'Saved design published. Store visibility, product activation and checkout settings are unchanged.';
+      $('notice').textContent=current.version>result.version?'Your saved action is confirmed. A newer design version is loaded; review it before editing.':operation==='save'?'Draft saved. Public design is unchanged.':'Saved design published. Store visibility, product activation and checkout settings are unchanged.';
     } catch(error) {
-      if(!terminal&&epoch===generation&&[409,422].includes(error.status)) {
+      if(!terminal&&epoch===generation&&error.status===409&&error.code==='theme_version_stale') {
         try {removeIntent();pending=null;} catch (_) {blocked=true;}
         if(error.status===409){blocked=true;$('recovery-note').textContent='This design changed elsewhere. Reload the saved design before editing.';}
       }
@@ -122,7 +132,8 @@
         if(!validConfig(config))throw Error('Use plain text without markup, and check the field lengths.');
         body.config=config;
       }
-      const command={format:1,user_id:owner,business_id:businessId,session_digest:fingerprint,created_at:new Date().toISOString(),operation,body,body_digest:await digest(JSON.stringify(body))};
+      const expected_config=JSON.parse(JSON.stringify(operation==='save'?body.config:record.draft)),expected_published_revision=record.published_revision,expected_published=JSON.parse(JSON.stringify(record.published));
+      const command={format:2,user_id:owner,business_id:businessId,session_digest:fingerprint,created_at:new Date().toISOString(),operation,body,expected_config,expected_published_revision,expected_published,body_digest:await digest(JSON.stringify([body,expected_config,expected_published_revision,expected_published]))};
       assertLive(epoch);storeIntent(command);pending=command;recovery();preparing=false;await send();
     }catch(error){showError(error);}finally{preparing=false;if(!terminal&&epoch===generation){busy=false;sync();}}
   }

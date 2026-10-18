@@ -38,6 +38,8 @@ async def _call(awaitable):
         return await awaitable
     except service.ImportNotFound:
         raise HTTPException(404, "Import resource not found")
+    except service.ImportRevisionConflict:
+        raise HTTPException(409, {"code":"import_revision_stale", "message":"Import revision changed before this action was accepted. Refresh and review the current facts."})
     except service.ImportConflict:
         raise HTTPException(409, "Import revision or idempotency conflict")
     except (ImportReviewError, FetchError, ValidationError, ValueError):

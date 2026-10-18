@@ -137,7 +137,7 @@ async def create_draft(db, actor, business_id, candidate_id, payload, *, reautho
         await reauthorize()
     await imports._fresh_access(db, actor, business_id, 'catalogue.write')
     if row.revision != payload.expected_revision:
-        conflict('Import candidate revision changed; review current facts')
+        conflict({'code':'import_revision_stale','message':'Import candidate revision changed before this action was accepted. Review current facts.'})
     candidate = before
     if candidate.state == CandidateState.PENDING:
         candidate = begin_review(candidate, business_id=business_id)

@@ -63,7 +63,7 @@ async def apply_command(db, actor, business_id, body, operation):
     row = await db.get(StorefrontThemeSettings, business_id, populate_existing=True)
     version = row.version if row else 0
     if body.expected_version != version:
-        raise HTTPException(409, "The design changed in another window. Reload the saved design before editing")
+        raise HTTPException(409, {"code":"theme_version_stale", "message":"The design changed before this action was accepted. Reload the saved design before editing."})
     if version >= 2_000_000_000:
         raise HTTPException(409, "Design version limit reached; contact support")
     if operation == "save":

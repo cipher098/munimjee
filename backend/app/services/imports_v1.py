@@ -37,6 +37,10 @@ class ImportConflict(ValueError):
     pass
 
 
+class ImportRevisionConflict(ImportConflict):
+    """Receipt lookup succeeded with no match; stale check precedes all writes."""
+
+
 class ImportNotFound(ValueError):
     pass
 
@@ -214,7 +218,7 @@ async def mutate_job(db, actor, business_id, job_id, payload: JobMutation, *, ac
         return ImportJobRead.model_validate(audit.details["result"])
     job = await _job(db, business_id, job_id, lock=True)
     if job.revision != payload.expected_revision:
-        raise ImportConflict("Import job revision changed")
+        raise ImportRevisionConflict("Import job revision changed")
     if action == "cancel":
         if job.state not in ("pending", "running", "failed"):
             raise ImportConflict("Import job cannot be cancelled")
@@ -245,7 +249,7 @@ async def review_candidate(db, actor, business_id, candidate_id, payload: Candid
     if row is None:
         raise ImportNotFound("Import candidate not found")
     if row.revision != payload.expected_revision:
-        raise ImportConflict("Import candidate revision changed")
+        raise ImportRevisionConflict("Import candidate revision changed")
     before = ImportCandidate.model_validate(row.document)
     updated = before
     if payload.action == "edit":

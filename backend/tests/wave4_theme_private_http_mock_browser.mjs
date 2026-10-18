@@ -38,7 +38,7 @@ async function setup({readonly=false,viewport={width:1440,height:1000},init}={})
    const operation=p.endsWith('/publish')?'publish':'save',body=req.postDataJSON();model.posts.push({operation,body});
    let result=model.receipts.get(body.idempotency_key);
    if(!result){
-    if(body.expected_version!==model.record.version)return route.fulfill({status:409,json:{detail:'Synthetic stale design version'}});
+    if(body.expected_version!==model.record.version)return route.fulfill({status:409,json:{detail:{code:'theme_version_stale',message:'Synthetic stale design version'}}});
     if(operation==='save')model.record.draft=body.config;
     else {model.record.published=structuredClone(model.record.draft);model.record.published_revision=model.record.version+1;model.record.published_at='2026-10-18T00:00:00Z';}
     model.record.version++;result=structuredClone(model.record);model.receipts.set(body.idempotency_key,result);
