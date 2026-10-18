@@ -11,9 +11,9 @@
   const api = window.V1.api;
   const exact = (x, keys) => x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length === keys.length && keys.every(k => Object.hasOwn(x,k));
   const digest = async x => [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x)))].map(v=>v.toString(16).padStart(2,'0')).join('');
-  const canEdit = () => access?.capabilities.includes('business.write');
+  const canEdit = () => access?.capabilities?.includes('business.write');
   function validConfig(c) {
-    return exact(c,['theme','palette',...Object.keys(texts),'show_story','show_categories']) && ['editorial','catalogue','video'].includes(c.theme) && ['rose','forest','indigo'].includes(c.palette) && ['show_story','show_categories'].every(k=>typeof c[k]==='boolean') && Object.entries(texts).every(([k,max])=>typeof c[k]==='string' && c[k].length<=max && !/[<>\x00-\x08\x0b-\x1f\x7f]/.test(c[k]));
+    return exact(c,['theme','palette',...Object.keys(texts),'show_story','show_categories']) && ['editorial','catalogue','video'].includes(c.theme) && ['rose','forest','indigo'].includes(c.palette) && ['show_story','show_categories'].every(k=>typeof c[k]==='boolean') && Object.entries(texts).every(([k,max])=>typeof c[k]==='string' && [...c[k]].length<=max && !/[<>\x00-\x08\x0b-\x1f\x7f]/.test(c[k]));
   }
   function validRecord(r) {return exact(r,['version','draft','published','published_revision','published_at']) && Number.isInteger(r.version) && r.version>=0 && validConfig(r.draft) && (r.published===null||validConfig(r.published)) && Number.isInteger(r.published_revision) && r.published_revision>=0 && r.published_revision<=r.version && (r.published_at===null||typeof r.published_at==='string');}
   function sync() {
@@ -44,7 +44,7 @@
     const current=await window.V1.session();assertLive(epoch);
     const currentAccess=current.businesses?.find(b=>b.id===businessId);
     const currentFingerprint=current.csrf_token?await digest(current.csrf_token):null;assertLive(epoch);
-    if(current.user_id!==owner || !currentAccess || currentFingerprint!==fingerprint) {
+    if(current.auth_method!=='v1_user' || current.user_id!==owner || !currentAccess || currentFingerprint!==fingerprint) {
       clearPrivate();throw Object.assign(Error('Your sign-in or business access changed. Sign in again.'),{identityChanged:true});
     }
     access=currentAccess;
@@ -102,7 +102,7 @@
       const operation=pending.operation;removeIntent();pending=null;populate(current);
       $('notice').textContent=operation==='save'?'Draft saved. Public design is unchanged.':'Saved design published. Store visibility, product activation and checkout settings are unchanged.';
     } catch(error) {
-      if(!terminal&&epoch===generation&&error.status>=400&&error.status<500&&error.status!==401) {
+      if(!terminal&&epoch===generation&&[409,422].includes(error.status)) {
         try {removeIntent();pending=null;} catch (_) {blocked=true;}
         if(error.status===409){blocked=true;$('recovery-note').textContent='This design changed elsewhere. Reload the saved design before editing.';}
       }
