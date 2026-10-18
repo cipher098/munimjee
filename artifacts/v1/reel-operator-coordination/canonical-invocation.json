@@ -1,0 +1,81 @@
+{
+  "format": "reel-operator-canonical-source-units.v1",
+  "source_commit": "cba1fc48c4d23e2f20346a2b8aa3f90ef31f703b",
+  "owner_backend": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+  "owner_UI": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+  "python": {
+    "command": [
+      "/tmp/munimjee-release-ci-py311/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/test_whatsapp_reel_operator_pure.py",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/test_comment_operator_pure.py",
+      "-q",
+      "-o",
+      "junit_family=xunit1",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml=/Users/user/Documents/ChatGPT/munimjee/artifacts/v1/reel-operator-coordination/canonical-python.xml"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0,
+    "new": 18,
+    "unchanged": 29
+  },
+  "node": {
+    "command": [
+      "/Users/user/.nvm/versions/node/v24.20.0/bin/node",
+      "--test",
+      "--test-reporter=tap",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/comment_operator_contract.test.mjs",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/comment_operator_lifecycle.test.mjs",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/whatsapp_reel_operator_contract.test.mjs",
+      "/Users/user/Documents/ChatGPT/munimjee/backend/tests/whatsapp_reel_operator_lifecycle.test.mjs"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "new": 8,
+    "unchanged": 12
+  },
+  "environment": "empty child env + explicit PATH/TMPDIR/LANG; Python PYTHONPATH exactbackend/PYTHONDONTWRITEBYTECODE=1; preimport safety installed; nodotenv cwd",
+  "in_memory_compile": "passed; including DB source with no import or collection",
+  "source_sha256": {
+    "backend/app/api/v1/whatsapp_reel_operator.py": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+    "backend/app/schemas/whatsapp_reel_operator.py": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+    "backend/app/services/whatsapp_reel_operator.py": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+    "backend/app/models/whatsapp_reel_operator.py": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+    "backend/alembic/versions/0058_v1_reel_operator.py": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f",
+    "backend/static/comment_operator.html": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11",
+    "backend/static/comment_operator.js": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6",
+    "backend/static/comment_operator_contract.js": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8",
+    "backend/static/comment_operator.css": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb"
+  },
+  "test_sha256": {
+    "backend/tests/comment_operator_contract.test.mjs": "62e500bfb42728bb65e4c5239bb383732a13462cc04d125786dcb3b850b4fac8",
+    "backend/tests/comment_operator_lifecycle.test.mjs": "f0def4d9267ff0d8a5009569ff2bdb131bd8fbb4f135f97a96abba6893b57666",
+    "backend/tests/test_whatsapp_reel_operator_db.py": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55",
+    "backend/tests/test_whatsapp_reel_operator_pure.py": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b"
+  },
+  "database": {
+    "authored_cases": 20,
+    "collected": false,
+    "executed": false
+  },
+  "actual_main_browser_sender_provider": "NOT RUN; integrator allocation required",
+  "limitations": [
+    "scripted raw projections do not evaluate final SQL predicates",
+    "dispatch adapter is not installed production worker",
+    "Node VM DOM/transport/session are controlled substitutes",
+    "source-only design has no browser paint proof",
+    "no actual FK/trigger/NOWAIT/concurrency/0058 database acceptance"
+  ]
+}

@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: canonical command fingerprint matches Python with mixed language, emoji and case-sensitive frozen text
+ok 1 - canonical command fingerprint matches Python with mixed language, emoji and case-sensitive frozen text
+  ---
+  duration_ms: 4.563
+  type: 'test'
+  ...
+# Subtest: well-shaped old acknowledgement cannot confirm a different exact command or target
+ok 2 - well-shaped old acknowledgement cannot confirm a different exact command or target
+  ---
+  duration_ms: 0.527625
+  type: 'test'
+  ...
+# Subtest: exact receipt replay is a separate acknowledgement and never delivery evidence
+ok 3 - exact receipt replay is a separate acknowledgement and never delivery evidence
+  ---
+  duration_ms: 0.087333
+  type: 'test'
+  ...
+# Subtest: recovery cannot change method, route, business, target or review confirmation
+ok 4 - recovery cannot change method, route, business, target or review confirmation
+  ---
+  duration_ms: 0.318458
+  type: 'test'
+  ...
+# Subtest: recovery rule scopes remain explicit and cannot be reconstructed from arbitrary URL/body
+ok 5 - recovery rule scopes remain explicit and cannot be reconstructed from arbitrary URL/body
+  ---
+  duration_ms: 0.172709
+  type: 'test'
+  ...
+# Subtest: legacy wildcard rule is inspectable/disableable but is never admitted as a new native rule scope
+ok 6 - legacy wildcard rule is inspectable/disableable but is never admitted as a new native rule scope
+  ---
+  duration_ms: 0.070458
+  type: 'test'
+  ...
+# Subtest: old page fence deletes only its owned journal, not a replacement session or another business
+ok 7 - old page fence deletes only its owned journal, not a replacement session or another business
+  ---
+  duration_ms: 1.599625
+  type: 'test'
+  ...
+# Subtest: ordinary read failure scrubs stale rows/editor and blocks fresh writes, preserving exact pending intent
+ok 8 - ordinary read failure scrubs stale rows/editor and blocks fresh writes, preserving exact pending intent
+  ---
+  duration_ms: 0.781125
+  type: 'test'
+  ...
+# Subtest: unclassified409 after POST keeps same key/body and disables new work
+ok 9 - unclassified409 after POST keeps same key/body and disables new work
+  ---
+  duration_ms: 0.637792
+  type: 'test'
+  ...
+# Subtest: only typed pre-mutation stale rejection releases a command and still requires fresh facts
+ok 10 - only typed pre-mutation stale rejection releases a command and still requires fresh facts
+  ---
+  duration_ms: 0.674958
+  type: 'test'
+  ...
+# Subtest: older successful session guard cannot dispatch after a newer role downgrade
+ok 11 - older successful session guard cannot dispatch after a newer role downgrade
+  ---
+  duration_ms: 0.957167
+  type: 'test'
+  ...
+# Subtest: back link uses mounted native business picker route
+ok 12 - back link uses mounted native business picker route
+  ---
+  duration_ms: 0.097916
+  type: 'test'
+  ...
+# Subtest: N01 canonical business/inbound/body digest matches independent Python literal
+ok 13 - N01 canonical business/inbound/body digest matches independent Python literal
+  ---
+  duration_ms: 5.159833
+  type: 'test'
+  ...
+# Subtest: N02 exact detail and frozen intent reject caller scope or source promotion
+ok 14 - N02 exact detail and frozen intent reject caller scope or source promotion
+  ---
+  duration_ms: 0.914292
+  type: 'test'
+  ...
+# Subtest: N03 receipt and typed rejection bind the exact command without delivery or source assertions
+ok 15 - N03 receipt and typed rejection bind the exact command without delivery or source assertions
+  ---
+  duration_ms: 0.300625
+  type: 'test'
+  ...
+# Subtest: N04 unrelated well-shaped200 retains exact uncertain journal and blocks fresh action
+ok 16 - N04 unrelated well-shaped200 retains exact uncertain journal and blocks fresh action
+  ---
+  duration_ms: 2.2285
+  type: 'test'
+  ...
+# Subtest: N05 unclassified409 and422 retry only same frozen key/body and preserve journal
+ok 17 - N05 unclassified409 and422 retry only same frozen key/body and preserve journal
+  ---
+  duration_ms: 1.722291
+  type: 'test'
+  ...
+# Subtest: N06 only exact typed pre-effect409 releases journal and still requires fresh review
+ok 18 - N06 only exact typed pre-effect409 releases journal and still requires fresh review
+  ---
+  duration_ms: 1.386916
+  type: 'test'
+  ...
+# Subtest: N07 actual api401 scrubs private reel DOM and only owned journals
+ok 19 - N07 actual api401 scrubs private reel DOM and only owned journals
+  ---
+  duration_ms: 1.574292
+  type: 'test'
+  ...
+# Subtest: N08 replacement-session fence prevents late old guard dispatch or deletion of newer journal
+ok 20 - N08 replacement-session fence prevents late old guard dispatch or deletion of newer journal
+  ---
+  duration_ms: 0.965708
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 68.968667

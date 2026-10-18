@@ -1,0 +1,40 @@
+{
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "canonical_source_anchor": "cba1fc48c4d23e2f20346a2b8aa3f90ef31f703b",
+  "owner_source": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+  "all_final_source_hashes_match_canonical": true,
+  "all_backend_source_hashes_match_owner": true,
+  "all_QA_test_and_raw_artifact_hashes_match": true,
+  "preexisting_tests_byte_unchanged": 243,
+  "shared_files_sha256_unchanged": {
+    "backend/app/main.py": "b433051d156b9347124e9559a8c2facd88bb85dcfa658725fdd9e2545b438a6a",
+    "backend/app/models/__init__.py": "d28549ae3ca7d18c88b503f22cf632a94cb7fd8607d847dd35c440a54f043f56",
+    "backend/app/workers/whatsapp.py": "9c5dcdfe18f0febc6040b431645ec84aabc830bf4591d4617451d94aa7f5a02a",
+    "backend/app/services/whatsapp.py": "0c1d041c721da43095403369942a119d412d52f46e885018915686e3ce6a17f7",
+    "backend/app/services/whatsapp_reel_queue.py": "da8986305d7c2f2cae94e1097470acf51074c37e92259d49ce8aba522b678bed",
+    "backend/app/services/whatsapp_test_authority.py": "e840a2dfea57731fd1f2982a5b87d1594a963e7c188f3dd3807a182b892e7aef",
+    "backend/static/v1_client.js": "048395b07eed350f8fceaf31cb960e4dd78bb514b61bcb7655c353c90b94e543",
+    "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "cd47c7c62c4904a47bfd4ebdcc6f4398dd790c36baf869b10562cff4bb8edb10"
+  },
+  "only_backend_changes": [
+    "backend/alembic/versions/0058_v1_reel_operator.py",
+    "backend/app/api/v1/whatsapp_reel_operator.py",
+    "backend/app/models/whatsapp_reel_operator.py",
+    "backend/app/schemas/whatsapp_reel_operator.py",
+    "backend/app/services/whatsapp_reel_operator.py",
+    "backend/static/comment_operator.css",
+    "backend/static/comment_operator.html",
+    "backend/static/comment_operator.js",
+    "backend/static/comment_operator_contract.js",
+    "backend/tests/test_whatsapp_reel_operator_db.py",
+    "backend/tests/test_whatsapp_reel_operator_pure.py",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs"
+  ],
+  "migration_heads": [
+    "0058_v1_reel_operator"
+  ],
+  "real_predecessor": "0057_v1_whatsapp_self_service",
+  "actual_DB_browser_sender_provider": "NOT RUN; integration allocation remains pending",
+  "review_method": "Git/AST/JSON/hash only; no app imports, DB collection or network policy retries"
+}

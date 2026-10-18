@@ -54,11 +54,16 @@ clear it; late private responses physically scrub on session/role loss.
 
 Early backend `34f2125` is composed as `1ae794e`, review correction `a2d4109`
 as `da90309`, final-guard compatibility correction `9f7a2e8` as `21cddc4`.
+Recipient/label binding `aba5c14` is composed as `0454061`; final accepted-label
+predicate `86ba2ef` as `446a4f1` and exact reply-context DDL `00f4e93` as `6a1a79b`.
 Root design-first UI is `9aaf659` with narrow followups `57b13cd`, `f01cee5`
-and bounded local rejection binding `4e0f905`. QA matrix is frozen46 cases:
-18pure,8Node and20DB-source-only. No candidate tests or actual DB/browser execution
-yet. Independent source review found and corrected NULL-open quote checks,
-result/action consistency and closed-dialog private DOM; review continues.
+and bounded local rejection binding `4e0f905`. QA matrix stays frozen46 cases:
+18pure,8Node and20DB-source-only. QA tests `4938321`/`6412d98` are composed as
+`00a03ce`/`faff196`; exact final canonical source anchor is `cba1fc4`.
+Canonical47Python+20Node pass zero failures/skips;20DB scenarios were not imported,
+collected or executed. Independent final evidence review is closing. Source
+review corrected NULL-open quote checks, result/action consistency, closed-dialog
+DOM and recipient/label/context bindings. No actual DB/browser/provider ran.
 `docs/v1-reel-operator-integration.md` is the early local installation guide.
 This file is the durable continuation pointer; do not replace this task with a
 readiness acknowledgment after compaction. Complete coherent source/test/review/
