@@ -12,7 +12,8 @@ import re
 from uuid import uuid4
 
 from fastapi import HTTPException
-from sqlalchemy import select, text, or_
+from sqlalchemy import select, text, or_, and_, exists, func
+from sqlalchemy.orm import aliased
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -61,15 +62,16 @@ async def binding(db, business_id, *, lock=False):
     Seller→WA order matches connection mutations. Signed WA ingestion already
     owns WAAccount; its proof path uses scalar reads without new account locks.
     """
-    query = select(Seller).join(Business, Business.id == Seller.id).where(
+    query = select(Seller.id, Seller.instagram_page_id, Seller.instagram_token, Seller.instagram_token_expires_at).join(Business, Business.id == Seller.id).where(
         Seller.id == business_id, Seller.is_active.is_(True), Business.is_active.is_(True))
     if lock:
         query = query.with_for_update(read=True, of=Seller)
-    seller = await db.scalar(query.execution_options(populate_existing=True, autoflush=False))
-    query = select(WhatsAppAccount).where(WhatsAppAccount.seller_id == business_id)
+    seller = (await db.execute(query.execution_options(autoflush=False))).one_or_none()
+    query = select(WhatsAppAccount.phone_number_id, WhatsAppAccount.waba_id, WhatsAppAccount.access_token,
+        WhatsAppAccount.connected_at).where(WhatsAppAccount.seller_id == business_id)
     if lock:
         query = query.with_for_update(read=True)
-    wa = await db.scalar(query.execution_options(populate_existing=True, autoflush=False))
+    wa = (await db.execute(query.execution_options(autoflush=False))).one_or_none()
     if not seller or not seller.instagram_page_id or not seller.instagram_token or not wa or not wa.access_token:
         raise HTTPException(409, 'Both channel accounts must remain connected')
     if seller.instagram_token_expires_at and seller.instagram_token_expires_at <= now():
@@ -87,10 +89,12 @@ async def binding(db, business_id, *, lock=False):
         'ig_expiry': seller.instagram_token_expires_at, 'wa': wa.phone_number_id,
         'waba': wa.waba_id, 'wa_token': wa.access_token, 'wa_connected': wa.connected_at,
         'controls': sorted(tuple(row) for row in controls)}
-    return {'instagram': seller.instagram_page_id, 'whatsapp': wa.phone_number_id, 'hash': digest(facts)}
+    return {'instagram': seller.instagram_page_id, 'whatsapp': wa.phone_number_id, 'hash': digest(facts), 'facts': facts}
 
 
 async def access(db, actor, business_id, *, write=False, authority=None):
+    if actor.auth_method != 'v1_user':
+        raise HTTPException(401, 'A current native sign-in is required')
     if authority:
         await authority()
     return await require_business_access(db, actor, business_id, 'automation.manage' if write else 'inbox.read')
@@ -323,7 +327,12 @@ async def ingest_instagram_command(db, event):
 async def ingest_whatsapp_command(db, account, event, provider_at):
     # The caller has validated signature, account, provider mid/from/time. Never
     # use contacts[].profile or a browser tenant/phone assertion as evidence.
-    content = (event.get('text') or {}).get('body') if event.get('type') == 'text' else None
+    body = event.get('text')
+    content = body.get('body') if isinstance(body, dict) else None
+    if event.get('type') != 'text':
+        media = event.get(event.get('type'))
+        caption = media.get('caption') if isinstance(media, dict) else None
+        return any(isinstance(value, str) and RESERVED.match(value) is not None for value in (content, caption))
     return await capture(db, account.seller_id, 'whatsapp', account.phone_number_id,
         event.get('from'), event.get('id'), provider_at, content)
 
@@ -332,15 +341,43 @@ async def verified_customer_id(db, business_id, channel, account_id, subject_id)
     """Only an opaque current canonical ID; no history/consent personalization."""
     if not enabled() or channel not in {'instagram', 'whatsapp'}:
         return None
-    rows = (await db.execute(select(Association.customer_id, Challenge.binding_hash).join(Challenge,
-        (Challenge.id == Association.challenge_id) & (Challenge.business_id == Association.business_id)).where(
-        Association.business_id == business_id, Association.channel == channel,
-        Association.account_id == account_id, Association.subject_id == subject_id,
-        Association.revoked_at.is_(None), Challenge.state == 'verified').execution_options(autoflush=False))).all()
-    if len(rows) != 1:
-        return None
     try:
         current = await binding(db, business_id)
     except HTTPException:
         return None
-    return rows[0].customer_id if rows[0].binding_hash == current['hash'] else None
+    facts = current['facts']
+    controls = facts['controls']
+    matching_controls = [and_(ChannelConnectionState.channel == c, ChannelConnectionState.version == version,
+        ChannelConnectionState.check_status == status, ChannelConnectionState.provider_account_id == provider)
+        for c, version, status, provider in controls]
+    # Compare the complete current configuration snapshot in the final SQL too;
+    # no old association, source, credential or connection generation can escape
+    # after an unlink/reconnect during any preceding await.
+    control_checks = [~exists(select(ChannelConnectionState.business_id).where(
+        ChannelConnectionState.business_id == business_id, ~or_(*matching_controls))) if controls else
+        ~exists(select(ChannelConnectionState.business_id).where(ChannelConnectionState.business_id == business_id))]
+    control_checks += [exists(select(ChannelConnectionState.business_id).where(
+        ChannelConnectionState.business_id == business_id, item)) for item in matching_controls]
+    other_seller, partner = aliased(Seller), aliased(Association)
+    query = select(Association.customer_id).join(Challenge,
+        (Challenge.id == Association.challenge_id) & (Challenge.business_id == Association.business_id))
+    query = query.join(Seller, Seller.id == Association.business_id).join(Business, Business.id == Seller.id)
+    query = query.join(WhatsAppAccount, WhatsAppAccount.seller_id == Seller.id)
+    query = query.join(Conversation, (Conversation.id == Challenge.conversation_id) & (Conversation.seller_id == Seller.id))
+    query = query.join(WhatsAppContact, (WhatsAppContact.id == Challenge.contact_id) & (WhatsAppContact.seller_id == Seller.id))
+    query = query.where(Association.business_id == business_id, Association.channel == channel,
+        Association.account_id == account_id, Association.subject_id == subject_id, Association.revoked_at.is_(None),
+        Challenge.state == 'verified', Challenge.binding_hash == current['hash'],
+        Conversation.customer_instagram_id == Challenge.instagram_subject, WhatsAppContact.phone == Challenge.whatsapp_subject,
+        Seller.is_active.is_(True), Business.is_active.is_(True), Seller.instagram_page_id == facts['ig'],
+        Seller.instagram_token == facts['ig_token'], Seller.instagram_token_expires_at == facts['ig_expiry'],
+        or_(Seller.instagram_token_expires_at.is_(None), Seller.instagram_token_expires_at > func.clock_timestamp()),
+        WhatsAppAccount.phone_number_id == facts['wa'], WhatsAppAccount.waba_id == facts['waba'],
+        WhatsAppAccount.access_token == facts['wa_token'], WhatsAppAccount.connected_at == facts['wa_connected'],
+        ~exists(select(other_seller.id).where(other_seller.id != business_id,
+            other_seller.is_active.is_(True), other_seller.instagram_page_id == facts['ig'])),
+        exists(select(partner.id).where(partner.business_id == business_id, partner.customer_id == Association.customer_id,
+            partner.challenge_id == Challenge.id, partner.channel != channel, partner.revoked_at.is_(None))),
+        *control_checks).execution_options(autoflush=False)
+    result = await db.scalar(query)
+    return result if enabled() else None

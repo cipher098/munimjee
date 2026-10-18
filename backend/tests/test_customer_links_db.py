@@ -152,3 +152,42 @@ async def test_proof_and_audit_immutable_and_tenant_fk_enforced(customer_lane):
     with pytest.raises(DBAPIError):
         async with j.sessions.begin() as db:
             db.add(Proof(business_id=uuid4(),challenge_id=cid,channel='instagram',account_id='a',subject_id='s',provider_message_id='m',provider_at=service.now(),received_at=service.now()));await db.flush()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',['unlink','reconnect','source','flag'])
+async def test_verified_lookup_rechecks_after_last_binding_await(customer_lane,monkeypatch,change):
+    j=customer_lane;cid,command,_=await create(j)
+    await proof(j,cid,command,'instagram');await proof(j,cid,command,'whatsapp');body=await final_body(j,cid)
+    async with j.sessions.begin() as db:
+        result=await service.finish(db,j.actor,j.bid,cid,body)
+        customer=UUID(result['customer_id']);row=await service.challenge_for(db,j.bid,cid)
+        account,subject=row.instagram_account,row.instagram_subject
+    original=service.binding
+    async def change_after_binding(*args,**kwargs):
+        snapshot=await original(*args,**kwargs)
+        if change=='flag':monkeypatch.setattr(settings,'V1_CUSTOMER_LINKS_ENABLED',False)
+        else:
+            async with j.sessions.begin() as other:
+                if change=='unlink':
+                    fp,_=await service.association_fingerprint(other,j.bid,customer)
+                    await service.unlink(other,j.actor,j.bid,customer,Unlink(idempotency_key=uuid4(),expected_fingerprint=fp,confirmed=True,reason='Synthetic separation during lookup'))
+                elif change=='reconnect':await other.execute(update(WhatsAppAccount).where(WhatsAppAccount.seller_id==j.bid).values(access_token='different-synthetic-token'))
+                else:await other.execute(update(WhatsAppContact).where(WhatsAppContact.id==j.contact).values(phone='919876543211'))
+        return snapshot
+    monkeypatch.setattr(service,'binding',change_after_binding)
+    async with j.sessions() as db:assert await service.verified_customer_id(db,j.bid,'instagram',account,subject) is None
+
+
+@pytest.mark.asyncio
+async def test_scalar_binding_preserves_unrelated_unflushed_orm_facts(customer_lane):
+    j=customer_lane
+    async with j.sessions() as db:
+        seller=await db.get(Seller,j.bid);wa=await db.get(WhatsAppAccount,j.bid)
+        seller.policies={'synthetic_pending_policy':True};wa.welcome_message='Synthetic pending inbox configuration'
+        assert await service.binding(db,j.bid)
+        assert seller.policies=={'synthetic_pending_policy':True} and db.is_modified(seller)
+        assert wa.welcome_message=='Synthetic pending inbox configuration' and db.is_modified(wa)
+        async with j.sessions() as other:
+            assert (await other.get(Seller,j.bid)).policies is None
+            assert (await other.get(WhatsAppAccount,j.bid)).welcome_message==''

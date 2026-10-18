@@ -111,7 +111,8 @@ async def start(request: Request, business_id: UUID, payload: Start,
     result = await service.view(db, row)
     # Never returned by GET/list/audit. Only the exact creator's mutation replay
     # can recover its own original expiring command; no provider send occurs.
-    result['consent_command'] = f'LINK {service.secret_for(row)} I CONSENT' if row.state == 'pending' and row.expires_at > service.now() else None
+    secret = service.secret_for(row)
+    result['consent_command'] = f'LINK {secret} I CONSENT' if row.state == 'pending' and row.expires_at > service.now() and result['binding_current'] and service.hmac.compare_digest(service.secret_digest(secret), row.secret_digest) else None
     result['command_id'] = str(payload.idempotency_key)
     return result
 
