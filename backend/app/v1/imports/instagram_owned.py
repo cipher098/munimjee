@@ -1,9 +1,8 @@
 """Tenant-bound owned-media adapter. Default capability is deliberately closed.
 
-The proposed Instagram Login media fields are not yet primary-source verified.
+Official documentation supports the route/fields, not the current wire grants.
 Only a trusted composition root may grant capabilities; no job/request can do so.
-The existing collect_claim consumes products and ignores original assets: returning
-bytes here does not persist them or attach them to candidates.
+The durable integration separately retains verified originals atomically.
 """
 from __future__ import annotations
 
@@ -243,7 +242,8 @@ class OwnedInstagramProvider:
         if type(document) is not dict:
             raise OwnedInstagramError("instagram_response_invalid")
         if "error" in document:
-            raise OwnedInstagramError("instagram_unauthorized")
+            # A Graph error object is not proof of an authentication failure.
+            raise OwnedInstagramError("instagram_api_error")
         return document
 
     @staticmethod
@@ -263,6 +263,7 @@ class OwnedInstagramProvider:
         cursor = None
         seen = set()
         collected = []
+        seen_media = set()
         for _ in range(self.limits.max_pages):
             params = {"fields": "id,media_type,media_url", "limit": self.limits.page_size}
             if cursor is not None:
@@ -271,17 +272,22 @@ class OwnedInstagramProvider:
             items = document.get("data")
             if type(items) is not list or len(items) > self.limits.page_size:
                 raise OwnedInstagramError("instagram_response_invalid")
+            found = None
             for item in items:
                 if type(item) is not dict or not isinstance(item.get("id"), str) or not re.fullmatch(r"[0-9]{1,32}", item["id"]):
                     raise OwnedInstagramError("instagram_response_invalid")
+                if item["id"] in seen_media:
+                    raise OwnedInstagramError("instagram_response_invalid")
+                seen_media.add(item["id"])
                 if wanted is not None and item["id"] == wanted:
-                    return (item,)
+                    found = item
                 if wanted is None:
-                    if any(previous["id"] == item["id"] for previous in collected):
-                        raise OwnedInstagramError("instagram_response_invalid")
                     collected.append(item)
                     if len(collected) > self.limits.max_assets:
                         raise OwnedInstagramError("instagram_request_limit")
+            # Validate the entire bounded page before trusting any matched item.
+            if found is not None:
+                return (found,)
             paging = document.get("paging")
             if paging is None:
                 return tuple(collected)
@@ -298,6 +304,26 @@ class OwnedInstagramProvider:
             seen.add(cursor)
         raise OwnedInstagramError("instagram_request_limit")
 
+    @staticmethod
+    def _principal(document, account_id):
+        # Official Get Started examples include a singleton data wrapper. Never
+        # choose one account from a list or mix flat/nested authority fields.
+        if "data" in document:
+            if set(document) != {"data"} or type(document["data"]) is not list or len(document["data"]) != 1 or type(document["data"][0]) is not dict:
+                raise OwnedInstagramError("instagram_response_invalid")
+            document = document["data"][0]
+            if "data" in document:
+                raise OwnedInstagramError("instagram_response_invalid")
+        if type(document.get("user_id")) is not str or document["user_id"] != account_id:
+            raise OwnedInstagramError("instagram_binding_changed")
+        if "id" in document and (type(document["id"]) is not str or document["id"] != account_id):
+            raise OwnedInstagramError("instagram_binding_changed")
+        # Explicit conservative mapping: retain the pre-existing CREATOR alias
+        # and add documented professional MEDIA_CREATOR wording in uppercase.
+        # Prose casing is not wire evidence; other spellings still fail closed.
+        if document.get("account_type") not in ("BUSINESS", "CREATOR", "MEDIA_CREATOR"):
+            raise OwnedInstagramError("instagram_unauthorized")
+
     async def fetch_owned_media(self, *, business_id: UUID, account_id: str, media_id: str) -> OwnedMediaResult:
         if not self.capabilities.ig_login_media:
             raise OwnedInstagramError("provider_capability_pending")
@@ -307,10 +333,7 @@ class OwnedInstagramProvider:
         try:
             initial = await self._credential(business_id, account_id, budget)
             principal = await self._graph("me", {"fields": "user_id,account_type"}, initial=initial, budget=budget)
-            if principal.get("user_id") != account_id:
-                raise OwnedInstagramError("instagram_binding_changed")
-            if principal.get("account_type") not in ("BUSINESS", "CREATOR"):
-                raise OwnedInstagramError("instagram_unauthorized")
+            self._principal(principal, account_id)
             matches = await self._edge(account_id + "/media", initial=initial, budget=budget, wanted=media_id)
             if not matches:
                 raise OwnedInstagramError("instagram_media_not_owned")
@@ -331,8 +354,12 @@ class OwnedInstagramProvider:
             assets = []
             for item in media:
                 item_kind = item.get("media_type")
-                if item_kind not in ("IMAGE", "VIDEO") or not isinstance(item.get("media_url"), str):
+                if item_kind not in ("IMAGE", "VIDEO"):
                     raise OwnedInstagramError("instagram_unsupported_media")
+                if item.get("media_url") is None:
+                    raise OwnedInstagramError("instagram_original_unavailable")
+                if type(item["media_url"]) is not str:
+                    raise OwnedInstagramError("instagram_response_invalid")
                 self._untainted(item["media_url"], initial.token)
                 mime, content = await self._request(item["media_url"], token=None, business_id=business_id,
                     account_id=account_id, initial=initial, budget=budget, max_bytes=self.limits.max_asset_bytes)

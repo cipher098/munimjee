@@ -26,7 +26,7 @@ ERROR_CODES = frozenset({
     "instagram_body_too_large", "instagram_unauthorized", "instagram_rate_limited",
     "instagram_http_error", "instagram_transport_failed", "instagram_unsafe_address",
     "instagram_peer_mismatch", "instagram_redirect_forbidden", "instagram_unsafe_url",
-    "instagram_content_encoding",
+    "instagram_content_encoding", "instagram_original_unavailable", "instagram_api_error",
 })
 
 

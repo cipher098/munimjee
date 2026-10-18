@@ -68,3 +68,19 @@ def business_mutation(capability: str):
         await require_business_access(db, current, business_id, capability)
 
     return guarded
+
+
+def business_read(capability: str):
+    """Discard private read responses after current session or tenant access ends."""
+    from uuid import UUID
+    from app.api.v1.identity import current_actor
+    from app.services.identity import require_business_access
+    async def guarded(request: Request, business_id: UUID, db: AsyncSession = Depends(get_db)):
+        actor = await current_actor(request, db)
+        await require_business_access(db, actor, business_id, capability)
+        yield actor
+        current = await current_actor(request, db)
+        if current != actor:
+            raise HTTPException(401, 'The native session changed')
+        await require_business_access(db, current, business_id, capability)
+    return guarded
