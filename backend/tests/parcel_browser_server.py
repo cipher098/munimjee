@@ -18,11 +18,12 @@ from app.services.identity import Actor,require_business_access
 from app.models.parcel_tracking import ParcelConnector
 from app.models.commerce import CommerceOrder
 from app.services.parcel_connector import ParcelAdapter
-from app.services import parcel_tracking as service
+from app.services import parcel_tracking as service,parcel_reviews as reviews
 from tests.parcel_transport import NodeConnectorTransport
 
 class BridgeAdapter(ParcelAdapter):
     def __init__(self,connector):super().__init__(connector,transport=NodeConnectorTransport())
+reviews.ParcelAdapter=BridgeAdapter
 original_process,original_preview=service.process_link,service.preview
 async def process(db,link_id,**kwargs):return await original_process(db,link_id,adapter_factory=BridgeAdapter,**kwargs)
 async def preview(*args,**kwargs):return await original_preview(*args,adapter_factory=BridgeAdapter,**kwargs)
