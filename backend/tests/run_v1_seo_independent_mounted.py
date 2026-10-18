@@ -26,6 +26,12 @@ def source_manifest(root):
             for path in paths if path.is_file()}
 
 
+def probe_environment(source):
+    """Keep local process essentials; never pass DB/provider/Node injection keys."""
+    return {key: value for key, value in source.items()
+            if key in {"PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "LC_CTYPE", "MUNIMJEE_SEO_QA_PORT"}}
+
+
 async def main():
     if not re.fullmatch(r"[1-9][0-9]{3,4}", _port) or not 1024 <= int(_port) <= 65535:
         raise TestSafetyError("Explicit allocated MUNIMJEE_SEO_QA_PORT 1024..65535 required")
@@ -46,8 +52,7 @@ async def main():
             ready = await asyncio.wait_for(server.stdout.readline(), 20)
             if ready != b"SEO_QA_BOUND\n" or server.returncode is not None:
                 raise RuntimeError("Owned QA listener did not bind; no HTTP requests sent")
-            probe_env = {key: value for key, value in env.items()
-                         if key in {"PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "LC_CTYPE", "MUNIMJEE_SEO_QA_PORT"}}
+            probe_env = probe_environment(env)
             probe = await asyncio.create_subprocess_exec("node", str(root / "backend/tests/v1_seo_independent_mounted.mjs"),
                 cwd=root, env=probe_env)
             if await asyncio.wait_for(probe.wait(), 90):
