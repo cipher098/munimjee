@@ -50,3 +50,40 @@ migrated concurrency/expiry/idempotency/unknown-effect tests only after explicit
 serial lane allocation. Preserve canonical signer/outbox behavior and no blind
 retry. Provider consent, real recipient delivery and external configuration remain
 separate closed acceptance gates.
+
+
+## Coherent backend6a8d6be follow-up (no actualDB yet)
+
+Dependency6a8d6be was applied as461006e on this test-owned branch; no owned runtime
+edit was made. The frozen reserved-MID negative now **passes**, and the Graph
+cancellation/admission regression still passes (`coherent-6a8-independent.txt`).
+The MID fix rejects the marker and nonprintable bytes before any Contact/Message
+insert. No challenge is printed in either historical or repaired logs.
+
+Additional portable negatives at exact6a8d6be:
+
+1. `exact_test_authority` reads the global test rollout flag only before awaited
+   projections. Disabling it while the last projection completes still returns an
+   allowed authorization. The actual helper test expects withholding and fails.
+   Catalogue accepted a final synchronous rollout/current-app/webhook-config gate.
+2. `queue_fixed_reply` always stores authorized+120seconds even if verified token
+   expiry is only10seconds away. This violates the frozen min(120s,token expiry,
+   inbound+24h) receipt bound. The existing sender separately denies expired
+   current grants; this finding does **not** claim an expired-token send. Catalogue
+   accepted the minimum bound in service plus DB insertion guard.
+3. `provider_step` and `exchange_signup` check authority, then await the committed
+   claim, then invoke the provider without a new post-commit authority check.
+   Revocation during that awaited commit can start a new external operation before
+   the later401. Both exact-function controlled commit callbacks reproduce one
+   attempted fake operation where zero is expected. This is revocation **before**
+   provider invocation, separate from an effect already in flight. Owner response
+   and the next frozen repair are pending at packet creation.
+
+`coherent-6a8-extra-negatives.txt` preserves2 failures (flag andTTL).
+`coherent-6a8-claim-revocation.txt` preserves2 failures (exchange/subscription).
+These tests model only source control-flow boundaries with fake query/commit
+callbacks; they neither prove PostgreSQL races nor certify DDL/transaction rollback.
+A follow-up actual migrated test must reproduce revocation around real committed
+claims and assert zero provider operations, durable safe disposition and exact
+replay/no duplicate effects. Native services/shared ingress/outbox UI composition
+and current credential-fingerprint provenance remain independently pending.
