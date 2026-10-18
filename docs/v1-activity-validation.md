@@ -1,5 +1,7 @@
 # Activity slice validation and integration gates
 
+Current pure-only checks on b27a9a0 pass25 Python contracts and28 Node checks without a DB connection. Shared PostgreSQL recovery caused an integrator hold; final runs will use a replacement exclusive lane after its URL/lease is provided. Historical payment_w3 results below remain historical.
+
 Source worktree: munimjee-v1-analytics-events; branch codex/v1-analytics-events. Contract1e6f1ce, actual immutable schema foundation00ed382, collector/report/module89e89e8. Real0054 follows reviewed real0053; no create_all, fake migration predecessor, provider calls or production actions.
 
 ## Current validation checkpoint

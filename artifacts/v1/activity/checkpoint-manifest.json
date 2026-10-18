@@ -1,0 +1,89 @@
+{
+  "source_checkpoint": "b27a9a0",
+  "state": "pending serialized replacement DB final gate and independent review",
+  "pure_contracts": 25,
+  "node_checks": 28,
+  "historical_mounted_checks": 19,
+  "mounted_captures_before_final_read_failure_hardening": true,
+  "shared_public_shell_hooks_installed": false,
+  "channel_producers_installed": false,
+  "provider_calls": 0,
+  "files": {
+    "backend-69-before-final-delta.txt": {
+      "sha256": "bc14648f0001f440065e691709c73c175f4c9f460e6c539711837639b3dfba7a",
+      "bytes": 788
+    },
+    "backend-initial-lock-14.txt": {
+      "sha256": "273db705ff3366b04be257196d59a67942745d6bbcf573989bff2e5b8de76f55",
+      "bytes": 788
+    },
+    "backend-initial-source-fixture-failure.txt": {
+      "sha256": "30ea35fa54027b14f85b83a5622817cb04055a7d4cd15a883acf57fd4727f2d7",
+      "bytes": 15043
+    },
+    "backend-source-public-delta-11.txt": {
+      "sha256": "f5db3e08fa1f105f766ad3a07e5b0f84a2507fb392944439520799de6bef3c26",
+      "bytes": 788
+    },
+    "browser-19-before-final-read-hardening.txt": {
+      "sha256": "4b5ccf05cf7c2782e24cfe4c0d99a99efb938af5aa5724a68637d5a70e5eac65",
+      "bytes": 107
+    },
+    "browser-first-fieldset-assertion.txt": {
+      "sha256": "9e190e64dde001d67fa03b10fe289d312f78cfd3b1c737482dd0221f2a59be69",
+      "bytes": 1870
+    },
+    "browser-initial-15.txt": {
+      "sha256": "4979f94acdf23f3426c6b58923d7c6493058514ba7efdca82d65adcf4fea4be3",
+      "bytes": 107
+    },
+    "browser-results.json": {
+      "sha256": "a61d4f05bd0b675506f7ce0c27bbab14da71bd2ee2f97855113ded368617778d",
+      "bytes": 203
+    },
+    "browser-second-missing-store-fixture.txt": {
+      "sha256": "e23bb0990eaa9f02546f6fb41babdaeaa8921b21864a39490252e92540ece713",
+      "bytes": 460
+    },
+    "desktop-observed.png": {
+      "sha256": "5d4ba988cf21512a636d3cdef85a361b6c45decb380309557ed94d2a0019dd79",
+      "bytes": 420351
+    },
+    "desktop-off.png": {
+      "sha256": "def3eed1b380584053671b0a8f611d389930d7eaf1b6c9c25794377df069b2bb",
+      "bytes": 412958
+    },
+    "detector.json": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    "mobile-access-ended.png": {
+      "sha256": "653f0110758e9f90f4ffe1a9515dc4e2ae9d4e73f190184e10e559bfc3cd0f99",
+      "bytes": 32467
+    },
+    "mobile-owner.png": {
+      "sha256": "14bf42dca28563b4c8389dc35359aa68f733690c1399c871095b1e4ce962a56f",
+      "bytes": 397123
+    },
+    "mobile-read-error.png": {
+      "sha256": "9a0801ed4ae97261d9bc4e2a92355e698f0fa9bc37939c163478558f35495cff",
+      "bytes": 304394
+    },
+    "mobile-viewer.png": {
+      "sha256": "28e6f6dd0cebf67a12ad8a1cf54dfb8b81c5a97634f2b1735228681bba66ff92",
+      "bytes": 396376
+    },
+    "node-26.txt": {
+      "sha256": "a2979136b83bb98149409a60805282b4f05cd5f088f932656c96fe06a23bca0c",
+      "bytes": 2130
+    },
+    "node-28.txt": {
+      "sha256": "1af14095eded220e36101893a1cfdc1fc7214e2b839735cf06588e73dd87e15d",
+      "bytes": 2302
+    },
+    "pure-contract-25.txt": {
+      "sha256": "1b01ab9a8bc7bb525e0640404571d54854afb5a8a28714c9ec74ca3099764ad8",
+      "bytes": 787
+    }
+  }
+}
