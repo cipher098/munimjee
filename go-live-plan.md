@@ -58,8 +58,12 @@ The older0055 full run's2 fixture failures and corrected26-check result remain
 preserved alongside the fresh green run. New-head runtime-image/restore/rollback,
 live provider and complete V1 acceptance remain pending.
 
-Remaining code-owned work includes installed channel activity producers/outcome
-reporting (currently null, not zero), supported WhatsApp v4 self-service consent and
+Reviewed channel activity producers/outcome reporting are now composed with241
+focused checks (1 Redis skip) and central8 mounted report journeys; a fresh complete
+backend gate is pending for that addition. They show only partial tagged observations
+with null empty families, explicit source clocks and test/manual exclusions; provider
+acceptance never means delivery. Remaining code-owned work includes supported
+WhatsApp v4 self-service consent and
 account selection, authorized-recipient test/result workflow, and the rest of the
 V1 acceptance matrix. Catalogue owns reserved0057 v4 implementation from frozen0056 after reviewed
 contract approval; its runtime/DB/browser acceptance is pending and no live

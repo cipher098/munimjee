@@ -1,0 +1,1 @@
+PASS 8 actual native channel-report render checks; source states synthetic; provider0

@@ -4,6 +4,15 @@ Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified f
 
 ## Wave7 verified complete checkpoint and next ownership
 
+New reviewed producer/report composition `41770a4` passes central actual0056
+report8 mounted checks with825 tracked files stable. Owner241 focused checks pass
+with1 known Redis skip; independent source/copy/render review is clear. Tagged
+new-row IG/WA/comment observations and current canonical outcomes are now composed
+with savepoint/timeout failure isolation. Counts always remain partial; empty
+families are null, test/manual rows excluded, source-specific clocks explicit,
+and provider acceptance never means delivery. A new complete run for this backend
+change is pending; the prior full2425 below does not certify it.
+
 Subsequent reviewed UI composition `e4183cf` passes central actual0056 native6
 and cart6 mounted checks, with817 tracked source/harness files stable. Only native
 v1_app.js/css and storefront styles.css change at runtime; backend/migrations are
@@ -34,7 +43,8 @@ WA generation repair; derived onboarding readiness/final invitation authority;
 and0056 native no-send comment reviews/rule controls plus durable inferred-WA
 review. The five previously reproduced queued-comment safety failures are fixed
 within the reviewed sender scope. Broader semantic/provider V08 acceptance is not
-inferred. Channel producers remain uninstalled in this tested central composition.
+inferred. The full2425 source predates producer installation; current reviewed producer
+composition has its separate gates and pending new full run above.
 
 Separate mounted evidence: native onboarding6 and shared customer/activity8 at
 actual0056 with stable source/harness maps; comment owner15 at actual0056, channel
@@ -44,8 +54,8 @@ onboarding190focused, comment134initial plus33affected (overlapping), composed
 Node107 plus operator lifecycle6. Full-run passing does not convert synthetic
 provider methods, controlled HTTP, or source review into live provider proof.
 
-Next isolated work: integrator owns trusted channel activity producers/outcome
-reporting (source-reviewed draft, actual gates pending); catalogue owns0057 WA v4
+Next isolated work: integrator owns reviewed channel activity producers/outcome
+reporting (actual focused/mounted passed, new composed full pending); catalogue owns0057 WA v4
 self-service/explicit authorized-recipient test flow from frozen0056; social completed/reviewed the CSS-only mobile cart fallback repair and now
 independently reviews0057 source. Remote native v1_app.js/css mobile, focus/error/
 long-name repairs are reviewed and composed. No shared file collision is granted.
@@ -55,9 +65,8 @@ Its repaired75 synthetic and six mounted cases pass. The final remote packet
 2681e91 is reviewed/composed, with32+8 controlled cases and the central native6
 actual-session rerun passing.
 
-DB/browser work stays serialized on disk-backed55443. The cart slot is released. Integrator now holds instagram_w6 for isolated
-producer SQL-failure/lock/delayed-source/report gates; no other DB/browser starts
-until explicit release. New image/restore/rollback copies remain deferred under host
+DB/browser work stays serialized on disk-backed55443. The cart slot is released. Integrator is moving from the released producer focused slot to a fresh
+wave6_integration complete gate. No other DB/browser starts until explicit release. New image/restore/rollback copies remain deferred under host
 disk headroom; no prune or evidence deletion is authorized. Provider approvals,
 physical devices, private ParcelDesk provisioning and operational deployment stay
 open. Exact boundaries are in `docs/v1-wave7-contracts.md`.

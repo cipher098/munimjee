@@ -84,3 +84,14 @@ Social is now source-only independent0057 reviewer. Integrator exclusively holds
 instagram_w6 for isolated producer gates; all other DB/browser work waits release.
 The exact remaining title/focus/source-specific coverage boundaries are documented
 in v1-wave7-ui-validation.md. Prior next-slot wording above is historical allocation.
+
+## Producer/report actual gates completed
+
+Reviewed isolated chain ea7889e is composed centrally at41770a4. Owner241 focused
+checks pass with1 known real-Redis skip; final8 mounted actual native/PG report
+checks pass, plus central composed8 with825 stable tracked files. Independent
+source/render verdict SHIP. No migration/financial/sender authority change. New
+complete backend run is next; previous2425 source is historical for this addition.
+Uniform receipt clocks are not invented:0054 canonical source timestamp guard
+remains, exact clocks are named. Failed optional measurement cannot discard valid
+ingress/outbox or create automatic replay.0057 remains isolated/unmounted.

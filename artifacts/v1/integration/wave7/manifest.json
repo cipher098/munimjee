@@ -71,6 +71,12 @@
     "activity-shell-0056.txt": "a04a2c98d8a1805b8795daab8aff3b949d4356df2d41107ea4c01c90924dc409",
     "activity-shell-initial.txt": "81e3228a6ac96d4e6965dea8bf6b47b1199fd264b23d51e58937976cf412743f",
     "channel-cleanup-prefix.txt": "dd49c3d4a740aa9d9d063b50dfde1da8bc7ed59432a16c00da6467b6653d844c",
+    "channel-composed/browser-results.json": "7dc3621c8b28002d92cfd103887c2e55aaf7b3665e4896c023d8f809934ca138",
+    "channel-composed/browser.txt": "38712360d32fc0a8a4370c537d09ec1087959c0d14bd5037b2a4fd994d5dcd5c",
+    "channel-composed/desktop-partial.png": "5abad689af5f0667c6a08d93d010fbf869c9e6e49e015cf2d8720ec9fdcf1fa6",
+    "channel-composed/mobile-channel-observations.png": "a0bbee353a9f70a8b453a0e6b65e1b52a6dd87cdf6cd40287f78ab152ce60c5d",
+    "channel-composed/mobile-partial.png": "2962de0a1655703b084c1c1cbf9c31f6e06a04085a39907be02e66f0bafecbb6",
+    "channel-composed/source.json": "bafc4930108d9aaac8200e04e1421d3632b6d2be6755f480ab1b547f303c9256",
     "channel-vm-composed.txt": "ee0f1c8092e289c677e1694746540e30826bcc4d21e91dde54f76c62a03d28ed",
     "composed-safety.txt": "0076f0b2601b0ee86f5395831f607339cdea21cd84f5b1ce7f0b6cb96c7a7c39",
     "composed-safety.xml": "8325dccf1cc41803e227c58d4e8ad010594456c5341dcdea84dee15cc90a673d",
@@ -141,5 +147,15 @@
     "cart_synthetic_activity_denials": 153,
     "cart_synthetic_exit_code": 1,
     "backend_migration_runtime_changed": false
+  },
+  "channel_activity_composed": {
+    "source": "41770a4191082c1956f298d417d1cfab232713cf",
+    "actual_mounted": 8,
+    "stable_tracked_files": 825,
+    "owner_focused_passed": 241,
+    "owner_skipped": 1,
+    "owner_skip": "real Redis requires allocated URL",
+    "migration_changed": false,
+    "complete_gate": "pending fresh run"
   }
 }

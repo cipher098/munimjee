@@ -1,0 +1,9 @@
+{
+  "checks": 8,
+  "actual_main_native_pg": true,
+  "synthetic_source_states": true,
+  "provider_transport_proof": false,
+  "provider_calls": 0,
+  "page_errors": [],
+  "external_requests": []
+}
