@@ -64,6 +64,15 @@ async def originals(db, actor, business_id, candidate_id, *, asset_id=None):
         ImportAudit.candidate_id==candidate_id,ImportAudit.job_id==draft.last_job_id,
         ImportAudit.action=='instagram_assets_retained').order_by(ImportAudit.id).limit(11))).all()
     if len(rows)>10: raise HTTPException(409,'Import original integrity check failed')
+    document=draft.document
+    if rows:
+        try:
+            require_integrity(str(document['id'])==str(candidate_id))
+            require_integrity(str(document['provenance']['business_id'])==str(business_id))
+            require_integrity(str(document['provenance']['import_job_id'])==str(draft.last_job_id))
+            require_integrity(document['provenance']['source']['kind']=='instagram')
+        except (KeyError,ValueError,TypeError,AttributeError):
+            raise HTTPException(409,'Import original integrity check failed') from None
     result=[]
     for audit in rows:
         job=await db.scalar(select(ImportJob).where(ImportJob.business_id==business_id,ImportJob.id==audit.job_id))
@@ -72,7 +81,7 @@ async def originals(db, actor, business_id, candidate_id, *, asset_id=None):
             expected_keys={'contract_version','parent_media_id','asset_media_id','asset_id','sha256','size_bytes','content_type','connection_version'}
             require_integrity(set(m)==expected_keys and m['contract_version']=='instagram-owned-manifest.v1')
             require_integrity(job and job.creator_id==audit.actor_id and job.source['kind']=='instagram')
-            require_integrity(m['parent_media_id']==m['asset_media_id']==job.source['media_id'])
+            require_integrity(m['parent_media_id']==m['asset_media_id']==job.source['media_id']==document['provenance']['source']['media_id'])
             require_integrity(type(m['connection_version']) is int and m['connection_version']==job.source['_connection']['version'])
             key=uuid5(job.id,'instagram-original:'+m['asset_media_id']+':'+m['sha256'])
             require_integrity(UUID(m['asset_id'])==key)
