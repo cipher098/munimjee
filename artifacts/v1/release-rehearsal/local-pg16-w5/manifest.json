@@ -1,5 +1,4 @@
 {
-  "tested_source_commit": "9c77f9f6caa59260daade3573a8ff22c6a743a29",
   "source_files": {
     "scripts/v1_release_rehearsal.py": "0233aeb0c890f8a5df3d37cb9fb9dd04c4274f0c4b9803d11f3b780ce4a52ffe",
     "scripts/v1_release_exec.py": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
@@ -20,5 +19,9 @@
   "application_switch": "pending_actual_package_journey",
   "new_domain_tables_fixture": "Support/customer proof tables restored empty; their full DDL protections compared",
   "independent_review": "Existing social peer reproduced two token collisions then verified fixes with14 pure checks; no fresh agent/reviewer execution implied",
-  "failed_first_pair": "Private retained first pair has matching full data/totals but original schema-formatting refusal; no reset/reuse"
+  "failed_first_pair": "Private retained first pair has matching full data/totals but original schema-formatting refusal; no reset/reuse",
+  "committed_runtime_matching_tested_hashes": "9c77f9f6caa59260daade3573a8ff22c6a743a29",
+  "test_invocation_git_head": "8a9de4d9ef467ecece53a900f60bae1326d89097",
+  "source_at_invocation": "Reviewed normalizer/head/test edits were uncommitted during execution; committed9c77f9f afterward without changing tested bytes. Exact file hashes above identify execution input.",
+  "additional_independent_review": "Catalogue peer52pure checks passed and source reviewed; no DB execution by reviewer."
 }
