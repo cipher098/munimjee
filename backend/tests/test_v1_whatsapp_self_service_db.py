@@ -423,3 +423,43 @@ async def test_actual_0057_new_test_requires_safe_recorded_outcome_even_after_ge
         assert created['detail']['code'] == 'channel_test_effect_pending'
     async with j.sessions() as db:
         assert await db.scalar(select(func.count()).select_from(WhatsAppTestAuthorization)) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('status,receipt', [('accepted',None),('accepted',''),('accepted','   '),
+    ('accepted','\t\n'),('sent',None),('delivered',None),('read',None)])
+async def test_actual_0057_current_receiptless_effect_projects_unknown_without_rewriting_history(native_wa_setup, status, receipt):
+    j = native_wa_setup
+    await attached_signup(j)
+    challenged = await challenge(j)
+    recipient = await bind_recipient(j, challenged)
+    tid = challenged['test']['test_id']
+    await post(j, f'/tests/{tid}/send', send_command(recipient))
+    if receipt == '':
+        # The released0057 message guard already rejects binding an empty ID.
+        # Prove that SQL boundary, then retain its real NULL association for the
+        # current status projection rather than disabling a migration trigger.
+        with pytest.raises(DBAPIError):
+            async with j.sessions.begin() as db:
+                auth = await db.get(WhatsAppTestAuthorization, UUID(tid))
+                await db.execute(update(WhatsAppMessage).where(WhatsAppMessage.id == auth.outbound_message_id)
+                    .values(provider_message_id=''))
+        receipt = None
+    async with j.sessions.begin() as db:
+        auth = await db.get(WhatsAppTestAuthorization, UUID(tid))
+        message = await db.get(WhatsAppMessage, auth.outbound_message_id)
+        message.status, message.provider_message_id = status, receipt
+    viewed = await j.client.get(j.base+f'/tests/{tid}')
+    assert viewed.status_code == 200
+    result = viewed.json()
+    assert result['is_current_generation'] is True
+    assert result['status'] == result['recorded_effect_status'] == 'unknown'
+    assert result['can_prepare_new_test'] is result['delivery_confirmed'] is False
+    assert result['provider_delivery_observed_at'] is None
+    denied = await post(j, '/tests', dict(idempotency_key=str(uuid4()),
+        expected_connection_version=1, recipient_authorized=True), status=409)
+    assert denied['detail']['code'] == 'channel_test_effect_pending'
+    async with j.sessions() as db:
+        auth = await db.get(WhatsAppTestAuthorization, UUID(tid))
+        message = await db.get(WhatsAppMessage, auth.outbound_message_id)
+        assert message.status == status and message.provider_message_id == receipt

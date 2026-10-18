@@ -401,7 +401,14 @@
     const value=await privateRead(base+'/signup/'+signupJournal.attempt_id);
     if(!validSignup(value)||value.attempt_id!==signupJournal.attempt_id)throw localError('Saved signup state could not be verified.');
     signup=value;$('signup-status').textContent=SIGNUP_LABELS[value.status]+'. Checking does not repeat registration or send a reply.';
-    if(['attached','cancelled','expired','failed','stale'].includes(value.status)){signupJournal=null;store();$('selection-section').hidden=true;}
+    if(['attached','cancelled','expired','failed','stale'].includes(value.status)){
+      signupJournal=null;store();$('selection-section').hidden=true;
+      try {
+        const current=await privateRead(base+'/self-service');
+        if(!validReadiness(current))throw localError('The current connection could not be checked. Fresh actions are withheld.');
+        readiness=current;renderReadiness();
+      }catch(error){readiness=null;erasePrivate();throw error;}
+    }
     else if(value.status==='awaiting_selection')await loadChoices();
     else if(value.status==='awaiting_assets'&&signupJournal.assets)$('signup-status').textContent+=' The original verified-account discovery request is available for explicit recovery.';
   }
