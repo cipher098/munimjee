@@ -125,7 +125,8 @@ async def notification_decision(db,link,milestone):
             try:
                 if template:
                     message=await wa.queue_message(db,account,contact,key=f'parcel:{link.id}:{milestone}',template=template,
-                        parameters=[order.customer.get('name',''),'MJ-'+order.id.hex[:12].upper(),link.raw_status])
+                        parameters=[order.customer.get('name',''),'MJ-'+order.id.hex[:12].upper(),link.raw_status],
+                        activity_producer=wa.activity.AutomatedWhatsAppProducer.PARCEL_UPDATE)
                     decision,reason='queued','approved_utility_template'
             except HTTPException:reason='consent_or_template_not_eligible'
     db.add(ParcelNotification(business_id=link.business_id,link_id=link.id,milestone=milestone,decision=decision,reason=reason,outbox_id=message.id if message else None))

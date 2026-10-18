@@ -136,6 +136,7 @@ async def link_and_resume(db, seller_id, shortcode, product_id, resume):
             skipped[reason] += 1
             continue
         await service.queue_message(db, account, contact, key=f'auto:reel:{message.provider_message_id}', text=text,
-            context={'reel_context': message.payload['reel_context'], 'customer_text': message.text})
+            context={'reel_context': message.payload['reel_context'], 'customer_text': message.text},
+            activity_producer=service.activity.AutomatedWhatsAppProducer.REEL_REVIEW)
         queued += 1
     return {'product_id': product.id, 'product_name': product.name, 'updated_messages': len(rows), 'queued_replies': queued, 'skipped': dict(skipped)}

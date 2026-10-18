@@ -11,6 +11,7 @@ from app.models.commerce import Storefront
 from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
 from app.services import whatsapp_provider as provider
 from app.services.whatsapp_context import inbound_context, reel_catalogue_reply, reel_reply_decision
+from app.services import activity_producers as activity
 
 
 def now():
@@ -82,7 +83,7 @@ async def sync_templates(db, account):
     await db.flush()
 
 
-async def queue_message(db, account, contact, *, key, text='', template=None, parameters=None, context=None):
+async def queue_message(db, account, contact, *, key, text='', template=None, parameters=None, context=None, activity_producer=None):
     existing = await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.seller_id == account.seller_id, WhatsAppMessage.idempotency_key == key))
     payload = {} if not template else {'name':template.name,'language':template.language,'parameters':parameters or []}
     if context and not template:
@@ -100,6 +101,7 @@ async def queue_message(db, account, contact, *, key, text='', template=None, pa
     message = WhatsAppMessage(seller_id=account.seller_id, contact_id=contact.id, phone_number_id=account.phone_number_id, idempotency_key=key, direction='outbound', kind='template' if template else 'text', text=text, payload=payload, status='queued')
     db.add(message)
     await db.flush()
+    await activity.whatsapp_outbound(db, account.seller_id, message.id, activity_producer)
     return message
 
 
@@ -142,7 +144,8 @@ async def queue_order_update(db, order, event):
     template = await db.scalar(select(WhatsAppTemplate).where(WhatsAppTemplate.seller_id == order.seller_id, WhatsAppTemplate.name == mapping['name'], WhatsAppTemplate.language == mapping['language'], WhatsAppTemplate.category == 'UTILITY'))
     parameters = [order.customer['name'], 'MJ-' + order.id.hex[:12].upper(), (order.tracking_url or order.tracking_number or 'Tracking will follow') if event == 'shipped' else f'{order.currency} {order.total / 100:.2f}']
     try:
-        await queue_message(db, account, contact, key=f'order:{order.id}:{event}', template=template, parameters=parameters) if template else None
+        await queue_message(db, account, contact, key=f'order:{order.id}:{event}', template=template, parameters=parameters,
+            activity_producer=activity.AutomatedWhatsAppProducer.ORDER_UPDATE) if template else None
     except HTTPException:
         return 'skipped'
     return 'queued' if template else 'skipped'
@@ -206,6 +209,7 @@ async def ingest_message(db, account, value, event):
         # START reopens replies only; it does not create marketing/utility consent.
         record_consent(contact, False, False, f'inbound:{command}:{mid}', at=timestamp)
     await db.flush()
+    await activity.whatsapp_inbound(db, account.seller_id, inbound.id)
     if command in {'stop','unsubscribe','start'} or contact.opted_out or not account.enabled or not account.automation_enabled or not window_open(contact) or timestamp < now() - timedelta(hours=24):
         return
     if account.reel_replies_enabled and context.get('reel_context'):
@@ -217,7 +221,8 @@ async def ingest_message(db, account, value, event):
                 contact_id=contact.id, phone_number_id=account.phone_number_id, reason=decision.review_reason))
         if reply:
             await queue_message(db, account, contact, key=f'auto:reel:{mid}', text=reply,
-                context={'reel_context': context['reel_context'], 'customer_text': text})
+                context={'reel_context': context['reel_context'], 'customer_text': text},
+                activity_producer=activity.AutomatedWhatsAppProducer.INBOUND_REPLY)
         return
     reply, product_id = '', None
     for rule in account.rules or []:
@@ -240,7 +245,8 @@ async def ingest_message(db, account, value, event):
             if not product:
                 return
             reply += '\n' + store_url + '?product=' + str(product.id)
-    await queue_message(db, account, contact, key=f'auto:{mid}', text=reply[:4096])
+    await queue_message(db, account, contact, key=f'auto:{mid}', text=reply[:4096],
+        activity_producer=activity.AutomatedWhatsAppProducer.INBOUND_REPLY)
 
 
 async def ingest_status(db, account, event):

@@ -59,10 +59,10 @@ def scalar_result(rows):
 async def test_persist_binds_from_database_and_commits_before_return():
     seller_id = uuid4()
     receipt = SimpleNamespace(seller_id=seller_id)
-    db = SimpleNamespace(execute=AsyncMock(side_effect=[scalar_result([SimpleNamespace(id=seller_id)]), None]),
-                         scalar=AsyncMock(return_value=receipt), commit=AsyncMock())
+    db = SimpleNamespace(execute=AsyncMock(return_value=scalar_result([SimpleNamespace(id=seller_id)])),
+                         scalar=AsyncMock(side_effect=[uuid4(),receipt]), flush=AsyncMock(), commit=AsyncMock())
     assert await persist_message(db, message(seller_id=str(uuid4()))) is receipt
-    values = db.execute.call_args_list[1].args[0].compile().params
+    values = db.scalar.call_args_list[0].args[0].compile().params
     assert values["seller_id"] == seller_id
     assert values["account_id"] == "account"
     assert "secret" not in str(values)

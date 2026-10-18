@@ -30,6 +30,18 @@ def test_unavailable_fixture_remains_null_not_zero():
     assert report.attribution is None and report.channel_activity.enquiry_messages is None
 
 
+def test_partial_channel_fixture_does_not_claim_delivery_or_complete_empty_families():
+    root=Path(__file__).resolve().parents[2]
+    raw=json.loads((root/'docs/contracts/activity-v1/channel-partial-report.json').read_text())
+    report=ActivityRead.model_validate(raw)
+    assert report.channel_activity.reason=='partial_coverage'
+    assert report.channel_activity.automation_outcomes.instagram_sends is None
+    for override in ({'reason':'no_production_observations'},{'enquiry_messages':0},
+            {'included_source_kinds':['wa_outbound']},{'included_source_kinds':['instagram_ingress','instagram_ingress']}):
+        value={**raw,'channel_activity':{**raw['channel_activity'],**override}}
+        with pytest.raises(ValidationError):ActivityRead.model_validate(value)
+
+
 def test_conversion_is_exact_bounded_and_never_zero_denominator_percentage():
     assert Conversion(numerator=1,denominator=3,percentage='33.33',unavailable_reason=None).percentage=='33.33'
     assert Conversion(numerator=0,denominator=0,percentage=None,unavailable_reason='no_observed_contexts').percentage is None

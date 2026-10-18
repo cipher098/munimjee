@@ -143,6 +143,7 @@ async def ingest_comment(db, account_id, change, entry_time=None, *, verified_so
     from uuid import uuid5
     bodies=[('private',selected.rule['private_reply']+'\n'+link)]
     if selected.rule['public_reply']:bodies.append(('public',selected.rule['public_reply']))
+    activity_ids=[]
     for kind,body in bodies:
         aid=uuid4();claim=accepted_claim(event,kind,body,selected.config)
         db.add(CommentAction(id=aid,seller_id=seller_id,event_id=eid,kind=kind,body=body,
@@ -150,5 +151,9 @@ async def ingest_comment(db, account_id, change, entry_time=None, *, verified_so
         await db.flush()
         db.add(CommentActionAudit(id=uuid5(aid,'accepted'),seller_id=seller_id,event_id=eid,action_id=aid,
             stage='accepted',after_status='pending'))
+        activity_ids.append(aid)
     await db.flush()
+    from app.services.activity_producers import comment_action
+    for aid in activity_ids:
+        await comment_action(db,seller_id,aid)
     return eid

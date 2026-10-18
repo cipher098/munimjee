@@ -146,15 +146,19 @@ async def persist_message(db, event: dict) -> InstagramIngress | None:
         raise ValueError("ambiguous_instagram_account")
     key = event_key(event, events)
     now = datetime.now(timezone.utc)
-    await db.execute(insert(InstagramIngress).values(
+    inserted = await db.scalar(insert(InstagramIngress).values(
         id=uuid4(), seller_id=sellers[0].id, account_id=account_id, customer_id=customer_id,
         event_key=key, provider_message_id=(event.get("message") or {}).get("mid"),
         occurred_at=provider_event_time(event.get("timestamp")),
         events=events, processed_indices=[], status="pending", attempts=0, available_at=now + timedelta(seconds=BATCH_SECONDS),
-    ).on_conflict_do_nothing(constraint="instagram_ingress_event_once"))
+    ).on_conflict_do_nothing(constraint="instagram_ingress_event_once").returning(InstagramIngress.id))
     receipt = await db.scalar(select(InstagramIngress).where(
         InstagramIngress.account_id == account_id, InstagramIngress.event_key == key,
     ))
+    if inserted is not None:
+        await db.flush()
+        from app.services.activity_producers import instagram_inbound
+        await instagram_inbound(db, sellers[0].id, inserted)
     # Explicit commit BEFORE optional broker dispatch or HTTP/SQS acknowledgement.
     await db.commit()
     return receipt

@@ -1,7 +1,7 @@
 # Channel activity installation proposal
 
-Status: next integrator-owned source work; not installed or accepted by this file.
-The existing seller-activity.v1 channel fields remain null/producer_not_installed.
+Status: isolated implementation draft, not yet actual-PG or mounted accepted.
+Central frozen0056 remains unchanged while its complete gate runs.
 No sender, consent, claim, retry, customer identity or financial behavior changes.
 
 ## Trusted new-row hooks
@@ -34,11 +34,13 @@ always demotes; historical/unknown/manual sources never become production.
 
 One scalar statement must combine minimal source ledger rows with exact
 tenant-bound canonical source rows. No bodies, customer/provider identifiers,
-credentials or arbitrary metadata are projected into analytics. The report's
-cohort time must be stated consistently: proposed source-ledger receipt time,
-while verified source time remains only a conservative eligibility check. This
-requires an explicit helper/fixture update; do not silently mix IG receipt time
-with WhatsApp provider timestamps.
+credentials or arbitrary metadata are projected into analytics. 0054's immutable database guard binds ledger created_at exactly to canonical
+source created_at. The draft preserves that authority and names each source-time
+cohort explicitly: Instagram durable ingress receipt time, WhatsApp signed inbound
+provider timestamp, and local outbound queue/action creation time. These are not
+a uniform receipt-time cohort or settlement time. A separate immutable receipt
+clock would need a reviewed additive migration after reserved0057; it remains
+queued, with no guard weakening or historical timestamp rewrite.
 
 Enquiries mean tagged accepted ordinary inbound messages, not people, buying
 intent or cross-channel identities. Automation outcomes mean current local
@@ -69,3 +71,27 @@ foreign/test/manual/policy/retention cases; current single-writer regression;
 source-time/receipt-time boundary; coherent report totals; mounted truthful
 empty/partial/test-excluded UI; and a fresh composed gate. Actual provider proof
 and deployed measurement/retention readiness remain separate and default-off.
+
+## Draft failure isolation and limits
+
+Each caller flushes domain facts before the observation seam. The seam uses a
+nested savepoint, bounded100ms lock/250ms statement timeouts, and restores prior
+transaction settings on success. Ledger exceptions roll back only the savepoint
+and emit one fixed redacted warning. Actual task cancellation still propagates.
+Healthy facts and ledger commit together; measurement failure may leave a valid
+unmeasured receipt, and exact replay never backfills it. This makes missing
+measurement explicit rather than dropping/retrying a valid ingress or send.
+
+The source report uses the same single-statement snapshot as the activity report.
+It joins exact tenant-bound source rows, lists observed production source kinds
+and test/unclassified exclusions, and always labels these channel observations
+partial. An inbound/outbound family with no production observations remains null,
+even when the other family has observations. Unknown, review-required, withheld
+or unrecognized no-receipt outcomes remain unknown; a nonempty canonical provider
+receipt is acceptance evidence only. Test commands intercepted before ordinary
+ingestion have no ordinary source fact.0057 test outbound uses no automation
+producer marker and cannot enter production automation totals; exact test-FK
+classification is a separately reviewed followup.
+
+Prepared actual SQL-failure/receipt/outbox/dedup/report tests are NOT execution
+evidence. Pure boundary checks alone do not prove PostgreSQL savepoint recovery.
