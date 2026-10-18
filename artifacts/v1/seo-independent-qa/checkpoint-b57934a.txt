@@ -1,0 +1,104 @@
+........................................................................ [ 63%]
+...............................FFFFsssssss                               [100%]
+=================================== FAILURES ===================================
+_ test_fence_cannot_take_ownership_of_existing_slash_alias_resource[False-/old-dress/-/old-dress] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c426f90>
+source = '/old-dress/', existing = '/old-dress', late = False
+
+    @pytest.mark.parametrize("source,existing", [("/old-dress/", "/old-dress"), ("/old-dress", "/old-dress/")])
+    @pytest.mark.parametrize("late", [False, True])
+    def test_fence_cannot_take_ownership_of_existing_slash_alias_resource(monkeypatch, source, existing, late):
+        from app.api.v1.storefront_bootstrap import install_storefront
+        from app.config import settings
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ENABLED", True)
+        monkeypatch.setattr(settings, "PUBLIC_BASE_URL", ORIGIN)
+        monkeypatch.setattr(settings, "V1_STOREFRONT_LEGACY_REDIRECTS", json.dumps([mapping(source_path=source)]))
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ASSETS_DIR", "")
+        app = FastAPI()
+        if not late:
+            app.add_api_route(existing, lambda: {"private": True})
+>       with pytest.raises(ValueError, match="collid"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_v1_seo_independent.py:326: Failed
+_ test_fence_cannot_take_ownership_of_existing_slash_alias_resource[False-/old-dress-/old-dress/] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c3e8c50>
+source = '/old-dress', existing = '/old-dress/', late = False
+
+    @pytest.mark.parametrize("source,existing", [("/old-dress/", "/old-dress"), ("/old-dress", "/old-dress/")])
+    @pytest.mark.parametrize("late", [False, True])
+    def test_fence_cannot_take_ownership_of_existing_slash_alias_resource(monkeypatch, source, existing, late):
+        from app.api.v1.storefront_bootstrap import install_storefront
+        from app.config import settings
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ENABLED", True)
+        monkeypatch.setattr(settings, "PUBLIC_BASE_URL", ORIGIN)
+        monkeypatch.setattr(settings, "V1_STOREFRONT_LEGACY_REDIRECTS", json.dumps([mapping(source_path=source)]))
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ASSETS_DIR", "")
+        app = FastAPI()
+        if not late:
+            app.add_api_route(existing, lambda: {"private": True})
+>       with pytest.raises(ValueError, match="collid"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_v1_seo_independent.py:326: Failed
+_ test_fence_cannot_take_ownership_of_existing_slash_alias_resource[True-/old-dress/-/old-dress] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b0ac850>
+source = '/old-dress/', existing = '/old-dress', late = True
+
+    @pytest.mark.parametrize("source,existing", [("/old-dress/", "/old-dress"), ("/old-dress", "/old-dress/")])
+    @pytest.mark.parametrize("late", [False, True])
+    def test_fence_cannot_take_ownership_of_existing_slash_alias_resource(monkeypatch, source, existing, late):
+        from app.api.v1.storefront_bootstrap import install_storefront
+        from app.config import settings
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ENABLED", True)
+        monkeypatch.setattr(settings, "PUBLIC_BASE_URL", ORIGIN)
+        monkeypatch.setattr(settings, "V1_STOREFRONT_LEGACY_REDIRECTS", json.dumps([mapping(source_path=source)]))
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ASSETS_DIR", "")
+        app = FastAPI()
+        if not late:
+            app.add_api_route(existing, lambda: {"private": True})
+>       with pytest.raises(ValueError, match="collid"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_v1_seo_independent.py:326: Failed
+_ test_fence_cannot_take_ownership_of_existing_slash_alias_resource[True-/old-dress-/old-dress/] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b5dced0>
+source = '/old-dress', existing = '/old-dress/', late = True
+
+    @pytest.mark.parametrize("source,existing", [("/old-dress/", "/old-dress"), ("/old-dress", "/old-dress/")])
+    @pytest.mark.parametrize("late", [False, True])
+    def test_fence_cannot_take_ownership_of_existing_slash_alias_resource(monkeypatch, source, existing, late):
+        from app.api.v1.storefront_bootstrap import install_storefront
+        from app.config import settings
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ENABLED", True)
+        monkeypatch.setattr(settings, "PUBLIC_BASE_URL", ORIGIN)
+        monkeypatch.setattr(settings, "V1_STOREFRONT_LEGACY_REDIRECTS", json.dumps([mapping(source_path=source)]))
+        monkeypatch.setattr(settings, "V1_STOREFRONT_ASSETS_DIR", "")
+        app = FastAPI()
+        if not late:
+            app.add_api_route(existing, lambda: {"private": True})
+>       with pytest.raises(ValueError, match="collid"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_v1_seo_independent.py:326: Failed
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee-wave6-qa/artifacts/v1/seo-independent-qa/checkpoint-b57934a.xml -
+=========================== short test summary info ============================
+FAILED tests/test_v1_seo_independent.py::test_fence_cannot_take_ownership_of_existing_slash_alias_resource[False-/old-dress/-/old-dress]
+FAILED tests/test_v1_seo_independent.py::test_fence_cannot_take_ownership_of_existing_slash_alias_resource[False-/old-dress-/old-dress/]
+FAILED tests/test_v1_seo_independent.py::test_fence_cannot_take_ownership_of_existing_slash_alias_resource[True-/old-dress/-/old-dress]
+FAILED tests/test_v1_seo_independent.py::test_fence_cannot_take_ownership_of_existing_slash_alias_resource[True-/old-dress-/old-dress/]
+4 failed, 103 passed, 7 skipped, 2 warnings in 0.57s
