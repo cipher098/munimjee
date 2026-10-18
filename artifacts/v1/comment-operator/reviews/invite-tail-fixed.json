@@ -1,0 +1,18 @@
+{
+  "source_sha256": "946c3389657c8c264a37441d716d68ecaccc31e8a895a097c86baaeebfd34aa1",
+  "exact_functions": [
+    "start_session",
+    "accept_invitation"
+  ],
+  "trace": [
+    "domain_initial_authority_passed",
+    "browser_session_staged",
+    "session_stage_owner_revoked",
+    "cookies_staged",
+    "flush",
+    "final_owner_denied",
+    "denied_response"
+  ],
+  "commits_before_denied_response": 0,
+  "proof": "source call-order only; no PostgreSQL/provider"
+}

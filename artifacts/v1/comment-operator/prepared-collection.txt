@@ -1,0 +1,19 @@
+tests/test_comment_operator_db.py::test_unknown_review_replay_preserves_effect_and_exact_receipt
+tests/test_comment_operator_db.py::test_pending_or_sending_cannot_be_closed[pending]
+tests/test_comment_operator_db.py::test_pending_or_sending_cannot_be_closed[sending]
+tests/test_comment_operator_db.py::test_concurrent_review_closures_record_only_one_decision
+tests/test_comment_operator_db.py::test_review_lock_wait_rechecks_current_native_authority[session]
+tests/test_comment_operator_db.py::test_review_lock_wait_rechecks_current_native_authority[role]
+tests/test_comment_operator_db.py::test_session_revoke_after_staged_review_flush_rolls_back_every_receipt
+tests/test_comment_operator_db.py::test_rule_expected_fingerprint_and_exact_lost_response_replay
+tests/test_comment_operator_db.py::test_native_viewer_foreign_scope_and_csrf_are_not_operator_authority
+tests/test_comment_operator_db.py::test_new_receipts_are_immutable_and_all_new_foreign_keys_validated
+tests/test_comment_operator_db.py::test_signed_inferred_followup_has_one_visible_enquiry_and_no_second_send
+
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+11 tests collected in 0.13s

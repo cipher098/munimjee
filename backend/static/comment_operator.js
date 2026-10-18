@@ -4,6 +4,7 @@ const $=id=>document.getElementById(id), business=location.pathname.split('/')[3
 const base=`/api/v1/businesses/${business}`, comments=`${base}/comment-automation`, enquiries=`${base}/whatsapp/enquiries`, prefix='munimjee.v1.comment-command:';
 let identity=null,storageKey=null,ended=false,generation=0,selectionEpoch=0,listEpoch=0,canManage=false,busy=false,intent=null,journalBlocked=false;
 let sessionCounter=0,sessionApplied=0;
+let viewReady=false;
 let tab='events',cursor=null,nextCursor=null,pages=[],selected=null,editing=null,previewRule=null,productCursor=null,productsStarted=false;
 const rules=new Map(),products=new Map();
 const csrfCookie=()=>{try{return document.cookie.split(';').map(value=>value.trim()).find(value=>value.startsWith('v1_csrf='))?.slice(8)||null;}catch{return null;}};
@@ -27,11 +28,11 @@ function fence(message,removeStorage=true){
   for(const form of document.querySelectorAll('form'))form.reset();$('rule-product').replaceChildren();
   for(const input of document.querySelectorAll('input,textarea'))input.value='';
   for(const control of document.querySelectorAll('#workspace button,dialog button,input,select,textarea'))control.disabled=true;
-  if(removeStorage)try{for(const key of Object.keys(sessionStorage))if(key.startsWith(prefix))sessionStorage.removeItem(key);}catch{}
+  if(removeStorage&&storageKey)try{sessionStorage.removeItem(storageKey);}catch{}
   $('error').textContent=message;$('signin').hidden=false;
 }
 function controls(){
-  const blocked=busy||ended||Boolean(intent)||journalBlocked;
+  const blocked=busy||ended||Boolean(intent)||journalBlocked||!viewReady;
   $('new-rule').hidden=tab!=='rules'||!canManage;$('new-rule').disabled=blocked;$('retry').disabled=busy||!canManage||ended||journalBlocked;
   $('review-form').hidden=!selected?.can_close||!canManage;$('close-review').disabled=blocked;
   $('save-rule').disabled=blocked||!canManage;$('disable-rule').disabled=blocked||!canManage;$('rule-form').hidden=!canManage;
@@ -78,8 +79,8 @@ async function recover(){
 function validEvent(row){return UUID.test(row?.id)&&typeof row.text==='string'&&HASH.test(row.fingerprint)&&typeof row.can_close==='boolean'&&Array.isArray(row.actions)&&row.actions.every(action=>['private','public'].includes(action.kind)&&typeof action.body==='string'&&['not_attempted','not_confirmed','provider_accepted'].includes(action.delivery_state));}
 function validEnquiry(row){return UUID.test(row?.id)&&UUID.test(row.inbound_message_id)&&typeof row.message==='string'&&typeof row.customer_name==='string'&&typeof row.customer_ref==='string'&&row.reason==='activated_inferred_context'&&HASH.test(row.fingerprint)&&typeof row.can_close==='boolean';}
 function delivery(value){return value==='provider_accepted'?'Provider accepted · delivery not confirmed':value==='not_attempted'?'No send attempted':'Send result not confirmed · check Instagram';}
-function button(label,action,manage=false){const result=node('button',label,'button secondary');result.type='button';result.dataset.manage=String(manage);result.addEventListener('click',()=>action().catch(error=>{if(!ended)$('error').textContent=error.message;}));return result;}
-async function load(){
+function button(label,action,manage=false){const result=node('button',label,'button secondary');result.type='button';result.dataset.manage=String(manage);result.addEventListener('click',()=>action().catch(onError));return result;}
+async function loadCurrent(){
   const epoch=++listEpoch,kind=tab,state=kind==='rules'?'all':$('state').value,params=new URLSearchParams({state,limit:'20'});if(cursor)params.set('cursor',cursor);
   $('list-state').textContent='Loading saved activity…';$('error').textContent='';
   const value=await api(`${kind==='enquiries'?enquiries:comments+'/'+kind}?${params}`);
@@ -94,8 +95,9 @@ async function load(){
     if(kind!=='rules')facts.append(node('small',`${date(row.created_at)}${row.review?' · Closed after review':''}`));article.append(facts,actions);$('records').append(article);
   }
   $('list-state').textContent=value.items.length?'':kind==='enquiries'?'No inferred follow-ups need review in this view.':kind==='rules'?'No comment rules yet. Start with a specific Instagram post and product.':'No saved comments match this view.';
-  $('previous').disabled=pages.length===0;$('next').disabled=!nextCursor;$('page-label').textContent=`Page ${pages.length+1}`;controls();
+  $('previous').disabled=pages.length===0;$('next').disabled=!nextCursor;$('page-label').textContent=`Page ${pages.length+1}`;viewReady=true;controls();
 }
+async function load(){try{await loadCurrent();}catch(error){invalidateReads();throw error;}}
 async function openDetail(id,kind){
   const epoch=++selectionEpoch,row=await api(`${kind==='events'?comments+'/events':enquiries}/${id}`);if(epoch!==selectionEpoch)return;
   if(row.id!==id||!(kind==='events'?validEvent(row):validEnquiry(row)))throw Error('The selected review could not be verified.');
@@ -113,10 +115,10 @@ async function send(){
     else{const row=await api(`${saved.operation==='comment_close'?comments+'/events':enquiries}/${saved.resource}`);if(row.id!==saved.resource||!row.review)throw Error('The review result could not be confirmed. Keep the saved action.');}
     if(saved!==intent)throw Error('The saved action changed.');sessionStorage.removeItem(storageKey);intent=null;renderIntent();for(const dialog of document.querySelectorAll('dialog'))if(dialog.open)dialog.close();selected=null;editing=null;
     $('notice').textContent=saved.operation.startsWith('rule_')?'Rule change confirmed. Earlier saved replies were not replayed.':'Review recorded. No new reply was sent; the original delivery result is unchanged.';await load();
-  }catch(error){if(!ended&&error.code==='comment_operator_context_changed'){sessionStorage.removeItem(storageKey);intent=null;renderIntent();$('notice').textContent='This action was not accepted. Refresh and review the current facts before deciding again.';}if(!ended)$('error').textContent=error.message;}
+  }catch(error){if(!ended&&error.code==='comment_operator_context_changed'){sessionStorage.removeItem(storageKey);intent=null;renderIntent();$('notice').textContent='This action was not accepted. Refresh and review the current facts before deciding again.';}if(!ended){invalidateReads();$('error').textContent=error.message;}}
   finally{busy=false;renderIntent();}
 }
-async function command(operation,resource,path,method,body,summary){if(busy||intent||ended||journalBlocked)return;busy=true;controls();let ready=false;try{await session(true);await prepare(operation,resource,path,method,body,summary);ready=true;}catch(error){if(!ended)$('error').textContent=error.message;}finally{busy=false;controls();}if(ready)await send();}
+async function command(operation,resource,path,method,body,summary){if(busy||intent||ended||journalBlocked||!viewReady)return;busy=true;controls();let ready=false;try{await session(true);await prepare(operation,resource,path,method,body,summary);ready=true;}catch(error){if(!ended)$('error').textContent=error.message;}finally{busy=false;controls();}if(ready)await send();}
 async function loadProducts(){
   const value=await api(`${comments}/products${productCursor?'?cursor='+encodeURIComponent(productCursor):''}`);
   if(!Array.isArray(value?.items)||value.items.some(row=>!UUID.test(row.id)||typeof row.name!=='string'||typeof row.activated!=='boolean'))throw Error('The product list could not be verified.');
@@ -131,7 +133,12 @@ async function editRule(row=null){
   $('disable-rule').hidden=!row;controls();$('rule-dialog').showModal();
 }
 async function preview(row){const epoch=++selectionEpoch;await session(true);if(epoch!==selectionEpoch)return;previewRule=row;$('preview-form').reset();$('preview-result').textContent='A preview checks a saved rule. It never sends a reply.';$('preview-dialog').showModal();}
-function onError(error){if(!ended)$('error').textContent=error.message;}
+function invalidateReads(){if(ended)return;viewReady=false;selectionEpoch++;listEpoch++;selected=null;editing=null;previewRule=null;rules.clear();products.clear();productsStarted=false;productCursor=null;nextCursor=null;
+  for(const id of ['records','detail-meta','detail-content','detail-block','preview-result','page-label'])$(id).replaceChildren();
+  for(const dialog of document.querySelectorAll('dialog'))if(dialog.open)dialog.close();for(const form of document.querySelectorAll('form'))form.reset();
+  $('rule-product').replaceChildren(node('option','Choose a product'));$('rule-product').firstElementChild.value='';$('list-state').textContent='Current activity could not be checked. Refresh before starting another action.';$('previous').disabled=true;$('next').disabled=true;controls();
+}
+function onError(error){if(!ended){invalidateReads();$('error').textContent=error.message;}}
 $('review-form').addEventListener('submit',event=>{event.preventDefault();if(!selected||!$('review-confirm').checked)return;const row=selected,operation=row.kind==='events'?'comment_close':'enquiry_close';command(operation,row.id,row.kind==='events'?`${comments}/events/${row.id}/reviews`:`${enquiries}/${row.id}/close`,'POST',{idempotency_key:crypto.randomUUID(),expected_fingerprint:row.fingerprint,confirmed:true,reason:$('review-reason').value.trim()},`Close review without send · ${row.kind==='events'?row.text:row.message}`.slice(0,1000)).catch(onError);});
 $('rule-form').addEventListener('submit',event=>{event.preventDefault();const row=editing,facts={name:$('rule-name').value.trim(),enabled:$('rule-enabled').checked,media_id:$('rule-media').value.trim(),product_id:$('rule-product').value,keywords:[...new Set($('rule-keywords').value.split(',').map(value=>value.trim()))],private_reply:$('rule-private').value.trim(),public_reply:$('rule-public').value.trim()||null};if(!validFacts(facts)){ $('rule-error').textContent='Check the explicit post, product and bounded reply fields.';return;}command(row?'rule_update':'rule_create',row?.id||null,`${comments}/rules${row?'/'+row.id:''}`,row?'PUT':'POST',{idempotency_key:crypto.randomUUID(),facts,expected_fingerprint:row?.fingerprint||null},`${row?'Update':'Create'} rule · ${facts.name}\nPost ${facts.media_id} · ${products.get(facts.product_id)?.name||'Selected product'}\n${facts.enabled?'Enable future matches':'Keep disabled'}`).catch(onError);});
 $('disable-rule').addEventListener('click',()=>{if(editing)command('rule_disable',editing.id,`${comments}/rules/${editing.id}/disable`,'POST',{idempotency_key:crypto.randomUUID(),expected_fingerprint:editing.fingerprint},`Disable rule · ${editing.name}`).catch(onError);});
@@ -143,4 +150,4 @@ $('refresh').addEventListener('click',()=>load().catch(onError));$('state').addE
 $('next').addEventListener('click',()=>{if(nextCursor){pages.push(cursor);cursor=nextCursor;load().catch(onError);}});$('previous').addEventListener('click',()=>{if(pages.length){cursor=pages.pop();load().catch(onError);}});
 let checking=false;async function refocus(){if(ended||checking||!identity)return;checking=true;$('workspace').hidden=true;try{await session();}catch(error){onError(error);}finally{checking=false;if(!ended&&!document.hidden)$('workspace').hidden=false;}}
 window.addEventListener('focus',refocus);window.addEventListener('pageshow',refocus);window.addEventListener('pagehide',()=>{$('workspace').hidden=true;});document.addEventListener('visibilitychange',()=>{if(document.hidden)$('workspace').hidden=true;else refocus();});
-(async()=>{try{if(!UUID.test(business))throw Error('Open comments from an authorized business.');const g=generation,me=await session();storageKey=prefix+me.user_id+':'+business+':'+await digest(me.csrf_token);current(g);try{await recover();}catch(error){onError(error);}const overview=await api(comments);if(overview.business_id!==business||typeof overview.business_name!=='string')throw Error('This business could not be verified.');$('business-name').textContent=overview.business_name;$('back').href=`/v1/businesses/${business}`;$('readiness').textContent=overview.readiness_reason?explain(overview.readiness_reason):'Local account access is checked. Provider permissions and real delivery are not certified here.';await load();current(g);$('workspace').hidden=false;controls();}catch(error){onError(error);}})();
+(async()=>{try{if(!UUID.test(business))throw Error('Open comments from an authorized business.');const g=generation,me=await session();storageKey=prefix+me.user_id+':'+business+':'+await digest(me.csrf_token);current(g);try{await recover();}catch(error){onError(error);}const overview=await api(comments);if(overview.business_id!==business||typeof overview.business_name!=='string')throw Error('This business could not be verified.');$('business-name').textContent=overview.business_name;$('back').href=`/v1?business=${encodeURIComponent(business)}`;$('readiness').textContent=overview.readiness_reason?explain(overview.readiness_reason):'Local account access is checked. Provider permissions and real delivery are not certified here.';await load();current(g);$('workspace').hidden=false;controls();}catch(error){onError(error);}})();
