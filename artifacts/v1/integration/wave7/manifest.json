@@ -85,6 +85,13 @@
     "full-0055.txt": "771b1f1aeda5eaf9eb812609a36b2809249ec4d0b5b5dc5c55e4549edc315868",
     "full-0055.xml": "34a8ccdb871be82ce196696869e832737658fad857ce85d4f16922eab099098f",
     "full-0056-before.json": "03c59b4b8b77cc93af76b1109c9eeabba0c5523d19c58670ce955b245212dd39",
+    "full-0056-producers-before.json": "822d10953a0d52bea8604d3345cddda0bb8a29129fbf2d43b37e91c2777cea4d",
+    "full-0056-producers-runner.txt": "d97d67bc37c32de035b9345240b12f0a7256325a554b13655ac69068e7d8d636",
+    "full-0056-producers-skip-attribution.json": "5ef9f72d7c5acfcbc7ddf5e7b5d49555b7c5cb25227d4a3acdf993402f816c05",
+    "full-0056-producers-source.json": "04f5a00591094b1a152fd8c0ad4457a24ef1a0d720e073391134638f626c6dde",
+    "full-0056-producers-verification.json": "5e03e4077f8699a329dbe706dcb59b90cc260e7d1885874a7a04497dded9c605",
+    "full-0056-producers.txt": "a72a1bf3329a1062713e9803dd3db80fb4f61ee6549ef7083de11e7ffac65d6f",
+    "full-0056-producers.xml": "46276a84d1c12291273b22e6f57d31fc169d1a3252433198c46a7b60bc21551f",
     "full-0056-runner.txt": "acc37d95b68f55a8841629bd5e0ed739ebb85b4989f83135ff43a295c01d174f",
     "full-0056-source.json": "3e1e95454353fc932a9f0de954044ce7eb87afc6f4d92982cd85478fc871d230",
     "full-0056.txt": "35a778a425718c9442fb1a6915e15dd86d11bdf83342bd7335fba5dd790469bb",
@@ -123,15 +130,21 @@
     "ui-composed/source.json": "78bb097583f39127ac76ed0cdeaf3cac83436307695808113d67d9393b14f333"
   },
   "current_accepted_complete": {
-    "source": "eeb94a119736cae816af782f2af5e04cb877e616",
+    "source": "a9880c56b6a8bf7b4e20f54837a362e4432aadda",
     "alembic_revision": "0056_v1_comment_operator",
-    "passed": 2425,
+    "revision_read_independently": true,
+    "passed": 2441,
     "skipped": 8,
     "failed": 0,
-    "duration_seconds": 1119.92,
+    "errors": 0,
+    "duration_seconds": 1134.89,
+    "warnings": 36,
     "exit_code": 0,
     "source_unchanged": true,
-    "stable_tracked_files": 800
+    "stable_tracked_files": 825,
+    "xml_cases": 2449,
+    "skips_match_prior_complete": true,
+    "provider_or_device_acceptance": false
   },
   "scoped_ui_composition": {
     "source": "e4183cfe78d36624bf0019048f0d5f64c9b00a2f",
@@ -156,6 +169,23 @@
     "owner_skipped": 1,
     "owner_skip": "real Redis requires allocated URL",
     "migration_changed": false,
-    "complete_gate": "pending fresh run"
+    "complete_gate": "a9880c56b6a8bf7b4e20f54837a362e4432aadda"
+  },
+  "full0056_producers": {
+    "source": "a9880c56b6a8bf7b4e20f54837a362e4432aadda",
+    "alembic_revision": "0056_v1_comment_operator",
+    "revision_read_independently": true,
+    "passed": 2441,
+    "skipped": 8,
+    "failed": 0,
+    "errors": 0,
+    "duration_seconds": 1134.89,
+    "warnings": 36,
+    "exit_code": 0,
+    "source_unchanged": true,
+    "stable_tracked_files": 825,
+    "xml_cases": 2449,
+    "skips_match_prior_complete": true,
+    "provider_or_device_acceptance": false
   }
 }

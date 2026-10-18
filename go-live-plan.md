@@ -27,10 +27,12 @@ native multiarchitecture and hosted CI billing remain separate release gates. Fl
 stay off by default. No real provider request, charge, customer send, running-project
 change or production cutover is authorized or claimed.
 
-The fresh complete checkpoint is frozen `eeb94a1`, actual0056:2425 backend tests
-pass with8 documented skips and0 failures;800 tracked source/harness files match
-before/after. Central native onboarding6 and shared activity8 mounted journeys,
-plus separately attributed owner gates, are documented in `docs/v1-wave7-validation.md`.
+The fresh complete checkpoint is frozen `a9880c5`, actual0056:2441 backend tests
+pass with8 documented skips and0 failures/errors;825 tracked source/harness files
+match before/after. This includes the reviewed channel activity producers/outcome
+reporting. Exact full proof and separate central8 mounted report journeys are in
+`docs/v1-wave7-producer-validation.md`. Earlier complete2425/native onboarding6
+and shared activity8 evidence remains in `docs/v1-wave7-validation.md`.
 Prior `abab30a` actual0053 image/restore evidence remains separate:315-file arm64
 image/3 offline modes and fresh restore53 do not certify the new head. Historical
 failed/interrupted runs remain preserved. New copies await safe disk headroom. Subsequent
@@ -59,16 +61,19 @@ preserved alongside the fresh green run. New-head runtime-image/restore/rollback
 live provider and complete V1 acceptance remain pending.
 
 Reviewed channel activity producers/outcome reporting are now composed with241
-focused checks (1 Redis skip) and central8 mounted report journeys; a fresh complete
-backend gate is pending for that addition. They show only partial tagged observations
+focused checks (1 Redis skip), central8 mounted report journeys and the fresh
+complete2441 gate above. They show only partial tagged observations
 with null empty families, explicit source clocks and test/manual exclusions; provider
 acceptance never means delivery. Remaining code-owned work includes supported
 WhatsApp v4 self-service consent and
 account selection, authorized-recipient test/result workflow, and the rest of the
 V1 acceptance matrix. Catalogue owns reserved0057 v4 implementation from frozen0056 after reviewed
 contract approval; its runtime/DB/browser acceptance is pending and no live
-provider action is authorized. Remote mobile/accessibility/offline QA is active after the
-connection recovered; only reviewed delivered results count. Provider approvals,
+provider action is authorized. Its reviewed source now includes explicit original-App
+binding, current native authority after provider claims, exact credential provenance
+and bounded test authorization; actual0057 proof is still pending. Remote reviewed
+material-question handoff and local queued-reconnect cases are next integration
+checks, not completed provider acceptance. Only reviewed delivered remote results count. Provider approvals,
 physical devices, international migration requirements and operational release
 remain separate gates. Exact current evidence and ownership are in
 `docs/v1-execution-status.md` and `docs/v1-wave7-contracts.md`.

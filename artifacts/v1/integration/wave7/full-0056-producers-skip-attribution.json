@@ -1,0 +1,48 @@
+{
+  "source_commit": "a9880c56b6a8bf7b4e20f54837a362e4432aadda",
+  "skipped": 8,
+  "historical_llm_cassettes": 5,
+  "redis_without_allocated_url": 3,
+  "cases": [
+    {
+      "class": "tests.test_claude_decide",
+      "name": "test_decide_greeting_returns_valid_action",
+      "reason": "No cassette at /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/cassettes/decide_greeting.yaml. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest"
+    },
+    {
+      "class": "tests.test_instagram_ingress_db",
+      "name": "test_real_redis_transfer_commits_every_missing_mid_occurrence_before_trim",
+      "reason": "Coordinator-allocated TEST_REDIS_URL required"
+    },
+    {
+      "class": "tests.test_instagram_ingress_worker",
+      "name": "test_legacy_trim_compares_prefix_before_deleting_new_events",
+      "reason": "Coordinator-allocated TEST_REDIS_URL required"
+    },
+    {
+      "class": "tests.test_instagram_ingress_worker",
+      "name": "test_redis_missing_mid_transfer_ids_survive_retry_and_distinguish_next_buffer",
+      "reason": "Coordinator-allocated TEST_REDIS_URL required"
+    },
+    {
+      "class": "tests.test_scenarios",
+      "name": "test_scenario[awaiting_payment_lock]",
+      "reason": "No cassettes for scenario 'awaiting_payment_lock'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py"
+    },
+    {
+      "class": "tests.test_scenarios",
+      "name": "test_scenario[happy_path_accept]",
+      "reason": "No cassettes for scenario 'happy_path_accept'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py"
+    },
+    {
+      "class": "tests.test_scenarios",
+      "name": "test_scenario[price_lock_consistency]",
+      "reason": "No cassettes for scenario 'price_lock_consistency'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py"
+    },
+    {
+      "class": "tests.test_scenarios",
+      "name": "test_scenario[walkaway_calls_bluff]",
+      "reason": "No cassettes for scenario 'walkaway_calls_bluff'. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest tests/test_scenarios.py"
+    }
+  ]
+}

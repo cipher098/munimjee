@@ -1,0 +1,17 @@
+{
+  "source": "a9880c56b6a8bf7b4e20f54837a362e4432aadda",
+  "alembic_revision": "0056_v1_comment_operator",
+  "revision_read_independently": true,
+  "passed": 2441,
+  "skipped": 8,
+  "failed": 0,
+  "errors": 0,
+  "duration_seconds": 1134.89,
+  "warnings": 36,
+  "exit_code": 0,
+  "source_unchanged": true,
+  "stable_tracked_files": 825,
+  "xml_cases": 2449,
+  "skips_match_prior_complete": true,
+  "provider_or_device_acceptance": false
+}

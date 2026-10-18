@@ -4,14 +4,23 @@ Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified f
 
 ## Wave7 verified complete checkpoint and next ownership
 
-New reviewed producer/report composition `41770a4` passes central actual0056
+The fresh complete producer checkpoint `a9880c56b6a8bf7b4e20f54837a362e4432aadda`
+passes **2441 tests,8 documented skips,0 failures/errors in1134.89s** on actual0056.
+The subprocess exits0 and all825 tracked non-artifact files match before/after.
+Independent XML accounting confirms2449 cases; the database revision was read as
+`0056_v1_comment_operator`. Skips remain five historical LLM cassettes and three
+unallocated real Redis cases. Exact proof is in `docs/v1-wave7-producer-validation.md`
+and `artifacts/v1/integration/wave7/full-0056-producers*`. This supersedes the
+earlier complete2425 source below; historical failed/interrupted runs remain intact.
+
+Reviewed producer/report composition `41770a4` also passes central actual0056
 report8 mounted checks with825 tracked files stable. Owner241 focused checks pass
 with1 known Redis skip; independent source/copy/render review is clear. Tagged
 new-row IG/WA/comment observations and current canonical outcomes are now composed
 with savepoint/timeout failure isolation. Counts always remain partial; empty
 families are null, test/manual rows excluded, source-specific clocks explicit,
-and provider acceptance never means delivery. A new complete run for this backend
-change is pending; the prior full2425 below does not certify it.
+and provider acceptance never means delivery. The fresh full2441 above now
+certifies the reviewed producer composition within these bounded limits.
 
 Subsequent reviewed UI composition `e4183cf` passes central actual0056 native6
 and cart6 mounted checks, with817 tracked source/harness files stable. Only native
@@ -44,7 +53,7 @@ and0056 native no-send comment reviews/rule controls plus durable inferred-WA
 review. The five previously reproduced queued-comment safety failures are fixed
 within the reviewed sender scope. Broader semantic/provider V08 acceptance is not
 inferred. The full2425 source predates producer installation; current reviewed producer
-composition has its separate gates and pending new full run above.
+composition has its fresh full2441 and separate mounted evidence above.
 
 Separate mounted evidence: native onboarding6 and shared customer/activity8 at
 actual0056 with stable source/harness maps; comment owner15 at actual0056, channel
@@ -55,7 +64,7 @@ Node107 plus operator lifecycle6. Full-run passing does not convert synthetic
 provider methods, controlled HTTP, or source review into live provider proof.
 
 Next isolated work: integrator owns reviewed channel activity producers/outcome
-reporting (actual focused/mounted passed, new composed full pending); catalogue owns0057 WA v4
+reporting (complete2441 and composed mounted8 passed); catalogue owns0057 WA v4
 self-service/explicit authorized-recipient test flow from frozen0056; social completed/reviewed the CSS-only mobile cart fallback repair and now
 independently reviews0057 source. Remote native v1_app.js/css mobile, focus/error/
 long-name repairs are reviewed and composed. No shared file collision is granted.
@@ -65,8 +74,19 @@ Its repaired75 synthetic and six mounted cases pass. The final remote packet
 2681e91 is reviewed/composed, with32+8 controlled cases and the central native6
 actual-session rerun passing.
 
-DB/browser work stays serialized on disk-backed55443. The cart slot is released. Integrator is moving from the released producer focused slot to a fresh
-wave6_integration complete gate. No other DB/browser starts until explicit release. New image/restore/rollback copies remain deferred under host
+Next source review is complete for the remote conservative material-question
+handoff (`a0d46df`, runtime `d3aacd9`); its synthetic-row48 checks are not yet
+integrated actual-PG proof. Social has prepared three signed-ingress/queued-WA
+acceptance cases for reconnect-paused withholding, explicit owner re-enable with
+fresh facts, and material-plus-price handoff.0057 backend `e897ee6` resolves the
+reviewed App/config/claim/expiry source findings with independent16 no-network
+checks; page `93e6856` has18 controlled-DOM checks. Actual0057 migration, lock
+races, shared hooks and mounted browser acceptance remain pending. Both flags
+stay false; no provider wire or delivery claim follows from these source tests.
+
+DB/browser work stays serialized on disk-backed55443. The complete producer gate
+has exited cleanly; the next lane requires an explicit coordinator grant after
+checkpoint publication. New image/restore/rollback copies remain deferred under host
 disk headroom; no prune or evidence deletion is authorized. Provider approvals,
 physical devices, private ParcelDesk provisioning and operational deployment stay
 open. Exact boundaries are in `docs/v1-wave7-contracts.md`.
