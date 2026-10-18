@@ -1,0 +1,37 @@
+FF.F                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_reels] _
+backend/tests/test_sku_fact_replies_db.py:400: in test_buffered_conflicting_explicit_products_never_choose_first_or_last
+    assert sent==[], 'Conflicting explicit contexts must withhold, never choose first/last product'
+E   AssertionError: Conflicting explicit contexts must withhold, never choose first/last product
+E   assert ['Current cat...th our team.'] == []
+E     
+E     Left contains one more item: 'Current catalogue: Second activated product.\n• Standard option — ₹222.22; recorded available: 2.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+E     Use -v to get more diff
+_ test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_reply_to] _
+backend/tests/test_sku_fact_replies_db.py:400: in test_buffered_conflicting_explicit_products_never_choose_first_or_last
+    assert sent==[], 'Conflicting explicit contexts must withhold, never choose first/last product'
+E   AssertionError: Conflicting explicit contexts must withhold, never choose first/last product
+E   assert ['Current cat...th our team.'] == []
+E     
+E     Left contains one more item: 'Current catalogue: Synthetic dress.\n• Size: M — ₹123.45; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+E     Use -v to get more diff
+_ test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_text_urls] _
+backend/tests/test_sku_fact_replies_db.py:400: in test_buffered_conflicting_explicit_products_never_choose_first_or_last
+    assert sent==[], 'Conflicting explicit contexts must withhold, never choose first/last product'
+E   AssertionError: Conflicting explicit contexts must withhold, never choose first/last product
+E   assert ['Our team wi...his product.'] == []
+E     
+E     Left contains one more item: 'Our team will confirm the current options, price and availability for this product.'
+E     Use -v to get more diff
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_sku_fact_replies_db.py::test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_reels]
+FAILED backend/tests/test_sku_fact_replies_db.py::test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_reply_to]
+FAILED backend/tests/test_sku_fact_replies_db.py::test_buffered_conflicting_explicit_products_never_choose_first_or_last[two_text_urls]
+3 failed, 1 passed, 43 deselected, 1 warning in 3.92s

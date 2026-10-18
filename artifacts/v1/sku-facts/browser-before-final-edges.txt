@@ -1,0 +1,5 @@
+INFO:app.workers.message_batch:message_batch: combined text='price?' (had_media=False)
+INFO:app.workers.message_batch:message_batch: combined text='available?' (had_media=False)
+INFO:app.workers.message_batch:message_batch: combined text='price?' (had_media=False)
+WARNING:app.workers.instagram_ingress:Instagram ingress processing failed; receipts require side-effect review
+PASS 4 mounted native SKU/channel journeys; providers synthetic.
