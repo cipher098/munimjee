@@ -106,13 +106,22 @@ def test_accepted_or_historical_status_never_claims_current_delivered_proof():
     value = json.loads(FIXTURE.read_text())["safe_test_example"]
     with pytest.raises(InvalidWhatsAppCommand):
         parse_command(TestView, {**value, "delivery_confirmed": True})
-    delivered = {**value, "status": "delivered", "delivery_confirmed": True,
+    delivered = {**value, "status": "delivered", "delivery_confirmed": True, "proof_source": "signed_provider_webhook",
         "provider_delivery_observed_at": "2026-10-18T12:00:01Z"}
     parse_command(TestView, delivered)
     for change in ({"inbound_observed_at": None}, {"message_id": None},
-                   {"is_current_generation": False}, {"proof_source": "not_recorded"}):
+                   {"is_current_generation": False}, {"proof_source": "not_recorded"},
+                   {"proof_source": "synthetic_fixture"}):
         with pytest.raises(InvalidWhatsAppCommand):
             parse_command(TestView, {**delivered, **change})
+
+
+def test_synthetic_delivery_can_only_be_illustrative_never_confirmed():
+    value = json.loads(FIXTURE.read_text())["safe_test_example"]
+    simulated = {**value, "status": "delivered", "provider_delivery_observed_at": "2026-10-18T12:00:01Z"}
+    assert parse_command(TestView, simulated).delivery_confirmed is False
+    with pytest.raises(InvalidWhatsAppCommand):
+        parse_command(TestView, {**simulated, "delivery_confirmed": True})
 
 
 def test_read_timestamps_need_explicit_timezone():

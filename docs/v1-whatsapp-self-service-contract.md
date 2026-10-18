@@ -210,6 +210,9 @@ promote unrelated tests. Unknown never offers a resend button. No status polling
 endpoint is invented. Current-connection acceptance requires signed inbound plus
 delivered/read proof for the same generation; old evidence stays historical after
 reconnect/disconnect and never makes the new connection ready.
+`delivery_confirmed` additionally requires exact `signed_provider_webhook`
+provenance. A synthetic fixture may illustrate delivered/read status but its
+confirmation remains false; it cannot turn the seller checklist ready.
 
 ## Proposed persistence and ownership decisions (not yet allocated)
 
