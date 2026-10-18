@@ -1,0 +1,1 @@
+The browser completed eight checks but acceptance failed because config.py was edited during the source-hash interval. This run is not acceptance. The pre-existing source-manifest.json belongs to the prior0054 run and was not regenerated; do not associate it with these0056 browser results. Raw failed runner output is activity-shell-0056.txt. A fresh frozen rerun follows.

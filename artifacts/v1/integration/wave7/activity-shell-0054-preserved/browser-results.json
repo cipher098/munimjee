@@ -1,0 +1,17 @@
+{
+  "checks": 8,
+  "results": [
+    "native APIs explicitly configure published SKU catalogue and owner measurement policy",
+    "actual live-entry visible mount and selected product hooks create one context/view without direct module invocation",
+    "actual checkout form-open hook is counted once",
+    "commit-then-drop preserves frozen nonsecret context with exact financial intent; capability stays header-only",
+    "reload retries exact checkout body/key/context and confirms original order",
+    "canonical accepted placement links same context once; visibility replay does not add counts",
+    "collector503 leaves canonical COD shopping usable and unmeasured",
+    "zero provider calls/external requests/page errors"
+  ],
+  "shared_hooks": true,
+  "provider_calls": 0,
+  "external_requests": [],
+  "page_errors": []
+}

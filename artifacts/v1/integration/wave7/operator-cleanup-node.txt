@@ -1,0 +1,14 @@
+✔ shared native transport preserves a valid absent storefront and can then save it (1.111208ms)
+✔ null error body produces a recoverable error with its HTTP status (0.413709ms)
+✔ native identity transitions erase private seller drafts and preserve customer checkout recovery (1.446834ms)
+✔ expired native identity clears private commands and old CSRF while ordinary reads retain them (0.332583ms)
+✔ restricted storage cannot prevent a successful native logout (0.277167ms)
+✔ only typed server error codes permit explicit recovery classification (0.883ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66.864084

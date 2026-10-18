@@ -1,0 +1,14 @@
+✔ canonical command fingerprint matches Python with mixed language, emoji and case-sensitive frozen text (3.007708ms)
+✔ well-shaped old acknowledgement cannot confirm a different exact command or target (0.237083ms)
+✔ exact receipt replay is a separate acknowledgement and never delivery evidence (0.050041ms)
+✔ recovery cannot change method, route, business, target or review confirmation (0.169042ms)
+✔ recovery rule scopes remain explicit and cannot be reconstructed from arbitrary URL/body (0.14025ms)
+✔ legacy wildcard rule is inspectable/disableable but is never admitted as a new native rule scope (0.069541ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80.57125

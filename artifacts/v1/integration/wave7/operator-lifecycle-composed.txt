@@ -1,0 +1,14 @@
+✔ old page fence deletes only its owned journal, not a replacement session or another business (1.789125ms)
+✔ ordinary read failure scrubs stale rows/editor and blocks fresh writes, preserving exact pending intent (0.719041ms)
+✔ unclassified409 after POST keeps same key/body and disables new work (0.517708ms)
+✔ only typed pre-mutation stale rejection releases a command and still requires fresh facts (0.404083ms)
+✔ older successful session guard cannot dispatch after a newer role downgrade (0.873292ms)
+✔ back link uses mounted native business picker route (0.080416ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.507375

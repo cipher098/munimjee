@@ -1,0 +1,310 @@
+EEEEEE.................................................................. [ 54%]
+.................FF........................................              [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_actual_main_new_order_link_and_accepted_replay_precedes_proof _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 35
+  @pytest.mark.asyncio
+  async def test_actual_main_new_order_link_and_accepted_replay_precedes_proof(activity):
+      j=activity;await enable(j);sku=await product(j);context=await started(j)
+      body=payload(sku,activity_context_id=context['context_id'])
+      path=f'/api/v1/storefronts/{j.slug}/checkout'
+      accepted=await j.browser.post(path,json=body,headers={'X-Activity-Context':'Bearer '+context['capability']})
+      assert accepted.status_code==201,accepted.text
+      replay=await j.browser.post(path,json=body,headers={'X-Activity-Context':'Bearer invalid'})
+      assert replay.status_code==200 and replay.json()['id']==accepted.json()['id']
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(accepted.json()['id']))
+          assert row.classification=='live' and str(row.context_id)==context['context_id']
+          assert await db.scalar(select(func.count()).select_from(OrderActivity))==1
+      assert (await j.browser.post(path,json={**body,'activity_context_id':str(uuid4())})).status_code==409
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+_ ERROR at setup of test_bad_optional_proof_keeps_shopping_and_never_promotes[missing] _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 51
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+  async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+      j=activity;await enable(j);sku=await product(j);context=await started(j)
+      body=payload(sku,activity_context_id=context['context_id'])
+      headers={}
+      if proof in {'foreign','native'}:headers['X-Activity-Context']='Bearer '+context['capability']
+      if proof=='invalid':headers['X-Activity-Context']='Bearer invalid'
+      if proof=='foreign':body['activity_context_id']=str(uuid4())
+      browser=j.client if proof=='native' else j.browser
+      response=await browser.post(f'/api/v1/storefronts/{j.slug}/checkout',json=body,headers=headers)
+      assert response.status_code==201,response.text
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(response.json()['id']))
+          assert row.classification==('test' if proof=='native' else 'unknown') and row.context_id is None
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+_ ERROR at setup of test_bad_optional_proof_keeps_shopping_and_never_promotes[invalid] _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 51
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+  async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+      j=activity;await enable(j);sku=await product(j);context=await started(j)
+      body=payload(sku,activity_context_id=context['context_id'])
+      headers={}
+      if proof in {'foreign','native'}:headers['X-Activity-Context']='Bearer '+context['capability']
+      if proof=='invalid':headers['X-Activity-Context']='Bearer invalid'
+      if proof=='foreign':body['activity_context_id']=str(uuid4())
+      browser=j.client if proof=='native' else j.browser
+      response=await browser.post(f'/api/v1/storefronts/{j.slug}/checkout',json=body,headers=headers)
+      assert response.status_code==201,response.text
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(response.json()['id']))
+          assert row.classification==('test' if proof=='native' else 'unknown') and row.context_id is None
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+_ ERROR at setup of test_bad_optional_proof_keeps_shopping_and_never_promotes[foreign] _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 51
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+  async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+      j=activity;await enable(j);sku=await product(j);context=await started(j)
+      body=payload(sku,activity_context_id=context['context_id'])
+      headers={}
+      if proof in {'foreign','native'}:headers['X-Activity-Context']='Bearer '+context['capability']
+      if proof=='invalid':headers['X-Activity-Context']='Bearer invalid'
+      if proof=='foreign':body['activity_context_id']=str(uuid4())
+      browser=j.client if proof=='native' else j.browser
+      response=await browser.post(f'/api/v1/storefronts/{j.slug}/checkout',json=body,headers=headers)
+      assert response.status_code==201,response.text
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(response.json()['id']))
+          assert row.classification==('test' if proof=='native' else 'unknown') and row.context_id is None
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+_ ERROR at setup of test_bad_optional_proof_keeps_shopping_and_never_promotes[native] _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 51
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+  async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+      j=activity;await enable(j);sku=await product(j);context=await started(j)
+      body=payload(sku,activity_context_id=context['context_id'])
+      headers={}
+      if proof in {'foreign','native'}:headers['X-Activity-Context']='Bearer '+context['capability']
+      if proof=='invalid':headers['X-Activity-Context']='Bearer invalid'
+      if proof=='foreign':body['activity_context_id']=str(uuid4())
+      browser=j.client if proof=='native' else j.browser
+      response=await browser.post(f'/api/v1/storefronts/{j.slug}/checkout',json=body,headers=headers)
+      assert response.status_code==201,response.text
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(response.json()['id']))
+          assert row.classification==('test' if proof=='native' else 'unknown') and row.context_id is None
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+_ ERROR at setup of test_legacy_absent_null_financial_hash_and_no_replay_backfill _
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_integration.py, line 68
+  @pytest.mark.asyncio
+  async def test_legacy_absent_null_financial_hash_and_no_replay_backfill(activity):
+      j=activity;await enable(j);sku=await product(j);body=payload(sku)
+      normalized=CheckoutWrite.model_validate(body).model_dump(mode='json',exclude={'idempotency_key','activity_context_id'})
+      old=hashlib.sha256(json.dumps(normalized,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+      assert request_hash(CheckoutWrite.model_validate(body))==old
+      assert request_hash(CheckoutWrite.model_validate({**body,'activity_context_id':None}))==old
+      path=f'/api/v1/storefronts/{j.slug}/checkout'
+      accepted=await j.browser.post(path,json=body);assert accepted.status_code==201,accepted.text
+      context=await started(j)
+      replay=await j.browser.post(path,json={**body,'activity_context_id':None},headers={'X-Activity-Context':'Bearer '+context['capability']})
+      assert replay.status_code==200,replay.text
+      async with j.sessions() as db:
+          row=await db.get(OrderActivity,UUID(accepted.json()['id']))
+          assert row.classification=='unknown' and row.context_id is None
+file /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py, line 22
+  @pytest_asyncio.fixture
+  async def activity(native_import,monkeypatch):
+      from app.main import app
+      from app.api.v1.activity_v1 import router
+      j=native_import
+      if not any(getattr(route,'path',None)=='/api/v1/storefronts/{slug}/activity/contexts' for route in app.routes):app.include_router(router)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_ENABLED',True)
+      monkeypatch.setattr(settings,'V1_ACTIVITY_RETENTION_READY',True)
+      # Classification fixture simulates server deployment context; no live traffic.
+      monkeypatch.setattr(settings,'APP_ENV','production')
+      async with j.sessions.begin() as db:
+          store=await db.get(Storefront,j.bid);store.published=True;j.slug=store.slug
+      j.policy=f'/api/v1/businesses/{j.bid}/analytics/measurement-policy'
+      j.activity=f'/api/v1/businesses/{j.bid}/analytics/activity'
+      j.public=f'/api/v1/storefronts/{j.slug}/activity'
+      async with AsyncClient(transport=ASGITransport(app=app),base_url='https://independent-canonical.example.test',
+              headers={'Origin':'https://independent-canonical.example.test','User-Agent':'Synthetic fixture browser'}) as browser:
+          j.browser=browser
+          yield j
+E       fixture 'native_import' not found
+>       available fixtures: _session_event_loop, activity, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, claude_cassette, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, migrated_engine, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tests/test_v1_activity_integration.py::<event_loop>, tests::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/test_v1_activity_http.py:22
+=================================== FAILURES ===================================
+___________ test_frozen_operational_fixtures_and_schemas_round_trip ____________
+
+    def test_frozen_operational_fixtures_and_schemas_round_trip():
+        root = Path(__file__).resolve().parents[2] / "docs/contracts/catalogue-v2"
+        for name, model in (("product-read", ProductRead), ("checkout-write", CheckoutWrite), ("product-create", ProductCreate)):
+            data = json.loads((root / (name + ".json")).read_text())
+>           assert model.model_validate(data).model_dump(mode="json") == data
+E           AssertionError: assert {'activity_co...4444444', ...} == {'address': {...33333'}], ...}
+E             
+E             Omitting 7 identical items, use -vv to show
+E             Left contains 1 more item:
+E             {'activity_context_id': None}
+E             Use -v to get more diff
+
+backend/tests/test_v1_checkout_api.py:286: AssertionError
+_______ test_context_excludes_tracked_and_untracked_sensitive_sentinels ________
+
+source = PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/source')
+tmp_path = PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0')
+
+    def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_path):
+        forbidden=['backend/.env','backend/.env.production','backend/uploads/customer.jpg',
+           'backend/tests/secret.py','backend/app/keys/credential.py','backend/app/config.py.bak',
+           'backend/app/scripts/capture.py','backend/static/design.html','backend/static/private.js','backend/static/secret.pem','frontend/storefront/src/fixtures.js',
+           'frontend/storefront/src/app.js','frontend/storefront/src/tests/sentinel.js',
+           'frontend/storefront/node_modules/secret.js','artifacts/private.txt','design/private.html']
+        for name in forbidden:
+            path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('SYNTHETIC-DO-NOT-PACKAGE-SENTINEL')
+        stage(source)
+        output=tmp_path/'context';manifest=package.create_context(source,output)
+>       assert len(list((output/'storefront-src').iterdir()))==13
+E       AssertionError: assert 14 == 13
+E        +  where 14 = len([PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_t...6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/context/storefront-src/payment-handoff.js'), ...])
+E        +    where [PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_t...6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/context/storefront-src/payment-handoff.js'), ...] = list(<generator object Path.iterdir at 0x10cff2500>)
+E        +      where <generator object Path.iterdir at 0x10cff2500> = <bound method Path.iterdir of PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/context/storefront-src')>()
+E        +        where <bound method Path.iterdir of PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/context/storefront-src')> = (PosixPath('/private/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/pytest-of-gothi/pytest-85/test_context_excludes_tracked_0/context') / 'storefront-src').iterdir
+
+backend/tests/test_v1_runtime_package.py:43: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave7/activity-shared-initial.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_checkout_api.py::test_frozen_operational_fixtures_and_schemas_round_trip
+FAILED backend/tests/test_v1_runtime_package.py::test_context_excludes_tracked_and_untracked_sensitive_sentinels
+ERROR backend/tests/test_v1_activity_integration.py::test_actual_main_new_order_link_and_accepted_replay_precedes_proof
+ERROR backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[missing]
+ERROR backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[invalid]
+ERROR backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[foreign]
+ERROR backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[native]
+ERROR backend/tests/test_v1_activity_integration.py::test_legacy_absent_null_financial_hash_and_no_replay_backfill
+2 failed, 123 passed, 1 warning, 6 errors in 67.10s (0:01:07)

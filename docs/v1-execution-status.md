@@ -37,8 +37,11 @@ browser journeys pass. Session/role changes discard private results and staged
 invitation/session writes roll back before commit. Local setup now advances from
 current facts; authorized messaging acceptance remains explicitly unavailable.
 Their confirmed failing-before-fix source/HTTP repros remain preserved.
-Native comment0056 service/schema has an initial134-pass actual-chain gate;
-final preview/browser/source review is still underway. Current composition is
+Native comment0056 service/schema is reviewed through7ed8bab:134 initial checks,
+33 affected checks (overlapping) and15 actual-main browser journeys pass. Central
+actual0056 native6 and shared activity8 also pass with stable source/harness maps.
+The activity source guard rejected one concurrent config-only edit; failed output
+is preserved and the frozen rerun is the accepted8-check result. Current composition is
 not covered by the older2325-pass run. No later full-suite, runtime-image, release,
 provider entitlement or live-delivery acceptance is implied.
 

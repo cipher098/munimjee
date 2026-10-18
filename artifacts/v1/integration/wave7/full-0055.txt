@@ -1,0 +1,404 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+................................................................s....... [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+.....................................................s.......ss......... [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+...............................................ssss..................... [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+............................F........................................... [ 49%]
+............................................F........................... [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+...............................                                          [100%]
+=================================== FAILURES ===================================
+__________ test_comment_source_requires_both_action_and_event_tenant ___________
+
+self = <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x11aac4ca0>
+operation = 'INSERT INTO comment_actions (id, seller_id, event_id, kind, body, status, error_code, provider_id, attempted_at, acce...SONB, $24::VARCHAR, $25::UUID, $26::TIMESTAMP WITH TIME ZONE) RETURNING comment_actions.created_at, comment_actions.id'
+parameters = (UUID('6a36f092-7f0b-41aa-8013-cad2a07f9a7f'), UUID('ca0328ce-9183-4eb8-bd00-1cac7e65ca36'), UUID('d21fb319-bf32-4fd4-80bc-b3b6f3ce8bde'), 'private', 'private-reply-marker', 'pending', ...)
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+    
+        async with adapt_connection._execute_mutex:
+            if not adapt_connection._started:
+                await adapt_connection._start_transaction()
+    
+            if parameters is None:
+                parameters = ()
+    
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+    
+                if attributes:
+                    self.description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self.description = None
+    
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self.rowcount = -1
+                else:
+>                   self._rows = await prepared_stmt.fetch(*parameters)
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:538: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:176: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:241: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:230: in __do_execute
+    return await executor(protocol)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   ???
+E   asyncpg.exceptions.ForeignKeyViolationError: insert or update on table "comment_actions" violates foreign key constraint "comment_action_event_tenant"
+E   DETAIL:  Key (seller_id, event_id)=(ca0328ce-9183-4eb8-bd00-1cac7e65ca36, ed4e7de8-66e1-4d5a-bf92-bd416ff00d1c) is not present in table "comment_events".
+
+asyncpg/protocol/protocol.pyx:207: ForeignKeyViolationError
+
+The above exception was the direct cause of the following exception:
+
+self = <sqlalchemy.engine.base.Connection object at 0x11d2a9910>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x11ce47610>
+context = <sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x11d087610>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x11d112e30>>
+error = ForeignKeyViolationError('insert or update on table "comment_actions" violates foreign key constraint "comment_action_event_tenant"')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "comment_actions" violates foreign key constraint "comment_action_event_tenant"
+E                   DETAIL:  Key (seller_id, event_id)=(ca0328ce-9183-4eb8-bd00-1cac7e65ca36, ed4e7de8-66e1-4d5a-bf92-bd416ff00d1c) is not present in table "comment_events".
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+sessions = async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x11bb82180>, autoflush=True, expire_on_commit=False)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11b04e3d0>
+
+    @pytest.mark.asyncio
+    async def test_comment_source_requires_both_action_and_event_tenant(sessions,monkeypatch):
+        from app.models.comment_automation import CommentAction,CommentEvent
+        bid,pid,sku,actor,context=await setup(sessions,monkeypatch)
+        foreign,_,_=await seed(sessions)
+        async with sessions.begin() as db:
+            own_event=CommentEvent(seller_id=bid,comment_id=uuid4().hex,media_id='synthetic',actor_id='private',text='private-comment',status='queued')
+            foreign_event=CommentEvent(seller_id=foreign,comment_id=uuid4().hex,media_id='synthetic',actor_id='private',text='private-comment',status='queued')
+            db.add_all([own_event,foreign_event]);await db.flush()
+            own=CommentAction(seller_id=bid,event_id=own_event.id,kind='private',body='private-reply-marker')
+            bad=CommentAction(seller_id=bid,event_id=foreign_event.id,kind='private',body='foreign-private-reply-marker')
+>           db.add_all([own,bad]);await db.flush()
+
+backend/tests/test_v1_activity_sources.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py:800: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4341: in flush
+    self._flush(objects)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4476: in _flush
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4437: in _flush
+    flush_context.execute()
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1844: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2124: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2353: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2116: in _exec_insertmany_context
+    dialect.do_execute(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x11d112e30>>
+error = ForeignKeyViolationError('insert or update on table "comment_actions" violates foreign key constraint "comment_action_event_tenant"')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "comment_actions" violates foreign key constraint "comment_action_event_tenant"
+E                   DETAIL:  Key (seller_id, event_id)=(ca0328ce-9183-4eb8-bd00-1cac7e65ca36, ed4e7de8-66e1-4d5a-bf92-bd416ff00d1c) is not present in table "comment_events".
+E                   [SQL: INSERT INTO comment_actions (id, seller_id, event_id, kind, body, status, error_code, provider_id, attempted_at, accepted_claim, claim_hash, claim_token, finalized_at) VALUES ($1::UUID, $2::UUID, $3::UUID, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::V ... 279 characters truncated ... , $25::UUID, $26::TIMESTAMP WITH TIME ZONE) RETURNING comment_actions.created_at, comment_actions.id]
+E                   [parameters: (UUID('6a36f092-7f0b-41aa-8013-cad2a07f9a7f'), UUID('ca0328ce-9183-4eb8-bd00-1cac7e65ca36'), UUID('d21fb319-bf32-4fd4-80bc-b3b6f3ce8bde'), 'private', 'private-reply-marker', 'pending', None, None, None, None, None, None, None, UUID('dd7f91c5-73ae-4a78-a4c2-b2249b26b553'), UUID('ca0328ce-9183-4eb8-bd00-1cac7e65ca36'), UUID('ed4e7de8-66e1-4d5a-bf92-bd416ff00d1c'), 'private', 'foreign-private-reply-marker', 'pending', None, None, None, None, None, None, None)]
+E                   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: IntegrityError
+____________ test_disabled_policy_never_falls_back_to_legacy_writer ____________
+
+sessions = async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x1121ed3c0>, autoflush=True, expire_on_commit=False)
+
+    @pytest.mark.asyncio
+    async def test_disabled_policy_never_falls_back_to_legacy_writer(sessions):
+        business, pid, ids = await seed(sessions, enabled=False)
+        with pytest.raises(HTTPException):
+            await place(sessions, business, checkout(ids[0]))
+>       payload = CheckoutInput(**{**checkout(ids[0]).model_dump(exclude={"items"}), "items": [{"product_id": pid, "quantity": 1}]})
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for CheckoutInput
+E       activity_context_id
+E         Extra inputs are not permitted [type=extra_forbidden, input_value=None, input_type=NoneType]
+E           For further information visit https://errors.pydantic.dev/2.7/v/extra_forbidden
+
+backend/tests/test_v1_checkout.py:209: ValidationError
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+tests/test_commerce.py: 29 warnings
+tests/test_commerce_whatsapp.py: 2 warnings
+tests/test_v1_auth_onboarding.py: 2 warnings
+tests/test_v1_identity_db.py: 1 warning
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/httpx/_client.py:1559: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    warnings.warn(message, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave7/full-0055.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_activity_sources.py::test_comment_source_requires_both_action_and_event_tenant
+FAILED backend/tests/test_v1_checkout.py::test_disabled_policy_never_falls_back_to_legacy_writer
+2 failed, 2325 passed, 8 skipped, 36 warnings in 982.14s (0:16:22)

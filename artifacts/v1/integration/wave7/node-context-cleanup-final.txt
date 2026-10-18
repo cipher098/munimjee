@@ -1,0 +1,26 @@
+✔ shared native transport preserves a valid absent storefront and can then save it (1.159375ms)
+✔ null error body produces a recoverable error with its HTTP status (0.417625ms)
+✔ native identity transitions erase private seller drafts and preserve customer checkout recovery (1.65025ms)
+✔ expired native identity clears private commands and old CSRF while ordinary reads retain them (0.386042ms)
+✔ restricted storage cannot prevent a successful native logout (0.304417ms)
+✔ only typed server error codes permit explicit recovery classification (0.950959ms)
+✔ exact catalogue.v2 envelope decodes without private tenant fields; preview, foreign and inactive fail closed (0.926375ms)
+✔ same-key200 and201 only confirm after full body, items and capability validation (1.488292ms)
+✔ only typed pre-reservation stock error is definitive; arbitrary409/500 stay uncertain (0.325875ms)
+✔ unknown result and reload preserve exact key/body; actual200 replay clears PII and retains protected capability (0.508834ms)
+✔ order status sends capability only in Authorization and validates matching order identity (0.241541ms)
+✔ checkout encoder excludes price/tenant authority and rejects injected fields (0.637667ms)
+✔ refreshed media follows SSR public image policy without credential query or unsafe schemes (0.134417ms)
+✔ equal-total pagination changes with duplicate product or SKU fail closed (0.248958ms)
+✔ versioned API advertises only server-enabled payment methods (0.1275ms)
+✔ verified online confirmation retains payment method across durable reload and status refresh (0.212292ms)
+✔ optional context stays frozen through lost financial response and proof is header-only (0.2845ms)
+✔ absent and null context are optional; unknown authority fields and malformed context stay rejected (0.088333ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.616167

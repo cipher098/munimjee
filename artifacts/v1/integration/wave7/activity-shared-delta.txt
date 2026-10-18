@@ -1,0 +1,163 @@
+FFFFFF...................................                                [100%]
+=================================== FAILURES ===================================
+______ test_actual_main_new_order_link_and_accepted_replay_precedes_proof ______
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10bb53190>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/56f31539ca3448739cc4296316fc4d28/activity', browser=<httpx.AsyncClient object at 0x10b644e10>)
+
+    @pytest.mark.asyncio
+    async def test_actual_main_new_order_link_and_accepted_replay_precedes_proof(activity):
+>       j=activity;await enable(j);sku=await product(j);context=await started(j)
+
+backend/tests/test_v1_activity_integration.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10bb53190>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/56f31539ca3448739cc4296316fc4d28/activity', browser=<httpx.AsyncClient object at 0x10b644e10>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+______ test_bad_optional_proof_keeps_shopping_and_never_promotes[missing] ______
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10beb2810>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/bd65a87db9a0488eafb8249c7671d7f7/activity', browser=<httpx.AsyncClient object at 0x10bf207d0>)
+proof = 'missing'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+    async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+>       j=activity;await enable(j);sku=await product(j);context=await started(j)
+
+backend/tests/test_v1_activity_integration.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10beb2810>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/bd65a87db9a0488eafb8249c7671d7f7/activity', browser=<httpx.AsyncClient object at 0x10bf207d0>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+______ test_bad_optional_proof_keeps_shopping_and_never_promotes[invalid] ______
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10bf7b850>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/575843a2f5bb4b8894a6ea31cbac451b/activity', browser=<httpx.AsyncClient object at 0x10bfb26d0>)
+proof = 'invalid'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+    async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+>       j=activity;await enable(j);sku=await product(j);context=await started(j)
+
+backend/tests/test_v1_activity_integration.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10bf7b850>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/575843a2f5bb4b8894a6ea31cbac451b/activity', browser=<httpx.AsyncClient object at 0x10bfb26d0>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+______ test_bad_optional_proof_keeps_shopping_and_never_promotes[foreign] ______
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10c00d1d0>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/b8d8a8de743a4b0e99643c8b3ba7a596/activity', browser=<httpx.AsyncClient object at 0x10c04c150>)
+proof = 'foreign'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+    async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+>       j=activity;await enable(j);sku=await product(j);context=await started(j)
+
+backend/tests/test_v1_activity_integration.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10c00d1d0>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/b8d8a8de743a4b0e99643c8b3ba7a596/activity', browser=<httpx.AsyncClient object at 0x10c04c150>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+______ test_bad_optional_proof_keeps_shopping_and_never_promotes[native] _______
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10c096f90>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/f7baac24b19d40e5be6faeeffbfa892d/activity', browser=<httpx.AsyncClient object at 0x10bf7bc10>)
+proof = 'native'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('proof',['missing','invalid','foreign','native'])
+    async def test_bad_optional_proof_keeps_shopping_and_never_promotes(activity,proof):
+>       j=activity;await enable(j);sku=await product(j);context=await started(j)
+
+backend/tests/test_v1_activity_integration.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10c096f90>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/f7baac24b19d40e5be6faeeffbfa892d/activity', browser=<httpx.AsyncClient object at 0x10bf7bc10>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+________ test_legacy_absent_null_financial_hash_and_no_replay_backfill _________
+
+activity = namespace(client=<httpx.AsyncClient object at 0x10c12bf10>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/2bb2d9c360e9464680ed62f98560ae3f/activity', browser=<httpx.AsyncClient object at 0x10c12bc10>)
+
+    @pytest.mark.asyncio
+    async def test_legacy_absent_null_financial_hash_and_no_replay_backfill(activity):
+>       j=activity;await enable(j);sku=await product(j);body=payload(sku)
+
+backend/tests/test_v1_activity_integration.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+j = namespace(client=<httpx.AsyncClient object at 0x10c12bf10>, sessions=async_sessionmaker(class_='AsyncSession', bind=<s...lic='/api/v1/storefronts/2bb2d9c360e9464680ed62f98560ae3f/activity', browser=<httpx.AsyncClient object at 0x10c12bc10>)
+
+    async def product(j):
+        response = await j.client.post(f'/api/v1/businesses/{j.bid}/catalogue/products', headers=j.csrf,
+            json={'idempotency_key':str(uuid4()),'seller_reviewed':True,'name':'Measured synthetic dress',
+                  'skus':[{'options':{'Size':'M'},'price_minor':1250,'currency':'INR','stock_available':10}]})
+>       assert response.status_code==201,response.text
+E       AssertionError: {"detail":[{"type":"missing","loc":["body","skus",0,"active"],"msg":"Field required","input":{"options":{"Size":"M"},"price_minor":1250,"currency":"INR","stock_available":10}}]}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+backend/tests/test_v1_activity_integration.py:18: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave7/activity-shared-delta.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_activity_integration.py::test_actual_main_new_order_link_and_accepted_replay_precedes_proof
+FAILED backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[missing]
+FAILED backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[invalid]
+FAILED backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[foreign]
+FAILED backend/tests/test_v1_activity_integration.py::test_bad_optional_proof_keeps_shopping_and_never_promotes[native]
+FAILED backend/tests/test_v1_activity_integration.py::test_legacy_absent_null_financial_hash_and_no_replay_backfill
+6 failed, 35 passed, 1 warning in 11.91s

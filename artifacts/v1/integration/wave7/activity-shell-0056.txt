@@ -1,0 +1,20 @@
+PASS 8 actual mounted shared activity/customer-order journeys; providers0.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/run_activity_shell_browser.py", line 40, in <module>
+    if __name__=='__main__':asyncio.run(main())
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/backend/tests/run_activity_shell_browser.py", line 33, in main
+    if before!=after:raise RuntimeError('Source changed during actual mounted acceptance')
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Source changed during actual mounted acceptance
