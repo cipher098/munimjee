@@ -223,3 +223,34 @@ Read-only b853f4a header-tail review is clear: the custom route preserves privat
 headers through HTTPException and supplies generic non-echoing validation errors;
 normal success remains private. It does not weaken native/session/capability
 checks. The email fixture compatibility correction7c501b6 is test-only.
+
+
+## Independent actual0057 result at646bb952
+
+The prepared6 ran once against coordinator's isolated frozen composition
+`646bb952838737edbffe7f644008a12198b59740`, which includes real main/hooksd541,
+private routeb853 and owner fixture927/7c. **6passed/0failed/0skip**, runner0 in
+11.30seconds. Actual PostgreSQL16.15 reports0057_v1_whatsapp_self_service. All1826
+tracked source/fixture/harness/artifact hashes match pre/post. Exact test file
+SHA496534d6d57b9f88c872715fa35a9b7d3968efec66832fe41abf5b135cedc9b7.
+
+Real session revocation commits after each actual consumed/step claim; valid App
+rotation occurs after each real joined final scalar. Every NEW targeted exchange/
+subscribe/register attempt is withheld. Registration rejection preserves the
+earlier confirmed subscription; durable unknown state and cleared provisional
+ciphertext/no attached Account remain truthful. Exact replay does not repeat the
+targeted operation or rebind authority. No fake database scalar/native authority,
+manual outbox or fallback route was used. Synthetic provider method counts are
+not globally zero: earlier preparation/confirmed effects are deliberately retained.
+
+The test module was executed from that exact isolated composition, not this
+review branch's older unmounted runtime. Raw XML/logs/all tracked hash maps and
+direct real revision are under actual-0057-first; no raw JWT patterns appear.
+Parcel_w6/8156 were explicitly released; no remaining DB sessions, own runner/
+migration process or port listener was observed.
+
+Bounded signup/claim/App source-and-actual-race verdict is clear. Canonical fixed
+test sending still requires its separate signed reserved-ingress→exact queued
+Message→existing paused worker composition proof; owner's direct-helper binding
+and our signup claim cases do not establish that wire path. Native UI/CSP, live
+Meta SDK/permissions and real recipient/customer delivery remain separate gates.

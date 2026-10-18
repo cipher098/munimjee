@@ -1,0 +1,6 @@
+{
+  "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+  "database": "munimjee_test_parcel_w6",
+  "alembic_head": "0057_v1_whatsapp_self_service",
+  "active_other_sessions": 0
+}
