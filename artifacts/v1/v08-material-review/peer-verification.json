@@ -1,0 +1,83 @@
+{
+  "base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "runtime_source_commit": "3b91a3a96a6c3f104e0666bb19dfbd97d1bc96e9",
+  "owner_evidence_commit": "aea4effd148810f63f079369adcf2dc87822290d",
+  "qa_prep_commit": "68441ddf0c8f6f3abf07cb76b0c672ff29c61761",
+  "qa_final_commit": "5faa15255c085a16f50954ec2ae5ca7baa78a569",
+  "new_harness_sha256": "8bb6bc7877828fefc1f8d03bc0ce692393627cfe0f802aa061187b41cd2bbdb9",
+  "runtime_sha256": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+  "verified": {
+    "existing_tests_byte_preserved": 219,
+    "prior_v08_artifacts_byte_preserved": 16,
+    "new_harness_unchanged_between_baseline_and_repaired": true,
+    "baseline_red_raw_files_byte_preserved": true,
+    "owner_function_hashes_verified": 11,
+    "all_owner_and_qa_raw_artifact_hashes_verified": true,
+    "repaired_xml": {
+      "passed": 48,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "original_material_case_now_exact_existing_handoff": true,
+    "new_case_xml_properties_match_manifest": true
+  },
+  "new_case_observations": [
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M01-plural]",
+      "properties": {
+        "scenario_id": "M01-plural",
+        "question": "What materials are available?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M02-price-material]",
+      "properties": {
+        "scenario_id": "M02-price-material",
+        "question": "What price and material is this?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M03-sizes-stock-materials]",
+      "properties": {
+        "scenario_id": "M03-sizes-stock-materials",
+        "question": "What sizes stock and materials are available?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m04_supported_mixed_request_preserves_zero_price_zero_and_unknown_stock",
+      "properties": {
+        "scenario_id": "M04-supported-mixed-zero-price",
+        "question": "What prices sizes and stock are available?",
+        "reply": "Current catalogue: Semantic kurta.\n\u2022 Color: Indigo; Size: M \u2014 \u20b90.00; recorded available: 2.\n\u2022 Color: Indigo; Size: L \u2014 \u20b9145.67; recorded out of stock.\n\u2022 Color: Indigo; Size: XL \u2014 \u20b9167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m05_empty_material_observation_still_withholds_authority",
+      "properties": {
+        "scenario_id": "M05-empty-material-observation",
+        "question": "What material is this?",
+        "reply": "<withheld>",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m06_null_required_price_still_withholds_mixed_material_reply",
+      "properties": {
+        "scenario_id": "M06-null-price-material",
+        "question": "What price and material is this?",
+        "reply": "<withheld>",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    }
+  ],
+  "execution": "No tests rerun by review lane; immutable source, harness, XML/properties and artifact byte/hash verification only.",
+  "disposition": "No scoped blocker. Bounded material-actionability symptom repaired conservatively. Real SQL/durable/provider/model/mounted/V08 completion not established."
+}
