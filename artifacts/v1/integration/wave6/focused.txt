@@ -1,0 +1,207 @@
+...................................EEEEEEEEEEE.......................... [ 19%]
+........................................................................ [ 38%]
+........................................................................ [ 58%]
+........................................................................ [ 77%]
+........................................................................ [ 96%]
+............                                                             [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_csv_whole_file_atomic_failure_cancel_retry_and_fenced_result _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_document_reimport_preserves_override_zero_private_bridge_and_exact_receipt _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_native_csrf_foreign_asset_and_current_role_boundaries _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_native_lock_wait_rechecks_and_rolls_back[session-upload] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_native_lock_wait_rechecks_and_rolls_back[session-create] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_native_lock_wait_rechecks_and_rolls_back[role-upload] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_native_lock_wait_rechecks_and_rolls_back[role-create] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_upload_revoke_while_body_streams_and_foreign_asset_is_private _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_stale_source_capture_cannot_overwrite_newer_document _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_legacy_job_request_hash_survives_csv_optional_fields __
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+_ ERROR at setup of test_csv_late_claim_of_older_queued_file_does_not_rewind_document _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:45: in native_import
+    install_storefront(app)
+backend/app/api/v1/storefront_bootstrap.py:35: in install_storefront
+    install_seo_request_fence(app, canonical_base=origin, legacy_redirects=inventory)
+backend/app/v1/storefront/seo.py:252: in install_seo_request_fence
+    app.add_middleware(_SEORequestFence, inventory=inventory)
+.venv/lib/python3.11/site-packages/starlette/applications.py:141: in add_middleware
+    raise RuntimeError("Cannot add middleware after an application has started")
+E   RuntimeError: Cannot add middleware after an application has started
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave6/focused.xml -
+=========================== short test summary info ============================
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_whole_file_atomic_failure_cancel_retry_and_fenced_result
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_document_reimport_preserves_override_zero_private_bridge_and_exact_receipt
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_native_csrf_foreign_asset_and_current_role_boundaries
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_native_lock_wait_rechecks_and_rolls_back[session-upload]
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_native_lock_wait_rechecks_and_rolls_back[session-create]
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_native_lock_wait_rechecks_and_rolls_back[role-upload]
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_native_lock_wait_rechecks_and_rolls_back[role-create]
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_upload_revoke_while_body_streams_and_foreign_asset_is_private
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_stale_source_capture_cannot_overwrite_newer_document
+ERROR backend/tests/test_v1_csv_import_db.py::test_legacy_job_request_hash_survives_csv_optional_fields
+ERROR backend/tests/test_v1_csv_import_db.py::test_csv_late_claim_of_older_queued_file_does_not_rewind_document
+361 passed, 2 warnings, 11 errors in 42.17s

@@ -1,0 +1,11 @@
+✔ INR minor units above Number safe range are formatted without rounding (10.546208ms)
+✔ other currencies remain exact minor units without a guessed fraction or exchange rate (0.097375ms)
+✔ report validation binds the current filters and refuses secret or inexact extra values (1.098334ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.881666

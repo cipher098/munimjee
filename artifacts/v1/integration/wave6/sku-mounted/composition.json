@@ -1,0 +1,10 @@
+{
+  "actual_alembic_head": "0053_v1_csv_import",
+  "harness_hashes_after": {
+    "backend/tests/run_sku_fact_browser.py": "9ff240a8a4dab9543cecac325a05a74123bfcc5bafd4c17a3497afcc75cb814a",
+    "backend/tests/sku_fact_browser_server.py": "5584a4454132794d13756127a92f8e9fa7386649d3b71fda55ff5ce93a0fd480",
+    "backend/tests/browser/sku-facts.mjs": "4f793b1c668fef8c3ff736f2548834b64daa094f4af5399f6bdd2bfc64c0036a"
+  },
+  "runtime_and_harness_changes_during_run": false,
+  "scope_correction": "Runner inherited text says0052; actual current chain queried0053. Source module hashes and currentcommit are in browser-results.json. No live provider calls."
+}

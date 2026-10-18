@@ -1,0 +1,42 @@
+{
+  "evidence": "actual migrated main app HTTP",
+  "synthetic": true,
+  "checks": [
+    "actual main listener ready",
+    "POST signup status 201",
+    "PUT storefront status 200",
+    "POST products status 201",
+    "POST activate status 200",
+    "PUT checkout-policy status 200",
+    "POST signup status 201",
+    "PUT storefront status 200",
+    "POST products status 201",
+    "POST activate status 200",
+    "PUT checkout-policy status 200",
+    "POST products status 201",
+    "index bounded canonical origins",
+    "sitemap contains current native product",
+    "sitemap excludes foreign and draft",
+    "sitemap root scope and namespace",
+    "reviewed synthetic redirect",
+    "exact path/query refusal /legacy-qa-tara?token=synthetic",
+    "exact path/query refusal /%6cegacy-qa-tara",
+    "exact path/query refusal /legacy-qa-tara/",
+    "POST checkout status 201",
+    "PUT storefront status 200",
+    "revoked sitemap disappears",
+    "revoked redirect disappears",
+    "private order still needs capability",
+    "old capability works after unpublish",
+    "order shell remains private and usable",
+    "index revocation preserves foreign tenant"
+  ],
+  "passed": true,
+  "gates": [
+    "real seller URL inventory",
+    "provider/domain authority",
+    "physical device",
+    "migration reconciliation",
+    "rollback rehearsal"
+  ]
+}

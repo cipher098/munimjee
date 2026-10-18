@@ -1,0 +1,81 @@
+{
+  "contract_version": "integration-evidence.v1",
+  "migration_head": "0053_v1_csv_import",
+  "runtime_commit": "0e658fc",
+  "complete_gate_invocation_commit": "b608f6f0737631450bb41851c98bd7b07f0e3f06",
+  "mounted_invocation_commit": "a3f98ece288514aa0cc134ad98a9b8c9b58197f6",
+  "full_gate": {
+    "passed": 1950,
+    "skipped": 8,
+    "failed": 0,
+    "seconds": 852.31,
+    "database": "new dedicated disk-backed PostgreSQL16; exact P01 lane wave6_integration; serialized execution"
+  },
+  "mounted": {
+    "csv": 74,
+    "native_import": 47,
+    "sku_channel": 5,
+    "seo_http": 28
+  },
+  "node": {
+    "storefront_and_shared": 77,
+    "analytics": 3
+  },
+  "image": {
+    "id": "sha256:1faf4b5089cccf93d15cd8ed91584aca547ff82298bc13eb6c2295b9a1fb689a",
+    "source": "b608f6f0737631450bb41851c98bd7b07f0e3f06",
+    "files": 315,
+    "architecture": "arm64",
+    "offline_modes_passed": 3
+  },
+  "limits": [
+    "Overlapping checks are not summed.",
+    "All provider transports synthetic or absent; no provider/device/production acceptance.",
+    "Earlier interrupted infrastructure run is preserved separately, with synthetic infrastructure credentials redacted in public copies and private original hashes recorded.",
+    "Activity0054 and ownedInstagram fixes are isolated next candidates, not included in this complete gate."
+  ],
+  "files": {
+    "analytics-node.txt": "030410855f868a1d04c79dfe8e292db3fe6efbe78c237bcfbd24edd0cbc74ed1",
+    "csv-mounted/browser-results.json": "46328ebd996c625954b1394a2d9e86505bf075efdc4a21836327f05dd927bbc1",
+    "csv-mounted/desktop-empty.png": "ba62a28a0ce3ca362f26483df918d97fc99a906b5de746a9a963b099763d951e",
+    "csv-mounted/desktop-reviewed-private.png": "4a4150fbbec5c7a73fd4d93c8a2b4a3e91167e929949692a76cecd416f93dfb7",
+    "csv-mounted/mobile-csv-source.png": "36e455e5b9c6b414f0558024bad3a166b9bf7f93cef273448b7fa62224a953e7",
+    "csv-mounted/mobile-file-error.png": "4f583d0f0b83d7c6141dc400ff11a41aaea546b0e7a5f5437d780277b07c4269",
+    "csv-mounted/mobile-session-ended.png": "cc5f2623732c8ffa7fddce8461d6af2f3a12f4391b4b1ba8b96ed25bde2be48a",
+    "csv-mounted/mobile-viewer.png": "a45fdf6508af8804135256b48609db45207390c5b93132362038c4fe9e13e07c",
+    "csv-mounted/source-hashes.json": "13c3c6b250b94476a95af61fc95e35873a556fe9008950454d2427c4697ccf6f",
+    "csv-mounted.txt": "de4120a4972013d6e9ede0d8da13944fb3e6eb5f0e22185ebffd16a3a38ca7bc",
+    "focused-final.txt": "9b6c332558e7faf9e60c30615ebd439f6bdb66257667269172843d77598dcec8",
+    "focused-final.xml": "a9bc141c8a796838a08eeba5340839d31598c52cdd593c4f60ff0fca85ee4bc9",
+    "focused.txt": "73adcff39b78e7232f14064d90f7d13d2f9ca8f6efd9e4c143b6de20d9c4b690",
+    "focused.xml": "16a6eff2019151504750fd2c4339e71a94aa8044caddb540e882a1abba18cfc2",
+    "full-disk-pg16.txt": "8f69481341e744886e26ccb54994ec443df39aa99e139172066760fe163bac04",
+    "full-disk-pg16.xml": "44832bb0f954be20359525d24969a30e146f01ade293092e919f50f3443ed15c",
+    "full.txt": "01fb647a691d5d0549d00129808d0befc724a7480dcbfa2a04e15214023da728",
+    "full.xml": "4bef80a546996be94bcac8157d274942399a6eb3be829e89ffe5cc5423c9182a",
+    "image-build.txt": "457ab1508c91118f95bbb54b2fce9efc88784a1d7aeb384fedc6466a40397962",
+    "image-runtime-manifest.json": "b00cb4a98d0397c1210b3d8437ba0f97bca9959475ef9a07dbd65dc7807d5437",
+    "image-smoke.txt": "baf752cf07cf852e9a29adbff3f74381dc6197932067ed26b42169be3c3c171e",
+    "image-verification.json": "fa6a18687f83edaec30ccc8f790165a750d9a19eade958cff4a5b0230133de63",
+    "native-import-mounted/native-browser-results.json": "a5e07ac08fcf95adfabb28acb9d738aa780af5f9ad6219e2e75a0bf75e67cd20",
+    "native-import-mounted/native-desktop-private-draft.png": "2c4cd716bd8c5afbe7508f7b560851a6c4757f28a6318e3d1c4a6d0148b8a737",
+    "native-import-mounted/native-mobile-private-draft.png": "6d0c4dc5dee1e1ad9307912425139af4dc68f12e736ccde9f693a8dfba5a8633",
+    "native-import-mounted/native-source-manifest.json": "333b7c725da90041b9f1fdcfa6fdf39e930b761998b3e83324f78d75aafd32e5",
+    "native-import-mounted.txt": "f02c475576b59ee0baf01aa0e536a90b641c3efe6287fb47a6f3ee3e937789b6",
+    "node.txt": "cd9a77b46dff2d8ec2ca4aced0cf3731eaffb731616cfb39aa542ab891836f0d",
+    "pg16-infrastructure-incident.json": "0fd140370fdf3124e5e321836dbe62ece27738c5178e08d1d16d6d05f2437a3e",
+    "pg16-infrastructure-incident.txt": "0c90a4ee5a29b007cdee8b0d2a31339461f10a607e471ca680d38e269ba5ff11",
+    "redacted-failure-evidence.json": "e35e554c19dcea16c1bf17f3b1d85f9dd466e10c9e31b7a3cc2f246873a69b6d",
+    "seo-mounted/mounted-actual.json": "b6629b38852846df8765066ea69540adec435a84019eb0aedffe75391545699f",
+    "seo-mounted/mounted-source-after.json": "ebcfa4e8805522bb76967c937da831dbea9bce0a3ed190a26e50f6ec03719199",
+    "seo-mounted/mounted-source-before.json": "ebcfa4e8805522bb76967c937da831dbea9bce0a3ed190a26e50f6ec03719199",
+    "seo-mounted.txt": "c3df900582314c3f0fa8210c361a1fba851da8add4cf7e64ef6ee66d90f46611",
+    "sku-mounted/browser-results.json": "f0b8a5f96db72af3aa461c79d391becdd3762a7086280b0c91f446455e0c1b60",
+    "sku-mounted/composition.json": "3583fbe9998b2366cb27e11017018b40226f6b8e4c9cc1ae390b98ce16c9f8bc",
+    "sku-mounted/desktop-current-inventory.png": "594feacbeda17779359ca128bfbaf8896f9005f14d8e72f1b8574b1554b1ff69",
+    "sku-mounted/mobile-untracked-inventory.png": "c11dc546b2dbe253c4abe1a74dcca0cb9cd2419d75ec7c7e972cd0f8a2424610",
+    "sku-mounted.txt": "f57814783d4443738d278f149c5e2d3429d142540c8791d56dcc8bbb57c63c41",
+    "wa-legacy-nowait-final.txt": "559d85bd8186c33e02e2ad85e716b1dff15ffdde1844e166ec71486b37b4a7b9",
+    "wa-legacy-nowait.txt": "9cd4f9e65372e4c4a4142a6dc1f720d217e3257b2758da9629b95cdafe785e61"
+  }
+}

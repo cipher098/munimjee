@@ -1,0 +1,298 @@
+{"files": 315, "tag": "munimjee-v1-runtime:local-20261018-wave6-b608f6f"}
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon  3.644MB
+Step 1/15 : FROM python:3.11-slim-bookworm@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89
+ ---> 0a310eeecf4e
+Step 2/15 : WORKDIR /app
+ ---> Using cache
+ ---> b397f8f8567a
+Step 3/15 : ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PIP_DISABLE_PIP_VERSION_CHECK=1     V1_STOREFRONT_ASSETS_DIR=/opt/munimjee/storefront-src
+ ---> Using cache
+ ---> d221149515ce
+Step 4/15 : COPY requirements.txt runtime.in runtime.lock /app/
+ ---> 0be8ebb0c1ed
+Step 5/15 : RUN python -m pip install --no-cache-dir --only-binary=:all: --require-hashes -r runtime.lock     && python -m pip check
+ ---> Running in eef829a9b7d8
+Collecting alembic==1.13.1 (from -r runtime.lock (line 1))
+  Downloading alembic-1.13.1-py3-none-any.whl (233 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 233.4/233.4 kB 3.6 MB/s eta 0:00:00
+Collecting amqp==5.4.1 (from -r runtime.lock (line 4))
+  Downloading amqp-5.4.1-py3-none-any.whl (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 51.9/51.9 kB 15.4 MB/s eta 0:00:00
+Collecting annotated-doc==0.0.5 (from -r runtime.lock (line 7))
+  Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Collecting annotated-types==0.8.0 (from -r runtime.lock (line 10))
+  Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Collecting anthropic==0.40.0 (from -r runtime.lock (line 13))
+  Downloading anthropic-0.40.0-py3-none-any.whl (199 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 199.5/199.5 kB 12.5 MB/s eta 0:00:00
+Collecting anyio==4.15.1 (from -r runtime.lock (line 16))
+  Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 132.1/132.1 kB 8.9 MB/s eta 0:00:00
+Collecting async-timeout==5.0.1 (from -r runtime.lock (line 19))
+  Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+Collecting asyncpg==0.29.0 (from -r runtime.lock (line 22))
+  Downloading asyncpg-0.29.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (2.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 11.0 MB/s eta 0:00:00
+Collecting bcrypt==4.2.0 (from -r runtime.lock (line 64))
+  Downloading bcrypt-4.2.0-cp39-abi3-manylinux_2_28_aarch64.whl (277 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 277.9/277.9 kB 17.7 MB/s eta 0:00:00
+Collecting billiard==4.3.1 (from -r runtime.lock (line 92))
+  Downloading billiard-4.3.1-py3-none-any.whl (90 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 90.2/90.2 kB 11.7 MB/s eta 0:00:00
+Collecting boto3==1.34.100 (from -r runtime.lock (line 95))
+  Downloading boto3-1.34.100-py3-none-any.whl (139 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 139.3/139.3 kB 66.3 MB/s eta 0:00:00
+Collecting botocore==1.34.162 (from -r runtime.lock (line 98))
+  Downloading botocore-1.34.162-py3-none-any.whl (12.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.5/12.5 MB 11.5 MB/s eta 0:00:00
+Collecting celery==5.3.6 (from -r runtime.lock (line 101))
+  Downloading celery-5.3.6-py3-none-any.whl (422 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 422.0/422.0 kB 12.9 MB/s eta 0:00:00
+Collecting certifi==2026.7.22 (from -r runtime.lock (line 104))
+  Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 137.0/137.0 kB 11.4 MB/s eta 0:00:00
+Collecting cffi==2.1.1 (from -r runtime.lock (line 107))
+  Downloading cffi-2.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (218 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 218.7/218.7 kB 12.3 MB/s eta 0:00:00
+Collecting charset-normalizer==3.5.2 (from -r runtime.lock (line 208))
+  Downloading charset_normalizer-3.5.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (259 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 259.3/259.3 kB 46.7 MB/s eta 0:00:00
+Collecting click==8.5.0 (from -r runtime.lock (line 381))
+  Downloading click-8.5.0-py3-none-any.whl (125 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 13.6 MB/s eta 0:00:00
+Collecting click-didyoumean==0.3.1 (from -r runtime.lock (line 384))
+  Downloading click_didyoumean-0.3.1-py3-none-any.whl (3.6 kB)
+Collecting click-plugins==1.1.1.2 (from -r runtime.lock (line 387))
+  Downloading click_plugins-1.1.1.2-py2.py3-none-any.whl (11 kB)
+Collecting click-repl==0.4.1 (from -r runtime.lock (line 390))
+  Downloading click_repl-0.4.1-py3-none-any.whl (14 kB)
+Collecting cryptography==50.0.2 (from -r runtime.lock (line 393))
+  Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_aarch64.whl (4.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 11.0 MB/s eta 0:00:00
+Collecting distro==1.9.0 (from -r runtime.lock (line 453))
+  Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+Collecting dnspython==2.9.0 (from -r runtime.lock (line 456))
+  Downloading dnspython-2.9.0-py3-none-any.whl (354 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 354.8/354.8 kB 19.1 MB/s eta 0:00:00
+Collecting ecdsa==0.19.2 (from -r runtime.lock (line 459))
+  Downloading ecdsa-0.19.2-py2.py3-none-any.whl (150 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150.8/150.8 kB 42.9 MB/s eta 0:00:00
+Collecting email-validator==2.3.0 (from -r runtime.lock (line 462))
+  Downloading email_validator-2.3.0-py3-none-any.whl (35 kB)
+Collecting fastapi==0.111.0 (from -r runtime.lock (line 465))
+  Downloading fastapi-0.111.0-py3-none-any.whl (91 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 92.0/92.0 kB 64.8 MB/s eta 0:00:00
+Collecting fastapi-cli==0.0.32 (from -r runtime.lock (line 468))
+  Downloading fastapi_cli-0.0.32-py3-none-any.whl (14 kB)
+Collecting google-api-core==2.30.3 (from -r runtime.lock (line 471))
+  Downloading google_api_core-2.30.3-py3-none-any.whl (173 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 173.3/173.3 kB 30.4 MB/s eta 0:00:00
+Collecting google-auth==2.62.0 (from -r runtime.lock (line 474))
+  Downloading google_auth-2.62.0-py3-none-any.whl (267 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 267.9/267.9 kB 6.0 MB/s eta 0:00:00
+Collecting google-cloud-vision==3.7.2 (from -r runtime.lock (line 477))
+  Downloading google_cloud_vision-3.7.2-py2.py3-none-any.whl (459 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 459.6/459.6 kB 13.0 MB/s eta 0:00:00
+Collecting googleapis-common-protos==1.75.0 (from -r runtime.lock (line 480))
+  Downloading googleapis_common_protos-1.75.0-py3-none-any.whl (300 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 300.6/300.6 kB 13.5 MB/s eta 0:00:00
+Collecting greenlet==3.5.6 (from -r runtime.lock (line 483))
+  Downloading greenlet-3.5.6-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl (613 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 613.4/613.4 kB 17.2 MB/s eta 0:00:00
+Collecting grpcio==1.84.0 (from -r runtime.lock (line 563))
+  Downloading grpcio-1.84.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (7.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 12.5 MB/s eta 0:00:00
+Collecting grpcio-status==1.62.3 (from -r runtime.lock (line 625))
+  Downloading grpcio_status-1.62.3-py3-none-any.whl (14 kB)
+Collecting h11==0.16.0 (from -r runtime.lock (line 628))
+  Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Collecting httpcore==1.0.9 (from -r runtime.lock (line 631))
+  Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 10.6 MB/s eta 0:00:00
+Collecting httptools==0.9.0 (from -r runtime.lock (line 634))
+  Downloading httptools-0.9.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (498 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 498.1/498.1 kB 33.0 MB/s eta 0:00:00
+Collecting httpx==0.27.0 (from -r runtime.lock (line 753))
+  Downloading httpx-0.27.0-py3-none-any.whl (75 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 75.6/75.6 kB 8.3 MB/s eta 0:00:00
+Collecting idna==3.20 (from -r runtime.lock (line 756))
+  Downloading idna-3.20-py3-none-any.whl (69 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 69.6/69.6 kB 14.1 MB/s eta 0:00:00
+Collecting jinja2==3.1.6 (from -r runtime.lock (line 759))
+  Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 18.4 MB/s eta 0:00:00
+Collecting jiter==0.17.0 (from -r runtime.lock (line 762))
+  Downloading jiter-0.17.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (343 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 343.3/343.3 kB 19.7 MB/s eta 0:00:00
+Collecting jmespath==1.1.0 (from -r runtime.lock (line 882))
+  Downloading jmespath-1.1.0-py3-none-any.whl (20 kB)
+Collecting kombu==5.6.2 (from -r runtime.lock (line 885))
+  Downloading kombu-5.6.2-py3-none-any.whl (214 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 214.2/214.2 kB 45.4 MB/s eta 0:00:00
+Collecting mako==1.4.3 (from -r runtime.lock (line 888))
+  Downloading mako-1.4.3-py3-none-any.whl (80 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 9.3 MB/s eta 0:00:00
+Collecting markdown-it-py==4.2.0 (from -r runtime.lock (line 891))
+  Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 91.7/91.7 kB 12.9 MB/s eta 0:00:00
+Collecting markupsafe==3.0.4 (from -r runtime.lock (line 894))
+  Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (24 kB)
+Collecting mdurl==0.1.2 (from -r runtime.lock (line 1046))
+  Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Collecting orjson==3.13.0 (from -r runtime.lock (line 1049))
+  Downloading orjson-3.13.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (129 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 129.1/129.1 kB 54.2 MB/s eta 0:00:00
+Requirement already satisfied: packaging==26.3 in /usr/local/lib/python3.11/site-packages (from -r runtime.lock (line 1109)) (26.3)
+Collecting pdfminer-six==20231228 (from -r runtime.lock (line 1112))
+  Downloading pdfminer.six-20231228-py3-none-any.whl (5.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 13.6 MB/s eta 0:00:00
+Collecting pdfplumber==0.11.1 (from -r runtime.lock (line 1115))
+  Downloading pdfplumber-0.11.1-py3-none-any.whl (57 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.9/57.9 kB 15.8 MB/s eta 0:00:00
+Collecting pillow==13.0.0 (from -r runtime.lock (line 1118))
+  Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (6.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.5/6.5 MB 10.9 MB/s eta 0:00:00
+Collecting prompt-toolkit==3.0.53 (from -r runtime.lock (line 1202))
+  Downloading prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 392.3/392.3 kB 12.9 MB/s eta 0:00:00
+Collecting proto-plus==1.28.2 (from -r runtime.lock (line 1205))
+  Downloading proto_plus-1.28.2-py3-none-any.whl (50 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.7/50.7 kB 456.9 MB/s eta 0:00:00
+Collecting protobuf==4.25.9 (from -r runtime.lock (line 1208))
+  Downloading protobuf-4.25.9-cp37-abi3-manylinux2014_aarch64.whl (294 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 294.2/294.2 kB 15.8 MB/s eta 0:00:00
+Collecting pyasn1==0.6.4 (from -r runtime.lock (line 1220))
+  Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.4/84.4 kB 11.9 MB/s eta 0:00:00
+Collecting pyasn1-modules==0.4.2 (from -r runtime.lock (line 1223))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 181.3/181.3 kB 3.3 MB/s eta 0:00:00
+Collecting pycparser==3.11 (from -r runtime.lock (line 1226))
+  Downloading pycparser-3.11-py3-none-any.whl (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 51.2/51.2 kB 7.8 MB/s eta 0:00:00
+Collecting pydantic==2.7.1 (from -r runtime.lock (line 1229))
+  Downloading pydantic-2.7.1-py3-none-any.whl (409 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 409.3/409.3 kB 19.8 MB/s eta 0:00:00
+Collecting pydantic-core==2.18.2 (from -r runtime.lock (line 1232))
+  Downloading pydantic_core-2.18.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (1.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 13.5 MB/s eta 0:00:00
+Collecting pydantic-settings==2.2.1 (from -r runtime.lock (line 1312))
+  Downloading pydantic_settings-2.2.1-py3-none-any.whl (13 kB)
+Collecting pygments==2.21.0 (from -r runtime.lock (line 1315))
+  Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 14.3 MB/s eta 0:00:00
+Collecting pypdfium2==5.14.0 (from -r runtime.lock (line 1318))
+  Downloading pypdfium2-5.14.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (3.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.7/3.7 MB 15.2 MB/s eta 0:00:00
+Collecting python-dateutil==2.9.0.post0 (from -r runtime.lock (line 1342))
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 229.9/229.9 kB 19.7 MB/s eta 0:00:00
+Collecting python-dotenv==1.2.4 (from -r runtime.lock (line 1345))
+  Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+Collecting python-jose==3.3.0 (from -r runtime.lock (line 1348))
+  Downloading python_jose-3.3.0-py2.py3-none-any.whl (33 kB)
+Collecting python-multipart==0.0.9 (from -r runtime.lock (line 1351))
+  Downloading python_multipart-0.0.9-py3-none-any.whl (22 kB)
+Collecting pyyaml==6.0.1 (from -r runtime.lock (line 1354))
+  Downloading PyYAML-6.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (732 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 732.2/732.2 kB 31.4 MB/s eta 0:00:00
+Collecting redis==5.0.4 (from -r runtime.lock (line 1406))
+  Downloading redis-5.0.4-py3-none-any.whl (251 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 252.0/252.0 kB 52.3 MB/s eta 0:00:00
+Collecting requests==2.34.2 (from -r runtime.lock (line 1409))
+  Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.1/73.1 kB 11.3 MB/s eta 0:00:00
+Collecting rich==15.0.0 (from -r runtime.lock (line 1412))
+  Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 310.7/310.7 kB 25.4 MB/s eta 0:00:00
+Collecting rich-toolkit==0.20.6 (from -r runtime.lock (line 1415))
+  Downloading rich_toolkit-0.20.6-py3-none-any.whl (39 kB)
+Collecting rsa==4.9.1 (from -r runtime.lock (line 1418))
+  Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Collecting s3transfer==0.10.4 (from -r runtime.lock (line 1421))
+  Downloading s3transfer-0.10.4-py3-none-any.whl (83 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 83.2/83.2 kB 13.6 MB/s eta 0:00:00
+Collecting shellingham==1.5.4 (from -r runtime.lock (line 1424))
+  Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Collecting six==1.17.0 (from -r runtime.lock (line 1427))
+  Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting sniffio==1.3.1 (from -r runtime.lock (line 1430))
+  Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Collecting sqlalchemy==2.0.30 (from -r runtime.lock (line 1433))
+  Downloading SQLAlchemy-2.0.30-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (3.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 13.1 MB/s eta 0:00:00
+Collecting starlette==0.37.2 (from -r runtime.lock (line 1483))
+  Downloading starlette-0.37.2-py3-none-any.whl (71 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.9/71.9 kB 11.6 MB/s eta 0:00:00
+Collecting typer==0.27.3 (from -r runtime.lock (line 1486))
+  Downloading typer-0.27.3-py3-none-any.whl (123 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 123.3/123.3 kB 17.6 MB/s eta 0:00:00
+Collecting typing-extensions==4.16.0 (from -r runtime.lock (line 1489))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 16.3 MB/s eta 0:00:00
+Collecting tzdata==2026.5 (from -r runtime.lock (line 1492))
+  Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 348.0/348.0 kB 14.4 MB/s eta 0:00:00
+Collecting ujson==6.0.0 (from -r runtime.lock (line 1495))
+  Downloading ujson-6.0.0-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl (57 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.2/57.2 kB 9.6 MB/s eta 0:00:00
+Collecting urllib3==2.8.0 (from -r runtime.lock (line 1615))
+  Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 135.7/135.7 kB 99.3 MB/s eta 0:00:00
+Collecting uvicorn==0.29.0 (from -r runtime.lock (line 1618))
+  Downloading uvicorn-0.29.0-py3-none-any.whl (60 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.8/60.8 kB 14.3 MB/s eta 0:00:00
+Collecting uvloop==0.23.0 (from -r runtime.lock (line 1621))
+  Downloading uvloop-0.23.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (3.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.9/3.9 MB 14.2 MB/s eta 0:00:00
+Collecting vine==5.1.0 (from -r runtime.lock (line 1683))
+  Downloading vine-5.1.0-py3-none-any.whl (9.6 kB)
+Collecting watchfiles==1.3.0 (from -r runtime.lock (line 1686))
+  Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (454 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 455.0/455.0 kB 29.8 MB/s eta 0:00:00
+Collecting wcwidth==0.9.2 (from -r runtime.lock (line 1720))
+  Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (771 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 771.6/771.6 kB 37.1 MB/s eta 0:00:00
+Collecting websockets==12.0 (from -r runtime.lock (line 1750))
+  Downloading websockets-12.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (131 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.5/131.5 kB 16.8 MB/s eta 0:00:00
+Installing collected packages: websockets, wcwidth, vine, uvloop, urllib3, ujson, tzdata, typing-extensions, sniffio, six, shellingham, redis, pyyaml, python-multipart, python-dotenv, pypdfium2, pygments, pycparser, pyasn1, protobuf, pillow, orjson, mdurl, markupsafe, jmespath, jiter, idna, httptools, h11, greenlet, dnspython, distro, click, charset-normalizer, certifi, billiard, bcrypt, async-timeout, annotated-types, annotated-doc, uvicorn, sqlalchemy, rsa, requests, python-dateutil, pydantic-core, pyasn1-modules, proto-plus, prompt-toolkit, markdown-it-py, mako, jinja2, httpcore, grpcio, googleapis-common-protos, email-validator, ecdsa, click-plugins, click-didyoumean, cffi, asyncpg, anyio, amqp, watchfiles, starlette, rich, python-jose, pydantic, kombu, httpx, grpcio-status, cryptography, click-repl, botocore, alembic, typer, s3transfer, rich-toolkit, pydantic-settings, pdfminer-six, google-auth, celery, anthropic, pdfplumber, google-api-core, fastapi-cli, boto3, fastapi, google-cloud-vision
+Successfully installed alembic-1.13.1 amqp-5.4.1 annotated-doc-0.0.5 annotated-types-0.8.0 anthropic-0.40.0 anyio-4.15.1 async-timeout-5.0.1 asyncpg-0.29.0 bcrypt-4.2.0 billiard-4.3.1 boto3-1.34.100 botocore-1.34.162 celery-5.3.6 certifi-2026.7.22 cffi-2.1.1 charset-normalizer-3.5.2 click-8.5.0 click-didyoumean-0.3.1 click-plugins-1.1.1.2 click-repl-0.4.1 cryptography-50.0.2 distro-1.9.0 dnspython-2.9.0 ecdsa-0.19.2 email-validator-2.3.0 fastapi-0.111.0 fastapi-cli-0.0.32 google-api-core-2.30.3 google-auth-2.62.0 google-cloud-vision-3.7.2 googleapis-common-protos-1.75.0 greenlet-3.5.6 grpcio-1.84.0 grpcio-status-1.62.3 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.27.0 idna-3.20 jinja2-3.1.6 jiter-0.17.0 jmespath-1.1.0 kombu-5.6.2 mako-1.4.3 markdown-it-py-4.2.0 markupsafe-3.0.4 mdurl-0.1.2 orjson-3.13.0 pdfminer-six-20231228 pdfplumber-0.11.1 pillow-13.0.0 prompt-toolkit-3.0.53 proto-plus-1.28.2 protobuf-4.25.9 pyasn1-0.6.4 pyasn1-modules-0.4.2 pycparser-3.11 pydantic-2.7.1 pydantic-core-2.18.2 pydantic-settings-2.2.1 pygments-2.21.0 pypdfium2-5.14.0 python-dateutil-2.9.0.post0 python-dotenv-1.2.4 python-jose-3.3.0 python-multipart-0.0.9 pyyaml-6.0.1 redis-5.0.4 requests-2.34.2 rich-15.0.0 rich-toolkit-0.20.6 rsa-4.9.1 s3transfer-0.10.4 shellingham-1.5.4 six-1.17.0 sniffio-1.3.1 sqlalchemy-2.0.30 starlette-0.37.2 typer-0.27.3 typing-extensions-4.16.0 tzdata-2026.5 ujson-6.0.0 urllib3-2.8.0 uvicorn-0.29.0 uvloop-0.23.0 vine-5.1.0 watchfiles-1.3.0 wcwidth-0.9.2 websockets-12.0
+[91mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+[0mNo broken requirements found.
+ ---> Removed intermediate container eef829a9b7d8
+ ---> 7b31b401ecc7
+Step 6/15 : COPY backend/app /app/app
+ ---> dea740f190e9
+Step 7/15 : COPY backend/alembic /app/alembic
+ ---> 5a0aa2d04509
+Step 8/15 : COPY backend/alembic.ini /app/alembic.ini
+ ---> 256e04c0d561
+Step 9/15 : COPY backend/static /app/static
+ ---> 1fd45081b36e
+Step 10/15 : COPY storefront-src /opt/munimjee/storefront-src
+ ---> c0abe76447e5
+Step 11/15 : COPY runtime-manifest.json /opt/munimjee/runtime-manifest.json
+ ---> 6abf7fc19f86
+Step 12/15 : RUN mkdir /app/uploads && chown 10001:10001 /app/uploads
+ ---> Running in b874832286b4
+ ---> Removed intermediate container b874832286b4
+ ---> 0d8ad483db94
+Step 13/15 : USER 10001:10001
+ ---> Running in d14f38f81080
+ ---> Removed intermediate container d14f38f81080
+ ---> 57aa65f8d9a5
+Step 14/15 : EXPOSE 8000
+ ---> Running in 5c4ad3eff325
+ ---> Removed intermediate container 5c4ad3eff325
+ ---> 9e327f706735
+Step 15/15 : CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ ---> Running in d7a6b6e5dfd9
+ ---> Removed intermediate container d7a6b6e5dfd9
+ ---> 1faf4b5089cc
+Successfully built 1faf4b5089cc
+Successfully tagged munimjee-v1-runtime:local-20261018-wave6-b608f6f

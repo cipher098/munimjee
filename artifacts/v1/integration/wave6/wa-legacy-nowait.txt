@@ -1,0 +1,334 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_wa_legacy_fact_guard_never_waits_behind_product_with_account_held ____
+
+self = <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x10e896380>
+operation = 'INSERT INTO whatsapp_accounts (seller_id, phone_number_id, waba_id, display_phone_number, access_token, enabled, auto..., $6::BOOLEAN, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::JSONB, $11::JSONB) RETURNING whatsapp_accounts.connected_at'
+parameters = (UUID('6b49325c-5b02-424b-a29d-504ebe0737ca'), 'synthetic-nowait-number', None, '', 'synthetic', True, ...)
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+    
+        async with adapt_connection._execute_mutex:
+            if not adapt_connection._started:
+                await adapt_connection._start_transaction()
+    
+            if parameters is None:
+                parameters = ()
+    
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+    
+                if attributes:
+                    self.description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self.description = None
+    
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self.rowcount = -1
+                else:
+>                   self._rows = await prepared_stmt.fetch(*parameters)
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:538: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:176: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:241: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:230: in __do_execute
+    return await executor(protocol)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   ???
+E   asyncpg.exceptions.NotNullViolationError: null value in column "waba_id" of relation "whatsapp_accounts" violates not-null constraint
+E   DETAIL:  Failing row contains (6b49325c-5b02-424b-a29d-504ebe0737ca, synthetic-nowait-number, null, , synthetic, t, f, , [], {}, 2026-10-18 08:07:29.350573+00, f).
+
+asyncpg/protocol/protocol.pyx:207: NotNullViolationError
+
+The above exception was the direct cause of the following exception:
+
+self = <sqlalchemy.engine.base.Connection object at 0x10eb0f2d0>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x10e3b5490>
+context = <sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x10eb31c50>
+statement = <sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x10eb31c90>
+parameters = [(UUID('6b49325c-5b02-424b-a29d-504ebe0737ca'), 'synthetic-nowait-number', None, '', 'synthetic', True, ...)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x10eaa5f30>>
+error = NotNullViolationError('null value in column "waba_id" of relation "whatsapp_accounts" violates not-null constraint')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "waba_id" of relation "whatsapp_accounts" violates not-null constraint
+E                   DETAIL:  Failing row contains (6b49325c-5b02-424b-a29d-504ebe0737ca, synthetic-nowait-number, null, , synthetic, t, f, , [], {}, 2026-10-18 08:07:29.350573+00, f).
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+world = namespace(client=<httpx.AsyncClient object at 0x10eadb310>, session=<function world.<locals>.session at 0x10eaca3e0>, ...v1/businesses/6b49325c-5b02-424b-a29d-504ebe0737ca/channels', app=<fastapi.applications.FastAPI object at 0x10e9e4810>)
+
+    @pytest.mark.asyncio
+    async def test_wa_legacy_fact_guard_never_waits_behind_product_with_account_held(world):
+        import asyncio
+        from app.models.product import Product
+        from app.models.whatsapp import WhatsAppAccount
+        from app.services.channel_readiness import guard_legacy_product, CatalogueAuthorityHandoff
+        bid=world.ids[0]
+        async with world.session() as db:
+            product=Product(seller_id=bid,name='Changing legacy product',listed_price=10000,floor_price=8000)
+            db.add(product)
+            db.add(WhatsAppAccount(seller_id=bid,phone_number_id='synthetic-nowait-number',access_token='synthetic'))
+>           await db.flush();pid=product.id
+
+backend/tests/test_channel_operator_db.py:557: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py:800: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4341: in flush
+    self._flush(objects)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4476: in _flush
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4437: in _flush
+    flush_context.execute()
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2353: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x10eaa5f30>>
+error = NotNullViolationError('null value in column "waba_id" of relation "whatsapp_accounts" violates not-null constraint')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "waba_id" of relation "whatsapp_accounts" violates not-null constraint
+E                   DETAIL:  Failing row contains (6b49325c-5b02-424b-a29d-504ebe0737ca, synthetic-nowait-number, null, , synthetic, t, f, , [], {}, 2026-10-18 08:07:29.350573+00, f).
+E                   [SQL: INSERT INTO whatsapp_accounts (seller_id, phone_number_id, waba_id, display_phone_number, access_token, enabled, automation_enabled, reel_replies_enabled, welcome_message, rules, order_templates) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::BOOLEAN, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::JSONB, $11::JSONB) RETURNING whatsapp_accounts.connected_at]
+E                   [parameters: (UUID('6b49325c-5b02-424b-a29d-504ebe0737ca'), 'synthetic-nowait-number', None, '', 'synthetic', True, False, False, '', '[]', '{}')]
+E                   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: IntegrityError
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_channel_operator_db.py::test_wa_legacy_fact_guard_never_waits_behind_product_with_account_held
+1 failed, 1 passed, 32 deselected, 1 warning in 3.27s

@@ -9,7 +9,7 @@ storefront designs, customer COD/online handoff, native payment settings, channe
 operator recovery, ParcelDesk tracking/review and a membership-scoped assisted
 onboarding board. Actual migrated PostgreSQL 16 and mounted browser checks provide
 bounded local evidence; exact source, counts and failures are recorded in
-`docs/v1-execution-status.md` and `docs/v1-wave5-validation.md`.
+`docs/v1-execution-status.md` and `docs/v1-wave6-validation.md`.
 
 Assignment does not grant membership or impersonation. Wave5 adds explicit current-
 owner-consented5–60-minute read-only readiness grants for server-provisioned operators,
@@ -25,9 +25,18 @@ physical-phone testing and operational deployment remain gates. Isolated real PG
 restore tooling passes its fresh-pair reconciliation; packaged old/current compatibility,
 native multiarchitecture and hosted CI billing remain separate release gates. Flags
 stay off by default. No real provider request, charge, customer send, running-project
-change or production cutover is authorized or claimed. Reviewed CSV0053 and SEO are
-next, followed by active authoritative-SKU replies/Instagram retrieval/activity work.
-Current boundaries remain in `docs/v1-wave5-contracts.md` and the next-slice contract.
+change or production cutover is authorized or claimed. Reviewed CSV0053, SEO and bounded authoritative-SKU replies are composed;
+Instagram retrieval/activity and remaining comment safeguards continue next.
+Current bounded0053 composition passes1950 backend tests with8 documented skips,
+central native-import47/CSV74/SKU-channel5 mounted checks and28 mounted SEO HTTP
+checks. A315-file locked arm64 image passes3 offline modes; fresh0053 restore53
+passes separately. The test-infrastructure interruption and recovered disk-backed
+PG16 gate are preserved in `docs/v1-wave6-validation.md`. Activity0054 and owned
+Instagram source fixes are next isolated candidates, not yet this composition.
+Five real queued-comment safety negatives keep broader V08 open; native comment
+controls and visible inferred-enquiry handoff remain code work. Official Meta docs
+raise principal/account-type/unavailable-original compatibility questions; both
+retrieval gates stay false. Current boundaries are in `docs/v1-wave6-contracts.md`.
 
 ## 1. The V1 outcome
 

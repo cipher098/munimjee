@@ -27,8 +27,10 @@ central app.main CSV browser passes74 checks; mounted SEO passes28 actual HTTP
 checks (not a device/browser claim). The complete regression is now green. A new
 315-file locked arm64 image from `b608f6f` passes all three offline startup/asset
 modes with per-file hash equality, no network/DB attempt and CID-only cleanup.
-Final central native-import47 and SKU5 mounted reruns remain pending while the
-exclusive new `payment_w6` lane runs the activity owner final checks. Current
+Final central native-import47 and SKU5 mounted reruns pass on actual0053. Native
+import pre/post application and harness hashes match. The activity owner final
+newpayment_w6 gate also passes74 Python/19 mounted/28 Node, with shared integration
+next; it is not part of this complete1950 composition. Current
 trusted flags stay off by default.
 
 SKU fact replies are reviewed and composed through8712dcc (owner runtime741a45b:
@@ -37,8 +39,8 @@ product selection in conflicting buffered reels/reply-to turns is fixed by froze
 whole-batch agreement, including activation/rollout/vision crossover withholding.
 The real failed-before-fix evidence is retained. The existing WA legacy guard now
 uses a nonblocking savepoint/handoff under Account locks;2 migrated regressions
-pass. Central complete acceptance is green; the final central SKU mounted rerun remains
-pending. The rollout stays off.
+pass. Central complete acceptance and final5 mounted journeys are green. The rollout
+stays off.
 
 V10 owner-consented observed activity reserves0054 after0053. Peer source/API/UI
 is independently reviewed within its bounded contract, with final new-lane checks
@@ -70,7 +72,8 @@ and newer target-only order preservation; exact evidence is in
 `artifacts/v1/release-rehearsal/local-pg16-w6/`. This new pair has no package-switch
 proof yet. Hosted billing/nativeamd64,
 old writers/browser routing and production remain open. Exact ownership is in
-`docs/v1-wave6-contracts.md`; final Wave5 checkpoint below remains authoritative.
+`docs/v1-wave6-contracts.md`, with final proof/failures in `docs/v1-wave6-validation.md`.
+The prior Wave5 checkpoint remains preserved below.
 
 ## Wave5 verified checkpoint
 

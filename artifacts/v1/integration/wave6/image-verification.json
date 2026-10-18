@@ -1,0 +1,13 @@
+{
+  "source_revision": "b608f6f0737631450bb41851c98bd7b07f0e3f06",
+  "current_runtime_source_matches_built_revision": true,
+  "image_id": "sha256:1faf4b5089cccf93d15cd8ed91584aca547ff82298bc13eb6c2295b9a1fb689a",
+  "size_bytes": 133942125,
+  "architecture": "arm64",
+  "user": "10001:10001",
+  "files": 315,
+  "checks": "Three actual offline startup/asset/private-route modes; current build context equals image manifest and every runtime file SHA256 checked by smoke.",
+  "network_and_database_attempts": 0,
+  "container_removed": true,
+  "amd64": "Not repeated; historical native architecture/hosted gate remains open."
+}

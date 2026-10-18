@@ -1,0 +1,17 @@
+{
+  "original_archive": "/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/munimjee-wave6-original-evidence-tba4zbwq",
+  "files": [
+    {
+      "path": "artifacts/v1/integration/wave6/full.txt",
+      "original_sha256": "b4d6714e5fa862bd906390af878a538b7f700a25529f90500399bff5b62d9464",
+      "public_sha256": "01fb647a691d5d0549d00129808d0befc724a7480dcbfa2a04e15214023da728",
+      "redaction": "Synthetic dedicated test infrastructure credential only; original unchanged in private archive."
+    },
+    {
+      "path": "artifacts/v1/integration/wave6/full.xml",
+      "original_sha256": "662ae91f08679a1a2c3c69292b8f8b27d6a0260f9af3f7e91c2f3391a3f9abc7",
+      "public_sha256": "4bef80a546996be94bcac8157d274942399a6eb3be829e89ffe5cc5423c9182a",
+      "redaction": "Synthetic dedicated test infrastructure credential only; original unchanged in private archive."
+    }
+  ]
+}
