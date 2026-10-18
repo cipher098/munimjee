@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="8" time="10.914" timestamp="2026-10-18T15:58:43.755485" hostname="MacBook-Air-3.local"><testcase classname="tests.test_v1_activity_producer_db" name="test_real_sql_ledger_failure_cannot_drop_ig_ack_or_create_duplicate" time="1.393" /><testcase classname="tests.test_v1_activity_producer_db" name="test_signed_actual_main_ack_survives_real_ledger_sql_error[instagram]" time="1.928" /><testcase classname="tests.test_v1_activity_producer_db" name="test_signed_actual_main_ack_survives_real_ledger_sql_error[whatsapp]" time="1.377" /><testcase classname="tests.test_v1_activity_producer_db" name="test_real_sql_ledger_failure_preserves_wa_inbound_and_outbox_exact_replay" time="1.068" /><testcase classname="tests.test_v1_activity_producer_db" name="test_owner_policy_lock_contention_cannot_block_durable_outbox_commit" time="1.172" /><testcase classname="tests.test_v1_activity_producer_db" name="test_installed_hooks_record_only_new_rows_and_do_not_backfill_lost_measurements" time="1.113" /><testcase classname="tests.test_v1_activity_producer_db" name="test_delayed_inbound_uses_documented_per_source_time_and_replay_never_moves_cohort" time="1.184" /><testcase classname="tests.test_v1_activity_producer_db" name="test_report_uses_guarded_source_cohort_current_canonical_states_and_excludes_test_manual" time="1.272"><failure message="AssertionError: assert {'accepted': ...eued': 0, ...} == {'accepted': ...eued': 1, ...}&#10;  &#10;  Omitting 4 identical items, use -vv to show&#10;  Differing items:&#10;  {'accepted': 3} != {'accepted': 1}&#10;  {'queued': 0} != {'queued': 1}&#10;  {'unknown': 0} != {'unknown': 1}&#10;  Use -v to get more diff">sessions = async_sessionmaker(class_='AsyncSession', bind=&lt;sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x11085ef00&gt;, autoflush=True, expire_on_commit=False)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x110a8a110&gt;
+
+    @pytest.mark.asyncio
+    async def test_report_uses_guarded_source_cohort_current_canonical_states_and_excludes_test_manual(sessions,monkeypatch):
+        bid=await prepared(sessions,monkeypatch)
+        async with sessions.begin() as db:
+            ids=[await inbound(db,bid,kind='outbound') for _ in range(5)]
+            for sid in ids[:3]:assert await activity.record_source(db,bid,'wa_outbound',sid,origin='automated',is_new=True)
+            assert await activity.record_source(db,bid,'wa_outbound',ids[3],origin='operator',is_new=True)
+            assert await activity.record_source(db,bid,'wa_outbound',ids[4],origin='automated',is_new=True,test_evidence=True)
+            messages=[await db.get(WhatsAppMessage,sid) for sid in ids]
+            messages[1].status='unknown'
+            messages[2].status='unknown';messages[2].provider_message_id='synthetic-canonical-receipt'
+            marker=await db.get(ActivitySource,(bid,'wa_outbound',ids[0]))
+            assert marker.created_at==messages[0].created_at
+            assert marker.retained_until-marker.created_at==timedelta(days=90)
+        async with sessions() as db:
+            at=await activity.clock(db)
+            value=await activity.report(db,bid,at.date(),at.date()+timedelta(days=1))
+            channel=value.channel_activity
+            assert channel.reason=='partial_coverage' and channel.included_source_kinds==['wa_outbound']
+            assert channel.enquiry_messages is None
+            assert channel.excluded_test==1 and channel.excluded_unclassified==1
+&gt;           assert channel.automation_outcomes.model_dump()==dict(queued=1,sending=0,accepted=1,failed=0,unknown=1,
+                instagram_sends=None,resolved_enquiries=None)
+E           AssertionError: assert {'accepted': ...eued': 0, ...} == {'accepted': ...eued': 1, ...}
+E             
+E             Omitting 4 identical items, use -vv to show
+E             Differing items:
+E             {'accepted': 3} != {'accepted': 1}
+E             {'queued': 0} != {'queued': 1}
+E             {'unknown': 0} != {'unknown': 1}
+E             Use -v to get more diff
+
+backend/tests/test_v1_activity_producer_db.py:214: AssertionError</failure></testcase></testsuite></testsuites>
