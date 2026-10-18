@@ -18,7 +18,7 @@ Existing named GPT-6.1 Sol/high workers and clean worktrees are reused.
 | instagram_provider | codex/v1-reel-operator-implementation | New `backend/app/{api/v1,schemas,services,models}/whatsapp_reel_operator.py`, `backend/alembic/versions/0058_v1_reel_operator.py`, implementation doc/artifacts |
 | instagram_contract_qa | codex/v1-reel-operator-qa | New reel-operator pure/DB-source/Node contract/lifecycle tests; QA doc/artifacts |
 | instagram_security | codex/v1-reel-operator-review | Independent review doc/artifacts only; all source/tests read-only |
-| Root | codex/v1-reel-operator-coordination | Existing `backend/static/comment_operator.html`, `.js`, `_contract.js`; source-only visual design, task/handoff and coordination artifacts; reviewed composition |
+| Root | codex/v1-reel-operator-coordination | Existing `backend/static/comment_operator.html`, `.js`, `_contract.js`, narrow wrapping `.css`; source-only visual design, task/handoff and coordination artifacts; reviewed composition |
 | Local integrator | local shared integration | Registry/main/package/navigation/cleanup/trusted ingress and canonical sender helper installation; actual DB/browser execution |
 
 Do not edit catalogue/import/credential/financial/legacy writer files or0057.
