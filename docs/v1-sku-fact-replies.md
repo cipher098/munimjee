@@ -68,6 +68,20 @@ No import/catalogue writer, checkout/payment schema or public storefront UI edit
 
 ## Required evidence and limits
 
+The request recognizer deliberately accepts a small English/Hinglish factual
+vocabulary. Other phrasing, a selected variant, numbers, transactional requests
+and additional unknown URLs use the human-confirmation response. A bare exact
+reel may request the same public observation. Stored reel mappings must be full
+allowlisted Instagram URLs or exact string media IDs; numeric JSON values and
+multiple references are not coerced into an identity. Case-insensitive scheme/
+host comparison preserves case-sensitive shortcodes and all matching products.
+
+Final IG emission also requires a current durable processing receipt within the
+provider window. This slice does not add proactive SKU nudges/resume. Existing
+agreed/payment cycles conservatively withhold rather than restart price discovery.
+Feature-wait, remembered variant and negotiation values remain unchanged. Only
+the conversation focus/history and existing message/outbox outcome are updated.
+
 Use the exclusively allocated P01 lane and actual current migration chain. Test
 foreign/inactive/draft/unpublished/nonactivated/malformed or inactive-SKU states,
 unknown stock, multiple prices/options and source ambiguity. Prove no private

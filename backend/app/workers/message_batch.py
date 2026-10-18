@@ -455,7 +455,9 @@ async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *
             ).order_by(ConversationProduct.created_at.desc()).limit(1)
         )
         active_cp = cp_result.scalars().first()
-        if active_cp and active_cp.state == "waiting_for_tag":
+        from app.services import sku_fact_replies as facts
+        preserve_sku_cycle = facts.enabled() and await facts.is_activated(db, seller.id, conversation.product_id)
+        if active_cp and active_cp.state == "waiting_for_tag" and not preserve_sku_cycle:
             logger.info("message_batch: %s releasing waiting_for_tag to process new message", conversation.id)
             active_cp.state = "product_inquiry"
             active_cp.pending_tag_id = None
