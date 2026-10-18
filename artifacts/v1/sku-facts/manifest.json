@@ -1,0 +1,81 @@
+{
+  "tested_source": "741a45b3b7c1fa72925c51712613c0e8ee666947",
+  "migration_head": "0052_v1_customer_links",
+  "lane": "parcel_w3",
+  "owned": {
+    "passed": 75,
+    "pure": 21,
+    "actual_pg": 54,
+    "skipped": 0
+  },
+  "broader": {
+    "passed": 227,
+    "skipped": [
+      {
+        "module": "tests.test_instagram_ingress_db",
+        "test": "test_real_redis_transfer_commits_every_missing_mid_occurrence_before_trim",
+        "reason": "Coordinator-allocated TEST_REDIS_URL required"
+      },
+      {
+        "module": "tests.test_instagram_ingress_worker",
+        "test": "test_legacy_trim_compares_prefix_before_deleting_new_events",
+        "reason": "Coordinator-allocated TEST_REDIS_URL required"
+      },
+      {
+        "module": "tests.test_instagram_ingress_worker",
+        "test": "test_redis_missing_mid_transfer_ids_survive_retry_and_distinguish_next_buffer",
+        "reason": "Coordinator-allocated TEST_REDIS_URL required"
+      }
+    ],
+    "failed": 0
+  },
+  "mounted_browser": {
+    "passed": 5,
+    "real_composition": "app.main + actual Alembic0052 + native auth/session/CSRF + catalogue draft/activation/inventory forms + signed synthetic inbound and existing durable workers",
+    "synthetic": "account/provider bindings, HMAC source messages, Instagram.send_message and WhatsApp provider.send transports",
+    "external_requests": [],
+    "page_errors": []
+  },
+  "sources": {
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/app/services/sku_fact_replies.py": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+    "backend/app/services/whatsapp_context.py": "d385071f116460f4f791a483e8a50c5504df5ab66db7f30c3d06c96376bcf5f7",
+    "backend/app/bot/conversation.py": "e6436301a99822cd604441abfe34024a6ca47bd7856fb07d1a8d7c71d198d88d",
+    "backend/app/workers/message_batch.py": "63722890231444f6ed307a16da3ad2b70f618b76ec3ca01bc20ea9a4f7884c3c",
+    "backend/app/config.py": "23436e6e220312cdfdbd97ce1d83b7b6e99c03d25606debce0d87548ebcdb005",
+    "backend/app/main.py": "7b4a7e3de38ce536f30484c3714a3d301a346e894bfba8e9390a58c60ed45959",
+    "backend/app/workers/whatsapp.py": "0c7fdc5013aaf4406314ff382eef551853eaebfb350f18081f672fd85d837b62",
+    "backend/tests/test_sku_fact_replies.py": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1",
+    "backend/tests/test_sku_fact_replies_db.py": "a19e189279ef8f58e2fe04789baaa3514ee1ba5d42cb0febd841713161f1babd",
+    "backend/tests/sku_fact_browser_server.py": "5584a4454132794d13756127a92f8e9fa7386649d3b71fda55ff5ce93a0fd480",
+    "backend/tests/run_sku_fact_browser.py": "9ff240a8a4dab9543cecac325a05a74123bfcc5bafd4c17a3497afcc75cb814a",
+    "backend/tests/browser/sku-facts.mjs": "4f793b1c668fef8c3ff736f2548834b64daa094f4af5399f6bdd2bfc64c0036a",
+    "docs/v1-sku-fact-replies.md": "e1370c3132c525e614f38a61bd8d933ed7d52febf1ea979979908cfd69436c0d"
+  },
+  "captures": {
+    "mobile-untracked-inventory.png": {
+      "width": 390,
+      "height": 3051,
+      "sha256": "c11dc546b2dbe253c4abe1a74dcca0cb9cd2419d75ec7c7e972cd0f8a2424610",
+      "scope": "Existing native catalogue UI; no new automation inbox UI or live provider screenshot."
+    },
+    "desktop-current-inventory.png": {
+      "width": 1365,
+      "height": 2444,
+      "sha256": "594feacbeda17779359ca128bfbaf8896f9005f14d8e72f1b8574b1554b1ff69",
+      "scope": "Existing native catalogue UI; no new automation inbox UI or live provider screenshot."
+    }
+  },
+  "independent_review": "Integrator source review accepted bounded batch/crossover fixes at741a45b; final227/3skip and5mounted packet supplied. No new production UI was implemented.",
+  "review_failure_evidence": "batch-ambiguity-before-fix.txt: actual a34404f worker3fail/1already-withheld; fixed actual regressions and mounted two-product source are green.",
+  "limits": [
+    "Flag defaults off; no deployment or live provider/customer sends.",
+    "Read snapshot is observed availability, never a reservation or stock guarantee.",
+    "No automatic variant/order/payment/stock mutation or joined customer history.",
+    "Strict request vocabulary and excessive/malformed/ambiguous SKU options hand off/withhold.",
+    "IG requires current durable processing source; no new proactive SKU resume/nudge path.",
+    "No new explicit SKU/Storefront/catalogue sweep locks; incumbent Product focus FK can block Product FOR UPDATE, including domain inventory writers.",
+    "Existing WA legacy Account\u2192Product lock inversion is integrator-owned followup.",
+    "Actual local proof uses0052; later integrated0053 chain remains central gate."
+  ]
+}
