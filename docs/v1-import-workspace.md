@@ -90,14 +90,16 @@ Current session checks run before/after API calls and on focus/visibility return
 Changed actor, CSRF session or lost tenant read access clears all private page
 facts and the `munimjee.v1.import-command:` prefix. Current read-only roles disable
 all writes and saved retries; backend role/session/CSRF checks remain authoritative.
-Shared auth cleanup/nav/main/runtime hooks are coordinator-owned and must be
+Terminal identity generations are rechecked after command/recovery digests and
+upload-to-job digests before storage or private UI can be restored. Controlled
+delayed-digest regressions cover all three waits. Shared auth cleanup/nav/main/runtime hooks are coordinator-owned and must be
 verified in the composed checkout.
 
 ## Evidence and remaining gates
 
 `backend/tests/browser/import_workspace.mjs` uses synthetic same-origin HTTP
 fixtures and Chromium, blocks external origins, and makes zero provider calls.
-`browser-results.json` records **123 passing checks**. It covers source permission,
+`browser-results.json` records **150 passing checks**. It covers source permission,
 raw byte/hash upload recovery, review/unknown/zero distinctions, stale revisions,
 source XSS safety, current role/session/tenant fences, corrupt/unavailable storage,
 rapid submit/poll races, full allocation totals, inactive payloads, lost draft
