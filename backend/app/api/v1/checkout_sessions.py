@@ -3,6 +3,8 @@ from uuid import UUID
 import json
 import asyncio
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from pydantic import Field
+import hmac
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
@@ -10,10 +12,10 @@ from app.config import settings
 from app.api.routes.razorpay import VerifyInput, GatewayInput
 from app.api.routes import razorpay as gateway
 from app.api.v1.identity import current_actor
-from app.api.v1.session import require_v1_mutation
+from app.api.v1.session import require_v1_mutation, business_mutation
 from app.services.identity import Actor, require_business_access
 from app.models.seller import Seller
-from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead, PaymentReviewRead
+from app.schemas.checkout_sessions import CheckoutSessionRead, CheckoutStateRead, PaymentReviewRead, GatewayConfigurationRead
 from app.services import checkout_sessions as service
 
 router = APIRouter(prefix="/api/v1/storefronts", tags=["public-checkout-session"])
@@ -55,16 +57,22 @@ configuration_router = APIRouter(prefix="/api/v1/businesses", tags=["native-paym
 CONFIGURATION_BODY_TIMEOUT = 5
 
 
-@configuration_router.get("/{business_id}/payments/razorpay", dependencies=[Depends(no_store)])
+class NativeGatewayInput(GatewayInput):
+    expected_revision: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+
+
+@configuration_router.get("/{business_id}/payments/razorpay", response_model=GatewayConfigurationRead,
+                          dependencies=[Depends(no_store)])
 async def payment_configuration(business_id: UUID, request: Request,
         actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "business.write")
-    return await gateway.get_settings(request, str(business_id), db)
+    return await service.gateway_configuration_view(db, business_id, request)
 
 
-@configuration_router.put("/{business_id}/payments/razorpay", dependencies=[Depends(no_store)])
+@configuration_router.put("/{business_id}/payments/razorpay", response_model=GatewayConfigurationRead,
+                          dependencies=[Depends(no_store)])
 async def update_payment_configuration(business_id: UUID, request: Request,
-        actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+        actor: Actor = Depends(business_mutation("business.write")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "business.write")
     # Do not echo invalid secret inputs through FastAPI's default validation detail.
     chunks, size = [], 0
@@ -78,15 +86,21 @@ async def update_payment_configuration(business_id: UUID, request: Request,
     except TimeoutError:
         raise HTTPException(408, "Payment configuration timed out")
     try:
-        body = GatewayInput.model_validate(json.loads(b"".join(chunks)))
+        body = NativeGatewayInput.model_validate(json.loads(b"".join(chunks)))
     except (ValueError, TypeError, RecursionError):
         raise HTTPException(422, "Payment configuration is invalid")
     await db.scalar(select(Seller.id).where(Seller.id == business_id).with_for_update())
     # Revocation/session changes during a lock wait must not authorize this write.
     fresh_actor = await require_v1_mutation(request, db)
     await require_business_access(db, fresh_actor, business_id, "business.write")
-    result = await gateway.update_settings(body, request, str(business_id), db, verify_connection=False)
-    return {**result, "connection_verification": "not_performed"}
+    current = await service.current_account(db, business_id)
+    if body.expected_revision is not None and not hmac.compare_digest(body.expected_revision,
+            service.gateway_configuration_revision(business_id, current)):
+        raise HTTPException(409, {"code": "gateway_config_stale",
+            "message": "Payment settings changed. Refresh the current settings before replacing credentials."})
+    command = GatewayInput.model_validate(body.model_dump(exclude={"expected_revision"}))
+    await gateway.update_settings(command, request, str(business_id), db, verify_connection=False, commit=False)
+    return await service.gateway_configuration_view(db, business_id, request)
 
 
 @configuration_router.get("/{business_id}/orders/{order_id}/payment-review", response_model=PaymentReviewRead,
