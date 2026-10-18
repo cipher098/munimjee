@@ -14,7 +14,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response, RedirectResponse
-from starlette.routing import Match
+from starlette.routing import Match, compile_path
 
 from app.v1.storefront.rendering import PublicStorefront, public_product, THEMES
 from app.v1.storefront.design import public_design
@@ -196,6 +196,10 @@ def _failure(status=503):
     return HTTPException(status, "Public page unavailable", headers=_ERROR_HEADERS)
 
 
+def _recognized_path(path):
+    return path.rstrip("/") or "/"
+
+
 class _SEORequestFence:
     """Reject only known SEO/source aliases before Router.redirect_slashes.
 
@@ -209,9 +213,9 @@ class _SEORequestFence:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope.get("path", "")
-            # Recognition is deliberately broader than acceptance: repeated
-            # slashes identify aliases to reject, never additional valid URLs.
-            recognized = re.sub(r"/+", "/", path).rstrip("/")
+            # Match Starlette's trailing-slash normalization only. Internal
+            # repeated slashes can belong to an unrelated existing resource.
+            recognized = _recognized_path(path)
             mapping = self.sources.get(recognized)
             sitemap = recognized == "/sitemap.xml" or (
                 recognized.startswith("/sitemap-store-") and recognized.endswith(".xml"))
@@ -271,7 +275,13 @@ def validate_route_collisions(app, router: APIRouter) -> None:
             dynamic_overlap = ("{" in proposed.path and "{" in other_path and (
                 proposed.path.split("{", 1)[0].startswith(other_path.split("{", 1)[0])
                 or other_path.split("{", 1)[0].startswith(proposed.path.split("{", 1)[0])))
-            if proposed.matches(reverse_scope)[0] != Match.NONE or dynamic_overlap:
+            # The request fence recognizes slash aliases before routing. Such
+            # aliases must not silently mask a preexisting literal/dynamic route.
+            proposed_alias = _recognized_path(proposed.path)
+            existing_alias = _recognized_path(other_path)
+            alias_collision = (compile_path(proposed_alias)[0].fullmatch(existing_alias)
+                               or compile_path(existing_alias)[0].fullmatch(proposed_alias))
+            if proposed.matches(reverse_scope)[0] != Match.NONE or dynamic_overlap or alias_collision:
                 raise ValueError("Reviewed SEO route collides with an existing route")
 
 
