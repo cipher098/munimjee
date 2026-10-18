@@ -1,0 +1,1 @@
+PASS 3 baseline reproduction checks; real app.main/0049 DB, no provider calls.

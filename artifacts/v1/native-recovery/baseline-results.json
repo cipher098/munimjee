@@ -1,0 +1,14 @@
+{
+  "checks": 3,
+  "baseline": true,
+  "results": [
+    "Reproduced baseline well-shaped old200 clears exact pending command",
+    "baseline old200 acknowledgement",
+    "Reproduced baseline post-fence JSON mutation dispatch",
+    "baseline JSON fence",
+    "Reproduced baseline post-fence raw upload dispatch",
+    "baseline upload fence"
+  ],
+  "errors": [],
+  "external": []
+}

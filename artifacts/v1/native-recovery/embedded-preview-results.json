@@ -1,0 +1,9 @@
+{
+  "checks": 1,
+  "baseline": false,
+  "results": [
+    "actual embedded private preview"
+  ],
+  "errors": [],
+  "external": []
+}

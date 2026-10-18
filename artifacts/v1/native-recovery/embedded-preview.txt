@@ -1,0 +1,1 @@
+PASS 1 actual native recovery checks; real app.main/0049 DB, no provider calls.
