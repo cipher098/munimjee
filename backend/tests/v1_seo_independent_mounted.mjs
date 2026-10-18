@@ -32,7 +32,7 @@ async function json(path, method, body, status) {
   return response.json();
 }
 async function seed(slug, activate = true) {
-  const user = await json('/api/v1/auth/signup', 'POST', {email: `${randomUUID()}@example.test`,
+  const user = await json('/api/v1/auth/signup', 'POST', {email: `${randomUUID()}@example.com`,
     password: 'synthetic-mounted-qa-password', business_name: 'Independent SEO synthetic'}, 201);
   const business = user.businesses[0].id;
   const prefix = `/api/v1/businesses/${business}/catalogue`;

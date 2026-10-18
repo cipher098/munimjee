@@ -2,7 +2,30 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave 5 in progress
+## Wave6 in progress
+
+Base verified/pushed32de1ac. Reviewed release tooling, CSV0053 and SEO/legacy
+redirects are composed locally through35182ad; no new release claim. Actual0053
+focused gate passes372 checks after repairing the shared native import fixture's
+middleware/startup teardown (the initial361-pass/11-error run is retained). Actual
+central app.main CSV browser passes74 checks. Mounted SEO HTTP and the complete
+regression/image gates remain pending. Current trusted flags stay off by default.
+
+SKU fact replies are held in peer review: a real buffered batch with conflicting
+reels/reply-to contexts picked the last/first product. The worker reproduced the
+finding and is fixing whole-batch context agreement before integration. V10 owner-
+consented observed-activity contract reserves0054 after0053; remote owned Instagram
+adapter is module-only and still needs local generation/retained-original/reader
+hooks. Integrator owns shared service/config/main/package/legacy-writer seams.
+
+Release-only actual0052 restore and current-create→old-read→current-read package
+proofs are integrated as historical evidence, not relabelled0053 acceptance. The
+new head compatibility review adds a retained CSV original/pending-job fixture;
+a new empty pair must pass before claiming0053 restore. Hosted billing/nativeamd64,
+old writers/browser routing and production remain open. Exact ownership is in
+`docs/v1-wave6-contracts.md`; final Wave5 checkpoint below remains authoritative.
+
+## Wave5 verified checkpoint
 
 Base `3082f1a`; ownership and consent/proof definitions frozen in
 `docs/v1-wave5-contracts.md`. Integrator owns explicit owner-consented read-only
