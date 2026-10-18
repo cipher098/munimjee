@@ -21,7 +21,9 @@ import sys
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-SUPPORTED_HEAD = "0050_v1_assistance"
+# Reviewed additive support/customer-link schema. Keep this explicit: a later
+# migration needs its own compatibility review rather than accepting any head.
+SUPPORTED_HEAD = "0052_v1_customer_links"
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_ROWS = 1000
 MAX_TABLES = 200
@@ -252,12 +254,74 @@ async def pg16(connection):
     require(160000 <= version < 170000, "Both allocated database servers must be PostgreSQL 16")
 
 
+def canonical_constraint(definition):
+    """Recognize only PG16's equivalent literal varchar-array text coercion.
+
+    pg_dump/reparse may distribute a varchar[] -> text[] cast onto each literal.
+    Preserve every literal, its order and all surrounding SQL. No other cast,
+    expression, operator or writer protection is discarded.
+    """
+    literal = r"'(?:[^']|'')*'::character varying"
+    pattern = re.compile(r"\(\(ARRAY\[(" + literal + r"(?:, " + literal + r")*)\]\)::text\[\]\)")
+    def distribute(match):
+        values = re.findall(literal, match.group(1))
+        return "(ARRAY[" + ", ".join("(" + value + ")::text" for value in values) + "])"
+    output, index = [], 0
+    while index < len(definition):
+        start = index
+        if definition.startswith("--", index):
+            end = definition.find("\n", index + 2)
+            index = len(definition) if end < 0 else end + 1
+        elif definition.startswith("/*", index):
+            index, depth = index + 2, 1
+            while index < len(definition) and depth:
+                if definition.startswith("/*", index):
+                    depth += 1
+                    index += 2
+                elif definition.startswith("*/", index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+        elif definition[index] in ("'", '"'):
+            quote = definition[index]
+            escaped = quote == "'" and index > 0 and definition[index-1] in "Ee" and (
+                index == 1 or not (definition[index-2].isalnum() or definition[index-2] in "_$"))
+            index += 1
+            while index < len(definition):
+                # Only E strings have backslash-escaped quote delimiters.
+                # Standard/U& strings and quoted identifiers double quotes.
+                if escaped and definition[index] == "\\":
+                    index += 2
+                elif definition[index] == quote:
+                    index += 1
+                    if index < len(definition) and definition[index] == quote:
+                        index += 1
+                    else:
+                        break
+                else:
+                    index += 1
+        elif definition[index] == "$" and (tag := re.match(r"\$(?:[A-Za-z_\x80-\U0010ffff][A-Za-z0-9_\x80-\U0010ffff]*)?\$", definition[index:])):
+            delimiter = tag.group()
+            end = definition.find(delimiter, index + len(delimiter))
+            index = len(definition) if end < 0 else end + len(delimiter)
+        elif match := pattern.match(definition, index):
+            output.append(distribute(match))
+            index = match.end()
+            continue
+        else:
+            index += 1
+        output.append(definition[start:index])
+    return "".join(output)
+
+
 async def schema_fingerprint(connection):
     """Fingerprint restored public writer protections as well as columns/FKs.
 
     Definitions are private inputs to a digest. Internal FK triggers are covered
     by validated FK definitions rather than unstable generated object OIDs/names.
     """
+    await query(connection, "SET LOCAL standard_conforming_strings = on")
     catalog = {
         "columns": """SELECT table_name,column_name,data_type,udt_name,is_nullable,column_default
           FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position""",
@@ -288,6 +352,8 @@ async def schema_fingerprint(connection):
     }
     inventory = {name: list(map(list, (await query(connection, sql)).all())) for name, sql in catalog.items()}
     require(all(row[3] for row in inventory["constraints"]), "Unvalidated restored constraints are forbidden")
+    for row in inventory["constraints"]:
+        row[2] = canonical_constraint(row[2])
     inventory["sequence_state"] = []
     for row in inventory["sequence_definitions"]:
         name = row[0]

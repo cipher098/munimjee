@@ -38,7 +38,48 @@ def test_default_plan_does_not_import_db_or_call_process_or_network(monkeypatch,
     assert result["mode"] == "plan"
     assert result["database_effects"] is False
     assert result["container_effects"] is False
-    assert result["alembic_head"] == "0050_v1_assistance"
+    assert result["alembic_head"] == "0052_v1_customer_links"
+
+
+def test_pg16_literal_array_cast_reparse_keeps_exact_constraint_meaning():
+    source = "CHECK (((role)::text = ANY ((ARRAY['owner'::character varying, 'can''t,skip'::character varying])::text[])))"
+    restored = "CHECK (((role)::text = ANY (ARRAY[('owner'::character varying)::text, ('can''t,skip'::character varying)::text])))"
+    assert rehearsal.canonical_constraint(source) == restored
+    assert rehearsal.canonical_constraint(restored) == restored
+    assert rehearsal.canonical_constraint(source.replace("'owner'", "'viewer'")) != restored
+    assert rehearsal.canonical_constraint(source.replace("= ANY", "<> ALL")) != restored
+    assert rehearsal.canonical_constraint(source.replace("::character varying", "::integer")) != restored
+    assert rehearsal.canonical_constraint("CHECK (value > 1)") == "CHECK (value > 1)"
+
+
+@pytest.mark.parametrize("wrapper", [
+    'CHECK ("{}" IS NOT NULL)', "CHECK (note <> $$hello {}$$)",
+    "CHECK (note <> $tag$hello {}$tag$)", "CHECK (note <> '{}')",
+    "CHECK (note <> $नाम$hello {}$नाम$)",
+    "CHECK (note <> E'{}')", 'CHECK (U&"{}" IS NOT NULL)',
+    "CHECK (value > 1 /* {} */)", "CHECK (value > 1 /* nested /* {} */ comment */)",
+    "CHECK (value > 1 -- {}\n)",
+])
+def test_cast_normalizer_preserves_quoted_identifiers_strings_and_comments(wrapper):
+    source = "((ARRAY['owner'::character varying])::text[])"
+    changed = "(ARRAY[('owner'::character varying)::text])"
+    if "'{}'" in wrapper:
+        source, changed = source.replace("'", "''"), changed.replace("'", "''")
+    original, different = wrapper.format(source), wrapper.format(changed)
+    assert rehearsal.canonical_constraint(original) == original
+    assert rehearsal.canonical_constraint(different) == different
+    assert rehearsal.canonical_constraint(original) != rehearsal.canonical_constraint(different)
+
+
+@pytest.mark.parametrize('prefix', ['"prefix\\" IS NULL OR ', "'prefix\\' IS NULL OR ", 'U&"prefix\\" IS NULL OR '])
+def test_backslash_does_not_escape_standard_or_identifier_delimiters(prefix):
+    source = "((ARRAY['owner'::character varying])::text[])"
+    changed = "(ARRAY[('owner'::character varying)::text])"
+    original = 'CHECK (' + prefix + '"' + source + '" IS NULL)'
+    different = 'CHECK (' + prefix + '"' + changed + '" IS NULL)'
+    assert rehearsal.canonical_constraint(original) == original
+    assert rehearsal.canonical_constraint(different) == different
+    assert rehearsal.canonical_constraint(original) != rehearsal.canonical_constraint(different)
 
 
 @pytest.mark.parametrize("url", ["", "postgresql://test:test@127.0.0.1:55461/munimjee_test_release_src",

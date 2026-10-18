@@ -1,12 +1,20 @@
 # Disposable V1 release rehearsal
 
 This release-only tool implements a guarded synthetic backup/restore acceptance
-path at the exact repository migration head, currently `0050_v1_assistance`.
+path at the exact repository migration head, currently `0052_v1_customer_links`.
 It changes no product models, migrations or P01 policy. Default invocation:
 
 ```sh
 python scripts/v1_release_rehearsal.py
 ```
+
+The local compatibility review advances the explicit allowed head from0050 to0052.
+0051 adds consent-bound read-only support grants/receipts;0052 adds isolated customer
+control-proof/association records. The dump inventory includes their constraints,
+immutable triggers/functions and full rows without enabling either feature. This
+fixed fixture leaves the new domain tables empty: its schema restore is exercised,
+but populated support/customer proof restoration is not claimed. CSV0053 is a
+separate next-slice compatibility review, not implicitly accepted by this constant.
 
 The default and explicit `plan` action read migration source only. They import no
 application configuration, read no dotenv file, spawn no subprocess and connect
@@ -112,6 +120,14 @@ DB reconciliation complete. A failed or interrupted operation can leave owned
 private files, a migrated source or a restored target. There is deliberately no
 cleanup command that might mistake an external resource for an owned one.
 
+PG16 can reparse a literal varchar-array-to-text-array CHECK cast into equivalent
+per-element text casts during pg_dump/restore. Fingerprinting canonicalizes only
+that exact literal form, preserving literal values/order and surrounding operators.
+A SQL token fence leaves quoted identifiers, standard/E/U& strings, dollar-quoted
+strings and nested/line comments byte-for-byte unchanged; other casts/protections
+remain compared. Independent review reproduced two initial quoted-token collisions;
+both are fixed with regression sentinels before the successful fresh-pair run.
+
 ## Application rollback and forward fix boundary
 
 The persisted-data probe is a generic SQL read over the current schema, **not an
@@ -156,9 +172,15 @@ or unsafe input fails rather than skipping once acceptance is explicitly enabled
 Do not combine this acceptance with backend conftest's single-lane socket guard:
 run this dedicated test file as its own process.
 
-Local status on 18 October 2026: **38 local safety/exec-helper checks passed, one actual
-PG16 acceptance skipped**. No allocated pair or explicit PG16 installation was
-provided. The known remote Docker hang was not probed or restarted. Actual
-`pg_dump`/`pg_restore`, hosted CI, prior/current application compatibility, rollback and
-forward-fix mounted journeys remain pending. Earlier wave-4 local PG16 acceptance
-is historical evidence and is not a run of this new rehearsal.
+Remote handoff originally recorded38 safety checks and one unexecuted acceptance.
+Local execution on18 October2026 now passes **53 checks, zero skips**, including
+real PG16.15 migrate/dump/restore with PG16.13 tools and a newly allocated empty
+source/target pair. Every restored table hash, schema protection and total matches;
+the newer target-only paid order/reservation is preserved by the generic read probe.
+The first pair's formatting refusal is retained and never reset/reused. Archives
+and ownership attestations remain private outside Git. Public evidence is under
+`artifacts/v1/release-rehearsal/local-pg16-w5/`.
+
+Hosted CI, native architecture image proof and prior/current application compatibility,
+rollback and forward-fix mounted journeys remain pending. The generic SQL probe is
+not a package switch. No existing service, production data or provider was used.
