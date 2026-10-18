@@ -1,0 +1,75 @@
+{
+  "format": "munimjee.whatsapp0057.coordinator-owner-review.v1",
+  "owner_packet": "80045c9",
+  "owner_runtime": "f61ed55e23e77639ebccd144e4efccf25f25bc36",
+  "central_frozen_full_source": "ec20891adb923fc82c91d7efd35bbdef105a2cef",
+  "owner_artifact_files_checked": 66,
+  "owner_artifact_hash_mismatches": [],
+  "owner_mounted_stable_hashes": 339,
+  "changed_0057_app_harness_paths_byte_equal": 36,
+  "inherited_central_differences": [
+    "backend/app/schemas/activity_v1.py",
+    "backend/app/services/activity_v1.py",
+    "backend/app/services/comment_automation.py",
+    "backend/app/services/instagram_ingress.py",
+    "backend/app/services/parcel_tracking.py",
+    "backend/app/services/sku_fact_replies.py",
+    "backend/app/services/whatsapp.py",
+    "backend/app/services/whatsapp_reel_queue.py",
+    "backend/static/analytics_activity.js",
+    "backend/static/analytics_v1.html",
+    "backend/static/v1_app.css",
+    "backend/static/v1_app.js"
+  ],
+  "late_pytest_display_ids_only": "1fefd17; separate from executed runtime/harness",
+  "distinct_overlapping_gates": [
+    {
+      "gate": "initial_owner",
+      "passed": 149,
+      "actual": 34,
+      "pure": 115
+    },
+    {
+      "gate": "extra_owner",
+      "actual": 8
+    },
+    {
+      "gate": "independent_committed_claim_late_app",
+      "actual": 6
+    },
+    {
+      "gate": "completion99c",
+      "passed": 161,
+      "actual": 43,
+      "pure": 118
+    },
+    {
+      "gate": "affected_final_f61",
+      "actual": 17
+    },
+    {
+      "gate": "mounted_final_f61",
+      "journeys": 35
+    }
+  ],
+  "counts_must_not_be_summed": true,
+  "coordinator_bounded_render_verdict": "clear",
+  "coordinator_inspected": [
+    "desktop-paused-account",
+    "mobile-unknown-setup",
+    "mobile-new-current-test",
+    "mobile-read-error",
+    "mobile-viewer",
+    "mobile-session-ended"
+  ],
+  "real_meta_sdk_network_requests": 0,
+  "other_external_requests": 0,
+  "synthetic_sdk_fulfilled": 1,
+  "provider_methods": "one synthetic canonical fixed-reply method; no live provider",
+  "remaining_integration_gates": [
+    "complete frozen central0057 backend result",
+    "central actual-main mounted35 composition check"
+  ],
+  "external_gates_open": true,
+  "release_ready": false
+}

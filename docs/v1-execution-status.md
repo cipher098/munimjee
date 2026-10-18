@@ -2,6 +2,55 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
+## 18 October quota checkpoint
+
+All three local GPT-6.1 Sol/high workers stopped on usage-limit errors. Mac mini
+`dev` also failed its next assigned turn with the same error (revision66). The
+follow-up dispatch timed out, but the remote snapshot confirms that a turn was
+created and failed; do not send a duplicate or assume browser work started.
+The account usage snapshot inconsistently reports ordinary usage allowed; actual
+worker failures remain the observed blocker. No model substitution is authorized.
+
+Frozen `ec20891adb923fc82c91d7efd35bbdef105a2cef` completed the whole backend
+gate: **2649 passed,8 skipped,0 failures/errors**,2657 XML cases,1275.66s pytest
+runtime (1278.44s wrapper), exit0. Recorded actual database is PostgreSQL16.15,
+`0057_v1_whatsapp_self_service`. Root independently checked XML accounting,
+identical before/after maps and all876 current tracked non-artifact hashes.
+Evidence is `artifacts/v1/integration/wave7/full-0057*`. The eight skips remain
+five missing historical LLM cassettes and three unallocated Redis cases.
+The central35 mounted WhatsApp rerun is still pending; the owner's separately
+verified35 journeys do not certify the different central inherited source.
+No live Meta SDK, consent, provider delivery or production readiness is implied.
+
+Resume in this order, preserving serial actual-DB/browser lanes:
+
+1. Integrator completes central35 mounted WhatsApp journeys at this runtime and
+   records their exact source, before composing subsequent feature work.
+2. Review/integrate remote A13 `82884c5` on
+   `origin/codex/v1-reel-operator-coordination`: real0058 follows0057; new native
+   exact-one-enquiry link/resume with immutable authorization. Root verified46
+   source/test/payload hashes and47Python+20Node results.20 authored DB cases,
+   shared final-sender installation and actual mounted acceptance remain pending.
+   The next remote NEW mounted-runner task failed on quota before confirmed work.
+3. Catalogue A10 branch `codex/v1-catalogue-comment-mode` is at `bf2503d`,
+   with preserved uncommitted schema/service/test fixes and two raw artifacts in
+   `../munimjee-v1-whatsapp-self-service-contract`. Independent review reproduced
+   an intermediate static-rule write TypeError when new DTO defaults reached the
+   old model. Do not compose until its storage projection fix and real0059 model/
+   migration are reviewed and tested.0059 must follow the real remote0058.
+4. Social X02/G5 tooling branch `codex/v1-pilot-tooling` is clean at `8c9bf5a`.
+   Source/unit review exists; actual health SQL/native authorization and bounded
+   managed read-load execution remain pending. Missing budgets are not assessed,
+   not passed. Integrator owns the main router seam.
+5. Release/image/current-head restore/rollback and hosted CI retain the documented
+   headroom/tooling/billing gates. External provider, physical-device, private
+   ParcelDesk and seller migration requirements remain separate.
+
+Existing sellerbot, demos and standalone ParcelDesk are unchanged. No production
+release, real charge or customer message occurred. Retain all dirty work and raw
+failures; do not reset, prune or delete evidence. Stop retrying quota-failed workers
+until capacity is restored, then reuse their existing ownership and worktrees.
+
 ## Wave7 verified complete checkpoint and next ownership
 
 The fresh complete producer checkpoint `a9880c56b6a8bf7b4e20f54837a362e4432aadda`

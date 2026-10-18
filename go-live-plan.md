@@ -91,6 +91,13 @@ physical devices, international migration requirements and operational release
 remain separate gates. Exact current evidence and ownership are in
 `docs/v1-execution-status.md` and `docs/v1-wave7-contracts.md`.
 
+Latest checkpoint: frozen `ec20891` now passes2649 backend tests with8 documented
+skips and no failures/errors on actual0057;876 tracked files are stable. Central
+mounted35 verification and A13/A10/X02 composition remain pending. All local
+workers and Mac mini hit usage limits; exact restart order and preserved dirty
+work are recorded in `docs/v1-execution-status.md` under the quota checkpoint.
+This supersedes the earlier whole-suite-pending statement, not external gates.
+
 ## 1. The V1 outcome
 
 A sales representative can onboard a boutique from its existing Instagram account and website, prepare and review its catalogue, publish a premium storefront, connect Instagram and WhatsApp, demonstrate catalogue-aware conversations, complete a purchase and manage the order without code changes or database edits.

@@ -1,0 +1,18 @@
+{
+  "source": "ec20891adb923fc82c91d7efd35bbdef105a2cef",
+  "exit_code": 0,
+  "elapsed_seconds": 1278.44,
+  "stable_tracked_nonartifact_files": 876,
+  "source_unchanged": true,
+  "actual_provider_or_device_acceptance": false,
+  "xml_cases": 2657,
+  "passed": 2649,
+  "skipped": 8,
+  "failed": 0,
+  "errors": 0,
+  "database": {
+    "alembic_revision": "0057_v1_whatsapp_self_service",
+    "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "active_other_sessions": 0
+  }
+}
