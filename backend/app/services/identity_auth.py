@@ -132,7 +132,17 @@ async def accept_invitation(db, body: InvitationAcceptInput) -> User:
     audit(db, user.id, "invitation_accepted", business_id=row.business_id,
           subject_id=row.id, details={"role": row.role})
     await db.flush()
+    await require_business_access(db, inviter, row.business_id, "members.manage")
     return user
+
+
+async def reauthorize_invitation_owner(db, token: str):
+    """Recheck current inviter authority after session/audit staging, before commit."""
+    row = (await db.execute(select(BusinessInvitation.created_by, BusinessInvitation.business_id)
+        .where(BusinessInvitation.token_digest == secret_digest(token)))).one_or_none()
+    if row is None:
+        raise HTTPException(status_code=400, detail="Invitation is unavailable")
+    await require_business_access(db, Actor(row.created_by, "v1_user"), row.business_id, "members.manage")
 
 
 async def revoke_membership(db, actor: Actor, business_id: UUID, membership_id: UUID):

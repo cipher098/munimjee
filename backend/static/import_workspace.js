@@ -165,6 +165,9 @@
     select.value=csvDocuments.has(previous)?previous:'new';csvMode();
   }
   function jobError(code) {
+    if(code==='instagram_original_unavailable')return 'Instagram did not provide a downloadable original for this media. This can happen with licensed audio. Upload an original you are authorized to use, or choose another source; reconnecting does not guarantee a download.';
+    if(code==='instagram_api_error')return 'Instagram did not return a usable media response. This does not establish an authentication failure. Review source availability and current access, or use an authorized original upload.';
+    if(code==='instagram_media_not_owned')return 'The requested media was not found in the checked account responses within the retrieval budget. Confirm the connected account and media ID, or upload an authorized original.';
     const match=/^csv_([a-z_]+):line_([0-9]+)(?::([a-z_]+))?$/.exec(code);
     if(!match)return code==='provider_capability_pending'?'Instagram retrieval is awaiting provider capability. Use original media or an authorized website.':'Import issue: '+code+'. Review source permission and format before retrying.';
     const reasons={size:'File must be nonempty and no larger than 256,000 bytes.',encoding:'Save the file as UTF-8 CSV.',control:'Remove unsupported control characters or embedded byte-order marks.',quoting:'Check CSV quotes and comma separators.',headers:'Use supported column names exactly, including product_ref; remove duplicates.',row_limit:'Use at most 200 product records.',column_count:'Every record must match the header column count.',field_limit:'A field exceeds its supported length.',invalid_fact:'Check the literal value against the column format.',duplicate_ref:'Each trimmed product_ref must be unique within this file.',price_currency_pair:'Supply both price and a recognized currency, or leave both blank.',no_products:'Include at least one product record.',content_type:'Select a CSV original.'};

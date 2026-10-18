@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.api.v1.identity import business_view, current_actor
-from app.api.v1.session import check_login_origin, require_v1_mutation, business_mutation
+from app.api.v1.session import check_login_origin, require_v1_mutation, business_mutation, business_read
 from app.models.identity import Membership
 from app.models.identity_auth import BusinessInvitation
 from app.schemas.identity_auth import (SignupInput, LoginInput, ProfileInput,
@@ -40,11 +40,12 @@ async def actor_view(db, actor, csrf=None):
             "customer_links": settings.V1_CUSTOMER_LINKS_ENABLED}}
 
 
-async def start_session(db, user, request, response):
+async def start_session(db, user, request, response, *, commit=True):
     await revoke_browser_session(db, request)
     token, csrf, _ = await issue_session(db, user)
     result = await actor_view(db, Actor(user.id, "v1_user"), csrf)
-    await db.commit()
+    if commit:
+        await db.commit()
     set_native_cookies(response, request, token, csrf)
     response.headers["Cache-Control"] = "no-store"
     return result
@@ -105,14 +106,17 @@ async def logout_all(request: Request, response: Response, actor: Actor = Depend
 async def accept_invitation(body: InvitationAcceptInput, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     check_login_origin(request)
     try:
-        return await start_session(db, await domain.accept_invitation(db, body), request, response)
+        result = await start_session(db, await domain.accept_invitation(db, body), request, response, commit=False)
+        await db.flush()
+        await domain.reauthorize_invitation_owner(db, body.token)
+        return result
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=409, detail="Account or membership changed; sign in and ask the owner to review access")
 
 
 @router.get("/businesses/{business_id}/profile")
-async def profile(business_id: UUID, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
+async def profile(business_id: UUID, actor: Actor = Depends(business_read("business.read")), db: AsyncSession = Depends(get_db)):
     access = await require_business_access(db, actor, business_id, "business.read")
     return profile_view(access.business)
 
@@ -123,7 +127,7 @@ async def update_profile(business_id: UUID, body: ProfileInput, actor: Actor = D
 
 
 @router.get("/businesses/{business_id}/onboarding")
-async def onboarding(business_id: UUID, request: Request, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
+async def onboarding(business_id: UUID, request: Request, actor: Actor = Depends(business_read("readiness.read")), db: AsyncSession = Depends(get_db)):
     routes = {getattr(route, "path", "").replace("{business_id}", str(business_id)) for route in request.app.routes}
     return await onboarding_view(db, actor, business_id, available_actions=routes)
 
@@ -140,7 +144,7 @@ async def invite(business_id: UUID, body: InvitationInput, actor: Actor = Depend
 
 
 @router.get("/businesses/{business_id}/invitations")
-async def invitations(business_id: UUID, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
+async def invitations(business_id: UUID, actor: Actor = Depends(business_read("members.manage")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "members.manage")
     rows = await db.scalars(select(BusinessInvitation).where(BusinessInvitation.business_id == business_id)
         .order_by(BusinessInvitation.created_at.desc()).limit(100))
@@ -160,7 +164,7 @@ async def revoke_invitation(business_id: UUID, invitation_id: UUID, actor: Actor
 
 
 @router.get("/businesses/{business_id}/members")
-async def members(business_id: UUID, actor: Actor = Depends(current_actor), db: AsyncSession = Depends(get_db)):
+async def members(business_id: UUID, actor: Actor = Depends(business_read("members.manage")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "members.manage")
     rows = await db.scalars(select(Membership).where(Membership.business_id == business_id).order_by(Membership.created_at).limit(100))
     return [{"id": row.id, "user_id": row.user_id, "role": row.role,

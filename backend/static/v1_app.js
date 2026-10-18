@@ -6,7 +6,76 @@
   if (invitation) history.replaceState(null, '', '/v1');
   const requestedBusiness = new URLSearchParams(location.search).get('business');
   let actor, business, profileVersion = 0, businessLoad = 0;
-  const api = window.V1.api;
+  const rawApi = window.V1.api;
+  let identity = null, ended = false, fenceGeneration = 0, sessionIssued = 0, sessionApplied = 0, latestSession = null, checking = false, recheckPending = false;
+  const csrfCookie = () => {try {return document.cookie.split(';').map(v => v.trim()).find(v => v.startsWith('v1_csrf='))?.slice(8) || null;} catch (_) {return null;}};
+  const changedError = () => Object.assign(new Error('Your sign-in or access changed. Review the current workspace.'), {stale: true});
+  function endWorkspace(message) {
+    if (ended) return; ended = true; fenceGeneration++; identity = null; latestSession = null; actor = null; mode = 'login'; access();
+    $('business-picker').replaceChildren(); $('business-content').hidden = true; $('team').hidden = true;
+    for (const id of ['profile-status','profile-error','invite-error','global-error','setup-progress']) $(id).textContent = '';
+    $('access-form').reset(); $('access-error').textContent = message; $('logout-all').hidden = true;
+  }
+  function applyAuthority(value) {
+    if (!actor) return;
+    const selected = business?.id || $('business-picker').value;
+    const different = JSON.stringify([actor.businesses,actor.features]) !== JSON.stringify([value.businesses,value.features]);
+    actor = value;
+    if (!different) return;
+    businessLoad++; clearInvite(); $('business-tools').hidden = true; $('business-tools').replaceChildren();
+    $('business-picker').replaceChildren(...value.businesses.map(b => {const option = text('option', b.name);option.value=b.id;return option;}));
+    $('business-picker').value = value.businesses.some(b => b.id === selected) ? selected : '';
+    $('business-picker-label').hidden = value.businesses.length < 2 && !(selected && !$('business-picker').value && value.businesses.length);
+    business = value.businesses.find(b => b.id === selected) || null;
+    if (!business) {
+      $('business-content').hidden = true; $('profile-form').reset(); $('team').hidden = true; $('checklist').replaceChildren();
+      $('business-heading').textContent = 'Your business'; $('setup-progress').textContent = '';
+      $('no-business').hidden = false; $('no-business').textContent = 'This business is no longer available. Choose one of your businesses or ask its owner to review access.';
+    } else {
+      $('business-heading').textContent = business.name;
+      [...$('profile-form').elements].forEach(control => control.disabled = !business.capabilities.includes('business.write'));
+      $('team').hidden = !business.capabilities.includes('members.manage');
+      const epoch = businessLoad;
+      queueMicrotask(() => {if (!ended && epoch === businessLoad) loadBusiness().catch(e => {if (!ended) $('global-error').textContent=e.message;});});
+    }
+    $('assisted-access-link').hidden = !value.features?.assisted_operator;
+  }
+  async function checkedSession(initial = false) {
+    if (ended && !initial) throw changedError();
+    const generation = fenceGeneration, sequence = ++sessionIssued;
+    if (identity && csrfCookie() !== identity.csrf) {endWorkspace('Your sign-in changed. Sign in again to continue.');throw changedError();}
+    let value;
+    try {value = await window.V1.session();} catch (e) {if (initial && !identity && !actor) throw e;if (generation === fenceGeneration) endWorkspace('Your current sign-in could not be checked. Sign in again.');throw e;}
+    if (generation !== fenceGeneration || ended) throw changedError();
+    if (sequence < sessionApplied) value = latestSession;
+    if (!value || typeof value.user_id !== 'string' || !Array.isArray(value.businesses) || !value.businesses.every(b => b && typeof b.id === 'string' && typeof b.name === 'string' && ['owner','manager','staff','viewer'].includes(b.role) && Array.isArray(b.capabilities) && b.capabilities.every(c => typeof c === 'string')) || typeof value.csrf_token !== 'string' || !value.csrf_token || csrfCookie() !== value.csrf_token ||
+        identity && (identity.user !== value.user_id || identity.csrf !== value.csrf_token)) {
+      endWorkspace('Your sign-in changed. Sign in again to continue.');throw changedError();
+    }
+    if (sequence >= sessionApplied) {sessionApplied = sequence;latestSession = value;}
+    applyAuthority(value); return value;
+  }
+  function pathAccess(path, options) {
+    const match = path.match(/^\/api\/v1\/businesses\/([^/]+)\/(profile|onboarding|invitations|members)(?:\/|$)/);
+    if (!match) return;
+    const capability = ['invitations','members'].includes(match[2]) ? 'members.manage' : match[2] === 'onboarding' ? 'readiness.read' : (options.method && options.method !== 'GET') ? 'business.write' : 'business.read';
+    if (!actor?.businesses.some(b => b.id === match[1] && b.capabilities.includes(capability))) throw Object.assign(new Error('Your current role does not allow this action.'), {status:403});
+  }
+  async function api(path, options = {}) {
+    const transition = /^\/api\/v1\/auth\/(login|signup|invitations\/accept)$/.test(path);
+    if (transition) {const generation = ++fenceGeneration;ended = false;identity = null;latestSession = null;const data = await rawApi(path,options);if(generation !== fenceGeneration)throw changedError();return data;}
+    if (!actor) throw changedError();
+    try {
+      const generation = fenceGeneration;await checkedSession();if (ended || generation !== fenceGeneration) throw changedError();pathAccess(path,options);
+      const data = await rawApi(path, options);
+      if (/^\/api\/v1\/auth\/logout(?:-all)?$/.test(path)) return data;
+      await checkedSession();if (ended || generation !== fenceGeneration) throw changedError();pathAccess(path,options);return data;
+    } catch (e) {
+      if (e.status === 401) endWorkspace('Your session ended. Sign in to continue.');
+      else if (e.status === 403 && !ended) {try {await checkedSession();} catch (_) {}}
+      throw e;
+    }
+  }
   const text = (tag, value, className) => {const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n;};
   function clearInvite() {
     $('invite-result').hidden = true; $('invite-link').value = ''; $('invite-form').reset();
@@ -33,7 +102,7 @@
     $(errorId).textContent = '';
     const buttons = [...form.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
     form.setAttribute('aria-busy', 'true');
-    try { await callback(); } catch (e) {if (epoch !== businessLoad) return; $(errorId).textContent = e.message;
+    try { await callback(); } catch (e) {if (e.stale || epoch !== businessLoad) return; $(errorId).textContent = e.message;
       if (e.status === 401 && actor) {actor = null; mode = 'login'; access(); $('access-error').textContent = 'Your session ended. Sign in to continue.';}
     } finally {if (epoch === businessLoad) buttons.forEach(b => b.disabled = false);form.removeAttribute('aria-busy');}
   }
@@ -107,6 +176,7 @@
   }
   async function workspace(data) {
     if (!data.csrf_token) {actor = null; mode = 'login'; access(); $('access-error').textContent = 'Sign in again to restore your browser session.'; return;}
+    ended = false; identity = {user:data.user_id,csrf:data.csrf_token}; latestSession = data; $('logout-all').hidden = false;
     actor = data; $('assisted-access-link').hidden = !data.features?.assisted_operator; $('business-heading').textContent = 'Your business'; $('invite-result').hidden = true; $('team-list').replaceChildren(); $('access').hidden = true; $('workspace').hidden = false; $('logout').hidden = false;
     $('business-picker').replaceChildren(...actor.businesses.map(b => {const option = text('option', b.name);option.value=b.id;return option;}));
     if (requestedBusiness !== null) $('business-picker').value = actor.businesses.some(b => b.id === requestedBusiness) ? requestedBusiness : '';
@@ -136,6 +206,9 @@
     if ($('business-picker').value) history.replaceState(null, '', '/v1?business=' + encodeURIComponent($('business-picker').value) + location.hash);
     loadBusiness().catch(e => $('global-error').textContent=e.message);
   });
-  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {await api('/api/v1/auth/' + id, {method:'POST'});actor=null;mode='login';$('profile-form').reset();$('invite-result').hidden=true; access();});});
-  (async () => {try {if (invitation) access(); else await workspace(await window.V1.session());} catch(e) {if(e.status===401) access();else $('global-error').textContent=e.message;} finally {$('loading').hidden=true;}})();
+  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {await api('/api/v1/auth/' + id, {method:'POST'});endWorkspace('Signed out. Sign in to continue.');});});
+  async function recheck() {if (!actor || ended) return;if(checking){recheckPending=true;return;}checking = true;$('workspace').hidden = true;try {await checkedSession();} catch (_) {if (!ended) endWorkspace('Your current sign-in could not be checked. Sign in again.');} finally {checking = false;if (actor && !ended && !document.hidden) $('workspace').hidden = false;if(recheckPending && !ended){recheckPending=false;recheck();}}}
+  window.addEventListener('focus', recheck);window.addEventListener('pageshow', recheck);window.addEventListener('pagehide', () => {$('workspace').hidden=true;});
+  document.addEventListener('visibilitychange', () => {if (document.hidden) $('workspace').hidden=true;else recheck();});
+  (async () => {try {if (invitation) access(); else await workspace(await checkedSession(true));} catch(e) {if(e.stale) return;if(e.status===401) access();else $('global-error').textContent=e.message;} finally {$('loading').hidden=true;}})();
 })();
