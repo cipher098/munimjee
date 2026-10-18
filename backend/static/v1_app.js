@@ -4,6 +4,7 @@
   let mode = location.hash.startsWith('#invite=') ? 'invite' : 'signup';
   const invitation = mode === 'invite' ? location.hash.slice(8) : null;
   if (invitation) history.replaceState(null, '', '/v1');
+  const requestedBusiness = new URLSearchParams(location.search).get('business');
   let actor, business, profileVersion = 0, businessLoad = 0;
   const api = window.V1.api;
   const text = (tag, value, className) => {const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n;};
@@ -40,9 +41,13 @@
     $('business-content').hidden = true;
     $('business-tools').hidden = true; $('business-tools').replaceChildren();
     $('global-error').textContent = '';
-    business = actor.businesses.find(b => b.id === $('business-picker').value) || actor.businesses[0];
+    business = actor.businesses.find(b => b.id === $('business-picker').value);
     $('no-business').hidden = Boolean(business);
-    if (!business) return;
+    if (!business) {
+      $('business-heading').textContent = 'Your business';
+      $('no-business').textContent = requestedBusiness ? 'This business is unavailable with your current access. Choose one of your businesses or ask its owner for an invitation.' : 'No active business access. Ask your business owner for a new invitation.';
+      return;
+    }
     $('business-heading').textContent = business.name;
     const data = await api(`/api/v1/businesses/${business.id}/onboarding`);
     if (load !== businessLoad) return;
@@ -53,6 +58,12 @@
         link.href = `/v1/businesses/${business.id}/${page}`; $('business-tools').append(link);
       }
       $('business-tools').hidden = false;
+    }
+    for (const [capability,label,page] of [['readiness.read','Onboarding','assistance'],['business.write','Payment setup','payments']]) {
+      if (business.capabilities.includes(capability)) {
+        const link = text('a', label, 'button secondary');
+        link.href = `/v1/businesses/${business.id}/${page}`; $('business-tools').append(link); $('business-tools').hidden = false;
+      }
     }
     profileVersion = data.profile.version;
     const form = $('profile-form');
@@ -95,7 +106,10 @@
     if (!data.csrf_token) {actor = null; mode = 'login'; access(); $('access-error').textContent = 'Sign in again to restore your browser session.'; return;}
     actor = data; $('business-heading').textContent = 'Your business'; $('invite-result').hidden = true; $('team-list').replaceChildren(); $('access').hidden = true; $('workspace').hidden = false; $('logout').hidden = false;
     $('business-picker').replaceChildren(...actor.businesses.map(b => {const option = text('option', b.name);option.value=b.id;return option;}));
-    $('business-picker-label').hidden = actor.businesses.length < 2; await loadBusiness();
+    if (requestedBusiness !== null) $('business-picker').value = actor.businesses.some(b => b.id === requestedBusiness) ? requestedBusiness : '';
+    const requestedUnavailable = requestedBusiness !== null && !actor.businesses.some(b => b.id === requestedBusiness);
+    $('business-picker-label').hidden = actor.businesses.length < 2 && !(requestedUnavailable && actor.businesses.length);
+    await loadBusiness();
   }
   $('access-toggle').addEventListener('click', () => {mode = mode === 'signup' ? 'login' : 'signup'; $('access-error').textContent = ''; access();});
   $('access-form').addEventListener('submit', event => {event.preventDefault(); const form = event.currentTarget; busy(form, 'access-error', async () => {
@@ -115,7 +129,10 @@
     if (epoch !== businessLoad || business?.id !== businessId) return;
     $('invite-link').value = location.origin + data.invitation_url; $('invite-result').hidden=false; await loadTeam();
   });});
-  $('business-picker').addEventListener('change', () => {loadBusiness().catch(e => $('global-error').textContent=e.message);});
+  $('business-picker').addEventListener('change', () => {
+    if ($('business-picker').value) history.replaceState(null, '', '/v1?business=' + encodeURIComponent($('business-picker').value) + location.hash);
+    loadBusiness().catch(e => $('global-error').textContent=e.message);
+  });
   for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {await api('/api/v1/auth/' + id, {method:'POST'});actor=null;mode='login';$('profile-form').reset();$('invite-result').hidden=true; access();});});
   (async () => {try {if (invitation) access(); else await workspace(await window.V1.session());} catch(e) {if(e.status===401) access();else $('global-error').textContent=e.message;} finally {$('loading').hidden=true;}})();
 })();

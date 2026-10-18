@@ -8,6 +8,7 @@
   const failure=message=>new Error(message);
   let identity=null, ended=false, selected=null, detail=null, pending=null, corrupt=false, authority=[];
   let pageEpoch=0, detailEpoch=0, busy=false, checking=false, recheckPending=false, page=null, cursors=[null], pageIndex=0;
+  let sessionRequest=0, sessionApplied=0, latestSession=null;
   let requested=location.pathname.match(/^\/v1\/businesses\/([a-f0-9-]+)\/assistance$/i)?.[1]||null;
   const fingerprint=async value=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(v=>v.toString(16).padStart(2,'0')).join('');
   function eraseCommands() {
@@ -15,7 +16,7 @@
   }
   function end(message,clear=true) {
     if(ended)return;ended=true;pageEpoch++;detailEpoch++;if(clear)eraseCommands();
-    identity=null;selected=null;detail=null;page=null;pending=null;corrupt=false;authority=[];
+    identity=null;selected=null;detail=null;page=null;pending=null;corrupt=false;authority=[];latestSession=null;
     for(const id of ['business-list','steps','checks','assignee'])$(id).replaceChildren();
     for(const id of ['business-heading','business-intro','lead-name','lead-help','recovery-message','recovery-error','notice','page-label'])$(id).textContent='';
     $('assignment-reviewed').checked=false;$('private-content').hidden=true;$('detail-content').hidden=true;
@@ -28,17 +29,22 @@
   }
   async function session() {
     if(ended)throw failure('Your sign-in ended.');
+    const request=++sessionRequest;
     if(!cookieMatches()){end('Your sign-in changed. Reopen onboarding after signing in.');throw failure('Your sign-in changed.');}
     let value;
     try{value=await rawApi('/api/v1/auth/session');}catch(error){if(error.status===401)end('Your sign-in ended. Reopen onboarding after signing in.');throw error;}
     if(ended)throw failure('Your sign-in ended.');
     if(!cookieMatches()){end('Your sign-in changed. Reopen onboarding after signing in.');throw failure('Your sign-in changed.');}
     if(!UUID.test(value?.user_id)||typeof value.csrf_token!=='string'||!value.csrf_token||!Array.isArray(value.businesses))throw failure('Your current sign-in could not be checked.');
-    const hash=await fingerprint(value.csrf_token);
+    let hash=await fingerprint(value.csrf_token);
     if(ended)throw failure('Your sign-in ended.');
     if(!cookieMatches()){end('Your sign-in changed. Reopen onboarding after signing in.');throw failure('Your sign-in changed.');}
+    // A slower earlier guard cannot restore a business/role that a later
+    // session projection has already removed. Its caller uses the latest facts.
+    if(request<sessionApplied){value=latestSession;hash=identity.hash;}
     if(identity&&(identity.user!==value.user_id||identity.hash!==hash)){end('Your sign-in changed. Reopen onboarding after signing in.');throw failure('Your sign-in changed.');}
     if(!identity)identity={user:value.user_id,hash,csrf:value.csrf_token};
+    if(request>=sessionApplied){sessionApplied=request;latestSession=value;}
     authority=value.businesses;
     if(page){
       page.items=page.items.filter(item=>authority.some(b=>b.id===item.business_id&&b.capabilities?.includes('readiness.read')));

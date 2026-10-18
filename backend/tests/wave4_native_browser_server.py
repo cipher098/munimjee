@@ -29,7 +29,7 @@ from app.v1.imports import parse_candidate
 async def seed_source(business_id: UUID, actor=Depends(business_mutation('catalogue.write')), db=Depends(get_db)):
     jid = uuid4()
     candidate = parse_candidate({'provenance': dict(business_id=business_id, import_job_id=jid,
-        captured_at=datetime.now(timezone.utc), source={'kind': 'website', 'url': 'https://shop.example.test/qa'},
+        captured_at=datetime.now(timezone.utc), source={'kind': 'website', 'url': 'https://shop.example.com/qa'},
         source_product_id=uuid4().hex), 'facts': dict(title='Independent mounted QA dress',
         description='Literal synthetic fixture facts', price={'amount': '12.50', 'currency': 'INR'},
         stock=5, options=[{'name': 'Size', 'values': ['S', 'M']}, {'name': 'Colour', 'values': ['Red', 'Blue']}])}, business_id=business_id)

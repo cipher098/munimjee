@@ -77,7 +77,8 @@ def test_exact_registered_theme_migration_chain_and_guard_hooks():
     from app.api.v1.theme_settings import router
     config=Config();config.set_main_option('script_location',str(Path(__file__).parents[1]/'alembic'))
     script=ScriptDirectory.from_config(config)
-    assert script.get_current_head()=='0049_v1_storefront_settings'
+    assert script.get_current_head()=='0050_v1_assistance'
+    assert script.get_revision('0050_v1_assistance').down_revision=='0049_v1_storefront_settings'
     assert script.get_revision('0049_v1_storefront_settings').down_revision=='0048_v1_parcel_tracking'
     for route in router.routes:
         if route.methods.intersection({'PUT','POST'}):

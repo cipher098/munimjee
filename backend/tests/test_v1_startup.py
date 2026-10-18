@@ -15,7 +15,8 @@ def test_all_foundation_models_are_registered():
             "v1_import_assets", "v1_import_jobs", "v1_import_drafts", "v1_import_audits",
             "import_catalogue_bridges", "v1_parcel_connectors", "v1_order_parcel_links",
             "v1_parcel_observations", "v1_parcel_notifications", "v1_parcel_audits",
-            "storefront_theme_settings_v1", "storefront_theme_commands_v1"} <= set(Base.metadata.tables)
+            "storefront_theme_settings_v1", "storefront_theme_commands_v1",
+            "v1_onboarding_assignments", "v1_assistance_commands"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -26,6 +27,8 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/api/v1/businesses/{business_id}/onboarding", "/v1",
             "/v1/businesses/{business_id}/catalogue", "/v1/businesses/{business_id}/channels",
             "/v1/businesses/{business_id}/imports", "/v1/businesses/{business_id}/themes",
+            "/v1/businesses/{business_id}/payments", "/v1/assistance",
+            "/v1/businesses/{business_id}/assistance", "/api/v1/assistance/businesses",
             "/api/v1/businesses/{business_id}/theme-settings",
             "/api/v1/businesses/{business_id}/theme-settings/preview",
             "/api/v1/storefronts/{slug}/products",
@@ -47,7 +50,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0049_v1_storefront_settings"]
+    assert scripts.get_heads() == ["0050_v1_assistance"]
+    assert scripts.get_revision("0050_v1_assistance").down_revision == "0049_v1_storefront_settings"
     assert scripts.get_revision("0049_v1_storefront_settings").down_revision == "0048_v1_parcel_tracking"
     assert scripts.get_revision("0048_v1_parcel_tracking").down_revision == "0047_v1_import_catalogue_bridge"
     assert scripts.get_revision("0047_v1_import_catalogue_bridge").down_revision == "0046_v1_import_jobs"

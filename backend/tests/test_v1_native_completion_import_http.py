@@ -53,7 +53,7 @@ async def native_import(migrated_engine, monkeypatch):
         # as well so the real cookie jar exercises authentication correctly.
         async with AsyncClient(transport=ASGITransport(app=app), base_url='https://test', headers={'Origin': 'https://test'}) as client:
             response = await client.post('/api/v1/auth/signup', json={
-                'email': f'{uuid4().hex}@example.test', 'password': 'synthetic-independent-qa-password',
+                'email': f'{uuid4().hex}@example.com', 'password': 'synthetic-independent-qa-password',
                 'business_name': 'Independent completion QA'})
             assert response.status_code == 201, response.text
             owner = response.json()
@@ -76,7 +76,7 @@ async def seed(j, **changes):
         options=[{'name': 'Size', 'values': ['S', 'M']}, {'name': 'Colour', 'values': ['Red', 'Blue']}])
     facts.update(changes)
     candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
-        captured_at=datetime.now(timezone.utc), source={'kind': 'website', 'url': 'https://shop.example.test/dress'},
+        captured_at=datetime.now(timezone.utc), source={'kind': 'website', 'url': 'https://shop.example.com/dress'},
         source_product_id=uuid4().hex), 'facts': facts}, business_id=j.bid)
     async with j.sessions.begin() as db:
         db.add(ImportJob(id=jid, business_id=j.bid, creator_id=j.uid, idempotency_key=uuid4(),

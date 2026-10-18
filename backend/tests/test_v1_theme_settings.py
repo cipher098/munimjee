@@ -74,7 +74,7 @@ async def theme_client(migrated_engine, monkeypatch):
 
 
 async def signup(c):
-    response=await c.post('/api/v1/auth/signup',json={'email':f'{uuid4().hex}@example.test','password':'synthetic-password-123','business_name':'Synthetic Theme Boutique'})
+    response=await c.post('/api/v1/auth/signup',json={'email':f'{uuid4().hex}@example.com','password':'synthetic-password-123','business_name':'Synthetic Theme Boutique'})
     assert response.status_code==201,response.text
     data=response.json()
     return data['businesses'][0]['id'],data['user_id']

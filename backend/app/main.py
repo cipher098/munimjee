@@ -41,6 +41,7 @@ from app.api.v1.theme_settings import router as v1_theme_settings_router
 from app.api.v1.checkout_sessions import router as v1_checkout_sessions_router, configuration_router as v1_payment_configuration_router
 from app.api.v1.parcel_tracking import router as v1_parcel_router
 from app.api.v1.assistance import router as v1_assistance_router
+from app.api.v1.payment_settings import router as v1_payment_settings_router
 from app.api.v1.session import business_mutation
 from app.api.v1.storefront_bootstrap import install_storefront
 
@@ -98,6 +99,7 @@ app.include_router(v1_checkout_sessions_router)
 app.include_router(v1_payment_configuration_router)
 app.include_router(v1_parcel_router)
 app.include_router(v1_assistance_router)
+app.include_router(v1_payment_settings_router)
 install_storefront(app)
 
 

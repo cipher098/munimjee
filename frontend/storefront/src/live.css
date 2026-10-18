@@ -10,3 +10,4 @@ html.palette-indigo{--paper:#f7f7fc;--ink:#292c47;--muted:#626582;--accent:#4e52
 .published-story{grid-template-columns:1fr 1fr}.published-story h2,.published-story p,.hero-copy h1,.hero-copy p,.section-heading h2{overflow-wrap:anywhere;min-width:0;white-space:pre-line}.published-story p{max-width:40rem}
 @media(max-width:700px){.published-story{display:block}.shop-header>div{min-width:0}.shop-header .wordmark{font-size:23px;letter-spacing:3px}.shop-header nav{gap:14px}.hero-copy h1{max-width:100%}}
 html[data-theme=video] .collection{background:var(--paper)}
+.hero-art>.empty-state{display:grid;place-items:center;background:var(--panel);color:var(--ink)}

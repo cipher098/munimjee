@@ -74,7 +74,11 @@ with TestClient(app, base_url='https://configured.example') as client:
                      '/storefront-assets/src/app.js','/storefront-assets/src/../requirements.txt',
                      '/storefront-assets/src/.env','/static/.env','/static/keys/private.pem'):
             assert client.get(path).status_code==404, path
-        for asset in ('parcel_tracking.js','parcel_scanner.js','parcel_barcode_reader.js','parcel_zxing_reader.wasm','parcel_scanner_LICENSE.txt'):
+        for asset in ('parcel_tracking.js','parcel_scanner.js','parcel_barcode_reader.js','parcel_zxing_reader.wasm','parcel_scanner_LICENSE.txt',
+                      'import_workspace.html','import_workspace.js','import_workspace.css',
+                      'theme_settings.html','theme_settings.js','theme_settings.css',
+                      'assistance.html','assistance.js','assistance.css',
+                      'payment_settings.html','payment_settings.js','payment_settings.css'):
             response=client.get('/static/'+asset)
             assert response.status_code==200 and len(response.content)>10
         # Private shell requires no DB, contains no order facts or capability.
