@@ -1,0 +1,26 @@
+{
+  "source_head": "a89be0e20a35b19e7216b123cabacdbeaee8f2e8",
+  "source_and_harness_unchanged": true,
+  "files": {
+    "backend/alembic/versions/0054_v1_activity.py": "3f1c1be152f8e30c81c81e053d7711fa5f4ebf6d360f60f9aac25ab20ef5de6d",
+    "backend/app/api/v1/activity_v1.py": "039e84672c3a124d4f5f2665e1a771109b92680e4418effd85d157dbf7d40311",
+    "backend/app/models/activity_v1.py": "b1cbe14f31a9f1537b9cd397954e6913710e4c2201caa72de9c62746eeb6866d",
+    "backend/app/schemas/activity_v1.py": "e759705f9b64fbbed358abb23cd52ecba1565fb494c8603097f8223384bc30a0",
+    "backend/app/services/activity_v1.py": "ce10b4638ac204af756d1411b5e87fe191aa97fdb375ea024f019de00434a0e8",
+    "backend/static/analytics_activity.js": "243e0eec27139be57a133a1f2837388f13c2b54659b01710c8dadb7f65a3f997",
+    "backend/static/analytics_v1.css": "2544045736883e0ed672f0002810f043770f0106027777035d04afe2cd9539a4",
+    "backend/static/analytics_v1.html": "251751ed6e42b951ddb08253985a06b3964ab8eb8eb4a05214552cde836d0cb3",
+    "backend/static/analytics_v1.js": "31920811546bf10baa9e413312b9b2ac4a574d176a0a7d536ecaa12c7eb7fdbd",
+    "backend/tests/activity_v1_server.py": "19e12aef88fcef54423e90ce5db884dc43ea1eba01dcbe635d39cf7436aacb51",
+    "backend/tests/browser/activity_v1.mjs": "5c03e26715f1cf3573fea4952791a9fe29bc81cc18e4cef0b24fae4c406d1714",
+    "backend/tests/browser/analytics-activity.test.mjs": "55956bb82b10507de1cca80cb4354ac999c6e5320ab1bd516c0c89815788f396",
+    "backend/tests/run_activity_v1_browser.py": "71ad5c43c5daab01fcc6bcb8aa0e56749b002457b10e63b8087c3935e855784c",
+    "backend/tests/test_v1_activity_contract.py": "66ebdccb3997365482238e48cddcece92bd3ee25c0618e04aabbe0ebddbfd37a",
+    "backend/tests/test_v1_activity_http.py": "ee5175e41441e3bbe3ad05d540e20314c9a7ace2c122702b3122ccc52734a114",
+    "backend/tests/test_v1_activity_orders.py": "0879c80901815fd062b645649642d6198053df07eb0897458ae3dbfda9802107",
+    "backend/tests/test_v1_activity_schema.py": "589052ac80d355f91a8b30a1079b562f6a387075e86482a73b39dbf6db45a273",
+    "backend/tests/test_v1_activity_sources.py": "ada13bb1286a79c2496b9cca577efe7057ec5f02ecade2d24acc8b1fa80803c2",
+    "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+    "frontend/storefront/tests/activity-client.test.mjs": "10b2a63327e2cc0960faf40316a1a5061dc4661b13d4ddbfe9689eb61dd6a50b"
+  }
+}

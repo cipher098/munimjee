@@ -1,0 +1,9 @@
+{
+  "checks": 19,
+  "actual_api_and_migrations": true,
+  "shared_shell_activity_hooks": false,
+  "synthetic_classification": true,
+  "provider_calls": 0,
+  "page_errors": [],
+  "external_requests": []
+}

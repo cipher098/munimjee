@@ -1,0 +1,36 @@
+✔ strict activity view binds business/dates and preserves unavailable nulls (1.458084ms)
+✔ conversion must be bounded exact supported context fraction (0.133208ms)
+✔ policy acknowledgement binds exact key mode expected revision and business (2.995417ms)
+✔ INR minor units above Number safe range are formatted without rounding (11.708208ms)
+✔ other currencies remain exact minor units without a guessed fraction or exchange rate (0.100042ms)
+✔ report validation binds the current filters and refuses secret or inexact extra values (1.038334ms)
+✔ stores only a bounded command/context/expiry, never capability (2.049709ms)
+✔ commit then dropped context response retries exact key after reload (0.223375ms)
+✔ reload reacquires memory proof with same context key (0.128542ms)
+✔ concurrent visible hooks share one context request and dedup events server-side (0.191625ms)
+✔ GPC prevents every optional POST (0.076333ms)
+✔ DNT prevents every optional POST (0.041083ms)
+✔ hidden prevents every optional POST (0.039125ms)
+✔ unavailable storage fails closed for measurement (0.07525ms)
+✔ silent storage write failure also prevents POST (0.08125ms)
+✔ malformed storage does not mint a fresh context: { (0.107ms)
+✔ malformed storage does not mint a fresh context: null (0.045458ms)
+✔ malformed storage does not mint a fresh context: {"capability (0.041292ms)
+✔ malformed storage does not mint a fresh context: xxxxxxxxxxxx (0.028334ms)
+✔ foreign origin/context envelope is withheld (0.084375ms)
+✔ malformed but successful ACK never provides a checkout context (0.219041ms)
+✔ wrong context ID on reacquire does not replace persisted identity (0.218333ms)
+✔ expiry can start a new browsing context but never proof for frozen old intent (0.100959ms)
+✔ measurement transport failures return optional null/false (0.083208ms)
+✔ disposal or a newly enabled privacy preference removes access to proof (0.050959ms)
+✔ product view only accepts a literal product UUID (0.613833ms)
+✔ a definitively expired lost-ACK key permits only a later visible new context (0.11275ms)
+✔ malformed expiry acknowledgement cannot discard an uncertain key (0.058917ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.813917
