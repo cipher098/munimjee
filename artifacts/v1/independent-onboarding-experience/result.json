@@ -1,6 +1,6 @@
 {
   "mode": "actual-native-onboarding-source-and-actual-formatter-with-synthetic-http",
-  "source_head": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "source_head": "d92406e2f2d62c7db859cd4d0bf0e91544c24376",
   "source_hashes_before": {
     "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
     "v1_app.js": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
@@ -16,8 +16,9 @@
     "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
   },
   "source_unchanged": true,
-  "runner_sha256": "e45fe489f453cb4fdb3686de010ac5040d81eaff2fde1222006084bb57fd2439",
-  "fixture_sha256": "461ec6df7680fd0b93fe5bd2fbd9b6f3edf012e416f07c29f5b17add755808ce",
+  "runner_sha256": "0f673f66c91eca69d4e4ec682e0eeae7e827a7c2124b248d19c211aabf4fd210",
+  "fixture_sha256": "2ebbe85908e995094fdc0b3ad3242833a59e95383a9f49d0ca6bae4c1aeb2275",
+  "fixture_sources_verified_before_browser": true,
   "playwright_module": "/Users/user/Documents/ChatGPT/munimjee-wave3-qa/frontend/storefront/node_modules/@playwright/test/index.mjs",
   "chromium_executable": "/Users/user/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell",
   "browser_version": "153.0.8010.12",
