@@ -1,0 +1,59 @@
+{
+  "source_head": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "passed": 22,
+  "failed": 10,
+  "unexpected_network": [],
+  "page_errors": [],
+  "failed_cases": [
+    {
+      "id": "keyboard-transition",
+      "name": "keyboard submit moves focus into newly opened workspace",
+      "message": "Focus did not enter new workspace: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}"
+    },
+    {
+      "id": "contrast-focus",
+      "name": "keyboard focus outline meets chosen 3:1 adjacent-background criterion",
+      "message": "{\"colors\":{\"outline\":\"rgb(149, 174, 149)\",\"width\":\"3px\",\"style\":\"solid\",\"focus_visible\":true,\"background\":\"rgb(255, 255, 255)\"},\"ratio\":2.3955324812741465,\"keyboard_tab\":true}"
+    },
+    {
+      "id": "startup-error",
+      "name": "startup 503 offers an actionable retry or sign-in path",
+      "message": "Both panels remain hidden and no retry/sign-in control is available"
+    },
+    {
+      "id": "long-business-name",
+      "name": "valid 160-character unbroken business name does not overflow 360px",
+      "message": "{\"scroll\":3062,\"viewport\":360}"
+    },
+    {
+      "id": "session-switch-401",
+      "name": "business-load 401 clears workspace and presents sign-in",
+      "message": "expect(locator).toBeHidden() failed\n\nLocator:  locator('#workspace')\nExpected: hidden\nReceived: visible\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.hidden\" with timeout 5000ms\n  - waiting for locator('#workspace')\n    9 × locator resolved to <section id=\"workspace\">…</section>\n      - unexpected value \"visible\"\n"
+    },
+    {
+      "id": "session-revoke-401",
+      "name": "invitation revoke 401 removes prior private profile and bearer link",
+      "message": "expect(locator).toBeHidden() failed\n\nLocator:  locator('#workspace')\nExpected: hidden\nReceived: visible\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.hidden\" with timeout 5000ms\n  - waiting for locator('#workspace')\n    9 × locator resolved to <section id=\"workspace\">…</section>\n      - unexpected value \"visible\"\n"
+    },
+    {
+      "id": "role-focus",
+      "name": "returning focus revalidates a downgraded role before further edits",
+      "message": "expect(received).toBeGreaterThan(expected)\n\nExpected: > 1\nReceived:   1\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate"
+    },
+    {
+      "id": "session-focus",
+      "name": "returning focus revalidates expired identity and clears private DOM",
+      "message": "expect(locator).toBeHidden() failed\n\nLocator:  locator('#workspace')\nExpected: hidden\nReceived: visible\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.hidden\" with timeout 5000ms\n  - waiting for locator('#workspace')\n    9 × locator resolved to <section id=\"workspace\">…</section>\n      - unexpected value \"visible\"\n"
+    },
+    {
+      "id": "cross-identity-error",
+      "name": "prior profile error is absent after sign-out and another identity/business signs in",
+      "message": "Prior-context error remained visible under another identity/business\n+ actual - expected\n\n+ 'Synthetic A private profile error'\n- ''\n"
+    },
+    {
+      "id": "logout-focus",
+      "name": "sign-out leaves keyboard focus in the visible sign-in context",
+      "message": "Focus did not enter sign-in context: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}"
+    }
+  ]
+}

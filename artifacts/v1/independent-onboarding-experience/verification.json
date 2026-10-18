@@ -1,0 +1,71 @@
+{
+  "frozen_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "mode": "actual-native-onboarding-source-and-actual-formatter-with-synthetic-http",
+  "passed": 22,
+  "failed": 10,
+  "commands": [
+    {
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python backend/tests/independent_onboarding_experience_qa.py",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave8-onboarding-qa",
+      "exit_code": 0
+    },
+    {
+      "command": "node backend/tests/independent_onboarding_experience_qa.mjs > artifacts/v1/independent-onboarding-experience/run.txt 2>&1",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave8-onboarding-qa",
+      "exit_code": 1,
+      "interpretation": "Ten application assertions remain red; no xfail or weakened success assertion"
+    }
+  ],
+  "owned_source_sha256": {
+    "backend/tests/independent_onboarding_experience_qa.py": "6cda62573c3c396b8384c112893b9a639937051b33250157a723b721d31de843",
+    "backend/tests/independent_onboarding_experience_qa.mjs": "e45fe489f453cb4fdb3686de010ac5040d81eaff2fde1222006084bb57fd2439",
+    "docs/v1-independent-onboarding-experience-qa.md": "5dff5f82441c1b32328ee2f50e402d445f63c14d4908803bf6052bb8f0670054"
+  },
+  "existing_source_sha256": {
+    "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "backend/static/v1_app.js": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
+    "backend/static/v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "backend/static/v1_client.js": "5dfecfacd325089cb86b37fad7a1e12222dfd7f1119801e4d7a76135b3331cf7",
+    "backend/static/commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+    "backend/tests/browser/onboarding.mjs": "71d699f25769db4b6e0d9d7f5b927f45207eb81f73a318e9fb834ee54432b82c",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1"
+  },
+  "artifact_sha256": {
+    "contrast-focus.png": "7341d9e57e336b056f0d85121639c24f20f574afae6408c2e0c49a777bdc84a3",
+    "cross-identity-error.png": "7dae92b792be456ea40743d5c7cefc120e2b5c942a0dd2dd77bc078e86e3a2f8",
+    "fixtures.json": "461ec6df7680fd0b93fe5bd2fbd9b6f3edf012e416f07c29f5b17add755808ce",
+    "keyboard-transition.png": "55a9db12ce7cc8e4b985733d65377cce208f9ece5cec9b35cb6483fcc4146b74",
+    "logout-focus.png": "457afc20417df6d300f8a80e209a4aea11c974d3d66ee68aa6f70e8a5cd0ca35",
+    "long-business-name.png": "a80e822c4115fb284a240cdda617787022c68d1e5fcd2c4c91e184abf69b09d0",
+    "owner-1440.png": "195c57296b8b990e4bcf0483f6f29028a8b6f1cd7c9e08b8bd6166fbcc7af954",
+    "owner-360.png": "33c4ff7fe3d371807500900cf4c45589aac67e64dc61509fde8b84bec1d6c229",
+    "owner-390.png": "6dc974e0d9fe8eaf52fb2b6be74937e0e52fa99e8c45dfbc6090c99dc282e4f5",
+    "owner-768.png": "b28c3a1f46b168d2f6c608793f4b09a56fbbfb8302444e2ddd11a186e28bb529",
+    "result.json": "c924d1b7b9b706bf6efda04040daaff608dceda05fd63c208f0044a96d952d40",
+    "role-focus.png": "55a9db12ce7cc8e4b985733d65377cce208f9ece5cec9b35cb6483fcc4146b74",
+    "run.txt": "3ddfb85589dd253caabb7f77d42428b2a73020fdc4224e105bc742840dc7852e",
+    "session-focus.png": "6dc974e0d9fe8eaf52fb2b6be74937e0e52fa99e8c45dfbc6090c99dc282e4f5",
+    "session-revoke-401.png": "991eabb1bdc3da587d5312697a321343d6527f72a07e74e625e3bd6a6de0e7bb",
+    "session-switch-401.png": "7c1797447b28312756cccdb1ee06380ef07c55f73fa0df5cb68584891a939665",
+    "signup-1440.png": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d",
+    "signup-360.png": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49",
+    "signup-390.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "signup-768.png": "c950ec647eacbb3ba903c98583055c2a407dcdbe0238d106e624a44786c72826",
+    "startup-error.png": "2e00851e037214d1e5baea6feb59e0cf094be10f2907f677925e8ab1a26341a6"
+  },
+  "production_source_status": "",
+  "source_unchanged": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "limits": [
+    "actual mounted migrated DB",
+    "physical iPhone/Android",
+    "screen-reader interaction",
+    "complete contrast/WCAG audit",
+    "production/provider behavior"
+  ],
+  "peer_review": "Committed checkpoint pending recovery/security peer review",
+  "server_started": false,
+  "actual_db_connections": 0,
+  "real_provider_calls": 0
+}
