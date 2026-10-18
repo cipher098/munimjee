@@ -78,3 +78,6 @@ __all__ += ["StorefrontThemeSettings", "StorefrontThemeCommand"]
 
 from app.models.assistance import OnboardingAssignment, AssistanceCommand
 __all__ += ["OnboardingAssignment", "AssistanceCommand"]
+
+from app.models.support_grants import SupportGrant, SupportCommand
+__all__ += ['SupportGrant', 'SupportCommand']

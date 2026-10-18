@@ -14,6 +14,7 @@
     $('invite-form').querySelectorAll('button').forEach(b => b.disabled = false);
   }
   function access() {
+    $('assisted-access-link').hidden = true;
     businessLoad++; business = null; clearInvite(); $('profile-form').reset(); $('checklist').replaceChildren();
     $('business-heading').textContent = 'Your business';
     $('business-tools').hidden = true; $('business-tools').replaceChildren();
@@ -59,12 +60,13 @@
       }
       $('business-tools').hidden = false;
     }
-    for (const [capability,label,page] of [['readiness.read','Onboarding','assistance'],['business.write','Payment setup','payments']]) {
+    for (const [capability,label,page] of [['readiness.read','Onboarding','assistance'],['business.write','Payment setup','payments'],['analytics.read','Purchases and payments','analytics']]) {
       if (business.capabilities.includes(capability)) {
         const link = text('a', label, 'button secondary');
         link.href = `/v1/businesses/${business.id}/${page}`; $('business-tools').append(link); $('business-tools').hidden = false;
       }
     }
+    if (actor.features?.support_grants && business.role === 'owner') { const link = text('a', 'Allow assisted access', 'button secondary'); link.href = `/v1/businesses/${business.id}/support`; $('business-tools').append(link); $('business-tools').hidden = false; }
     profileVersion = data.profile.version;
     const form = $('profile-form');
     form.elements.name.value = data.profile.name;
@@ -104,7 +106,7 @@
   }
   async function workspace(data) {
     if (!data.csrf_token) {actor = null; mode = 'login'; access(); $('access-error').textContent = 'Sign in again to restore your browser session.'; return;}
-    actor = data; $('business-heading').textContent = 'Your business'; $('invite-result').hidden = true; $('team-list').replaceChildren(); $('access').hidden = true; $('workspace').hidden = false; $('logout').hidden = false;
+    actor = data; $('assisted-access-link').hidden = !data.features?.assisted_operator; $('business-heading').textContent = 'Your business'; $('invite-result').hidden = true; $('team-list').replaceChildren(); $('access').hidden = true; $('workspace').hidden = false; $('logout').hidden = false;
     $('business-picker').replaceChildren(...actor.businesses.map(b => {const option = text('option', b.name);option.value=b.id;return option;}));
     if (requestedBusiness !== null) $('business-picker').value = actor.businesses.some(b => b.id === requestedBusiness) ? requestedBusiness : '';
     const requestedUnavailable = requestedBusiness !== null && !actor.businesses.some(b => b.id === requestedBusiness);

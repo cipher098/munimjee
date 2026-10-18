@@ -35,7 +35,9 @@ router = APIRouter(prefix="/api/v1", tags=["v1-auth"], dependencies=[Depends(ena
 async def actor_view(db, actor, csrf=None):
     return {"user_id": actor.user_id, "auth_method": actor.auth_method,
         "businesses": [business_view(a) for a in await accessible_businesses(db, actor)],
-        "csrf_token": csrf}
+        "csrf_token": csrf, "features": {"support_grants": settings.V1_SUPPORT_GRANTS_ENABLED,
+            "assisted_operator": settings.V1_SUPPORT_GRANTS_ENABLED and actor.auth_method=="v1_user" and actor.user_id in settings.V1_SUPPORT_OPERATOR_IDS,
+            "customer_links": settings.V1_CUSTOMER_LINKS_ENABLED}}
 
 
 async def start_session(db, user, request, response):

@@ -78,7 +78,9 @@ with TestClient(app, base_url='https://configured.example') as client:
                       'import_workspace.html','import_workspace.js','import_workspace.css',
                       'theme_settings.html','theme_settings.js','theme_settings.css',
                       'assistance.html','assistance.js','assistance.css',
-                      'payment_settings.html','payment_settings.js','payment_settings.css'):
+                      'payment_settings.html','payment_settings.js','payment_settings.css',
+                      'support_grants.html','support_grants.js','support_grants.css',
+                      'analytics_v1.html','analytics_v1.js','analytics_v1.css'):
             response=client.get('/static/'+asset)
             assert response.status_code==200 and len(response.content)>10
         # Private shell requires no DB, contains no order facts or capability.

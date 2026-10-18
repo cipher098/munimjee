@@ -41,6 +41,8 @@ from app.api.v1.theme_settings import router as v1_theme_settings_router
 from app.api.v1.checkout_sessions import router as v1_checkout_sessions_router, configuration_router as v1_payment_configuration_router
 from app.api.v1.parcel_tracking import router as v1_parcel_router
 from app.api.v1.assistance import router as v1_assistance_router
+from app.api.v1.support_grants import router as v1_support_grants_router
+from app.api.v1.analytics_v1 import router as v1_analytics_router
 from app.api.v1.payment_settings import router as v1_payment_settings_router
 from app.api.v1.session import business_mutation
 from app.api.v1.storefront_bootstrap import install_storefront
@@ -99,6 +101,8 @@ app.include_router(v1_checkout_sessions_router)
 app.include_router(v1_payment_configuration_router)
 app.include_router(v1_parcel_router)
 app.include_router(v1_assistance_router)
+app.include_router(v1_support_grants_router)
+app.include_router(v1_analytics_router)
 app.include_router(v1_payment_settings_router)
 install_storefront(app)
 
@@ -219,6 +223,6 @@ async def private_v1_cache_policy(request, call_next):
     path = request.url.path
     if (path == "/v1" or path.startswith("/v1/businesses/") or path == "/api/v1/me"
             or path == "/api/v1/businesses" or path.startswith("/api/v1/businesses/")
-            or path.startswith("/api/v1/auth/")):
+            or path.startswith("/api/v1/auth/") or path == "/v1/support" or path.startswith("/api/v1/support/")):
         response.headers["Cache-Control"] = "no-store"
     return response
