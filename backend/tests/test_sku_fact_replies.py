@@ -35,3 +35,10 @@ def test_transactional_variant_selection_or_ambiguous_question_hands_off(text):
 def test_malformed_public_facts_rejected(updates):
     values=dict(sku_id=uuid4(),options={},price_minor=100,currency="INR",stock_available=None)
     with pytest.raises(ValidationError):SKUFact(**(values|updates))
+
+
+def test_other_url_or_transactional_text_does_not_disappear_behind_reel_reference():
+    assert service.reel_question('https://instagram.com/reel/x/')=='[customer sent media]'
+    assert service.factual_request(service.reel_question('https://instagram.com/reel/x/ price?'))
+    assert not service.factual_request(service.reel_question('https://instagram.com/reel/x/ https://foreign.example/new-product'))
+    assert not service.factual_request(service.reel_question('https://instagram.com/reel/x/ discount please'))

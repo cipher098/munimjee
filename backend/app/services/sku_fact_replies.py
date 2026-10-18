@@ -111,10 +111,10 @@ def factual_request(text):
 
 
 def reel_question(text):
-    from app.services.whatsapp_context import URL_RE
+    from app.services.whatsapp_context import URL_RE, instagram_references
     # The trusted exact reference is checked separately; a bare link requests
     # these public facts, while any remaining transactional text still hands off.
-    question = URL_RE.sub("", text or "").strip()
+    question = URL_RE.sub(lambda match: "" if instagram_references(match.group()) else match.group(), text or "").strip()
     return "[customer sent media]" if not question else question
 
 
@@ -126,6 +126,8 @@ def reel_candidates(business_id, *, reel_url="", media_id=None):
     """
     from app.services.whatsapp_context import instagram_references
     refs = instagram_references(reel_url)
+    if len(refs) > 1:
+        return select(Product.id).where(literal(False))
     codes = {ref["shortcode"] for ref in refs}
     numeric = media_id if isinstance(media_id, str) and re.fullmatch(r"[0-9]{1,64}", media_id) else None
     links = func.jsonb_array_elements_text(case((func.jsonb_typeof(Product.reel_urls) == "array", Product.reel_urls),
@@ -139,6 +141,9 @@ def reel_candidates(business_id, *, reel_url="", media_id=None):
 
 
 async def exact_reel_products(db, business_id, *, reel_url="", media_id=None):
+    from app.services.whatsapp_context import instagram_references
+    if len(instagram_references(reel_url)) > 1:
+        return None
     with db.no_autoflush:
         rows = (await db.scalars(reel_candidates(business_id, reel_url=reel_url, media_id=media_id)
             .order_by(Product.id).limit(101))).all()
