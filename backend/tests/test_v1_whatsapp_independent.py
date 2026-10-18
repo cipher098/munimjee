@@ -162,9 +162,9 @@ async def test_fixed_reply_authorization_never_outlives_its_verified_token(monke
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('operation', ['subscription', 'exchange'])
-@pytest.mark.parametrize('revoke_on_commit', [True, False], ids=['revoked', 'current-positive-control'])
-async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, revoke_on_commit):
+@pytest.mark.parametrize('operation', ['subscription', 'registration', 'exchange'])
+@pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation'])
+async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, transition):
     """Ordering proof only: a committed claim must not bypass later authority."""
     from datetime import timedelta
     from fastapi import HTTPException
@@ -176,7 +176,7 @@ async def test_native_revocation_at_claim_commit_starts_no_new_provider_operatio
         idempotency_key=key, selected_key=key, connection_version=1,
         expires_at=at+timedelta(minutes=5), provisional_token_ciphertext='synthetic-only',
         token_expires_at=at+timedelta(hours=1), subscription_state='not_started',
-        evidence_kind='provider', requested_app_id='123', verified_app_id='123')
+        registration_state='not_started', evidence_kind='provider', requested_app_id='123', verified_app_id='123')
     class NativeAuthority:
         async def check(self, db):
             if state['revoked']:
@@ -189,14 +189,16 @@ async def test_native_revocation_at_claim_commit_starts_no_new_provider_operatio
         await authority.check(db)
         return SimpleNamespace(version=1), None
     async def claim_commit():
-        state['revoked'] = revoke_on_commit
+        state['revoked'] = transition == 'revoked'
+        if transition == 'app-rotation':
+            monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
     async def current_projection(*args, **kwargs):
         return None if state['revoked'] else auth.binding.session_id
     db = SimpleNamespace(commit=AsyncMock(side_effect=claim_commit),
         scalar=AsyncMock(side_effect=current_projection))
-    client = SimpleNamespace(subscribe=AsyncMock(), exchange=AsyncMock(return_value=SimpleNamespace(
+    client = SimpleNamespace(subscribe=AsyncMock(), register=AsyncMock(), exchange=AsyncMock(return_value=SimpleNamespace(
         token='synthetic-only', expires_at=at+timedelta(hours=1), app_id='123')), evidence_kind='provider')
-    payload = SimpleNamespace(idempotency_key=key, waba_id='12345')
+    payload = SimpleNamespace(idempotency_key=key, waba_id='12345', phone_number_id='67890', registration_pin='123456')
     monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '123')
     monkeypatch.setattr(service, 'embedded_configuration', lambda value: {})
     monkeypatch.setattr(service, 'encrypt', lambda value: 'synthetic-cipher-only')
@@ -207,17 +209,20 @@ async def test_native_revocation_at_claim_commit_starts_no_new_provider_operatio
     monkeypatch.setattr(service, 'effect_unknown', AsyncMock())
     monkeypatch.setattr(service, 'now', lambda: at)
     async def invoke():
-        if operation == 'subscription':
-            await service.provider_step(db, auth, row.id, payload, client, stage='subscription', token='synthetic-only')
+        if operation in ('subscription', 'registration'):
+            await service.provider_step(db, auth, row.id, payload, client, stage=operation, token='synthetic-only')
         else:
             payload.code = 'synthetic-only'
             await service.exchange_signup(db, auth, row.id, payload, 'synthetic-only', provider=client)
-    if revoke_on_commit:
-        with pytest.raises(HTTPException) as error:
-            await invoke()
-        assert error.value.status_code == 401
-    else:
+    error = None
+    try:
         await invoke()
-    attempts = client.subscribe.await_count + client.exchange.await_count
-    assert attempts == (0 if revoke_on_commit else 1)
-    assert service.effect_unknown.await_count == (1 if revoke_on_commit else 0)
+    except HTTPException as caught:
+        error = caught
+    attempts = client.subscribe.await_count + client.register.await_count + client.exchange.await_count
+    assert attempts == (1 if transition == 'current-positive-control' else 0)
+    if transition == 'current-positive-control':
+        assert error is None
+    else:
+        assert error is not None and error.status_code == (401 if transition == 'revoked' else 409)
+    assert service.effect_unknown.await_count == (0 if transition == 'current-positive-control' else 1)
