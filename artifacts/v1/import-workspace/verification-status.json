@@ -1,7 +1,7 @@
 {
   "base": "a2ea26d",
   "preserved_workspace_checkpoint": "8e1aeb9",
-  "chromium_checks": 150,
+  "chromium_checks": 164,
   "transport": "synthetic same-origin HTTP fixtures; external origins blocked",
   "provider_calls": 0,
   "database_tests": {
@@ -12,7 +12,8 @@
   "actual_native_browser": {
     "status": "prepared_not_run",
     "runner": "python -m tests.run_import_workspace_browser --native",
-    "requires": "allocated exact disposable P01 lane and held migration/reset lease"
+    "requires": "allocated exact disposable P01 lane and held migration/reset lease",
+    "prepared_coverage": "private Product/no CatalogueActivation on creation; separate explicit Catalogue activation succeeds; store remains unpublished and checkout disabled"
   },
   "visual_review": [
     "allocation-design-study.png",
@@ -20,5 +21,9 @@
     "mobile-allocation-focused.png"
   ],
   "physical_device": "not tested",
-  "production_actions": 0
+  "production_actions": 0,
+  "prior_digest_fence_checkpoint": {
+    "head": "f841f3279897d75fa48b1c3d38498a924c9a00a8",
+    "checks": 150
+  }
 }

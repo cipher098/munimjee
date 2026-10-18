@@ -1,11 +1,11 @@
-"""Actual application browser target with one protected synthetic worker hook.
+"""Actual application browser target with protected synthetic worker/state hooks.
 
 Only launched under the held P01 reset/migration lease. No provider sockets.
 """
 from tests.safety import install_test_safety
 install_test_safety()
 from uuid import UUID
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from app.config import settings
 settings.V1_AUTH_ENABLED = True
 settings.V1_ENFORCE_LEGACY_ACCESS = True
@@ -17,6 +17,8 @@ from app.api.v1.import_workspace import router
 from app.api.v1.session import require_v1_mutation
 from app.database import AsyncSessionLocal, get_db
 from app.services.identity import require_business_access
+from app.models.product import Product
+from app.models.checkout_v1 import CatalogueActivation
 from app.services.imports_v1 import run_job
 from app.v1.imports.fetching import FetchedSource
 
@@ -39,6 +41,17 @@ async def process_synthetic_job(business_id: UUID, job_id: UUID,
     await require_business_access(db, actor, business_id, "catalogue.write")
     return {"processed": await run_job(AsyncSessionLocal, business_id, job_id,
                                        fetcher=SyntheticFetcher())}
+
+
+@app.get("/__import_workspace_fixture/businesses/{business_id}/products/{product_id}/state")
+async def private_product_state(business_id: UUID, product_id: UUID,
+                                actor=Depends(require_v1_mutation), db=Depends(get_db)):
+    await require_business_access(db, actor, business_id, "catalogue.read")
+    product = await db.get(Product, product_id)
+    if product is None or product.seller_id != business_id:
+        raise HTTPException(404, "Product not found")
+    return {"product_active": product.active,
+            "catalogue_activated": await db.get(CatalogueActivation, (business_id, product_id)) is not None}
 
 
 if __name__ == "__main__":
