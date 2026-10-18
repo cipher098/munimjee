@@ -1,0 +1,38 @@
+{
+  "format": "munimjee.v1.acceptance-delta.run.v1",
+  "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+  "python": "3.9.6",
+  "commands": [
+    {
+      "command": "python3 artifacts/v1/acceptance-delta/verify.py",
+      "exit_code": 0,
+      "purpose": "supplement source/scope integrity only"
+    },
+    {
+      "command": "python3 -m unittest discover -s backend/tests -p test_v1_release_audit_evidence.py -v",
+      "exit_code": 0,
+      "passed": 6,
+      "skipped": 0,
+      "purpose": "historical saved-evidence integrity only"
+    },
+    {
+      "command": "git cat-file -t 3556850",
+      "exit_code": 128,
+      "result": "object unavailable; local analytics source not inspected; no fetch"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "sha256": {
+    "docs/v1-acceptance-delta.md": "74f4f6edc05520c3e5b40eb831ad2d499a39cf15a2968da5c6d4a6fe1b61d6a8",
+    "artifacts/v1/acceptance-delta/inventory.json": "9f04653469aa65df31e2ff19db50150396ae6ef24b7419e03bd749d9d5c8b826",
+    "artifacts/v1/acceptance-delta/verify.py": "36a9ebf8d3548fe91f41af348a2a1a0f5a4d56824352d67e1884de55025c34fb",
+    "artifacts/v1/acceptance-delta/verification.json": "7a5d9935f760cb7b2af1b8305f6afb3468a29ceb868b92277fff58fadfc16119",
+    "artifacts/v1/acceptance-delta/historical-audit-checks.txt": "562924ca22ae7b38d2dcbfdbdc717452264ac2d15c849d98f5d180150f078dae"
+  },
+  "product_source_changes": [],
+  "production_provider_database_docker_actions": [],
+  "new_product_acceptance": false
+}

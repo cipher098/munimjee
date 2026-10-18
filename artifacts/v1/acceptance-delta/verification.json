@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "frozen_source": "e750e5a5a78da74390572d116f5c98649a7334a1",
+  "checks": {
+    "immutable_source_hashes_and_anchors": 25,
+    "historical_rows_covered": 58,
+    "bounded_work_items": 15,
+    "all_acceptance_complete_false": true,
+    "local_report_separate": true
+  },
+  "product_acceptance_executed": false,
+  "network_db_docker_provider_operations": false
+}
