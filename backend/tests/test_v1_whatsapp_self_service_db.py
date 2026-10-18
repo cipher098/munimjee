@@ -383,3 +383,43 @@ async def test_actual_0057_signed_reserved_ingress_redacts_even_default_off(nati
         row = await db.get(WhatsAppConnectionTest, UUID(challenged['test']['test_id']))
         assert row.inbound_message_id is None
     assert j.provider.calls['subscribe'] == j.provider.calls['register'] == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('outcome', ['queued','sending','unknown','accepted_missing_receipt','accepted','sent','delivered','read','failed'])
+async def test_actual_0057_new_test_requires_safe_recorded_outcome_even_after_generation_change(native_wa_setup, monkeypatch, outcome):
+    from app.services import whatsapp_connection_tests as test_service
+    j = native_wa_setup
+    await attached_signup(j)
+    challenged = await challenge(j)
+    recipient = await bind_recipient(j, challenged)
+    tid = challenged['test']['test_id']
+    await post(j, f'/tests/{tid}/send', send_command(recipient))
+    safe = outcome in {'accepted','sent','delivered','read','failed'}
+    async with j.sessions.begin() as db:
+        auth = await db.get(WhatsAppTestAuthorization, UUID(tid))
+        message = await db.get(WhatsAppMessage, auth.outbound_message_id)
+        message.status = 'accepted' if outcome == 'accepted_missing_receipt' else outcome
+        if outcome in {'accepted','sent','delivered','read'}:
+            message.provider_message_id='synthetic-known-result'
+        await db.execute(update(ChannelConnectionState).where(ChannelConnectionState.business_id == j.bid,
+            ChannelConnectionState.channel == 'whatsapp').values(version=2))
+    viewed = await j.client.get(j.base+f'/tests/{tid}')
+    assert viewed.status_code == 200
+    result = viewed.json()
+    assert result['status'] == 'stale_connection'
+    assert result['recorded_effect_status'] == ('unknown' if outcome == 'accepted_missing_receipt' else outcome)
+    assert result['can_prepare_new_test'] is safe
+    # Protocol clock only in this isolated server test; the mounted journey must
+    # respect the real60s cooldown and retain its exact key after rate limiting.
+    future = datetime.now(timezone.utc)+timedelta(seconds=61)
+    monkeypatch.setattr(test_service, 'now', lambda: future)
+    created = await post(j, '/tests', dict(idempotency_key=str(uuid4()),
+        expected_connection_version=2, recipient_authorized=True), status=200 if safe else 409)
+    if safe:
+        assert created['test']['test_id'] != tid and created['test']['connection_version'] == 2
+        assert created['test']['recorded_effect_status'] is None
+    else:
+        assert created['detail']['code'] == 'channel_test_effect_pending'
+    async with j.sessions() as db:
+        assert await db.scalar(select(func.count()).select_from(WhatsAppTestAuthorization)) == 1

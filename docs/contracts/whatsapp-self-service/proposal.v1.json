@@ -70,6 +70,8 @@
     "message_id": "55555555-5555-4555-8555-555555555555",
     "provider_delivery_observed_at": null,
     "delivery_confirmed": false,
+    "recorded_effect_status": "accepted",
+    "can_prepare_new_test": true,
     "is_current_generation": true,
     "proof_source": "synthetic_fixture",
     "message": "The provider accepted the test reply. Delivery has not been confirmed."

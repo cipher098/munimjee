@@ -124,6 +124,14 @@ def test_synthetic_delivery_can_only_be_illustrative_never_confirmed():
         parse_command(TestView, {**simulated, "delivery_confirmed": True})
 
 
+@pytest.mark.parametrize('effect', ['queued','sending','unknown'])
+def test_recorded_pending_effect_cannot_authorize_new_test_even_if_stale(effect):
+    value = json.loads(FIXTURE.read_text())["safe_test_example"]
+    with pytest.raises(InvalidWhatsAppCommand):
+        parse_command(TestView, {**value, "status":"stale_connection", "is_current_generation":False,
+            "recorded_effect_status":effect, "can_prepare_new_test":True})
+
+
 def test_read_timestamps_need_explicit_timezone():
     value = json.loads(FIXTURE.read_text())["safe_attempt_example"]
     with pytest.raises(InvalidWhatsAppCommand):
