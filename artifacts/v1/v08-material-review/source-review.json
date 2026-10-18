@@ -1,0 +1,38 @@
+{
+  "base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "source_commit": "3b91a3a96a6c3f104e0666bb19dfbd97d1bc96e9",
+  "changed_paths": [
+    "backend/app/services/sku_fact_replies.py"
+  ],
+  "exact_transform": "Remove material/materials from only the allowlist string and requested set; all other bytes identical.",
+  "before_sha256": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+  "after_sha256": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+  "unchanged_function_ASTs": [
+    "enabled",
+    "is_activated",
+    "read_facts",
+    "render",
+    "reel_question",
+    "reel_candidates",
+    "exact_reel_products",
+    "instagram_batch_context",
+    "freeze_instagram_batch",
+    "instagram_filters"
+  ],
+  "unchanged_tests_safety_prior_evidence": [
+    "backend/app/services/whatsapp_context.py",
+    "backend/app/bot/conversation.py",
+    "backend/app/schemas/sku_fact_replies.py",
+    "backend/tests/test_v08_semantics_acceptance.py",
+    "backend/tests/test_v08_context_acceptance.py",
+    "backend/tests/test_sku_fact_replies.py",
+    "backend/tests/safety.py",
+    "backend/tests/conftest.py",
+    "artifacts/v1/v08-semantics/first-run.xml",
+    "artifacts/v1/v08-semantics/first-run.txt",
+    "artifacts/v1/v08-context/results.xml",
+    "artifacts/v1/v08-review/independent-21.xml"
+  ],
+  "tests_executed_by_review": 0,
+  "disposition": "No scoped source blocker; QA candidate evidence pending."
+}
