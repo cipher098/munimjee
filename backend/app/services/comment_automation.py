@@ -83,6 +83,10 @@ async def ingest_comment(db, account_id, change, entry_time=None, *, verified_so
     text=value.get('text','')
     if not isinstance(text,str):return None
     text=text[:10000]
+    try:
+        if '\x00' in text:return None
+        text.encode('utf-8')
+    except UnicodeError:return None
     verification='signed_webhook'
     known_ineligible=change['field']=='live_comments' or str(media.get('media_product_type','')).upper()=='LIVE' or value.get('parent_id') or actor_id in {account_id,first.config['owner_account']}
     reason=first.source_reason()

@@ -314,3 +314,24 @@ def test_real_0055_upgrade_renders_offline_with_only_historical_fk_not_valid(mon
     assert ddl.count('NOT VALID')==1 # Existing action/event mismatches only.
     assert 'CREATE TABLE comment_action_audits' in ddl
     assert 'comment_audit_event_tenant FOREIGN KEY' in ddl and 'comment_audit_action_tenant FOREIGN KEY' in ddl
+
+
+
+def test_accepted_timestamp_identity_survives_postgres_utc_projection(scene):
+    offset=timezone(timedelta(hours=5,minutes=30))
+    scene.event.commented_at=scene.event.commented_at.astimezone(offset)
+    scene.event.source_verified_at=scene.event.source_verified_at.astimezone(offset)
+    scene.action.accepted_claim=claims.accepted_claim(scene.event,scene.action.kind,scene.action.body,scene.context.config)
+    scene.action.claim_hash=claims.digest(scene.action.accepted_claim)
+    scene.event.commented_at=scene.event.commented_at.astimezone(timezone.utc)
+    scene.event.source_verified_at=scene.event.source_verified_at.astimezone(timezone.utc)
+    assert claims.valid_claim(scene.action,scene.event)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('text',['price?\x00','price?\ud800'])
+async def test_unencodable_comment_is_not_accepted_or_forwarded(scene,monkeypatch,text):
+    db=ProducerDB(scene.event.seller_id)
+    monkeypatch.setattr(policy,'context',AsyncMock(return_value=producer_context(scene)))
+    assert await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':text}},verified_source=True) is None
+    assert db.inserted is None and not db.added
