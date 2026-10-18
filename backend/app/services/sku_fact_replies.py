@@ -5,8 +5,8 @@ import re
 from datetime import timedelta
 
 from pydantic import ValidationError
-from sqlalchemy import case, exists, func, literal, or_, select
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Text, and_, case, column, exists, func, literal, or_, select
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from app.config import settings
 from app.models.catalogue_v1 import CatalogueProductMapping, CatalogueSKU
@@ -121,8 +121,8 @@ def reel_question(text):
 def reel_candidates(business_id, *, reel_url="", media_id=None):
     """Exact allowlisted URL/numeric mapping predicate reusable at final read.
 
-    Noncanonical host capitalization is withheld, never guessed. SQL expansion
-    touches only this tenant's mapping values and selects no legacy/private facts.
+    Host/scheme matching ignores ASCII case; shortcode/path matching does not.
+    SQL expansion selects no legacy/private facts and never chooses first-hit.
     """
     from app.services.whatsapp_context import instagram_references
     refs = instagram_references(reel_url)
@@ -130,13 +130,18 @@ def reel_candidates(business_id, *, reel_url="", media_id=None):
         return select(Product.id).where(literal(False))
     codes = {ref["shortcode"] for ref in refs}
     numeric = media_id if isinstance(media_id, str) and re.fullmatch(r"[0-9]{1,64}", media_id) else None
-    links = func.jsonb_array_elements_text(case((func.jsonb_typeof(Product.reel_urls) == "array", Product.reel_urls),
-        else_=literal([], type_=JSONB))).table_valued("value").alias("linked_reel")
-    predicates = [links.c.value.op("~")(
-        r"^https?://(www\.|m\.)?instagram\.com/(reel|reels|p|tv)/" + re.escape(code) + r"/?([?#][^\s]*)?$") for code in sorted(codes)]
+    links = func.jsonb_array_elements(case((func.jsonb_typeof(Product.reel_urls) == "array", Product.reel_urls),
+        else_=literal([], type_=JSONB))).table_valued(column("value", JSONB)).alias("linked_reel")
+    value = links.c.value.op("#>>", return_type=Text)(literal([], type_=ARRAY(Text)))
+    # PostgreSQL's global case-insensitive flag would incorrectly collapse two
+    # distinct shortcodes. Restrict case folding to the scheme and hostname.
+    prefix = r"^[hH][tT][tT][pP][sS]?://([wW][wW][wW]\.|[mM]\.)?[iI][nN][sS][tT][aA][gG][rR][aA][mM]\.[cC][oO][mM]/"
+    predicates = [value.op("~")(
+        prefix + r"(reel|reels|p|tv)/" + re.escape(code) + r"/?([?#][^\s]*)?$") for code in sorted(codes)]
     if numeric:
-        predicates.append(links.c.value == numeric)
-    matches = exists(select(1).select_from(links).where(or_(*predicates))).correlate(Product) if predicates else literal(False)
+        predicates.append(value == numeric)
+    matches = exists(select(1).select_from(links).where(and_(func.jsonb_typeof(links.c.value) == "string",
+        or_(*predicates)))).correlate(Product) if predicates else literal(False)
     return select(Product.id).where(Product.seller_id == business_id, Product.active.is_(True), matches)
 
 

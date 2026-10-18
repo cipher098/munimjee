@@ -111,6 +111,15 @@ async def test_exact_reel_resolves_all_matches_never_title_or_substring_guess(sk
         assert set(await service.exact_reel_products(db,j.bid,reel_url='https://instagram.com/reel/Exact_code/'))=={j.pid,pid2}
 
 
+@pytest.mark.asyncio
+async def test_corrupt_numeric_mapping_is_not_coerced_into_reviewed_media_identity(sku_lane):
+    j=sku_lane
+    async with j.sessions.begin() as db:(await db.get(Product,j.pid)).reel_urls=[12345]
+    async with j.sessions() as db:assert await service.exact_reel_products(db,j.bid,media_id='12345')==()
+    async with j.sessions.begin() as db:(await db.get(Product,j.pid)).reel_urls=['12345']
+    async with j.sessions() as db:assert await service.exact_reel_products(db,j.bid,media_id='12345')==(j.pid,)
+
+
 async def instagram_turn(j, *, status='processing'):
     cid,rid=uuid4(),uuid4()
     current=datetime.now(timezone.utc)
@@ -253,7 +262,7 @@ async def test_final_reel_projection_rejects_new_ambiguity_after_initial_resolve
         assert await service.exact_reel_products(reader,j.bid,**reference)==(j.pid,)
         async with j.sessions.begin() as writer:
             writer.add(Product(seller_id=j.bid,name='Second mapped product',listed_price=1,floor_price=1,
-                active=True,reel_urls=['https://instagram.com/p/Exact_code/']))
+                active=True,reel_urls=['HTTPS://INSTAGRAM.COM/p/Exact_code/']))
         assert await service.read_facts(reader,j.bid,j.pid,reel=reference) is None
 
 
@@ -326,3 +335,35 @@ async def test_invalid_reply_to_never_answers_using_previous_focus(sku_lane,monk
     await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
     async with j.sessions() as db:
         assert (await db.get(InstagramIngress,rid)).error_code=='authoritative_catalogue_handoff'
+
+
+@pytest.mark.asyncio
+async def test_existing_feature_wait_variant_and_negotiation_values_are_read_only(sku_lane,monkeypatch):
+    from app.workers import instagram_ingress as worker
+    j=sku_lane;cid,rid=await instagram_turn(j,status='pending');cycle=uuid4();sent=[]
+    monkeypatch.setattr(worker,'worker_session',session_factory(j))
+    async with j.sessions.begin() as db:
+        db.add(ConversationProduct(id=cycle,conversation_id=cid,product_id=j.pid,state='waiting_for_tag',
+            active_variant_label='Legacy remembered variant',last_counter_price=999,last_shown_price=1111,negotiation_round=2))
+    async def send(client,recipient,text):sent.append(text);return {'message_id':'synthetic-current-facts'}
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',send)
+    await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
+    async with j.sessions() as db:
+        row=await db.get(ConversationProduct,cycle)
+        assert (row.state,row.active_variant_label,row.last_counter_price,row.last_shown_price,row.negotiation_round)==(
+            'waiting_for_tag','Legacy remembered variant',999,1111,2)
+        assert (await db.get(InstagramIngress,rid)).status=='completed'
+        assert len(sent)==1 and '₹123.45' in sent[0] and '999' not in sent[0]
+
+
+@pytest.mark.asyncio
+async def test_rollout_revoked_during_final_read_is_not_authority(sku_lane,monkeypatch):
+    j=sku_lane
+    async with j.sessions() as db:
+        execute=db.execute
+        async def changed(*args,**kwargs):
+            result=await execute(*args,**kwargs)
+            monkeypatch.setattr(settings,'V1_SKU_FACT_REPLIES_ENABLED',False)
+            return result
+        monkeypatch.setattr(db,'execute',changed)
+        assert await service.read_facts(db,j.bid,j.pid) is None

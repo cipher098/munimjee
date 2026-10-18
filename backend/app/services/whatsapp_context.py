@@ -85,6 +85,22 @@ async def inbound_context(db, account, contact, event, text):
     if not refs:
         return result
 
+    from app.services import sku_fact_replies as facts
+    if facts.enabled():
+        for ref in refs:
+            ids = await facts.exact_reel_products(db, account.seller_id, reel_url=ref['url'])
+            if ids is None:
+                ref['products'], ref['status'] = [], 'ambiguous'
+                continue
+            with db.no_autoflush:
+                matches = (await db.execute(select(Product.id, Product.name).where(
+                    Product.seller_id == account.seller_id, Product.active.is_(True), Product.id.in_(ids))
+                    .order_by(Product.id))).all() if ids else []
+            ref['products'] = [{'id':str(product_id), 'name':name} for product_id, name in matches]
+            ref['status'] = 'matched' if len(matches) == 1 else 'ambiguous' if matches else 'unlinked'
+        result['reel_context'] = {'source':source, 'shared_at':shared_at, 'references':refs}
+        return result
+
     products = (await db.scalars(select(Product).where(
         Product.seller_id == account.seller_id,
         Product.active.is_(True), Product.reel_urls.isnot(None),
