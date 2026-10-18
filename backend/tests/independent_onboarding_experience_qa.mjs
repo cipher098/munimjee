@@ -8,9 +8,9 @@ import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 
 const root=path.resolve(fileURLToPath(new URL('../..',import.meta.url)));
-const artifactRoot=path.join(root,'artifacts/v1/independent-onboarding-experience');
-const out=path.resolve(process.argv[4]||path.join(artifactRoot,'comparison-8ae97c2'));
-assert.ok(out===artifactRoot||out.startsWith(artifactRoot+path.sep),'Output must remain in the owned onboarding artifact directory');
+const artifactRoots=['independent-onboarding-experience','native-onboarding-repair-qa'].map(name=>path.join(root,'artifacts/v1',name));
+const out=path.resolve(process.argv[4]||artifactRoots[1]);
+assert.ok(artifactRoots.some(dir=>out===dir||out.startsWith(dir+path.sep)),'Output must remain in an owned onboarding artifact directory');
 const modulePath=process.argv[2]||'/Users/user/Documents/ChatGPT/munimjee-wave3-qa/frontend/storefront/node_modules/@playwright/test/index.mjs';
 const executable=process.argv[3]||'/Users/user/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell';
 const {chromium,expect}=await import(pathToFileURL(modulePath).href);
