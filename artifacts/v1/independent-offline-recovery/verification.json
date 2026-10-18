@@ -65,7 +65,7 @@
     "SQL NULL comparison WHERE handling",
     "Cancellation cleanup before gate notification"
   ],
-  "peer_harness_review": "Pending stable committed originals; subsequent docs/evidence-only review checkpoint planned",
+  "peer_harness_review": "Original storefrontfaec016/onboardingd92406e reviewed read-only; exact hashes verified against frozenabab30a. Two tiny onboarding repeatability/fidelity followups pending. Details in peer-review.json.",
   "unrun_gates": [
     "Actual PostgreSQL locks/transactions/durable restart",
     "Redis queue/broker recovery",

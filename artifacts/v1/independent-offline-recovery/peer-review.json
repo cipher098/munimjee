@@ -1,0 +1,226 @@
+{
+  "storefront": {
+    "commit": "faec01614c27578afd38bef750b9dc2205ee7c98",
+    "application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+    "runner_sha256": "b271d954ec4fdb8511b10b05ba72890c811f5aba66666fe6ba29fac5ad664f7f",
+    "exporter_sha256": "7d625a8c331e37cd8853c76e71c26c8087de6c00d58d8a5ab0bb8be370b149ff",
+    "runner_record_matches": true,
+    "exporter_record_matches": true,
+    "app_source_hashes": {
+      "frontend/storefront/src/app.js": {
+        "expected": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+        "frozen_blob": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+        "matches": true
+      },
+      "frontend/storefront/src/canonical-contract.js": {
+        "expected": "aa771ebfaa9ea6677be2673ee17643c81960e4f4c9fa52f064a7e53ec885a84b",
+        "frozen_blob": "aa771ebfaa9ea6677be2673ee17643c81960e4f4c9fa52f064a7e53ec885a84b",
+        "matches": true
+      },
+      "frontend/storefront/src/catalogue-adapter.js": {
+        "expected": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+        "frozen_blob": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+        "matches": true
+      },
+      "frontend/storefront/src/checkout-attempt.js": {
+        "expected": "9328c46471f992576c19d83221ae41cb851198dacc78070a1dd019701e853859",
+        "frozen_blob": "9328c46471f992576c19d83221ae41cb851198dacc78070a1dd019701e853859",
+        "matches": true
+      },
+      "frontend/storefront/src/commerce.js": {
+        "expected": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+        "frozen_blob": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+        "matches": true
+      },
+      "frontend/storefront/src/components.js": {
+        "expected": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+        "frozen_blob": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+        "matches": true
+      },
+      "frontend/storefront/src/fixtures.js": {
+        "expected": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+        "frozen_blob": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+        "matches": true
+      },
+      "frontend/storefront/src/live-api.js": {
+        "expected": "26a1d127047ca190518c365f73c678f098b6cb8d228d288c4cb0d0d11d3ce886",
+        "frozen_blob": "26a1d127047ca190518c365f73c678f098b6cb8d228d288c4cb0d0d11d3ce886",
+        "matches": true
+      },
+      "frontend/storefront/src/live-app.js": {
+        "expected": "de7cdf36e921dccdf653e86327dc529b5fa4b25087611665ed1ff68ab22cf319",
+        "frozen_blob": "de7cdf36e921dccdf653e86327dc529b5fa4b25087611665ed1ff68ab22cf319",
+        "matches": true
+      },
+      "frontend/storefront/src/live-entry.js": {
+        "expected": "c2d46fa21641dbd98a6d2e3830da5a96e7b0e078e2e09a095f82ddaa8863f07e",
+        "frozen_blob": "c2d46fa21641dbd98a6d2e3830da5a96e7b0e078e2e09a095f82ddaa8863f07e",
+        "matches": true
+      },
+      "frontend/storefront/src/order-status.js": {
+        "expected": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+        "frozen_blob": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+        "matches": true
+      },
+      "frontend/storefront/src/payment-handoff.js": {
+        "expected": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+        "frozen_blob": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+        "matches": true
+      },
+      "frontend/storefront/src/published-design.js": {
+        "expected": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+        "frozen_blob": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+        "matches": true
+      },
+      "frontend/storefront/src/theme-config.js": {
+        "expected": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+        "frozen_blob": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+        "matches": true
+      },
+      "frontend/storefront/src/live.css": {
+        "expected": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+        "frozen_blob": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+        "matches": true
+      },
+      "frontend/storefront/src/styles.css": {
+        "expected": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+        "frozen_blob": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+        "matches": true
+      },
+      "backend/app/v1/storefront/rendering.py": {
+        "expected": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+        "frozen_blob": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+        "matches": true
+      },
+      "backend/app/v1/storefront/design.py": {
+        "expected": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+        "frozen_blob": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+        "matches": true
+      },
+      "backend/app/schemas/storefront_theme_v1.py": {
+        "expected": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+        "frozen_blob": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+        "matches": true
+      }
+    },
+    "native_before_after_equal": true,
+    "fixture_hashes_match": true,
+    "passed": 69,
+    "failed": 6,
+    "unexpected_requests": [],
+    "page_errors": [],
+    "review_conclusion": "No safety/assertion blocker found. Spatial text-range assertions preserve six failures and support one shared P2 defect. Source/fixture attribution verified against frozen Git blobs.",
+    "review_execution": "Read-only code/artifact/hash review; browser was not rerun by this reviewer.",
+    "screenshots_independently_viewed": [
+      "catalogue-320-missing-photo-overlap.png"
+    ]
+  },
+  "onboarding": {
+    "commit": "d92406e2f2d62c7db859cd4d0bf0e91544c24376",
+    "application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+    "runner_sha256": "e45fe489f453cb4fdb3686de010ac5040d81eaff2fde1222006084bb57fd2439",
+    "exporter_sha256": "6cda62573c3c396b8384c112893b9a639937051b33250157a723b721d31de843",
+    "runner_record_matches": true,
+    "fixture_record_matches": true,
+    "app_source_hashes": {
+      "backend/static/v1_app.html": {
+        "expected": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+        "frozen_blob": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+        "matches": true
+      },
+      "backend/static/v1_app.js": {
+        "expected": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
+        "frozen_blob": "cd0e3899a5a409643d22b3f750bec5a0a7dc9eae4976e6015928c749199908a0",
+        "matches": true
+      },
+      "backend/static/v1_app.css": {
+        "expected": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+        "frozen_blob": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+        "matches": true
+      },
+      "backend/static/v1_client.js": {
+        "expected": "5dfecfacd325089cb86b37fad7a1e12222dfd7f1119801e4d7a76135b3331cf7",
+        "frozen_blob": "5dfecfacd325089cb86b37fad7a1e12222dfd7f1119801e4d7a76135b3331cf7",
+        "matches": true
+      },
+      "backend/static/commerce.css": {
+        "expected": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+        "frozen_blob": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+        "matches": true
+      }
+    },
+    "formatter_source_hashes": {
+      "backend/app/services/onboarding.py": {
+        "expected": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9",
+        "frozen_blob": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9",
+        "matches": true
+      },
+      "backend/app/services/identity.py": {
+        "expected": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+        "frozen_blob": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+        "matches": true
+      },
+      "backend/app/api/v1/identity.py": {
+        "expected": "6c7ef2d291134af9c172c3cd4d2f79990a7355d8dba7054b4eff63dbdd2c46cf",
+        "frozen_blob": "6c7ef2d291134af9c172c3cd4d2f79990a7355d8dba7054b4eff63dbdd2c46cf",
+        "matches": true
+      },
+      "backend/app/api/v1/auth.py": {
+        "expected": "9d8c56e6d8ee9f2bce8ec06c55b3c91962679dcdaf1c6dfe8353ea7a2dccbcbc",
+        "frozen_blob": "9d8c56e6d8ee9f2bce8ec06c55b3c91962679dcdaf1c6dfe8353ea7a2dccbcbc",
+        "matches": true
+      },
+      "backend/tests/safety.py": {
+        "expected": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+        "frozen_blob": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+        "matches": true
+      }
+    },
+    "native_before_after_equal": true,
+    "passed": 22,
+    "failed": 10,
+    "unexpected_network": [],
+    "page_errors": [],
+    "privacy_visibility_cases": {
+      "session-switch-401": {
+        "workspace_visible": true,
+        "business_content_visible": false,
+        "profile_control_visible": false,
+        "profile_value_in_DOM": "Synthetic QA Atelier",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      },
+      "session-revoke-401": {
+        "workspace_visible": true,
+        "business_content_visible": true,
+        "profile_control_visible": true,
+        "profile_value_in_DOM": "Synthetic QA Atelier",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": true,
+        "invitation_link_has_value": true
+      },
+      "cross-identity-error": {
+        "workspace_visible": true,
+        "business_content_visible": true,
+        "profile_control_visible": true,
+        "profile_value_in_DOM": "Second QA Atelier",
+        "profile_error_visible": true,
+        "profile_error": "Synthetic A private profile error",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    },
+    "review_conclusion": "No safety/effect-boundary blocker found. Visibility snapshots support two scoped P1 frontend privacy/context findings and distinguish hidden-DOM switch401 retention. Synthetic HTTP is not real backend authorization/persistence evidence.",
+    "nonblocking_repeatability_gap": "Runner records fixture hash but does not automatically assert fixtures.source_sha256 against current formatter/capability sources. Current checkpoint hashes independently match frozen source; future reruns should reject stale exported fixture source.",
+    "review_execution": "Read-only code/artifact/hash review; browser was not rerun by this reviewer.",
+    "nonblocking_storage_assertion_gap": "Coordinator identified that logout-storage preserves public-checkout-fixture, an arbitrary unrelated key, rather than the real munimjee.checkout.v1:<slug> namespace from checkout-attempt.js:15. Requested tiny owner followup; current test proves generic unrelated-storage preservation only.",
+    "screenshots_independently_viewed": [
+      "cross-identity-error.png",
+      "session-revoke-401.png"
+    ]
+  },
+  "review_status": "Current original checkpoints reviewed. Narrow onboarding stale-fixture/source-hash and real-public-storage-namespace followup pending; no product failures suppressed."
+}
