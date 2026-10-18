@@ -1,0 +1,111 @@
+{
+  "base": "4d9f940d25e681fd6a80e168f4ea4c0510131fbd",
+  "first_candidate": "992c8bf88704545117ca17b3dbc12b8f41412f15",
+  "corrected_candidate": "bd24f74e541147713f0edf160f0faf5af9df03a2",
+  "changed_paths": [
+    "scripts/v1_release_fixture_0056.json",
+    "scripts/v1_release_rehearsal.py",
+    "scripts/v1_release_synthetic.py"
+  ],
+  "fixed_fixture": {
+    "path": "scripts/v1_release_fixture_0056.json",
+    "version": 1,
+    "sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+    "records_counts_totals_append_match_prior_approved_proposal": true,
+    "source_rows": 52,
+    "target_rows": 58
+  },
+  "unchanged_rehearsal_guard_functions": [
+    {
+      "name": "require",
+      "sha256": "4eb0575ad79a2d8f72db27ae1a9df948b1e594d9cd04ee4245dd6e0f6d250ad1"
+    },
+    {
+      "name": "repo_head",
+      "sha256": "a42e66734665166092e59fec90e135350455182b5dbab55e364a650ed8d7af88"
+    },
+    {
+      "name": "p01",
+      "sha256": "98ee20ae3c737e42088cc74512e16604ac6a8d45f5bec3188982b6e05334e628"
+    },
+    {
+      "name": "targets",
+      "sha256": "a28ab62b3a7f44f2ba62d228028c6900c8cb2c474aaaa3f5cf77f18cff13bcf5"
+    },
+    {
+      "name": "no_symlinks",
+      "sha256": "ec1a35736ae330524b901d11d1d89bf74f55b1c2c4822ef141e3dc6ba32bfbf2"
+    },
+    {
+      "name": "ownership",
+      "sha256": "f4075267e26591ee8dd0577f814df7ddca0a1ab329b532dc64e9e74e03ab550c"
+    },
+    {
+      "name": "archive_location",
+      "sha256": "db40df0ca85a629dc38c51c7207ac1690f3a0ec1d73298bf270be5030429b790"
+    },
+    {
+      "name": "private_file",
+      "sha256": "7e36c05f60c1ea848795815ee79d1b1886ef9c6f322b1b7f7b98948be9df22e3"
+    },
+    {
+      "name": "private_read",
+      "sha256": "e16e6761e33e356e0b731010abacd7458b585b7c2c759c7448e6c6386a874e7f"
+    },
+    {
+      "name": "private_sha256",
+      "sha256": "363e75b9a253787c81fde94ae810ebd75bfb1b9c629eb34671438e085dca87ae"
+    },
+    {
+      "name": "private_json",
+      "sha256": "ddf791062e3023458ef23863967111822035bc64f696eaf0e618d11cb60a5d4a"
+    },
+    {
+      "name": "child_env",
+      "sha256": "2d848a50685589e15a327d4b82cbeb8c7e047a1eacd36a0a640261e8602a9b0c"
+    },
+    {
+      "name": "command",
+      "sha256": "a6ba88e9bd4a2fb5464b94695390227fbaab51351ebd3dc2451605915d36d8a5"
+    },
+    {
+      "name": "owned_call",
+      "sha256": "0d1aea2f0d5076b871aba5b14334a79ef6418c34410be25ab5c831b1b7dc5b13"
+    },
+    {
+      "name": "pg_tools",
+      "sha256": "5579aaca8ee1bada720142d83e92960613fde62f1a54a88660d3ae987895582f"
+    },
+    {
+      "name": "query",
+      "sha256": "41d02e8657a7b55cb101c6e69acc2925577f7e805e9759bb823a3a0b53e2cf25"
+    },
+    {
+      "name": "empty_database",
+      "sha256": "240997986d19373bb4bb517c426eb71a8d2c7c51516fef12457b041768e4c232"
+    },
+    {
+      "name": "pg16",
+      "sha256": "e2b80612397623e36215e716841c10238b3ebc50802e1c110a1359224457e66d"
+    },
+    {
+      "name": "canonical_constraint",
+      "sha256": "1a42cf57c66c66369b905cf3b563338765d0df0be39d2891286faf753cc3fb59"
+    },
+    {
+      "name": "main",
+      "sha256": "b5760841525f72410962d72b439029eeb14c3178872564d40780e484d5b25f8e"
+    }
+  ],
+  "exec_helper_unchanged_sha256": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+  "finding": {
+    "id": "R01",
+    "first_candidate_path": "scripts/v1_release_rehearsal.py",
+    "function": "schema_fingerprint",
+    "description": "Raw duplicated constraint_metadata definitions defeat existing PG16 literal-array cast equivalence normalization.",
+    "correction_commit": "bd24f74e541147713f0edf160f0faf5af9df03a2",
+    "correction": "Validate raw exact FK metadata first, then apply unchanged narrow canonical_constraint to duplicate metadata definitions before hashing.",
+    "status": "source correction reviewed; holistic schema digest regression requested from QA"
+  },
+  "review_mode": "Static immutable Git/AST/JSON byte/hash review only; no candidate import, unit execution or DB/tool operation."
+}
