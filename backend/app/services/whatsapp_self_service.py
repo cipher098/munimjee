@@ -99,7 +99,7 @@ async def signup_view(db,row):
 
 def start_state(row,binding):
     return jwt.encode({'purpose':'wa-native-signup.v1','attempt':str(row.id),**dict(zip(
-        ('business','user','sid','auth_version'),binding.values())), 'generation':row.connection_version,
+        ('business','user','sid','auth_version'),binding.values())), 'generation':row.connection_version,'app_id':row.requested_app_id,
         'nonce_digest':row.nonce_digest,'exp':row.expires_at},settings.SECRET_KEY,algorithm=settings.JWT_ALGORITHM)
 
 
@@ -112,6 +112,7 @@ async def start_signup(db,authority,payload,*,provider=None):
     if row:
         if not same_actor(row,authority.binding) or not hmac.compare_digest(row.request_hash,digest):
             problem('signup_intent_conflict','This action key already belongs to another signup intent')
+        require_attempt_app(row)
     else:
         if payload.expected_connection_version!=control.version:
             problem('channel_generation_stale','The connection changed; review its current state')
@@ -134,14 +135,16 @@ async def start_signup(db,authority,payload,*,provider=None):
         row=WhatsAppSignupAttempt(id=attempt_id,business_id=authority.binding.business_id,
             actor_user_id=authority.binding.user_id,actor_session_id=authority.binding.session_id,
             actor_auth_version=authority.binding.auth_version,idempotency_key=payload.idempotency_key,
-            request_hash=digest,connection_version=control.version,nonce_digest=hashlib.sha256(nonce.encode()).hexdigest(),
+            request_hash=digest,connection_version=control.version,requested_app_id=sdk['app_id'],nonce_digest=hashlib.sha256(nonce.encode()).hexdigest(),
             state='pending',created_at=timestamp,expires_at=timestamp+timedelta(minutes=10),
             token_delete_after=timestamp+timedelta(minutes=15),token_expiry_kind='unknown',
             subscription_state='not_started',registration_state='not_started',evidence_kind=evidence_kind,updated_at=timestamp)
         db.add(row)
     await authority.finalize(db)
     result=SignupStartView(contract_version='whatsapp-signup-start.v1',attempt=await signup_view(db,row),
-        signed_state=start_state(row,authority.binding),sdk=SDKConfiguration(**sdk))
+        signed_state=start_state(row,authority.binding),sdk=SDKConfiguration(**sdk),receipt={
+            'business_id':row.business_id,'idempotency_key':row.idempotency_key,'action':'signup_start',
+            'expected_connection_version':row.connection_version,'resource_id':row.id,'selected_choice_id':None})
     await authority.check(db)
     return result,bound_nonce(settings.SECRET_KEY,row.id,authority.binding)
 
@@ -151,7 +154,7 @@ def verify_browser(row,binding,payload,nonce):
         claims=jwt.decode(payload.signed_state,settings.SECRET_KEY,algorithms=[settings.JWT_ALGORITHM],options={'require_exp':True})
         expected={'purpose':'wa-native-signup.v1','attempt':str(row.id),'business':str(binding.business_id),
             'user':str(binding.user_id),'sid':str(binding.session_id),'auth_version':binding.auth_version,
-            'generation':row.connection_version,'nonce_digest':row.nonce_digest}
+            'generation':row.connection_version,'app_id':row.requested_app_id,'nonce_digest':row.nonce_digest}
         if any(claims.get(k)!=v for k,v in expected.items()) or type(claims.get('auth_version')) is not int or type(claims.get('generation')) is not int:
             raise ValueError()
         if type(nonce) is not str or not hmac.compare_digest(hashlib.sha256(nonce.encode()).hexdigest(),row.nonce_digest):
@@ -184,6 +187,7 @@ async def exchange_signup(db,authority,attempt_id,payload,nonce,*,provider=None)
     if payload.idempotency_key!=row.idempotency_key:
         problem('signup_intent_conflict','Use the original signup action key')
     verify_browser(row,authority.binding,payload,nonce)
+    require_attempt_app(row)
     if row.state!='pending':
         await authority.finalize(db)
         return await signup_view(db,row)
@@ -199,6 +203,9 @@ async def exchange_signup(db,authority,attempt_id,payload,nonce,*,provider=None)
         embedded_configuration(settings)
         control,_=await locked_configuration(db,authority)
         row=await owned_attempt(db,authority,attempt_id,lock=True)
+        require_attempt_app(row)
+        if verified.app_id!=row.requested_app_id:
+            raise ProtocolError('provider_grants_unverified')
         if row.state!='exchanging' or row.connection_version!=control.version or row.expires_at<=now():
             raise HTTPException(409,'The signup changed or expired during provider authorization')
         if client.evidence_kind not in ('provider','synthetic_fixture'):
@@ -227,6 +234,7 @@ async def discover_assets(db,authority,attempt_id,payload,*,provider=None):
     row=await owned_attempt(db,authority,attempt_id,lock=True)
     if payload.idempotency_key!=row.idempotency_key:
         problem('signup_intent_conflict','Use the original signup action key')
+    require_attempt_app(row,verified=True)
     if row.state=='awaiting_selection':
         selected=await db.scalar(select(WhatsAppSignupChoice.id).where(WhatsAppSignupChoice.attempt_id==row.id,
             WhatsAppSignupChoice.waba_id==payload.waba_id,WhatsAppSignupChoice.phone_number_id==payload.phone_number_id))
@@ -245,6 +253,7 @@ async def discover_assets(db,authority,attempt_id,payload,*,provider=None):
         problem('signup_assets_unverified','Account membership could not be verified. No account was attached.')
     control,_=await locked_configuration(db,authority)
     row=await owned_attempt(db,authority,attempt_id,lock=True)
+    require_attempt_app(row,verified=True)
     if row.state!='awaiting_assets' or row.connection_version!=control.version or row.expires_at<=now() or not row.provisional_token_ciphertext:
         problem('channel_generation_stale','The signup changed during account discovery')
     if verified.app_id!=row.verified_app_id or verified.expires_at!=row.token_expires_at or client.evidence_kind!=row.evidence_kind:
@@ -270,7 +279,6 @@ async def discover_assets(db,authority,attempt_id,payload,*,provider=None):
 
 async def select_account(db,authority,attempt_id,payload,*,provider=None):
     from sqlalchemy.exc import IntegrityError
-    embedded_configuration(settings)
     client=provider or SignupProvider(settings)
     control,account=await locked_configuration(db,authority)
     row=await owned_attempt(db,authority,attempt_id,lock=True)
@@ -280,6 +288,8 @@ async def select_account(db,authority,attempt_id,payload,*,provider=None):
             problem('signup_intent_conflict','This signup already has a different selection command')
         await authority.finalize(db)
         return await signup_view(db,row)
+    embedded_configuration(settings)
+    require_attempt_app(row,verified=True)
     if row.state!='awaiting_selection' or row.expires_at<=now() or row.connection_version!=control.version or payload.expected_connection_version!=control.version:
         problem('channel_generation_stale','Review the current connection before account selection')
     choice=await db.scalar(select(WhatsAppSignupChoice).where(WhatsAppSignupChoice.id==payload.choice_id,
@@ -303,6 +313,7 @@ async def select_account(db,authority,attempt_id,payload,*,provider=None):
         problem('signup_choice_unverified','Current provider account membership could not be verified')
     control,account=await locked_configuration(db,authority)
     row=await owned_attempt(db,authority,attempt_id,lock=True)
+    require_attempt_app(row,verified=True)
     if row.selected_key is not None:
         if row.selected_key!=payload.idempotency_key or not hmac.compare_digest(row.selected_hash,digest):
             problem('signup_intent_conflict','A different account selection was already recorded')
@@ -352,6 +363,7 @@ async def provider_step(db,authority,attempt_id,payload,client,*,stage,token):
         embedded_configuration(settings)
         control,_=await locked_configuration(db,authority)
         row=await owned_attempt(db,authority,attempt_id,lock=True)
+        require_attempt_app(row,verified=True)
         if row.state!='setting_up' or row.selected_key!=payload.idempotency_key or row.connection_version!=control.version or row.expires_at<=now() or not row.provisional_token_ciphertext or not row.token_expires_at or row.token_expires_at<=now():
             raise HTTPException(409,'The claimed setup is no longer current')
         state=getattr(row,attribute)
@@ -367,6 +379,7 @@ async def provider_step(db,authority,attempt_id,payload,client,*,stage,token):
         embedded_configuration(settings)
         control,_=await locked_configuration(db,authority)
         row=await owned_attempt(db,authority,attempt_id,lock=True)
+        require_attempt_app(row,verified=True)
         if row.state!='setting_up' or getattr(row,attribute)!='requesting' or row.connection_version!=control.version or row.expires_at<=now():
             raise HTTPException(409,'The connection changed during provider setup')
         setattr(row,attribute,'confirmed'); row.updated_at=now()
@@ -384,6 +397,7 @@ async def attach_account(db,authority,attempt_id,payload,*,token):
     embedded_configuration(settings)
     control,account=await locked_configuration(db,authority)
     row=await owned_attempt(db,authority,attempt_id,lock=True)
+    require_attempt_app(row,verified=True)
     if row.state!='setting_up' or row.selected_key!=payload.idempotency_key or row.connection_version!=control.version or row.expires_at<=now() or row.subscription_state!='confirmed' or row.registration_state!='confirmed' or not row.token_expires_at or row.token_expires_at<=now():
         problem('signup_attachment_unavailable','Current confirmed setup is required before saving the account')
     choice=await db.scalar(select(WhatsAppSignupChoice).where(WhatsAppSignupChoice.id==row.selected_choice_id,
@@ -458,11 +472,12 @@ async def post_claim_authority(db,authority,attempt_id,*,stage):
         ChannelConnectionState,(ChannelConnectionState.business_id==attempt.business_id)&(ChannelConnectionState.channel=='whatsapp')).where(
         attempt.id==attempt_id,attempt.actor_session_id==authority.binding.session_id,
         attempt.actor_auth_version==authority.binding.auth_version,attempt.expires_at>func.clock_timestamp(),
-        ChannelConnectionState.version==attempt.connection_version)
+        ChannelConnectionState.version==attempt.connection_version,attempt.requested_app_id==settings.WHATSAPP_EMBEDDED_APP_ID)
     if stage=='exchange':
         query=query.where(attempt.state=='exchanging',attempt.exchange_consumed_at.is_not(None))
     else:
         query=query.where(attempt.state=='setting_up',getattr(attempt,stage+'_state')=='requesting',
+            attempt.verified_app_id==settings.WHATSAPP_EMBEDDED_APP_ID,
             attempt.provisional_token_ciphertext.is_not(None),attempt.token_expiry_kind=='at',
             attempt.token_expires_at>func.clock_timestamp(),~select(WhatsAppAccount.seller_id).where(
                 WhatsAppAccount.phone_number_id==attempt.selected_phone_number_id,
@@ -486,3 +501,8 @@ async def cancel_signup(db,authority,attempt_id,payload):
     result=await signup_view(db,row)
     await authority.check(db)
     return result
+
+
+def require_attempt_app(row,*,verified=False):
+    if row.requested_app_id!=settings.WHATSAPP_EMBEDDED_APP_ID or verified and row.verified_app_id!=row.requested_app_id:
+        problem('signup_configuration_changed','The configured Meta app changed. Review this attempt without repeating provider steps.')

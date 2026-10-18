@@ -18,6 +18,7 @@ DDL = (
 	request_hash VARCHAR(64) NOT NULL, 
 	connection_version INTEGER NOT NULL, 
 	nonce_digest VARCHAR(64) NOT NULL, 
+	requested_app_id VARCHAR(40) NOT NULL, 
 	evidence_kind VARCHAR(30) DEFAULT 'provider' NOT NULL, 
 	state VARCHAR(30) DEFAULT 'pending' NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
@@ -45,6 +46,8 @@ DDL = (
 	CONSTRAINT wa_signup_state CHECK (state IN ('pending','exchanging','exchange_unknown','awaiting_assets','awaiting_selection','setting_up','setup_unknown','attached','failed','cancelled','expired','stale')), 
 	CONSTRAINT wa_signup_steps CHECK (subscription_state IN ('not_started','requesting','unknown','confirmed','failed') AND registration_state IN ('not_started','requesting','unknown','confirmed','failed')), 
 	CONSTRAINT wa_signup_token_expiry CHECK (token_expiry_kind IN ('unknown','at','permanent') AND ((token_expiry_kind = 'at' AND token_expires_at IS NOT NULL) OR (token_expiry_kind <> 'at' AND token_expires_at IS NULL))), 
+	CONSTRAINT wa_signup_requested_app CHECK (requested_app_id ~ '^[0-9]{1,40}$'), 
+	CONSTRAINT wa_signup_verified_app_binding CHECK (verified_app_id IS NULL OR verified_app_id=requested_app_id), 
 	CONSTRAINT wa_signup_app_id CHECK (verified_app_id IS NULL OR verified_app_id ~ '^[0-9]{1,40}$'), 
 	CONSTRAINT wa_signup_selection CHECK ((selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL AND selected_phone_number_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL AND selected_phone_number_id IS NOT NULL AND selected_phone_number_id ~ '^[0-9]{1,40}$')), 
 	FOREIGN KEY(business_id) REFERENCES businesses (id), 
@@ -166,8 +169,8 @@ DDL = (
 	UNIQUE (outbound_message_id)
 )""",
     """ALTER TABLE whatsapp_signup_attempts ADD CONSTRAINT wa_signup_selected_choice FOREIGN KEY(selected_choice_id, id, business_id, selected_phone_number_id) REFERENCES whatsapp_signup_choices (id, attempt_id, business_id, phone_number_id)""",
-    """CREATE UNIQUE INDEX wa_signup_phone_claim ON whatsapp_signup_attempts (selected_phone_number_id) WHERE state IN ('setting_up','setup_unknown')""",
     """CREATE INDEX ix_wa_signup_cleanup ON whatsapp_signup_attempts (token_delete_after)""",
+    """CREATE UNIQUE INDEX wa_signup_phone_claim ON whatsapp_signup_attempts (selected_phone_number_id) WHERE state IN ('setting_up','setup_unknown')""",
     """CREATE INDEX ix_wa_provenance_credential ON whatsapp_authorization_provenance (business_id, credential_fingerprint)""",
     """CREATE INDEX ix_wa_test_created ON whatsapp_connection_tests (business_id, issued_at)""",
 )
@@ -314,6 +317,9 @@ BEGIN
  IF TG_OP='DELETE' OR (to_jsonb(NEW)-ARRAY['provider_message_id','status','error','updated_at'])
  IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['provider_message_id','status','error','updated_at']) THEN
  RAISE EXCEPTION 'Bound test message identity is immutable' USING ERRCODE='23514'; END IF;
+ IF TG_OP='UPDATE' AND NEW.provider_message_id IS DISTINCT FROM OLD.provider_message_id AND (
+ OLD.direction='inbound' OR OLD.provider_message_id IS NOT NULL OR coalesce(NEW.provider_message_id,'')='') THEN
+ RAISE EXCEPTION 'Bound provider association is one way' USING ERRCODE='23514'; END IF;
  END IF;
  IF TG_OP='DELETE' THEN RETURN OLD; END IF;
  RETURN NEW;
@@ -321,7 +327,7 @@ END; $$""")
     op.execute("""CREATE FUNCTION wa_choice_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF NOT EXISTS (SELECT 1 FROM whatsapp_signup_attempts a WHERE a.id=NEW.attempt_id AND a.business_id=NEW.business_id
- AND a.state='awaiting_assets' AND a.verified_app_id IS NOT NULL AND a.provisional_token_ciphertext IS NOT NULL
+ AND a.state='awaiting_assets' AND a.verified_app_id=a.requested_app_id AND a.provisional_token_ciphertext IS NOT NULL
  AND NEW.verified_at BETWEEN a.created_at AND a.expires_at) THEN
  RAISE EXCEPTION 'Choice requires current verified signup' USING ERRCODE='23514'; END IF;
  RETURN NEW;
@@ -332,7 +338,7 @@ BEGIN
  JOIN whatsapp_accounts account ON account.seller_id=a.business_id
  JOIN channel_connection_states control ON control.business_id=a.business_id AND control.channel='whatsapp'
  WHERE a.id=NEW.attempt_id AND a.business_id=NEW.business_id AND a.state='setting_up'
- AND a.subscription_state='confirmed' AND a.registration_state='confirmed'
+ AND a.subscription_state='confirmed' AND a.registration_state='confirmed' AND a.verified_app_id=a.requested_app_id
  AND ROW(a.actor_user_id,a.actor_session_id,a.actor_auth_version,a.verified_app_id,a.token_expiry_kind,a.token_expires_at,a.evidence_kind)
  IS NOT DISTINCT FROM ROW(NEW.actor_user_id,NEW.actor_session_id,NEW.actor_auth_version,NEW.verified_app_id,NEW.token_expiry_kind,NEW.token_expires_at,NEW.evidence_kind)
  AND NEW.connection_version=a.connection_version+1 AND control.version=NEW.connection_version

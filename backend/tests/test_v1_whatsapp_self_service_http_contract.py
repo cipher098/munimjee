@@ -48,7 +48,9 @@ def test_private_challenge_response_does_not_repr_raw_command():
         'connection_version':0,'status':'awaiting_recipient','recipient_hint':None,'inbound_observed_at':None,
         'message_id':None,'provider_delivery_observed_at':None,'delivery_confirmed':False,
         'is_current_generation':True,'proof_source':'not_recorded','message':'Waiting for intended recipient'}
-    result=TestChallengeView(contract_version='whatsapp-test-challenge.v1',test=view,command=private_command)
+    result=TestChallengeView(contract_version='whatsapp-test-challenge.v1',test=view,command=private_command,receipt={
+        'business_id':binding.business_id,'idempotency_key':uuid4(),'action':'test_start','expected_connection_version':0,
+        'resource_id':view['test_id'],'selected_choice_id':None})
     assert private_command not in repr(result)
 
 
