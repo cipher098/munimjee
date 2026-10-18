@@ -90,27 +90,29 @@ historical artifacts were restored byte-for-byte. Exact boundaries are in
 `docs/v1-wave7-v08-validation.md`. This is a focused runtime delta after the
 complete2441 source, not another complete-run claim or full V08 acceptance.
 
-0057 remains isolated from this accepted central checkpoint. Backend `e897ee6`
-resolves reviewed App/config/claim/expiry findings with16 independent no-network
-checks; the installed actual-main composition includes shared hooks `d541311`.
-The first actual gate found missing private error headers, fixed in `b853f4a`.
-Subsequent owner selection passes149 checks (26 new actual0057,8 legacy actual,
-115 pure), plus8 additional actual boundary checks. Independent six committed-claim
-SID and late-App races pass at isolated `646bb952`, actualPG16.15/head0057, with1826
-tracked files stable. These results are separate selections, not an aggregate full
-suite. The initial private-header failure remains preserved.
+0057 is now reviewed and provisionally composed through runtime `a2a2909`, before
+its complete central gate. The shared installation `d541311` and final owner
+`f61ed55` match across36 changed app/migration/harness paths. The owner149 selection
+(26newactual,8legacyactual,115pure), eight extra actual boundary checks and six
+independent committed-claim/late-App races remain separately attributed. Earlier
+private-error-header failure was fixed by `b853f4a`; its raw result remains.
 
-The owner mounted flow passes30 actual-main checks at0057 with339 stable source/
-harness hashes, one fulfilled synthetic SDK request, zero actual Meta SDK requests,
-and zero other external requests/page errors. Three earlier harness timing/assertion
-failures are preserved. This is not final0057 acceptance: subsequent reviewed
-completion delta `99c632b` adds explicit fresh-test review after a known safe result,
-blocks all earlier queued/sending/unknown reply effects under the Account lock even
-across generation changes, and corrects uncertain-setup controls/copy. Its118 pure
-and22 controlled-DOM checks pass; fresh focused actual and mounted checks are now
-allocated serially. Both feature flags stay false. Real SDK, grants, phone registration,
-CSP and delivery canaries remain unproved. A full frozen0057 run is still required
-before integrating/pushing this isolated feature.
+Completion99c632b passes161 (43actual/118pure), then its mounted run catches real
+stale connection copy after definitive setup recovery. Finalf61ed55 refreshes current
+readiness and projects accepted-like rows without usable receipts as unknown;
+affected17actual cases pass. Final actual-main mounted35 passes at actual0057/
+PostgreSQL16.15 with339 stable source/harness hashes. The real60-second cooldown,
+explicit same-key retry, fresh recipient permission and no repeat of the old fixed
+reply are proved. One synthetic SDK URL is fulfilled; actual Meta SDK requests,
+other external requests and page errors are zero. Three historical harness failures,
+the initial30 passing browser packet and the later real UI failure remain preserved.
+Counts overlap and are not added. Final source/render review is clear in this scope.
+
+Current full2441 remains the earlier0056 source. Complete frozen0057 acceptance
+and publishing this new runtime require the next whole-backend gate. Both flags
+stay false; real SDK/CSP/grants/registration/billing/live recipient delivery and
+operational cleanup remain unproved. Mere synthetic status or workflow presence
+does not promote global messaging readiness.
 
 Acceptance reconciliation also identifies remaining code-owned boundaries: A13 lacks
 a native exact-one-enquiry reviewed link/eligible resume command; existing legacy
@@ -121,10 +123,9 @@ action remains deliberately withheld by the safe static-copy policy; repaired na
 controls do not imply that action mode is implemented. Social owns the bounded
 58-row/23-journey reconciliation; root coordinates remote implementation assignments.
 
-DB/browser work stays serialized on disk-backed55443. Catalogue exclusively owns
-payment_w6 for the frozen0057 completion checks and mounted8171 proof; no other
-DB/browser executor is authorized until explicit release. All prior parcel slots
-are released. Host free space was2.7GiB at this allocation. New image/restore/rollback
+DB/browser work stays serialized on disk-backed55443. The owner payment_w6/8171 and all parcel slots are explicitly released. The
+coordinator next allocates wave6_integration for the frozen whole0057 gate; no
+parallel DB/browser executor is authorized. Host free space was2.7GiB at this allocation. New image/restore/rollback
 copies remain deferred under headroom; no prune or evidence deletion is authorized.
 Remote0056 release-harness upgrade `d1720fc` has107 source/unit passes and one
 explicit actual-PG skip; no actual0056 restore is claimed or allocated. Provider

@@ -68,11 +68,13 @@ acceptance never means delivery. Remaining code-owned work includes supported
 WhatsApp v4 self-service consent and
 account selection, authorized-recipient test/result workflow, and the rest of the
 V1 acceptance matrix. Catalogue owns reserved0057 v4 implementation from frozen0056 after reviewed
-contract approval; it remains isolated from the accepted central checkpoint. Its owner149 focused
+contract approval; its reviewed code is now provisionally composed after the accepted0056 checkpoint. Its owner149 focused
 checks,8 additional actual checks, independent six actual claim/App races and30
-mounted actual-main checks now pass separately. A subsequent explicit fresh-test/
-uncertain-setup completion delta is source-reviewed and undergoing fresh serial
-checks; final frozen0057 full-suite acceptance is still pending. Both flags stay off,
+mounted actual-main checks now pass separately. The subsequent explicit fresh-test/
+uncertain-setup delta passes161 focused cases before its mounted status failure;
+finalf61ed55 repairs the status tails and passes17 affected actual cases plus35
+actual-main mounted journeys. Counts overlap and remain separate. The reviewed
+code is provisionally composed, with frozen0057 whole-suite acceptance still pending. Both flags stay off,
 real SDK/provider canaries remain unproved, and no live provider action is authorized.
 Its source includes original-App binding, current native authority after provider
 claims, exact credential provenance and bounded test authorization. A13 native
