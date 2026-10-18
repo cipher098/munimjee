@@ -1,0 +1,1672 @@
+{
+  "mode": "fresh-actual-SSR-and-live-browser-synthetic-HTTP",
+  "source_head": "13685d7353541bd71cef90aab99f05377c0e20e3",
+  "fixture_export": {
+    "mode": "actual-renderer-and-live-source-synthetic-HTTP-no-database",
+    "source_head": "13685d7353541bd71cef90aab99f05377c0e20e3",
+    "source_hashes_before": {
+      "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+      "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+      "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+      "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+      "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+      "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+      "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+      "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+      "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+      "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+      "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+      "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+      "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+      "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+      "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+      "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+      "frontend/storefront/src/styles.css": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+      "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+      "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d"
+    },
+    "source_hashes_after": {
+      "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+      "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+      "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+      "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+      "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+      "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+      "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+      "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+      "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+      "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+      "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+      "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+      "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+      "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+      "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+      "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+      "frontend/storefront/src/styles.css": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+      "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+      "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d"
+    },
+    "source_unchanged_during_export": true,
+    "product_id": "22222222-2222-4222-8222-222222222201",
+    "sku_id": "33333333-3333-4333-8333-333333333301",
+    "api_product": {
+      "product_id": "22222222-2222-4222-8222-222222222201",
+      "name": "Independent occasion dress",
+      "description": "A literal reviewed garment description for synthetic browser testing.",
+      "category_id": "44444444-4444-4444-8444-444444444401",
+      "photo_urls": [],
+      "skus": [
+        {
+          "sku_id": "33333333-3333-4333-8333-333333333301",
+          "product_id": "22222222-2222-4222-8222-222222222201",
+          "options": {
+            "Size": "M"
+          },
+          "price_minor": 129950,
+          "currency": "INR",
+          "stock_available": 2,
+          "active": true
+        },
+        {
+          "sku_id": "33333333-3333-4333-8333-333333333302",
+          "product_id": "22222222-2222-4222-8222-222222222201",
+          "options": {
+            "Size": "L"
+          },
+          "price_minor": 129950,
+          "currency": "INR",
+          "stock_available": 0,
+          "active": true
+        },
+        {
+          "sku_id": "33333333-3333-4333-8333-333333333304",
+          "product_id": "22222222-2222-4222-8222-222222222201",
+          "options": {
+            "Size": "S"
+          },
+          "price_minor": 129950,
+          "currency": "INR",
+          "stock_available": null,
+          "active": true
+        }
+      ],
+      "contract_version": "catalogue.v2",
+      "mode": "operational",
+      "business_id": "11111111-1111-4111-8111-111111111101",
+      "readiness": "active",
+      "checkout_enabled": true
+    },
+    "fixture_hashes": {
+      "catalogue-empty.html": "fa9fc0481bd7089415f4bcdd4eafd012cb329871eadcbb62aa00f140d14e9c64",
+      "catalogue-long.html": "8052ee1fbae68668477f93a426e09af4d40d11c8092105f667466e1eff5eae8d",
+      "catalogue-standard.html": "41ae218959fda4f31e327814e8bfd4c5401d5b04f66d32e5385ab6d1550d01bf",
+      "editorial-empty.html": "0f42cbeef83ebacef19e0a9e2cf854708a3960ee9f92795de496c364b1099e8f",
+      "editorial-long.html": "485c15c93e97bd65b27d612e19bcad6361ff4e31355ef2247826b2cecf6ca679",
+      "editorial-standard.html": "442693d1870ba6d538fc5385b47fdf1e1947b6a1ee81fd2f57b5b783f8d97a0c",
+      "video-empty.html": "55492df695cdb4ffb5b0ce461c43930c9f7af25f8cae51272a2dde2e13daee66",
+      "video-long.html": "5e83e73021bb1f20a39d0d133f2b9215bc657cf08faa66c462836733fca99406",
+      "video-standard.html": "7db9956dc4dccf8137792fb65a6e0c405a62c8fad5828bd458707c35ad0c6a07"
+    }
+  },
+  "source_hashes_before": {
+    "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+    "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+    "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+    "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+    "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+    "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+    "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+    "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+    "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+    "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+    "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+    "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+    "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+    "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+    "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+    "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+    "frontend/storefront/src/styles.css": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+    "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+    "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+    "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d"
+  },
+  "source_hashes_after": {
+    "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+    "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+    "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+    "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+    "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+    "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+    "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+    "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+    "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+    "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+    "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+    "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+    "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+    "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+    "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+    "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+    "frontend/storefront/src/styles.css": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+    "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+    "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+    "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d"
+  },
+  "source_unchanged": true,
+  "runner_sha256": "6c90c4262f9b5373c29d5dd80e30df5269c8a08d774d2c63db408e95a75769b1",
+  "exporter_sha256": "688efd87f171344b413d2a092cac76383f725ec85792eaf51e1f73e18a0f3c64",
+  "browser_version": "145.0.7632.6",
+  "playwright_module": "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/@playwright/test/index.mjs",
+  "physical_device": false,
+  "screen_reader": false,
+  "database_allocated": false,
+  "real_provider": false,
+  "checks_passed": 69,
+  "checks_failed": 6,
+  "results": [
+    {
+      "name": "editorial 320x740: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 1623
+    },
+    {
+      "name": "editorial 360x800: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 588
+    },
+    {
+      "name": "editorial 390x844: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 360
+    },
+    {
+      "name": "editorial 844x390: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 345
+    },
+    {
+      "name": "editorial 768x1024: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 318
+    },
+    {
+      "name": "editorial 1440x1000: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 313
+    },
+    {
+      "name": "editorial 320px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 264
+    },
+    {
+      "name": "editorial 390px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 264
+    },
+    {
+      "name": "editorial: keyboard dialogs trap focus, preserve visible focus and restore triggers",
+      "result": "passed",
+      "elapsed_ms": 194
+    },
+    {
+      "name": "editorial: semantic landmarks, dialog names, form labels and keyboard skip link",
+      "result": "passed",
+      "elapsed_ms": 1216
+    },
+    {
+      "name": "editorial: enabled primary control text and keyboard focus have representative contrast",
+      "result": "passed",
+      "elapsed_ms": 384
+    },
+    {
+      "name": "editorial: sold-out and inactive variants cannot enter bag; untracked stock stays explicit",
+      "result": "passed",
+      "elapsed_ms": 272
+    },
+    {
+      "name": "editorial: empty collection retains visible explanation after hydration",
+      "result": "passed",
+      "elapsed_ms": 133
+    },
+    {
+      "name": "editorial: filtered-empty count is announced and clearing search restores results",
+      "result": "passed",
+      "elapsed_ms": 143
+    },
+    {
+      "name": "editorial: long published branding and product text fit 320px",
+      "result": "passed",
+      "elapsed_ms": 147
+    },
+    {
+      "name": "editorial: JavaScript-off SSR empty collection remains meaningful",
+      "result": "passed",
+      "elapsed_ms": 122
+    },
+    {
+      "name": "editorial: deferred availability refresh shows pending control then restores it",
+      "result": "passed",
+      "elapsed_ms": 259
+    },
+    {
+      "name": "editorial: abort availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 281
+    },
+    {
+      "name": "editorial: server500 availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 262
+    },
+    {
+      "name": "editorial: malformed availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 280
+    },
+    {
+      "name": "editorial: invalid_json availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 279
+    },
+    {
+      "name": "editorial: abort checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 414
+    },
+    {
+      "name": "editorial: malformed checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 412
+    },
+    {
+      "name": "editorial: stock checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 411
+    },
+    {
+      "name": "editorial: pending checkout disables repeated submission and retains visible progress",
+      "result": "passed",
+      "elapsed_ms": 410
+    },
+    {
+      "name": "catalogue 320x740: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 370
+    },
+    {
+      "name": "catalogue 360x800: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 329
+    },
+    {
+      "name": "catalogue 390x844: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 340
+    },
+    {
+      "name": "catalogue 844x390: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 345
+    },
+    {
+      "name": "catalogue 768x1024: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 304
+    },
+    {
+      "name": "catalogue 1440x1000: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 329
+    },
+    {
+      "name": "catalogue 320px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 264
+    },
+    {
+      "name": "catalogue 390px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 265
+    },
+    {
+      "name": "catalogue: keyboard dialogs trap focus, preserve visible focus and restore triggers",
+      "result": "passed",
+      "elapsed_ms": 196
+    },
+    {
+      "name": "catalogue: semantic landmarks, dialog names, form labels and keyboard skip link",
+      "result": "passed",
+      "elapsed_ms": 1208
+    },
+    {
+      "name": "catalogue: enabled primary control text and keyboard focus have representative contrast",
+      "result": "passed",
+      "elapsed_ms": 206
+    },
+    {
+      "name": "catalogue: sold-out and inactive variants cannot enter bag; untracked stock stays explicit",
+      "result": "passed",
+      "elapsed_ms": 268
+    },
+    {
+      "name": "catalogue: empty collection retains visible explanation after hydration",
+      "result": "passed",
+      "elapsed_ms": 132
+    },
+    {
+      "name": "catalogue: filtered-empty count is announced and clearing search restores results",
+      "result": "passed",
+      "elapsed_ms": 242
+    },
+    {
+      "name": "catalogue: long published branding and product text fit 320px",
+      "result": "passed",
+      "elapsed_ms": 193
+    },
+    {
+      "name": "catalogue: JavaScript-off SSR empty collection remains meaningful",
+      "result": "passed",
+      "elapsed_ms": 119
+    },
+    {
+      "name": "catalogue: deferred availability refresh shows pending control then restores it",
+      "result": "passed",
+      "elapsed_ms": 266
+    },
+    {
+      "name": "catalogue: abort availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 267
+    },
+    {
+      "name": "catalogue: server500 availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 278
+    },
+    {
+      "name": "catalogue: malformed availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 265
+    },
+    {
+      "name": "catalogue: invalid_json availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 279
+    },
+    {
+      "name": "catalogue: abort checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 415
+    },
+    {
+      "name": "catalogue: malformed checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 412
+    },
+    {
+      "name": "catalogue: stock checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 409
+    },
+    {
+      "name": "catalogue: pending checkout disables repeated submission and retains visible progress",
+      "result": "passed",
+      "elapsed_ms": 409
+    },
+    {
+      "name": "video 320x740: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 351
+    },
+    {
+      "name": "video 360x800: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 313
+    },
+    {
+      "name": "video 390x844: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 338
+    },
+    {
+      "name": "video 844x390: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 361
+    },
+    {
+      "name": "video 768x1024: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 321
+    },
+    {
+      "name": "video 1440x1000: public layout and product/bag/checkout dialogs fit",
+      "result": "passed",
+      "elapsed_ms": 312
+    },
+    {
+      "name": "video 320px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 263
+    },
+    {
+      "name": "video 390px: missing-photo bag title does not overlap line price",
+      "result": "failed",
+      "message": "Product title overlaps line price: {\"title\":\"Independent occasion dress\",\"price\":\"₹1,299.50\",\"titleRects\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20},{\"left\":35,\"right\":99.71875,\"top\":362.609375,\"bottom\":382.609375,\"width\":64.71875,\"height\":20},{\"left\":35,\"right\":74.640625,\"top\":382.609375,\"bottom\":402.609375,\"width\":39.640625,\"height\":20}],\"priceRect\":{\"left\":112,\"right\":165.8125,\"top\":343.609375,\"bottom\":356.609375,\"width\":53.8125,\"height\":13},\"overlaps\":[{\"left\":35,\"right\":131.515625,\"top\":342.609375,\"bottom\":362.609375,\"width\":96.515625,\"height\":20}]}\n\n1 !== 0\n",
+      "elapsed_ms": 264
+    },
+    {
+      "name": "video: keyboard dialogs trap focus, preserve visible focus and restore triggers",
+      "result": "passed",
+      "elapsed_ms": 192
+    },
+    {
+      "name": "video: semantic landmarks, dialog names, form labels and keyboard skip link",
+      "result": "passed",
+      "elapsed_ms": 1203
+    },
+    {
+      "name": "video: enabled primary control text and keyboard focus have representative contrast",
+      "result": "passed",
+      "elapsed_ms": 213
+    },
+    {
+      "name": "video: sold-out and inactive variants cannot enter bag; untracked stock stays explicit",
+      "result": "passed",
+      "elapsed_ms": 271
+    },
+    {
+      "name": "video: empty collection retains visible explanation after hydration",
+      "result": "passed",
+      "elapsed_ms": 137
+    },
+    {
+      "name": "video: filtered-empty count is announced and clearing search restores results",
+      "result": "passed",
+      "elapsed_ms": 138
+    },
+    {
+      "name": "video: long published branding and product text fit 320px",
+      "result": "passed",
+      "elapsed_ms": 132
+    },
+    {
+      "name": "video: JavaScript-off SSR empty collection remains meaningful",
+      "result": "passed",
+      "elapsed_ms": 117
+    },
+    {
+      "name": "video: deferred availability refresh shows pending control then restores it",
+      "result": "passed",
+      "elapsed_ms": 264
+    },
+    {
+      "name": "video: abort availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 263
+    },
+    {
+      "name": "video: server500 availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 280
+    },
+    {
+      "name": "video: malformed availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 280
+    },
+    {
+      "name": "video: invalid_json availability refresh reports failure and preserves catalogue",
+      "result": "passed",
+      "elapsed_ms": 262
+    },
+    {
+      "name": "video: abort checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 449
+    },
+    {
+      "name": "video: malformed checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 411
+    },
+    {
+      "name": "video: stock checkout has accessible error and no invented confirmation",
+      "result": "passed",
+      "elapsed_ms": 408
+    },
+    {
+      "name": "video: pending checkout disables repeated submission and retains visible progress",
+      "result": "passed",
+      "elapsed_ms": 410
+    }
+  ],
+  "observations": [
+    {
+      "theme": "editorial",
+      "viewport_width": 320,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "editorial",
+      "viewport_width": 390,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "editorial",
+      "primary_text_contrast": 6.445640743400167,
+      "keyboard_outline_contrast": 4.365618260070232,
+      "computed_colors": {
+        "foreground": "rgb(255, 250, 247)",
+        "background": "rgb(133, 75, 88)",
+        "outline": "rgb(161, 103, 56)",
+        "outlineStyle": "solid",
+        "outlineWidth": 3,
+        "paper": "rgb(251, 247, 243)"
+      }
+    },
+    {
+      "theme": "catalogue",
+      "viewport_width": 320,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "catalogue",
+      "viewport_width": 390,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "catalogue",
+      "primary_text_contrast": 9.478041291546127,
+      "keyboard_outline_contrast": 4.52206101754603,
+      "computed_colors": {
+        "foreground": "rgb(251, 255, 247)",
+        "background": "rgb(41, 76, 58)",
+        "outline": "rgb(161, 103, 56)",
+        "outlineStyle": "solid",
+        "outlineWidth": 3,
+        "paper": "rgb(252, 252, 247)"
+      }
+    },
+    {
+      "theme": "video",
+      "viewport_width": 320,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "video",
+      "viewport_width": 390,
+      "missing_photo_cart_layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 99.71875,
+            "top": 362.609375,
+            "bottom": 382.609375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 35,
+            "right": 74.640625,
+            "top": 382.609375,
+            "bottom": 402.609375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 112,
+          "right": 165.8125,
+          "top": 343.609375,
+          "bottom": 356.609375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": [
+          {
+            "left": 35,
+            "right": 131.515625,
+            "top": 342.609375,
+            "bottom": 362.609375,
+            "width": 96.515625,
+            "height": 20
+          }
+        ]
+      }
+    },
+    {
+      "theme": "video",
+      "primary_text_contrast": 7.15955488033033,
+      "keyboard_outline_contrast": 4.35773536182787,
+      "computed_colors": {
+        "foreground": "rgb(253, 252, 255)",
+        "background": "rgb(78, 82, 133)",
+        "outline": "rgb(161, 103, 56)",
+        "outlineStyle": "solid",
+        "outlineWidth": 3,
+        "paper": "rgb(247, 247, 252)"
+      }
+    }
+  ],
+  "unexpected_requests": [
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    },
+    {
+      "kind": "unhandled",
+      "method": "POST",
+      "path": "/api/v1/storefronts/experience/activity/contexts"
+    }
+  ],
+  "page_errors": []
+}

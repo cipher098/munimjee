@@ -1,0 +1,46 @@
+{
+  "approved_base": "eeb94a119736cae816af782f2af5e04cb877e616",
+  "metadata_only_checkpoint": "d4026b1ebf8e9e11865ccf2172ded41bcdc0ac22",
+  "tested_head": "13685d7353541bd71cef90aab99f05377c0e20e3",
+  "runtime_feature": "4eed8af",
+  "qa_dependencies": [
+    "faec01614c27578afd38bef750b9dc2205ee7c98",
+    "51f24801a5beb7f39ee57f8739301c633b056272"
+  ],
+  "unchanged_runner_sha256": "6c90c4262f9b5373c29d5dd80e30df5269c8a08d774d2c63db408e95a75769b1",
+  "unchanged_exporter_sha256": "688efd87f171344b413d2a092cac76383f725ec85792eaf51e1f73e18a0f3c64",
+  "only_source_difference_between_baseline_and_repair": [
+    "frontend/storefront/src/styles.css"
+  ],
+  "baseline": {
+    "ui_passed": 69,
+    "ui_failed": 6,
+    "runner_exit": 1,
+    "denied_activity_requests": 153,
+    "source_unchanged": true,
+    "intentional_css_restore_from": "e8c663c"
+  },
+  "repair": {
+    "ui_passed": 75,
+    "ui_failed": 0,
+    "runner_exit": 1,
+    "denied_activity_requests": 153,
+    "source_unchanged": true
+  },
+  "mounted": {
+    "passed": 6,
+    "runner_exit": 0,
+    "actual_main": true,
+    "actual_native_catalogue_activation_theme_publication": true,
+    "migration": "0056_v1_comment_operator",
+    "lane": "parcel_w6",
+    "source_unchanged": true,
+    "orders_created": 0,
+    "prohibited_financial_requests": 0,
+    "provider_calls": 0,
+    "external_requests": 0
+  },
+  "physical_device": false,
+  "provider_canary": false,
+  "slot": "released; cleanup.json verifies no owned process/listener/TLSdir"
+}
