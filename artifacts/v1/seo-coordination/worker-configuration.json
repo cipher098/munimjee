@@ -1,0 +1,27 @@
+{
+  "basis": "explicit spawn_agent model and reasoning_effort arguments; no inferred model defaults",
+  "base": "e750e5a5a78da74390572d116f5c98649a7334a1",
+  "workers": [
+    {
+      "name": "/root/seo_publication",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    },
+    {
+      "name": "/root/seo_qa",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    },
+    {
+      "name": "/root/acceptance_delta",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    }
+  ],
+  "csv_owner": "local catalogue_commerce",
+  "csv_reserved_migration": "0053 -> 0052",
+  "remote_csv_writes": false
+}
