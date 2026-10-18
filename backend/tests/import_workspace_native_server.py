@@ -9,6 +9,7 @@ from fastapi import Depends
 from app.config import settings
 settings.V1_AUTH_ENABLED = True
 settings.V1_ENFORCE_LEGACY_ACCESS = True
+settings.V1_IMPORT_BRIDGE_ENABLED = True
 settings.V1_IMPORTS_ENABLED = False  # Manual synthetic worker hook only.
 settings.PUBLIC_BASE_URL = "http://127.0.0.1:4320"
 from app.main import app
@@ -19,8 +20,9 @@ from app.services.identity import require_business_access
 from app.services.imports_v1 import run_job
 from app.v1.imports.fetching import FetchedSource
 
-# Integrator owns mounting this router in production app/main.py.
-app.include_router(router)
+# Support both the feature checkout and the final coordinator-mounted app.
+if not any(getattr(route, "path", "") == "/v1/businesses/{business_id}/imports" for route in app.routes):
+    app.include_router(router)
 
 
 class SyntheticFetcher:

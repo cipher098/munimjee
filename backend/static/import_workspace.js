@@ -8,18 +8,22 @@
   const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const exact = (value, keys) => object(value) && Object.keys(value).length === keys.length && keys.every(k => Object.hasOwn(value,k));
   const clone = value => JSON.parse(JSON.stringify(value));
+  // Facts compare semantically; immutable command serialization remains exact.
+  const canonical = value => Array.isArray(value)?value.map(canonical):object(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+  const same = (a,b) => JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
   let identity = null, access = null, stopped = false, busy = false, preparing = false, command = null, blocked = false, storageKey;
   let jobs = [], candidates = [], selected = null, baseline = null, jobsCursor = null, candidateCursor = null;
+  let preview = null, previewEpoch = 0;
   let jobHistory = [], candidateHistory = [], candidateNext = null, timer = null, pollCount = 0, loadEpoch = 0;
   const canWrite = () => !stopped && Boolean(access?.capabilities.includes('catalogue.write'));
   function el(tag, text, className) {const node = document.createElement(tag);if(text !== undefined)node.textContent = text;if(className)node.className = className;return node;}
   async function hash(value) {const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');}
   function clearCommands() {try {for(let i=sessionStorage.length-1;i>=0;i--){const key=sessionStorage.key(i);if(key?.startsWith(PREFIX))sessionStorage.removeItem(key);}}catch(_) {}}
   function fence(message) {
-    stopped = true;loadEpoch++;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
+    stopped = true;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
     $('workspace').hidden=true;$('access-needed').hidden=false;$('loading').hidden=true;$('business-name').textContent='PRIVATE CATALOGUE';
     $('candidate-list').replaceChildren();$('job-list').replaceChildren();$('candidate-evidence').textContent='';$('candidate-source').textContent='';$('candidate-state').textContent='';$('review-heading').textContent='Choose a candidate';$('confirmations').replaceChildren();$('recovery-facts').textContent='';$('recovery-message').textContent='';$('recovery-file').value='';$('notice').textContent='';
-    $('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('option-rows').replaceChildren();$('global-error').textContent=message;
+    $('allocation-form').reset();$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('receipt-details').textContent='';$('bridge-note').hidden=true;$('allocation-form').hidden=true;$('allocation-status').textContent='';$('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('option-rows').replaceChildren();$('global-error').textContent=message;
   }
   async function session(write=false) {
     if(stopped)throw Error('Your session ended. Sign in again.');
@@ -27,7 +31,7 @@
     if(stopped)throw Error('Your session ended. Sign in again.');
     const membership=data.businesses?.find(b=>b.id===businessId);
     if(data.auth_method!=='v1_user'||!uuid(data.user_id)||!data.csrf_token||!membership?.capabilities?.includes('catalogue.read')) {fence('Sign in with your own V1 account for this business.');throw Error('Native business access required.');}
-    const fingerprint=await hash(data.csrf_token);
+    const fingerprint=await hash(data.csrf_token);if(stopped)throw Error('Your session ended. Sign in again.');
     if(identity && (identity.user!==data.user_id || identity.fingerprint!==fingerprint)) {fence('Your sign-in changed. Private import details were cleared. Sign in again.');throw Error('Your sign-in changed.');}
     if(!identity) {identity={user:data.user_id,fingerprint};storageKey=PREFIX+data.user_id+':'+businessId;}
     access=membership;$('business-name').textContent=membership.name || membership.business_name || 'PRIVATE CATALOGUE';sync();
@@ -36,13 +40,13 @@
   }
   async function api(path, options={}) {
     const write=Boolean(options.method&&options.method!=='GET');await session(write);
-    let data;try {data=await V1.api(path,{...options,redirect:'error'});}catch(error){if(error.status===401)fence('Your session ended. Private import details were cleared. Sign in again.');throw error;}
+    let data;try {data=await V1.api(path,{...options,redirect:'error'});}catch(error){if(error.status===401)fence('Your session ended. Private import details were cleared. Sign in again.');else if([403,404].includes(error.status))await session();throw error;}
     await session();return data;
   }
   function message(error, target='global-error') {if(!stopped)$(target).textContent=error.status===409 ? 'This record changed or the saved action conflicts. Refresh to review the current revision before making a new decision.' : error.message || 'The request could not be confirmed. Refresh or retry the saved action.';}
   function sync() {
     const disabled=!canWrite()||busy||preparing||Boolean(command)||blocked;
-    for(const id of ['website-fields','upload-fields','facts-fields','approve-fields','reject-fields'])$(id).disabled=disabled;
+    for(const id of ['website-fields','upload-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
     $('role-note').hidden=canWrite();$('retry-command').disabled=!canWrite()||busy||!command||blocked;
     $('recovery').hidden=!command&&!blocked;
     $('jobs-previous').disabled=busy||!jobHistory.length;$('jobs-next').disabled=busy||jobs.length<50;
@@ -52,6 +56,7 @@
       $('facts-fields').disabled=disabled||!['review_required','approved'].includes(state);
       $('approve-fields').disabled=disabled||state!=='review_required';$('reject-fields').disabled=disabled||!['pending','review_required'].includes(state);
     }
+    $('allocation-fields').disabled=disabled||!preview||!['needs_review','ready_for_allocation'].includes(preview.state);
     for(const button of document.querySelectorAll('.job-actions button'))button.disabled=disabled;
   }
   function validFacts(facts) {
@@ -71,6 +76,7 @@
     if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id)));
     if(!Number.isInteger(b.expected_revision)||b.expected_revision<1)return false;
     if(/^\/jobs\/[0-9a-f-]{36}\/(cancel|retry)$/i.test(value.path))return exact(b,['expected_revision','idempotency_key']);
+    if(/^\/candidates\/[0-9a-f-]{36}\/catalogue-draft$/i.test(value.path))return exact(b,['expected_revision','idempotency_key','seller_reviewed','confirmed_fields','allocations'])&&b.seller_reviewed===true&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f))&&Array.isArray(b.allocations)&&b.allocations.length>0&&b.allocations.length<=500&&b.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000&&a.active===false)&&new Set(b.allocations.map(a=>optionIdentity(a.options))).size===b.allocations.length;
     if(!/^\/candidates\/[0-9a-f-]{36}\/review$/i.test(value.path)||!['edit','approve','reject'].includes(b.action))return false;
     if(b.action==='edit')return exact(b,['expected_revision','idempotency_key','action','overrides'])&&Array.isArray(b.overrides)&&b.overrides.length>0&&b.overrides.length<=5&&new Set(b.overrides.map(o=>o.field)).size===b.overrides.length&&b.overrides.every(o=>exact(o,['field','value'])&&fields.includes(o.field)&&validFacts({...Object.fromEntries(fields.map(f=>[f,null])),[o.field]:o.value}));
     if(b.action==='approve')return exact(b,['expected_revision','idempotency_key','action','confirmed_fields'])&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f));
@@ -109,17 +115,18 @@
     try {
       await session(true);const saved=await decode(readStorage());if(JSON.stringify(saved)!==JSON.stringify(command))throw Error('Saved action changed. Reload and reconcile it before continuing.');
       if(command.kind==='upload')await rawUpload(file);
-      const sent=command,result=await api(root+sent.path,{method:'POST',body:sent.body});
+      const sent=command,viewEpoch=loadEpoch,result=await api(root+sent.path,{method:'POST',body:sent.body});
       if(sent.path==='/jobs'||sent.path.startsWith('/jobs/')) {if(!validJob(result)||(sent.path!=='/jobs'&&sent.path.split('/')[2]!==result.job_id))throw Error('The response did not confirm an import job in this business. Retry the saved action.');}
-      else if(!validCandidate(result)||result.candidate_id!==sent.path.split('/')[2])throw Error('The response did not confirm the reviewed candidate. Retry the saved action.');
+      else if(sent.path.endsWith('/catalogue-draft')) {if(!validReceipt(result,sent.path.split('/')[2])||![sent.body.expected_revision,sent.body.expected_revision+1].includes(result.candidate_revision))throw Error('The response did not confirm a private draft receipt for this candidate. Retry the saved action.');}
+      else if(!validCandidate(result)||result.candidate_id!==sent.path.split('/')[2]||result.revision!==sent.body.expected_revision+1)throw Error('The response did not confirm the reviewed candidate. Retry the saved action.');
       remove();command=null;$('recovery-facts').textContent='';$('recovery-file').value='';$('website-form').reset();$('upload-form').reset();
-      if(sent.path.startsWith('/candidates/')) {selected=result;renderCandidate();}
-      $('notice').textContent=sent.path==='/jobs'?'Import request confirmed. Waiting for worker progress; no completion time is promised.':sent.path.startsWith('/candidates/')?'Review action confirmed. This candidate remains private.':'Job action confirmed. Refresh to check durable progress.';
+      if(viewEpoch===loadEpoch&&selected?.candidate_id===result.candidate_id&&sent.path.startsWith('/candidates/')&&!sent.path.endsWith('/catalogue-draft')) {selected=result;renderCandidate();}
+      $('notice').textContent=sent.path.endsWith('/catalogue-draft')?'Private catalogue draft confirmed. Review it in Catalogue; activation and publication remain separate.':sent.path==='/jobs'?'Import request confirmed. Waiting for worker progress; no completion time is promised.':sent.path.startsWith('/candidates/')?'Review action confirmed. This candidate remains private.':'Job action confirmed. Refresh to check durable progress.';
       pollCount=0;await load(false);
     } catch(error) {
       // A conflict/validation response is definitive for this immutable request;
       // network errors and 5xx retain the exact command across reload.
-      if(command&&[403,404,409,413,415,422].includes(error.status)) {try{remove();command=null;}catch(storageError){blocked=true;message(storageError,'recovery-error');}}
+      if(command&&[403,404,409,413,415,422].includes(error.status)) {const refreshReceipt=error.status===409&&command.path.endsWith('/catalogue-draft');try{remove();command=null;}catch(storageError){blocked=true;message(storageError,'recovery-error');}if(refreshReceipt&&!blocked){try{await load(false);}catch(refreshError){message(refreshError,'allocation-error');}}}
       if(command)showRecovery();message(error,command?'recovery-error':'global-error');
     } finally {busy=false;sync();}
   }
@@ -157,7 +164,7 @@
     if(!validFacts(result))throw Error('Check factual values: a positive decimal price, whole stock from 0 to 1,000,000, and distinct bounded options. Blank values remain unknown.');return result;
   }
   function renderCandidate() {
-    $('review-empty').hidden=Boolean(selected);$('review-content').hidden=!selected;if(!selected)return;
+    previewEpoch++;preview=null;$('allocation-form').hidden=true;$('bridge-note').hidden=true;$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('allocation-error').textContent='';$('receipt-details').textContent='';$('review-empty').hidden=Boolean(selected);$('review-content').hidden=!selected;if(!selected)return;
     const c=selected.candidate;baseline=effective(selected);$('review-heading').textContent=baseline.title||'Untitled candidate';$('candidate-state').textContent=c.state.replaceAll('_',' ')+' · revision '+selected.revision;
     $('candidate-source').textContent=sourceLabel(c.provenance.source)+' · captured '+String(c.provenance.captured_at)+' · job '+c.provenance.import_job_id;
     $('candidate-evidence').textContent=JSON.stringify({evidence:c.provenance.evidence,source_product_id:c.provenance.source_product_id,extracted:c.extracted,seller_overrides:c.overrides},null,2);
@@ -165,11 +172,51 @@
     $('option-rows').replaceChildren();$('options-mode').value=baseline.options===null?'unknown':baseline.options.length?'specified':'none';for(const option of baseline.options||[])optionRow(option);optionsMode();
     $('confirmations').replaceChildren();for(const field of fields){const label=el('label',undefined,'check'),box=el('input');box.type='checkbox';box.required=true;box.name='confirm-'+field;label.append(box,el('span','I checked '+field+(baseline[field]===null?' (currently unknown)':'')));$('confirmations').append(label);}
     const unknown=['title','price','stock','options'].filter(f=>baseline[f]===null);$('approval-blockers').textContent=unknown.length?'Resolve before approval: '+unknown.join(', ')+'. Unknown is not zero, untracked stock or no options.':'Check every factual field, then approve in a separate decision.';$('approve').disabled=Boolean(unknown.length);
-    $('bridge-note').hidden=c.state!=='approved';$('facts-error').textContent='';$('review-error').textContent='';$('reject-form').reset();sync();
+    void loadPreview();$('facts-error').textContent='';$('review-error').textContent='';$('reject-form').reset();sync();
+  }
+  function validOptions(options) {return object(options)&&Object.keys(options).length<=8&&Object.entries(options).every(([k,v])=>k.length>0&&k.length<=64&&typeof v==='string'&&v.length>0&&v.length<=80);}
+  function optionIdentity(options) {return JSON.stringify(Object.entries(options).sort(([a],[b])=>a.localeCompare(b)));}
+  function combinations(facts) {
+    if(['title','price','stock','options'].some(f=>facts[f]===null)||facts.price.currency!=='INR'||Math.round(Number(facts.price.amount)*100)>2000000000)return null;
+    let rows=[{}];for(const option of facts.options){if(option.name.length>64||rows.length*option.values.length>500)return null;rows=rows.flatMap(row=>option.values.map(value=>({...row,[option.name]:value})));}return rows;
+  }
+  function validReceipt(value,id) {return object(value)&&value.contract_version==='import-catalogue.v1'&&value.creation_mode==='private_draft'&&uuid(value.receipt_id)&&value.candidate_id===id&&Number.isInteger(value.candidate_revision)&&value.candidate_revision>0&&uuid(value.product_id)&&typeof value.replayed==='boolean'&&value.catalogue_url===`/v1/businesses/${businessId}/catalogue`;}
+  function validPreview(value,record) {
+    if(!object(value)||value.contract_version!=='import-catalogue-preview.v1'||value.candidate_id!==record.candidate_id||value.candidate_revision!==record.revision||!['needs_review','ready_for_allocation','already_created','unsupported'].includes(value.state)||!validFacts(value.facts)||fields.some(f=>!same(value.facts[f],effective(record)[f]))||!Array.isArray(value.issues)||value.issues.length>30||value.issues.some(i=>typeof i!=='string'||i.length>4000)||!Array.isArray(value.allocations)||value.allocations.length>500)return false;
+    if(value.state==='already_created')return validReceipt(value.existing,record.candidate_id)&&value.existing.candidate_revision<=record.revision;
+    if(value.existing!==null||!value.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&(a.stock_available===null||Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000)&&typeof a.active==='boolean'))return false;
+    const expected=combinations(value.facts);
+    if(value.state==='unsupported')return value.issues.length>0;
+    if(value.issues.length||!expected||!['pending','review_required','approved'].includes(record.candidate.state)||(record.candidate.state==='approved'?value.state!=='ready_for_allocation':value.state!=='needs_review'))return false;
+    const identities=value.allocations.map(a=>optionIdentity(a.options));return identities.length===expected.length&&new Set(identities).size===expected.length&&expected.every(a=>identities.includes(optionIdentity(a)));
+  }
+  async function loadPreview() {
+    const epoch=++previewEpoch,record=selected;$('allocation-status').textContent='Loading the current reviewed allocation preview…';
+    try {const value=await api(root+'/candidates/'+record.candidate_id+'/catalogue-preview');if(stopped||epoch!==previewEpoch||selected!==record)return;if(!validPreview(value,record))throw Error('The allocation preview is malformed or stale. Refresh current candidate facts before continuing.');preview=value;renderPreview();}
+    catch(error){if(stopped||epoch!==previewEpoch||selected!==record)return;preview=null;$('allocation-status').textContent='Allocation preview unavailable. Refresh to try again.';message(error,'allocation-error');}finally{sync();}
+  }
+  function renderPreview() {
+    $('allocation-issues').replaceChildren();for(const issue of preview.issues)$('allocation-issues').append(el('p',issue));
+    if(preview.existing){$('allocation-status').textContent='This source already has a private catalogue draft.';$('bridge-note').hidden=false;$('receipt-details').textContent='Product '+preview.existing.product_id+' · approved revision '+preview.existing.candidate_revision;$('bridge-catalogue').href=preview.existing.catalogue_url;return;}
+    if(preview.state==='unsupported'){$('allocation-status').textContent='Resolve the listed facts or setup requirements, then refresh. No draft can be created yet.';return;}
+    $('allocation-status').textContent=preview.allocations.length+' SKU combination'+(preview.allocations.length===1?'':'s')+' · confirmed stock '+preview.facts.stock+' · INR '+preview.facts.price.amount+'. All SKUs will start inactive.';
+    for(const [i,row] of preview.allocations.entries()) {const node=el('div',undefined,'allocation-row'),name=Object.entries(row.options).map(([k,v])=>k+': '+v).join(' / ')||'No options';node.append(el('strong',name));const label=el('label','Quantity'),input=el('input');input.type='number';input.min='0';input.max='1000000';input.step='1';input.required=true;input.name='allocation-'+i;input.setAttribute('aria-label','Quantity for '+name);input.value=row.stock_available===null?'':row.stock_available;label.append(input);node.append(label);$('allocation-rows').append(node);}
+    for(const field of fields){const label=el('label',undefined,'check'),box=el('input');box.type='checkbox';box.required=true;box.name='allocation-confirm-'+field;label.append(box,el('span','I checked the saved '+field));$('allocation-confirmations').append(label);}
+    $('allocation-form').hidden=false;allocationTotal();sync();
+  }
+  function readAllocations() {
+    if(!preview||preview.facts.stock===null)throw Error('Unknown stock blocks draft creation. Save an explicit confirmed total first.');
+    const inputs=[...$('allocation-rows').querySelectorAll('input')];if(inputs.length!==preview.allocations.length)throw Error('Refresh the complete SKU allocation preview.');
+    const allocations=inputs.map((input,i)=>{if(!/^\d+$/.test(input.value)||!Number.isInteger(Number(input.value))||Number(input.value)>1000000)throw Error('Enter a whole quantity, including explicit zero, for every combination.');return {options:clone(preview.allocations[i].options),stock_available:Number(input.value),active:false};});
+    if(allocations.reduce((sum,a)=>sum+a.stock_available,0)!==preview.facts.stock)throw Error('Allocated stock must equal the confirmed total of '+preview.facts.stock+'.');return allocations;
+  }
+  function allocationTotal() {
+    const inputs=[...$('allocation-rows').querySelectorAll('input')],complete=inputs.every(input=>/^\d+$/.test(input.value)&&Number(input.value)<=1000000),sum=inputs.reduce((total,input)=>total+(Number(input.value)||0),0),valid=complete&&sum===preview?.facts.stock;
+    $('allocation-total').textContent=sum+' of '+preview?.facts.stock+' units allocated'+(!complete?' · enter every quantity':valid?' · total matches':' · total must match');$('allocation-total').classList.toggle('invalid',!valid);$('create-draft').disabled=!valid;
   }
   async function load(resetPoll=true) {
     if(stopped)return;if(resetPoll){pollCount=0;$('notice').textContent='Refreshed current server state. Unsaved factual changes were replaced.';}
-    const epoch=++loadEpoch;const [j,c]=await Promise.all([api(root+'/jobs?limit=50'+(jobsCursor?'&after='+jobsCursor:'')),api(root+'/candidates?limit=50'+(candidateCursor?'&after='+candidateCursor:''))]);
+    previewEpoch++;preview=null;sync();const epoch=++loadEpoch;const [j,c]=await Promise.all([api(root+'/jobs?limit=50'+(jobsCursor?'&after='+jobsCursor:'')),api(root+'/candidates?limit=50'+(candidateCursor?'&after='+candidateCursor:''))]);
     if(stopped||epoch!==loadEpoch)return;
     if(!Array.isArray(j)||j.length>50||!j.every(validJob)||!Array.isArray(c?.items)||c.items.length>50||!c.items.every(validCandidate)||(c.next_after!==null&&!uuid(c.next_after)))throw Error('The server returned an invalid import page. Private facts were withheld.');
     jobs=j;candidates=c.items;candidateNext=c.next_after;if(selected){selected=candidates.find(v=>v.candidate_id===selected.candidate_id)||null;}renderJobs();renderCandidates();renderCandidate();schedulePoll();
@@ -186,10 +233,12 @@
   $('website-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!$('website-consent').checked)throw Error('Explicit source permission is required.');await makeCommand('json','/jobs',{idempotency_key:crypto.randomUUID(),source_authorized:true,source_kind:'website',source_url:$('website-url').value.trim()});await sendCommand();});});
   $('upload-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const file=$('upload-file').files[0];if(!$('upload-consent').checked)throw Error('Explicit media permission is required.');if(!file||!['image/jpeg','image/png','video/mp4'].includes(file.type)||!file.size||file.size>5000000)throw Error('Choose a nonempty original JPEG, PNG or MP4 no larger than 5 MB.');await makeCommand('upload','/uploads',{idempotency_key:crypto.randomUUID(),job_key:crypto.randomUUID(),content_type:file.type,size:file.size,sha256:await hash(await file.arrayBuffer()),name:file.name.slice(0,255)});await sendCommand(file);});});
   $('retry-command').addEventListener('click',()=>run(()=>sendCommand($('recovery-file').files[0]),'recovery-error'));
-  $('facts-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const facts=readFacts(),overrides=fields.filter(f=>JSON.stringify(facts[f])!==JSON.stringify(baseline[f])).map(field=>({field,value:facts[field]}));if(!overrides.length)throw Error('No factual changes to save.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'edit',overrides});await sendCommand();},'facts-error');});
-  $('approve-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(JSON.stringify(readFacts())!==JSON.stringify(baseline))throw Error('Save factual changes first, then review and confirm the saved facts.');if(['title','price','stock','options'].some(f=>baseline[f]===null)||![...$('confirmations').querySelectorAll('input')].every(box=>box.checked))throw Error('Resolve unknown required facts and explicitly confirm all five factual fields.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'approve',confirmed_fields:fields});await sendCommand();},'review-error');});
+  $('facts-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const facts=readFacts(),overrides=fields.filter(f=>!same(facts[f],baseline[f])).map(field=>({field,value:facts[field]}));if(!overrides.length)throw Error('No factual changes to save.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'edit',overrides});await sendCommand();},'facts-error');});
+  $('approve-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!same(readFacts(),baseline))throw Error('Save factual changes first, then review and confirm the saved facts.');if(['title','price','stock','options'].some(f=>baseline[f]===null)||![...$('confirmations').querySelectorAll('input')].every(box=>box.checked))throw Error('Resolve unknown required facts and explicitly confirm all five factual fields.');await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'approve',confirmed_fields:fields});await sendCommand();},'review-error');});
   $('reject-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{await makeCommand('json','/candidates/'+selected.candidate_id+'/review',{expected_revision:selected.revision,idempotency_key:crypto.randomUUID(),action:'reject',reason:$('reject-reason').value.trim()});await sendCommand();},'review-error');});
-  $('facts-form').addEventListener('input',dirty);$('options-mode').addEventListener('change',optionsMode);$('add-option').addEventListener('click',()=>{if($('option-rows').children.length<8)optionRow();});
+  $('allocation-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!preview||!['needs_review','ready_for_allocation'].includes(preview.state)||preview.candidate_id!==selected?.candidate_id||preview.candidate_revision!==selected.revision)throw Error('Refresh the current allocation preview before creating a draft.');if(!same(readFacts(),baseline))throw Error('Save factual changes first, then review the current allocations.');const allocations=readAllocations();if(![...$('allocation-confirmations').querySelectorAll('input')].every(box=>box.checked))throw Error('Explicitly confirm all five saved factual fields before creating a draft.');await makeCommand('json','/candidates/'+selected.candidate_id+'/catalogue-draft',{expected_revision:preview.candidate_revision,idempotency_key:crypto.randomUUID(),seller_reviewed:true,confirmed_fields:fields,allocations});await sendCommand();},'allocation-error');});
+  $('allocation-rows').addEventListener('input',allocationTotal);
+  $('facts-form').addEventListener('input',()=>{dirty();for(const box of $('allocation-confirmations').querySelectorAll('input'))box.checked=false;});$('options-mode').addEventListener('change',optionsMode);$('add-option').addEventListener('click',()=>{if($('option-rows').children.length<8)optionRow();});
   $('refresh').addEventListener('click',()=>run(()=>load()));
   for(const type of ['jobs','candidates'])for(const direction of ['previous','next'])$(type+'-'+direction).addEventListener('click',()=>run(async()=>{const isJobs=type==='jobs',history=isJobs?jobHistory:candidateHistory;let cursor=isJobs?jobsCursor:candidateCursor;if(direction==='next'){history.push(cursor);cursor=isJobs?jobs.at(-1).job_id:candidateNext;}else cursor=history.pop()||null;if(isJobs)jobsCursor=cursor;else{candidateCursor=cursor;selected=null;}await load();}));
   window.addEventListener('focus',()=>run(()=>session()));document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);}else run(()=>session());});window.addEventListener('pagehide',()=>clearTimeout(timer));
