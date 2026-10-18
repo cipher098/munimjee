@@ -25,7 +25,7 @@ compare-and-set helper and advance generation. A network result from an older
 account/token/expiry/generation cannot restore a disconnect or replace newer
 credentials. Native disconnect/OAuth already advances generation under its
 business/Seller lock. A connection cannot silently change an existing account.
-Provider exception/body logs were removed from those legacy paths.
+Legacy OAuth state also binds the connection at authorization start; pre-upgrade states must restart. Its opaque binding discloses no raw credential proof. With existing V1_ENFORCE_LEGACY_ACCESS enabled, final legacy owner/user/token-cutoff authority is rechecked under User/Membership locks before commit; disabling that rollout gate intentionally retains prior legacy revocation semantics. Provider exception/body logs were removed from those legacy paths.
 
 A typed internal collected batch carries candidates and originals together.
 Single IMAGE/VIDEO output requires exactly one matching parent/media original,
@@ -38,7 +38,7 @@ CSV chronology, document identity, review and private draft gates are preserved.
 
 Private manifest and attachment-download routes resolve the current candidate's
 accepted job, verify all tenant/job/actor/media/idempotency/digest/byte relations,
-recompute content integrity and recheck current native session after reads. JSON
+recompute content integrity and recheck current native session and catalogue.read access after reads. Integrity checks are explicit runtime branches and survive Python optimization; assertions are not an authorization boundary. JSON
 asset UUIDs are never treated as foreign-key proof. These application paths never
 update/delete originals/manifests; existing tables have no database immutability
 trigger, so database-admin tamper resistance is not claimed. Private reads fail

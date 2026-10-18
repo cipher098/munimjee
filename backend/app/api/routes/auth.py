@@ -1,5 +1,7 @@
 """JWT auth endpoints for sellers and delivery team members."""
 import hashlib
+import hmac
+import json
 import secrets
 from uuid import UUID
 import logging
@@ -208,7 +210,7 @@ class ConnectInstagramRequest(BaseModel):
 
 
 @router.post("/seller/connect-instagram")
-async def connect_instagram(body: ConnectInstagramRequest, seller: Seller = Depends(authenticated_seller), db: AsyncSession = Depends(get_db)):
+async def connect_instagram(body: ConnectInstagramRequest, request: Request, seller: Seller = Depends(authenticated_seller), db: AsyncSession = Depends(get_db)):
     """Exchange credentials only for the authenticated seller's linked account."""
     if body.seller_id is not None and body.seller_id != seller.id:
         raise HTTPException(status_code=403, detail="Cannot link another seller")
@@ -232,6 +234,11 @@ async def connect_instagram(body: ConnectInstagramRequest, seller: Seller = Depe
     expires_at = datetime.now(timezone.utc) + timedelta(days=60)
     if not await replace(db, seller.id, expected=expected, account_id=ig_id, token=long_lived_token, expires_at=expires_at):
         raise HTTPException(409, "Instagram connection changed. Start again.")
+    from app.services.instagram_credentials import lock_legacy_authority
+    await lock_legacy_authority(db, seller.id)
+    current = await authenticated_seller(request, db)
+    if current.id != seller.id:
+        raise HTTPException(401, "Seller login changed")
     await db.commit()
     return {"detail": "Instagram token updated", "expires_at": expires_at}
 
@@ -260,8 +267,15 @@ def _oauth_redirect_uri(request: Request) -> str:
     return f"{base}/auth/instagram/oauth/callback"
 
 
-def _sign_oauth_state(seller_id: str, nonce: str | None = None) -> str:
-    return jwt.encode({"sub": seller_id, "purpose": "instagram_link", "nonce": nonce or secrets.token_urlsafe(32),
+def _oauth_connection_binding(proof: dict, nonce: str) -> str:
+    body=json.dumps(proof,sort_keys=True,separators=(",",":")).encode()
+    return hmac.new(settings.SECRET_KEY.encode(), b"oauth-connection:"+nonce.encode()+b":"+body, hashlib.sha256).hexdigest()
+
+
+def _sign_oauth_state(seller_id: str, nonce: str | None = None, *, connection: dict | None = None) -> str:
+    nonce=nonce or secrets.token_urlsafe(32)
+    return jwt.encode({"sub": seller_id, "purpose": "instagram_link", "nonce": nonce,
+                       "connection_binding": _oauth_connection_binding(connection,nonce) if connection is not None else None,
                        "exp": datetime.now(timezone.utc) + timedelta(seconds=_OAUTH_TTL)},
                       settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
@@ -285,6 +299,10 @@ async def instagram_oauth_start(request: Request, seller_id: UUID | None = None,
                                 seller: Seller = Depends(authenticated_seller), db: AsyncSession = Depends(get_db)):
     if seller_id is not None and seller_id != seller.id:
         raise HTTPException(status_code=403, detail="Cannot link another seller")
+    from app.services.instagram_credentials import snapshot
+    from app.services.identity import ensure_legacy_owner_bridge
+    await ensure_legacy_owner_bridge(db, seller)
+    connection = (await snapshot(db, seller.id, lock=True)).proof()
     nonce = secrets.token_urlsafe(32)
     browser = secrets.token_urlsafe(32)
     db.add(OAuthState(nonce_hash=hashlib.sha256(nonce.encode()).hexdigest(), seller_id=seller.id,
@@ -292,7 +310,7 @@ async def instagram_oauth_start(request: Request, seller_id: UUID | None = None,
                       expires_at=datetime.now(timezone.utc) + timedelta(seconds=_OAUTH_TTL)))
     await db.commit()
     url = build_oauth_authorize_url(redirect_uri=_oauth_redirect_uri(request),
-                                    state=_sign_oauth_state(str(seller.id), nonce))
+                                    state=_sign_oauth_state(str(seller.id), nonce, connection=connection))
     response = RedirectResponse(url=url, status_code=302)
     if request.headers.get("authorization", "").lower().startswith("bearer "):
         _set_seller_session(response, request, request.headers["authorization"][7:])
@@ -338,9 +356,11 @@ async def instagram_oauth_callback(
         return RedirectResponse(url="/onboarding?error=authorization_declined", status_code=302)
 
     from app.services.instagram_credentials import snapshot, replace
-    from app.services.identity import ensure_legacy_owner_bridge
-    await ensure_legacy_owner_bridge(db, seller)
-    expected = (await snapshot(db, seller.id)).proof()
+    current_connection = await snapshot(db, seller.id)
+    expected = current_connection.proof()
+    binding = payload.get("connection_binding")
+    if not current_connection.active or not isinstance(binding,str) or not hmac.compare_digest(binding,_oauth_connection_binding(expected,payload["nonce"])):
+        return RedirectResponse(url="/onboarding?error=connection_changed", status_code=302)
     await db.commit()
     redirect_uri = _oauth_redirect_uri(request)
     try:
@@ -386,6 +406,11 @@ async def instagram_oauth_callback(
     if not await replace(db, seller.id, expected=expected, account_id=ig_user_id, token=long_lived,
             expires_at=datetime.now(timezone.utc) + timedelta(days=60)):
         return RedirectResponse(url="/onboarding?error=connection_changed", status_code=302)
+    from app.services.instagram_credentials import lock_legacy_authority
+    await lock_legacy_authority(db, seller.id)
+    current = await authenticated_seller(request, db)
+    if current.id != seller.id:
+        raise HTTPException(401, "Seller login changed")
     seller.onboarding_state = "instagram_connected"
     await db.commit()
 

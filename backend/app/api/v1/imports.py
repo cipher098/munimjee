@@ -130,6 +130,7 @@ def create_router(require_v1_mutation) -> APIRouter:
         result = await originals(db, actor, business_id, candidate_id)
         if await current_actor(request, db) != actor:
             raise HTTPException(401, 'The native session changed')
+        await require_business_access(db,actor,business_id,"catalogue.read")
         return result
 
     @router.get("/candidates/{candidate_id}/originals/{asset_id}")
@@ -138,6 +139,7 @@ def create_router(require_v1_mutation) -> APIRouter:
         metadata, content = await originals(db, actor, business_id, candidate_id, asset_id=asset_id)
         if await current_actor(request, db) != actor:
             raise HTTPException(401, 'The native session changed')
+        await require_business_access(db,actor,business_id,"catalogue.read")
         return Response(content, media_type=metadata['content_type'], headers={
             "Cache-Control":"no-store, private", "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff",
             "Content-Disposition":'attachment; filename="original'+('.mp4' if metadata['content_type']=='video/mp4' else '.png' if metadata['content_type']=='image/png' else '.jpg')+'"'})

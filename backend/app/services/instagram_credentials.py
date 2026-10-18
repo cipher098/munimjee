@@ -81,3 +81,15 @@ def credential(current, business_id, account_id, proof):
     if not current.usable() or current.account_id != account_id or not current.matches(proof):
         raise OwnedInstagramError('instagram_binding_changed')
     return OwnedCredentialSnapshot(business_id, account_id, current.token, current.expires_at, current.version)
+
+
+async def lock_legacy_authority(db, business_id):
+    """Keep existing legacy-enforcement rollout semantics through final commit."""
+    if not settings.V1_ENFORCE_LEGACY_ACCESS:
+        return
+    from app.models.identity import User, Membership
+    from app.services.identity import legacy_owner_id
+    with db.no_autoflush:
+        await db.execute(select(User.id).join(Membership, Membership.user_id==User.id).where(
+            User.id==legacy_owner_id(business_id), Membership.business_id==business_id)
+            .with_for_update(read=True,of=(User,Membership)).execution_options(autoflush=False))
