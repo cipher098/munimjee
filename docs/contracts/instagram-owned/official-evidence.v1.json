@@ -1,0 +1,30 @@
+{
+  "contract_version": "instagram-owned-official-evidence.v1",
+  "observed_date": "2026-10-18",
+  "scope": "public official documentation only; no provider wire observations",
+  "adapter_commit": "e0e836fa54242d1b1b434f68c10f2808505a5e13",
+  "adapter_blob": "b010e67a11fd881fe52c1f54507fb3f987b37a2c",
+  "capabilities": {"ig_login_media": false, "carousel": false},
+  "sources": [
+    {"id":"S1","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started","title":"Get started with Instagram API with Instagram Login","displayed_updated":"2024-12-02","retrieval":"public rendered browser DOM","supports":["Instagram Login owned-account media edge","user_id and account_type fields","documented /me example data-array wrapper","account_type prose Business or Media_Creator","media edge example cursor fields"],"does_not_establish":["actual wire enum casing","universal /me response wrapping","paging.next end semantics"]},
+    {"id":"S2","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login","title":"Business Login for Instagram","displayed_updated":"2026-03-13","retrieval":"public rendered browser DOM","supports":["Instagram authorize and code exchange routes","long-lived token exchange and refresh","Instagram App ID/Secret","requested versus granted scope distinction","server-side secret handling"]},
+    {"id":"S3","url":"https://developers.facebook.com/documentation/instagram-platform/reference/instagram-media","title":"IG Media","displayed_updated":"2026-08-12","retrieval":"public rendered browser DOM","supports":["Instagram Login host/token/basic reading permission","id media_type media_url fields","IMAGE VIDEO CAROUSEL_ALBUM types","owned licensed-audio video media_url omission"],"does_not_establish":["exhaustive CDN suffixes","media URL TTL","guaranteed original bytes or MIME"]},
+    {"id":"S4","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/ig-media/children","title":"Children","displayed_updated":"2026-08-12","retrieval":"public rendered browser DOM","supports":["Instagram Login requirements column","GET media-ID children edge","children are IG Media objects","possible child video URL omission","child permalink limitations"],"qualification":"sample request uses graph.facebook.com despite explicit two-route requirements table"},
+    {"id":"S5","url":"https://developers.facebook.com/documentation/instagram-platform/reference/me","title":"/me","displayed_updated":"2025-03-03","retrieval":"public rendered browser DOM","supports":["token-derived user node alias"]},
+    {"id":"S6","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/ig-user","title":"IG User","displayed_updated":"2026-04-22","retrieval":"public rendered browser DOM","supports":["professional account and route distinction","media collection edge"],"qualification":"generic fields table does not list Get Started account_type/user_id fields"},
+    {"id":"S7","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/ig-user/media","title":"IG User Media","displayed_updated":"2026-09-28","retrieval":"public rendered browser DOM","qualification":"reading requirements/sample are Facebook Login; do not transfer its pagination/limit statements to Instagram Login as exact proof"},
+    {"id":"S8","url":"https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/error-codes","title":"Instagram Platform error codes","displayed_updated":"2026-06-02","retrieval":"public rendered browser DOM","supports":["structured Graph error envelope","HTTP400 and403 examples"],"qualification":"predominantly publishing/audio cases; not exhaustive owned-read taxonomy"},
+    {"id":"S9","url":"https://www.postman.com/meta/instagram/folder/6raa77c/instagram-api-with-instagram-login","title":"Instagram API with Instagram Login","retrieval":"indexed official Meta Postman text","supports":["professional business/creator accounts","no Facebook Page requirement","instagram_business_basic","inherited Bearer token"]},
+    {"id":"S10","url":"https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api","title":"Instagram API official collection","retrieval":"indexed official Meta Postman text","qualification":"contains both login routes; Facebook page/media/pagination examples are not blanket Instagram Login proof"}
+  ],
+  "documentary_shape_examples": {
+    "warning":"Synthetic sentinel values in shapes derived from documentation; not copied provider responses, executable acceptance fixtures, or permission to relax ownership checks.",
+    "get_started_me_wrapper":{"data":[{"user_id":"100000000000001","username":"synthetic-owner"}]},
+    "get_started_media_cursor_shape":{"data":[{"id":"200000000000001"}],"paging":{"cursors":{"before":"SYNTHETIC_BEFORE","after":"SYNTHETIC_AFTER"}}},
+    "media_url_may_be_absent":{"id":"200000000000001","media_type":"VIDEO"},
+    "account_type_prose_values":["Business","Media_Creator"],
+    "account_type_wire_values":null,
+    "required_negative_principal_cases":["empty data array","multiple principals","flat and nested conflicting IDs","wrong bound account ID","unknown account type","wrong field types"]
+  },
+  "unresolved":["configured Graph version compatibility","actual principal shape and enum values","exact Instagram Login pagination next/end contract and cursor alphabet","exhaustive retrieval error/subcode/retry mapping","CDN authority completeness and URL lifetime","actual app/seller grants","authorized live media and carousel canaries","atomic durable-original/shared worker acceptance"]
+}
