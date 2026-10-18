@@ -1,0 +1,184 @@
+{
+  "artifact_sha256": {
+    "node.tap": "91be3f0f4bd7c549486d5b3c6f48995ab8e19b6c3cb3f044122fc83c5ec954a8",
+    "pure-final.log": "aee956915c7849e09b89fb4a4a9b989a24f4816042e4a8c4efaebfd81616f74b",
+    "pure-final.xml": "ad88b3d2030cc99d3d13dd38ea6873763c1ac5c7d5c50788494f796577953f75",
+    "pure.log": "3b02a9cb42b4ea94b624f669c3cd18b70c4e751bfe2e0fa6d6e5ab2e4ec811e7",
+    "pure.xml": "57bf6a9c32d5ada48edca9789878d44660a17efc8e3be49f5048d4095d8ad728"
+  },
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "boundaries": [
+    "strict raw-result repository projections do not evaluate SQL or prove persistence/authority",
+    "real request schema/replay/helper/render functions with declared access and fact-reader substitutes",
+    "two dispatch checks are adapters, not actual deliver_one installation",
+    "Node actual production source with controlled DOM/session/transport; no browser or mounted HTTP",
+    "DB synthetic row setup bypasses ingress/parser; final helper is not provider delivery"
+  ],
+  "database": {
+    "allocated": false,
+    "authored": 20,
+    "collected": false,
+    "executed": false,
+    "status": "BLOCKED_PENDING_EXPLICIT_LOCAL_P01_ALLOCATION_AND_INTEGRATOR_INSTALL"
+  },
+  "existing_test_changes": [],
+  "existing_test_files_checked": 243,
+  "final_qa_test_commit": "6412d989536df3c0ac70b81b9c99533064e5eb2f",
+  "format": "reel-operator-independent-qa.v1",
+  "harness_correction": "An edit/commit command was initially issued from /tmp and failed before changing any file; the independent absolute-path Python run in that command succeeded. Corrected the test edit in the assigned worktree and reran only new18.",
+  "prepared_qa_commit": "4938321402c38a8326fa272183d92541e3a805f9",
+  "remaining_gates": [
+    "actual0058 migration/FK/trigger/null/immutability and NOWAIT same-transaction proof",
+    "native mounted route/session/CSRF and real concurrent operator tests",
+    "integrator final helper install/no-awaited authority gap and canonical once-only provider handling",
+    "physical UI/accessibility and real delivery acceptance"
+  ],
+  "runs": [
+    {
+      "argv": [
+        "env",
+        "-i",
+        "PATH=/usr/bin:/bin",
+        "TMPDIR=/tmp",
+        "LANG=C",
+        "PYTHONPATH=/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend",
+        "/tmp/munimjee-release-ci-py311/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/test_whatsapp_reel_operator_pure.py",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/test_comment_operator_pure.py",
+        "-q",
+        "-o",
+        "junit_family=xunit1",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/artifacts/v1/reel-operator-qa/pure.xml"
+      ],
+      "cwd": "/tmp",
+      "exit_code": 0,
+      "failed": 0,
+      "log": "pure.log",
+      "new": 18,
+      "note": "Before final one-field recipient non-null assertion addition; first output preserved.",
+      "passed": 47,
+      "skipped": 0,
+      "unchanged": 29,
+      "xunit": "pure.xml"
+    },
+    {
+      "argv": [
+        "env",
+        "-i",
+        "PATH=/usr/bin:/bin",
+        "TMPDIR=/tmp",
+        "LANG=C",
+        "PYTHONPATH=/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend",
+        "/tmp/munimjee-release-ci-py311/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/test_whatsapp_reel_operator_pure.py",
+        "-q",
+        "-o",
+        "junit_family=xunit1",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/artifacts/v1/reel-operator-qa/pure-final.xml"
+      ],
+      "cwd": "/tmp",
+      "exit_code": 0,
+      "failed": 0,
+      "log": "pure-final.log",
+      "note": "Recheck only new18 after test-only6412d98 assertion edit; no product edits.",
+      "passed": 18,
+      "skipped": 0,
+      "xunit": "pure-final.xml"
+    },
+    {
+      "argv": [
+        "env",
+        "-i",
+        "PATH=/usr/bin:/bin",
+        "TMPDIR=/tmp",
+        "LANG=C",
+        "/Users/user/.nvm/versions/node/v24.20.0/bin/node",
+        "--test",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/comment_operator_contract.test.mjs",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/comment_operator_lifecycle.test.mjs",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/whatsapp_reel_operator_contract.test.mjs",
+        "/Users/user/Documents/ChatGPT/munimjee-wave11-v08-material-qa/backend/tests/whatsapp_reel_operator_lifecycle.test.mjs"
+      ],
+      "cwd": "/tmp",
+      "exit_code": 0,
+      "failed": 0,
+      "log": "node.tap",
+      "new": 8,
+      "passed": 20,
+      "skipped": 0,
+      "unchanged": 12
+    }
+  ],
+  "source_composition_head": "6412d989536df3c0ac70b81b9c99533064e5eb2f",
+  "source_hashes": {
+    "backend/alembic/versions/0058_v1_reel_operator.py": {
+      "matches_owner_blob": true,
+      "owner_commit": "aba5c14f4d371a300818847794b3a6dc8229112d",
+      "sha256": "d4914b44bc630d29f8545988f1e09bf7dc325e1eab3426e44a5f75b69e84e7cc"
+    },
+    "backend/app/api/v1/whatsapp_reel_operator.py": {
+      "matches_owner_blob": true,
+      "owner_commit": "34f2125e547be76c10890c0087e1c40e587e9dff",
+      "sha256": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb"
+    },
+    "backend/app/models/whatsapp_reel_operator.py": {
+      "matches_owner_blob": true,
+      "owner_commit": "aba5c14f4d371a300818847794b3a6dc8229112d",
+      "sha256": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86"
+    },
+    "backend/app/schemas/whatsapp_reel_operator.py": {
+      "matches_owner_blob": true,
+      "owner_commit": "34f2125e547be76c10890c0087e1c40e587e9dff",
+      "sha256": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b"
+    },
+    "backend/app/services/whatsapp_reel_operator.py": {
+      "matches_owner_blob": true,
+      "owner_commit": "aba5c14f4d371a300818847794b3a6dc8229112d",
+      "sha256": "a872286875429c31532ad221ea17848333d17c012d88c4d7b1d904b1c4465e74"
+    },
+    "backend/static/comment_operator.css": {
+      "matches_owner_blob": true,
+      "owner_commit": "9aaf659fc9f3288f126aed4f31c4534be20b3ef4",
+      "sha256": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb"
+    },
+    "backend/static/comment_operator.html": {
+      "matches_owner_blob": true,
+      "owner_commit": "9aaf659fc9f3288f126aed4f31c4534be20b3ef4",
+      "sha256": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11"
+    },
+    "backend/static/comment_operator.js": {
+      "matches_owner_blob": true,
+      "owner_commit": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "sha256": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6"
+    },
+    "backend/static/comment_operator_contract.js": {
+      "matches_owner_blob": true,
+      "owner_commit": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "sha256": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8"
+    },
+    "docs/v1-native-reel-resume-contract.md": {
+      "matches_owner_blob": true,
+      "owner_commit": "24f746f21247fca5a716018d8858241721b3990e",
+      "sha256": "f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c"
+    }
+  },
+  "test_sha256": {
+    "backend/tests/test_whatsapp_reel_operator_db.py": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55",
+    "backend/tests/test_whatsapp_reel_operator_pure.py": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b"
+  },
+  "warnings": [
+    "Existing Pydantic class Config deprecation; no task assertion weakened"
+  ]
+}
