@@ -1,6 +1,7 @@
 {
   "base": "e750e5a",
-  "manifest_timing": "after final pure-ASGI runs; mounted harness records separate before/after manifests when actually executed",
+  "harness_review": "Existing fd09de0 credential-free Node allowlist preserved; helper extraction and pure fake-spawn verification only. No prior committed credential propagation found.",
+  "manifest_timing": "Updated after pure harness environment/spawn proof; original source/ASGI run counts retained separately. Mounted harness records separate before/after manifests only when actually executed.",
   "node": "v24.20.0",
   "python": "Python 3.11.16",
   "qa_composition_parent": "ac6a7a7059cd2a96f28dc34fb04941d44c63c09f",
@@ -19,6 +20,13 @@
       "passed": 103,
       "skipped": 7,
       "tests": 114
+    },
+    "harness-environment-proof": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 2,
+      "skipped": 0,
+      "tests": 2
     },
     "independent-final": {
       "errors": 0,
@@ -40,9 +48,10 @@
     "backend/app/config.py": "0324f29c56bdc409b6e66257758f00a755a2d7ba43cf0a1857de0f7c08cc9678",
     "backend/app/services/storefront_publication.py": "47e1679cf44c1cff6d9f7eacbe9d232167438989721ccaabc48bb8c9011c3295",
     "backend/app/v1/storefront/seo.py": "86100cd438343ba55272001e03b165b8e8e6be7dbc4d5d08dd6c1f2ebb6e3433",
-    "backend/tests/run_v1_seo_independent_mounted.py": "0520af9bd34e643aa2490cdd0248a1fa2794557b54d9c72d4f79975085bf77fd",
+    "backend/tests/run_v1_seo_independent_mounted.py": "472e181f9a66edb64b102dd45460de0fd32ed29849c3d8a07e22139273c41603",
     "backend/tests/test_v1_seo_independent.py": "4dc57f9774487a4261cc87ae726eb18c1671e17fc3fda6fac5769f51dfa36b4f",
     "backend/tests/test_v1_seo_independent_db.py": "621874d6ab6ae688cea8e729227838fdcebb011d9dd31afb9fe96688fb409536",
+    "backend/tests/test_v1_seo_independent_harness.py": "0540811b99ebbec32f2700737999d521e75daa69d3f08fc188e04f4c3fa13a82",
     "backend/tests/v1_seo_independent_mounted.mjs": "7e5914a2b31c6a2fd59481dcd50a57f61ddc4f799bc34c59693a8c281a200ddb",
     "backend/tests/v1_seo_independent_server.py": "cd2ecf7f29e7129268ad513e94503f09b290ff86379956845807ad969eb9c83b"
   },
