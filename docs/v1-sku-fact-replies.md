@@ -1,6 +1,6 @@
 # Activated SKU facts in channel replies
 
-Approved bounded contract, frozen with the integrator on18October2026. Base7a5974f plus the
+Approved bounded contract, frozen with the integrator on 18 October 2026. Base 7a5974f plus the
 accepted customer privacy dependency a7e6ce7; separate worktree/branch. No DDL,
 import ownership change, new sender or live provider canary is included.
 
@@ -55,6 +55,9 @@ state processing. Conflicting reels, reply-to products or unknown media with SKU
 context withhold; neither the first nor the last reference selects a product.
 Every frozen exact reel is revalidated in the final observation statement, and
 all processing receipt timestamps/account bindings must still be current.
+Eligibility freezes once before cycle handling. Activation, rollout or legacy
+vision/title identification during later waits cannot admit new fact authority
+mid-turn; it withholds through the existing handoff/rollback instead.
 
 The adapter takes no explicit SKU/Storefront/catalogue sweep locks. Incumbent
 focus persistence is retained: changing `Conversation.product_id` can hold an

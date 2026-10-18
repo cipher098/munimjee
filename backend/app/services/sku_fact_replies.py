@@ -219,6 +219,18 @@ async def instagram_batch_context(db, business_id, conversation, events):
     return dict(product_id=next(iter(candidates)), references=references)
 
 
+async def freeze_instagram_batch(db, business_id, conversation, events):
+    selected = await instagram_batch_context(db, business_id, conversation, events)
+    conversation._sku_batch_product = selected['product_id'] if selected else None
+    conversation._sku_reel_references = selected['references'] if selected else None
+    conversation._sku_reel_reference = None
+    conversation._sku_batch_facts_allowed = selected is not None
+    # An ephemeral single-call marker, never persisted. _consume_events freezes
+    # before its CP handling; direct _process_events callers freeze at entry.
+    # A flag/activation/identification change cannot admit facts later in a turn.
+    conversation._sku_batch_events = events
+
+
 def instagram_filters(business_id, product_id, *, conversation_id, customer_id, token, page_id):
     """Fresh sender gates in the SAME statement as catalogue facts.
 
