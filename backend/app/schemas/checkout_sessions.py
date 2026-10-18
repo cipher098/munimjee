@@ -74,3 +74,14 @@ class PaymentReviewRead(Contract):
     payment_status: Literal["pending", "paid", "collected", "review_required", "cancelled", "expired"]
     fulfillment_status: Literal["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"]
     reconciliation_eligible: bool = Field(strict=True)
+
+
+class GatewayConfigurationRead(Contract):
+    configured: bool = Field(strict=True)
+    enabled: bool = Field(strict=True)
+    mode: Literal["test", "live"]
+    key_id: str = Field(max_length=100)
+    webhook_url: str = Field(max_length=4096)
+    encryption_ready: bool = Field(strict=True)
+    configuration_revision: str = Field(pattern=r"^[a-f0-9]{64}$")
+    connection_verification: Literal["not_performed"] = "not_performed"

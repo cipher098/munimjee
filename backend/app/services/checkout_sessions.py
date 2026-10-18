@@ -1,6 +1,9 @@
 """Scoped public Razorpay handoff. Existing order/attempt/capture state owns authority."""
 from datetime import datetime, timedelta, timezone
 import math
+import hashlib
+import hmac
+import json
 import re
 from types import SimpleNamespace
 from urllib.parse import quote
@@ -233,3 +236,26 @@ async def payment_review(db, business_id, order_id):
     return PaymentReviewRead(order_id=row.id, attempt_state=attempt or "not_started",
         gateway_order_id=row.gateway_order_id, payment_status=row.payment_status,
         fulfillment_status=row.fulfillment_status, reconciliation_eligible=eligible)
+
+
+def gateway_configuration_revision(business_id, account):
+    """Opaque version of the exact stored ciphertext/configuration, not secrets.
+
+    The business ID and domain separate absent and configured states. This never
+    decrypts credentials and cannot be used as a provider or native capability.
+    """
+    facts = {"business_id": str(business_id), "configured": account is not None}
+    if account is not None:
+        facts.update({name: getattr(account, name) for name in (
+            "key_id", "mode", "enabled", "key_secret", "webhook_secret")})
+    raw = b"munimjee.gateway-configuration.v1\0" + json.dumps(facts, sort_keys=True,
+        separators=(",", ":")).encode()
+    return hmac.new(settings.SECRET_KEY.encode(), raw, hashlib.sha256).hexdigest()
+
+
+async def gateway_configuration_view(db, business_id, request):
+    from app.api.routes.razorpay import settings_json
+    from app.schemas.checkout_sessions import GatewayConfigurationRead
+    account = await current_account(db, business_id)
+    return GatewayConfigurationRead(**settings_json(account, request, business_id),
+        configuration_revision=gateway_configuration_revision(business_id, account))

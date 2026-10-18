@@ -74,7 +74,7 @@ async def save_settings(
     return await update_settings(body, request, seller_id, db)
 
 
-async def update_settings(body, request, seller_id, db, *, verify_connection=True):
+async def update_settings(body, request, seller_id, db, *, verify_connection=True, commit=True):
     if not body.key_id.startswith(f"rzp_{body.mode}_"):
         raise HTTPException(422, "The key ID does not match the selected mode")
     # Serialize settings writes, including first configuration.
@@ -119,7 +119,10 @@ async def update_settings(body, request, seller_id, db, *, verify_connection=Tru
     # Validate the account before enabling it; a stored key alone is not a connection.
     if body.enabled and verify_connection:
         await payments.gateway_request(account, "GET", "orders?count=1")
-    await db.commit()
+    if commit:
+        await db.commit()
+    else:
+        await db.flush()
     return settings_json(account, request, seller.id)
 
 
