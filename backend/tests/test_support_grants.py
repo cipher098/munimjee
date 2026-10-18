@@ -7,7 +7,10 @@ from app.models.support_grants import SupportGrant, SupportCommand
 @pytest.mark.asyncio
 async def test_actual_0051_constraints_and_immutable_triggers(migrated_engine):
     async with migrated_engine.connect() as db:
-        assert await db.scalar(text('SELECT version_num FROM alembic_version'))=='0051_v1_support_grants'
+        from pathlib import Path
+        from alembic.script import ScriptDirectory
+        expected=ScriptDirectory(str(Path(__file__).resolve().parents[1]/'alembic')).get_current_head()
+        assert await db.scalar(text('SELECT version_num FROM alembic_version'))==expected
         names=set(await db.scalars(text("SELECT conname FROM pg_constraint WHERE conrelid='v1_support_grants'::regclass")))
         assert {'v1_support_grant_tenant','v1_support_grant_owner','v1_support_grant_revoker','v1_support_grant_expiry'}<=names
         names=set(await db.scalars(text("SELECT tgname FROM pg_trigger WHERE NOT tgisinternal")))
@@ -182,13 +185,16 @@ async def test_session_revoked_after_real_audit_flush_rolls_back(support,monkeyp
 async def test_board_configuration_removal_during_final_guard_clears_names(support,monkeypatch):
     c,f,bid,h,_,_,_,uid,*_=support
     assert (await c.post(owner_path(bid),headers=h,json=create_body(uid))).status_code==200
+    second,_,_=await seed(f)
+    second_headers,*_=await actor(f,second)
+    assert (await c.post(owner_path(second),headers=second_headers,json=create_body(uid))).status_code==200
     calls=0
     async def reauthorize():
         nonlocal calls
         calls+=1
         if calls==2:monkeypatch.setattr(settings,'V1_SUPPORT_OPERATOR_IDS',[])
     from app.services.identity import Actor
-    async with f() as db:value=await domain.board(db,Actor(uid,'v1_user'),reauthorize=reauthorize)
+    async with f() as db:value=await domain.board(db,Actor(uid,'v1_user'),limit=1,reauthorize=reauthorize)
     assert calls==2 and value['items']==[] and value['next_after'] is None
 
 
@@ -248,3 +254,22 @@ def test_support_confirmations_reject_numeric_truth():
     from app.schemas.support_grants import GrantAction
     from pydantic import ValidationError
     with pytest.raises(ValidationError):GrantAction(idempotency_key=uuid4(),confirmed=1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',['subject_auth_version','allowlist'])
+async def test_provisioned_subject_changes_after_audit_flush_roll_back_consent(support,monkeypatch,change):
+    c,f,bid,h,_,_,_,uid,*_=support
+    original=domain.record
+    async def changed_after_flush(*args,**kwargs):
+        result=await original(*args,**kwargs)
+        if change=='allowlist':monkeypatch.setattr(settings,'V1_SUPPORT_OPERATOR_IDS',[])
+        else:
+            async with f.begin() as other:await other.execute(update(User).where(User.id==uid).values(auth_version=User.auth_version+1))
+        return result
+    monkeypatch.setattr(domain,'record',changed_after_flush)
+    r=await c.post(owner_path(bid),headers=h,json=create_body(uid))
+    assert r.status_code==404,r.text
+    async with f() as db:
+        assert await db.scalar(select(func.count()).select_from(SupportGrant))==0
+        assert await db.scalar(select(func.count()).select_from(SupportCommand))==0

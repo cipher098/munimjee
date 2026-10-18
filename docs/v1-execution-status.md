@@ -12,10 +12,12 @@ consent and customer links (0052), plus independent support security review. All
 workers remain GPT-6.1 Sol/high. Remote CI/restore/rollback/multi-architecture
 rehearsal is independent and cannot authorize production changes.
 
-Current support schema migration smoke passed on actual PG16; first28 API/negative
-checks passed, with expanded expiry/revocation/race checks still running. Analytics
-owner reports10 actual PG16 checks; customer-link owner reports14 through the real
-0051/0052 chain. These are interim lane results, not integrated product acceptance.
+Current combined actual PG16/0052 focused gate passed97 checks, including support
+expiry/revocation/tenant/native-final-commit negatives, analytics and signed-provider
+customer consent HTTP tests. Mounted support passed31 checks; independent source/render
+review accepted its bounded scope. Analytics owner passed22 focused and21 mounted
+checks; customer-link owner reports47 backend and14 mounted checks with final
+active-association projection/capture verification still running. These are interim lane results, not integrated product acceptance.
 Default flags/allowlist remain deny-by-default. Final mounted/full/image gates are
 pending for this batch; the Wave4 verified checkpoint below remains authoritative.
 

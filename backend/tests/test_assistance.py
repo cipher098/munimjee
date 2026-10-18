@@ -32,7 +32,7 @@ def body(uid=None,version=0,key=None):return dict(idempotency_key=str(key or uui
 @pytest.mark.asyncio
 async def test_actual_chain_and_private_readiness_projection(console):
     client,factory,bid,headers,*_=console
-    async with factory() as db:assert await db.scalar(text('SELECT version_num FROM alembic_version'))=='0050_v1_assistance'
+    async with factory() as db:assert await db.scalar(text('SELECT version_num FROM alembic_version'))=='0052_v1_customer_links'
     page=await client.get('/api/v1/assistance/businesses',headers=headers)
     assert page.status_code==200,page.text
     assert page.headers['cache-control']=='no-store' and page.headers['referrer-policy']=='no-referrer'
