@@ -7,7 +7,8 @@ failures. Preserve all 32 cases, the five repaired privacy/session cases and the
 existing identity, business-load, CSRF, current-capability and async fences.
 
 **Transfer pending: no production/runtime writes are authorized yet.** This is the
-minimal proposed patch for the local integrator to reserve. Source-only design,+test preparation, static review and an unapplied patch artifact are allowed.
+minimal proposed patch for the local integrator to reserve. Source-only design,
+test preparation, static review and an unapplied patch artifact are allowed.
 
 ## Exact proposed runtime ownership
 
