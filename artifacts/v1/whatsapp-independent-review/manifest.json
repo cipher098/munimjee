@@ -9,7 +9,7 @@
     "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "c90a10dd061788d02ec86f774c476f2a2901823be8584a853ad038431e5b2dc6"
   },
   "owned_sha256": {
-    "backend/tests/test_v1_whatsapp_independent.py": "d953698c32984bc0755949b75c9bae582503489f988e59077de54390cef1f8d3",
+    "backend/tests/test_v1_whatsapp_independent.py": "dbdb91244c57f373badd5f4523446bb20c558cfb7377f40d4897c25bbb21201e",
     "docs/v1-whatsapp-independent-security-review.md": "02df0f4091e6f4f98ffdfdc06e473b45ffe60874f26182827fa56279171b7cce",
     "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
     "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8",
