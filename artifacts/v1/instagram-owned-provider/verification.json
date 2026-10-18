@@ -1,0 +1,20 @@
+{
+  "base_sha": "3f01ae1b8f0296df8c761d9ce52b534aa6b74b9a",
+  "csv_contract_source_inspected": "32a2d11fb51293402dd814eb3c4216327e5eec5a",
+  "environment": "isolated macOS worktree; Python3.11 /tmp/munimjee-release-ci-py311/bin/python",
+  "commands": [
+    {"command": "PYTHONPATH=backend /tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_v1_instagram_owned_provider.py -q", "result": "43 passed"},
+    {"command": "PYTHONPATH=backend /tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_v1_instagram_owned_provider.py backend/tests/test_v1_import_jobs_fetch.py -q", "result": "90 passed"},
+    {"command": "/tmp/munimjee-release-ci-py311/bin/python -m py_compile backend/app/v1/imports/instagram_owned.py backend/app/v1/imports/instagram_owned_transport.py", "result": "passed"}
+  ],
+  "source_sha256": {
+    "backend/app/v1/imports/instagram_owned.py": "8301bdbfe97d781a6dd8a10a8e569c1978e608557a4c92bfbef894142085b7ba",
+    "backend/app/v1/imports/instagram_owned_transport.py": "02db3ce8e8b90e5fa5edaea385a2ae6bbe35f28cee18fee6fe9de1808351f4a1",
+    "backend/tests/test_v1_instagram_owned_provider.py": "e83d1096c90b993c36d3a84db7b8533b60889eb6fab6c04c60f582fb49ee9bf7",
+    "docs/v1-instagram-owned-provider.md": "6bef4f8a2e8c8a7745c9f3b4a28c6680cfbe5446f366cbf4ce93b00953bc42c8"
+  },
+  "simulated_only": true,
+  "default_capabilities": {"ig_login_media": false, "carousel": false},
+  "unrun_gates": ["official Instagram Login media endpoint/field verification", "actual authorized Meta provider permission and media retrieval", "shared worker composition", "final transaction generation/expiry/token guard", "durable original assets and manifest transaction", "tenant-scoped original asset review API/UI", "migrated database pipeline acceptance"],
+  "external_effects": "No real Graph/CDN call, actual token read, DB allocation, provider canary, Docker operation, production access or charge."
+}
