@@ -47,3 +47,18 @@ execution; it is not implemented or imported into production source by this test
 branch. **All3 tests collect only; no actual DB pass is claimed.** The source base
 and collection are separate from the future composed runtime under test. Serial
 lane permission remains withheld during the full producer gate.
+
+
+First actual selection at central4b24bbba was stopped after two fixture errors
+(and58 completed passes): the prepared fixture required the separate Control
+automation flag to be false. Incumbent reconnect pauses both effective Account
+flags and advances generation/credential, while leaving the Control flag true.
+Coordinator confirmed this is a metadata inconsistency, not current send
+authority; sender/effective views require the Account flags. The corrected
+fixture keeps both mandatory Account pause assertions and records the Control
+value as an observation instead. No runtime or generation policy changed.
+
+The stopped run, KeyboardInterrupt/reset teardown warnings and all512 stable
+source hashes are preserved separately; it is not a complete acceptance pass.
+The final frozen rerun must prove actual paused dispatch0 and deliberate owner
+re-enable/fresh facts independently.
