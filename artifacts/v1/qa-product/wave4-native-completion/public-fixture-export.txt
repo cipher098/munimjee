@@ -1,0 +1,23 @@
+{
+  "mode": "actual-renderer-and-order-shell-with-synthetic-public-provider-dto-no-database",
+  "source_head": "af71097c3d25903c527136e4a8d366f570751dc7",
+  "source_hashes": {
+    "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+    "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+    "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+    "backend/app/api/v1/storefront.py": "5b15e389bb777213e2df7d6770e4f83146f5257a1dae2685b50dff785473214b",
+    "backend/tests/export_wave4_public_theme_fixtures.py": "4f4a2792becb1057056cc856ca5ac2fb1a2541fc809668c6e9a791d050ef8bcf"
+  },
+  "fixture_hashes": {
+    "video-defaults.html": "db7d55563790ae759a57f3e9e5fb64fe1f7c06b5cc7364eba697159ce4391e4c",
+    "editorial.html": "f1cec44c3acc89a1c9c947814705b218015b3d9dcdf43dd046ac7d64f7060541",
+    "video.html": "f3dff270a94f5f4a119d39d31f1d5e7fcfa2419f2aa8b48996343b470c0da18e",
+    "editorial-defaults.html": "555e0eba8894da80c4a3726b4ddd96186cc903c25b0616d47d50213fd4396832",
+    "catalogue.html": "683553c0878648ee8b8328a8f17424ae5c55049c36997657d06958dada7c293a",
+    "private-order-shell.html": "202331d17a72382f693734d9cb8eb303fb8a5d23f75129c403e3d8a5f7bc6c58",
+    "catalogue-defaults.html": "053528e68090d68f948ea9627b762eb88d567cb74201c9cde46ebbf0f8715f23"
+  },
+  "product_id": "22222222-2222-4222-8222-222222222201",
+  "sku_id": "33333333-3333-4333-8333-333333333301",
+  "order_id": "55555555-5555-4555-8555-555555555501"
+}

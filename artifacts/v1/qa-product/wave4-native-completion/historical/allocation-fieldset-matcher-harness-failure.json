@@ -1,0 +1,77 @@
+{
+  "mode": "actual-source-dom-with-synthetic-http-no-database",
+  "source": "/Users/user/Documents/ChatGPT/munimjee-wave4-qa",
+  "source_head": "1be621c73db1f0aaffaa2a60b781489478d1d616",
+  "source_worktree_ui_status": "",
+  "source_hashes": {
+    "import_workspace.html": "3c87e8f495165fa6b61da7f303e5747d25141c049c22fa36e242853c38187cb4",
+    "import_workspace.js": "705e899201add6bacba473b3090456185b9930c922dae951634af3ffe205ae8a",
+    "import_workspace.css": "0d12dcab961c09ae3ff1115ca831f3fb967a60aedf7259fde08db5459513b0ca",
+    "v1_client.js": "09672e97fc95e0d836af11d5bd601e853fc64192d1acb35ed2fc9f8d60bcea3a",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged_during_run": true,
+  "runner_sha256": "50ba731185427a9f44600cb66ffee1dbc67a8a8318b4c6910e5a72aa7017ff83",
+  "browser_version": "153.0.8010.12",
+  "physical_device": false,
+  "checks_passed": 11,
+  "checks_failed": 2,
+  "results": [
+    {
+      "name": "four combos require explicit quantities including zero and confirm all five facts",
+      "result": "passed"
+    },
+    {
+      "name": "unknown stock preview blocks allocation without replacing null with zero",
+      "result": "passed"
+    },
+    {
+      "name": "disabled server flag remains explicit and never offers a draft command",
+      "result": "passed"
+    },
+    {
+      "name": "unsaved factual edit clears confirmations and cannot create from stale saved facts",
+      "result": "passed"
+    },
+    {
+      "name": "rapid synthetic submits persist one command and send once",
+      "result": "passed"
+    },
+    {
+      "name": "lost receipt reload never auto-replays and retry sends exact original allocation/key",
+      "result": "passed"
+    },
+    {
+      "name": "malformed cross-candidate receipt retains durable command for exact retry",
+      "result": "passed"
+    },
+    {
+      "name": "late preview from a previous selected candidate cannot replace the current allocation",
+      "result": "passed"
+    },
+    {
+      "name": "old-session preview cannot repopulate private facts after focus identity cleanup",
+      "result": "passed"
+    },
+    {
+      "name": "corrupt storage blocks new allocation commands",
+      "result": "failed",
+      "message": "expect(locator).toBeDisabled() failed\n\nLocator:  locator('#allocation-fields')\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.disabled\" with timeout 5000ms\n  - waiting for locator('#allocation-fields')\n    9 × locator resolved to <fieldset disabled id=\"allocation-fields\">…</fieldset>\n      - unexpected value \"enabled\"\n"
+    },
+    {
+      "name": "storage failure sends no command",
+      "result": "passed"
+    },
+    {
+      "name": "mobile keyboard allocation completes with inactive private receipt",
+      "result": "passed"
+    },
+    {
+      "name": "read-only capability removes allocation write authority",
+      "result": "failed",
+      "message": "expect(locator).toBeDisabled() failed\n\nLocator:  locator('#allocation-fields')\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.disabled\" with timeout 5000ms\n  - waiting for locator('#allocation-fields')\n    9 × locator resolved to <fieldset disabled id=\"allocation-fields\">…</fieldset>\n      - unexpected value \"enabled\"\n"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": []
+}
