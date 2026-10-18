@@ -1,0 +1,112 @@
+{
+  "base": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "runtime_checkpoint": "8e62ea770729d04bc0982aadf64dadae41973cb9",
+  "scope": [
+    "backend/static/v1_app.js",
+    "backend/static/v1_app.css"
+  ],
+  "transfer": "Coordinator explicitly relayed local integrator ownership transfer before runtime writes.",
+  "commands": [
+    {
+      "command": "node --check backend/static/v1_app.js",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "source_sha256": {
+    "backend/static/v1_app.js": "ee4a64b78b1a177e199a22f2cc1e10e146ff66120111bb2147f8bb0920ef9e91",
+    "backend/static/v1_app.css": "6e9ca1e94315efe982654edab93ecb3e19442f71b1ec6e8a3da62777b25ef52c"
+  },
+  "unchanged_authority_and_lifecycle_functions": [
+    {
+      "name": "endWorkspace",
+      "byte_identical": true,
+      "sha256": "1cf65f7fe8fab61c9f6a91fc163bf8b953cf4f430887a2b63273ec9f0455ba7a"
+    },
+    {
+      "name": "applyAuthority",
+      "byte_identical": true,
+      "sha256": "5cbd208965a97cfa450b47ac7971df3e3a09150d2e4fa99501a97185872d1c94"
+    },
+    {
+      "name": "checkedSession",
+      "byte_identical": true,
+      "sha256": "a1321bd79ab6b5ab8392f2ee7bb0659408af857b83b2f89a62ba32f1146c118a"
+    },
+    {
+      "name": "pathAccess",
+      "byte_identical": true,
+      "sha256": "774129a5cf11ddc463ad56ce7f3054af44638bbd938cb74391688af4f4ab3569"
+    },
+    {
+      "name": "api",
+      "byte_identical": true,
+      "sha256": "df524c38dd2b3e730611fca78233e6302ada53352dbc7b19f3afe0680e9536a5"
+    },
+    {
+      "name": "clearInvite",
+      "byte_identical": true,
+      "sha256": "704a18b1376624dde92aee19daf734dedd9373936997ba87de3a3e0455d8ec77"
+    },
+    {
+      "name": "access",
+      "byte_identical": true,
+      "sha256": "184ce45dc8b42c89fd18ce522b0aa0a6d1473f16d57bd6c5c77b2cdd95f846b3"
+    },
+    {
+      "name": "busy",
+      "byte_identical": true,
+      "sha256": "da5b56f73237b372d808472f7b67d1e6307e5c2b584021fbcd2dbbbe37a8c060"
+    },
+    {
+      "name": "loadBusiness",
+      "byte_identical": true,
+      "sha256": "d1f0604251640d5e06743067cb63bb5e06775b82f1ce8b4cae48ebc91bc65729"
+    },
+    {
+      "name": "loadTeam",
+      "byte_identical": true,
+      "sha256": "f00e132143c48ac30be52121cafa3d7e677368eead157a78d447431b1e8fddc5"
+    },
+    {
+      "name": "workspace",
+      "byte_identical": true,
+      "sha256": "9c004982e1f46e0ccad89344428d00ffbf56d3027f7126c3e2eff83f131e504f"
+    },
+    {
+      "name": "recheck",
+      "byte_identical": true,
+      "sha256": "d3c21440891e0b570e0e31115b524be4f3e14d2b1b686a46c1aa586cceba642c"
+    }
+  ],
+  "all_original_css_bytes_preserved": true,
+  "new_css_rules": [
+    "body.native-onboarding-page :is(button,a,input,select,textarea,[tabindex=\"-1\"]):focus-visible{outline:3px solid var(--green);outline-offset:3px}",
+    "body.native-onboarding-page .page-heading{min-width:0;flex-wrap:wrap}",
+    "body.native-onboarding-page .page-heading>div{min-width:0;max-width:100%}",
+    "body.native-onboarding-page #business-heading{overflow-wrap:anywhere}",
+    "body.native-onboarding-page #business-picker-label{min-width:0;max-width:100%;flex-shrink:1}",
+    "body.native-onboarding-page #business-picker{min-width:0;max-width:100%}"
+  ],
+  "all_new_css_rules_native_marker_scoped": true,
+  "shared_stylesheet_consumers": {
+    "parcel_tracking.html": "loads v1_app.css but not v1_app.js; no native marker in original HTML",
+    "customer_links.html": "loads v1_app.css but not v1_app.js; no native marker in original HTML"
+  },
+  "source_color_calculation_only": {
+    "outline": "#2e5141",
+    "white_contrast": 8.862737535767886,
+    "paper_contrast": 8.236895205397976,
+    "outline_width_px": 3,
+    "offset_px": 3,
+    "actual_keyboard_browser_verification": "pending independent QA"
+  },
+  "focus": "Only explicit interactive auth completion and current logout completion call helper. Generation, businessLoad, visible/focused document, current view and already-focused view guards; no passive lifecycle focus.",
+  "logout_late_result_fence": "Capture generation before awaiting logout; reject changed generation before endWorkspace and focus.",
+  "startup_recovery": "Named Reload and try again button only for non401 initial failure with both normal panels hidden; click location.reload() reuses original checkedSession startup. No automatic retry or fabricated session.",
+  "independent_browser_cases": "All original32 assertions and repaired privacy cases remain owned by independent QA; pending exact-source execution.",
+  "effects": "No author-run browser, server, DB, provider, actual credential, message, charge, Docker or production operation."
+}
