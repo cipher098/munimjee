@@ -8,7 +8,7 @@ const base='https://127.0.0.1:8171',output=new URL('../../../artifacts/v1/whatsa
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const nonce=process.env.WA_SETUP_FIXTURE_NONCE,errors=[],external=[];
-let checks=0,sdkLoads=0;
+let checks=0,sdkLoads=0,privatePosts=0;
 const sdk=`window.FB={init:function(v){window.__syntheticSDKConfig=v;},login:function(callback,options){window.__syntheticSDKLogin=options;window.__syntheticSDKCallback=callback;}};`;
 const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:1100}});
 await context.route('**/*',async route=>{
@@ -49,6 +49,7 @@ try{
   await page.getByRole('button',{name:'Create account',exact:true}).click();
   await page.getByRole('heading',{name:'Synthetic Indigo WhatsApp',exact:true}).waitFor();checks++;
   const identity=await session(),bid=identity.businesses[0].id,path=`/v1/businesses/${bid}/channels/whatsapp/setup`,endpoint=`/api/v1/businesses/${bid}/channels/whatsapp`;
+  page.on('request',request=>{if(request.url().startsWith(base+endpoint)&&request.method()==='POST')privatePosts++;});
   await page.goto(base+path);await expect(page.locator('#business-name')).toHaveText('Synthetic Indigo WhatsApp');
   await expect(page.locator('#operator-gate')).toBeVisible();await expect(page.locator('#consent-fields')).toBeDisabled();
   assert.equal(sdkLoads,0);assert.equal((await page.request.get(base+path)).headers()['cache-control'],'no-store');checks++;
@@ -82,7 +83,7 @@ try{
   let selectionWrites=0;page.on('request',request=>{if(request.url().endsWith('/select')&&request.method()==='POST')selectionWrites++;});
   await page.route('**'+endpoint+'/signup/*/select',async route=>{const response=await route.fetch();assert.equal(response.status(),200);await route.abort();});
   await page.getByRole('button',{name:'Register & save with automation paused',exact:true}).click();
-  await expect(page.locator('#registration-pin')).toHaveValue('');await expect(page.locator('#recovery-message')).toContainText('PIN was erased');
+  assert.equal(await page.locator('#registration-pin').evaluate(input=>input.value===''),true);await expect(page.locator('#recovery-message')).toContainText('PIN was erased');
   const afterSelection=await storage();assert.equal(afterSelection.includes('registration_pin'),false);assert.equal(afterSelection.includes('synthetic-one-use-code'),false);assert.equal(afterSelection.includes('signed_state'),false);checks++;
   await page.setViewportSize({width:390,height:844});await screenshot('mobile-unknown-setup');
   await page.unroute('**'+endpoint+'/signup/*/select');await page.reload();await expect(page.locator('#check-action')).toBeVisible();
@@ -127,15 +128,40 @@ try{
   await page.getByRole('button',{name:'Refresh status',exact:true}).click();await expect(page.locator('#page-error')).not.toBeEmpty();await expect(page.locator('#workspace')).toBeHidden();
   assert.equal(await page.locator('#recipient-phone').textContent(),'');await screenshot('mobile-read-error');checks++;
   await page.unroute('**'+endpoint+'/self-service');await page.getByRole('button',{name:'Refresh status',exact:true}).click();await expect(page.locator('#workspace')).toBeVisible();
+
+  // Hold an old valid private GET, then replace this same user's actual native
+  // session. Controlled input canaries test physical erasure, not screenshot masks.
+  let releaseOld,oldEntered;const oldWait=new Promise(resolve=>{releaseOld=resolve;}),oldStarted=new Promise(resolve=>{oldEntered=resolve;});
+  await page.route('**'+endpoint+`/tests/${testId}`,async route=>{
+    const response=await route.fetch();oldEntered();await oldWait;
+    try{await route.fulfill({response});}catch(_){} // Ended page aborts its own request.
+  });
+  await page.getByRole('button',{name:'Check test result',exact:true}).click();await oldStarted;
+  await page.evaluate(value=>{document.querySelector('#private-command').value=value;document.querySelector('#registration-pin').value='123456';},privateCommand);
+  const postsBeforeReplacement=privatePosts;
+  const replaced=await page.request.post(base+'/api/v1/auth/login',{data:{email,password},headers:{Origin:base}});
+  assert.equal(replaced.status(),200);
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#access-needed')).toBeVisible();
+  const replacementSecretsEmpty=await page.evaluate(()=>document.querySelector('#private-command').value===''&&document.querySelector('#registration-pin').value==='');
+  assert.equal(replacementSecretsEmpty,true);await expect(page.locator('#logout')).toBeHidden();checks++;
+  releaseOld();await page.unroute('**'+endpoint+`/tests/${testId}`);
+  await page.evaluate(()=>{for(const id of ['consent-form','send-form'])document.getElementById(id).dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
+  await page.waitForTimeout(100);assert.equal(privatePosts,postsBeforeReplacement);
+  assert.equal(await page.locator('#test-status').textContent(),'');await expect(page.locator('#workspace')).toBeHidden();checks++;
+  await screenshot('mobile-session-replaced');
+  await page.reload();await expect(page.locator('#workspace')).toBeVisible();
   await api(`/__wa_setup/${bid}/viewer`,'POST',{},true);await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
   await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#logout')).toBeHidden();assert.equal(await page.locator('#recipient-phone').textContent(),'');checks++;
   await page.reload();await expect(page.locator('#view-only')).toBeVisible();await expect(page.locator('#owner-tools')).toBeHidden();await screenshot('mobile-viewer');checks++;
   assert.equal((await api(endpoint+'/tests','POST',{idempotency_key:crypto.randomUUID(),expected_connection_version:1,recipient_authorized:true})).status,403);checks++;
   await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page.locator('#access-needed')).toBeVisible();
   for(const selector of ['#connection-status','#recipient-phone','#signup-status','#test-status','#recovery-message'])assert.equal(await page.locator(selector).textContent(),'');
+  const endedSecretsEmpty=await page.evaluate(()=>document.querySelector('#private-command').value===''&&document.querySelector('#registration-pin').value==='');
+  assert.equal(endedSecretsEmpty,true);
   await expect(page.locator('#logout')).toBeHidden();await screenshot('mobile-session-ended');checks++;
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks++;
   await writeFile(new URL('result.json',output),JSON.stringify({checks,actual_main_router:true,synthetic_provider:true,synthetic_sdk:true,
-    external_requests:external.length,page_errors:errors.length,real_meta_consent:false,live_delivery_proved:false},null,2)+'\n');
+    synthetic_sdk_requests_fulfilled:sdkLoads,external_network_attempts:external.length,
+    actual_meta_sdk_network_requests:0,page_errors:errors.length,real_meta_consent:false,live_delivery_proved:false},null,2)+'\n');
   console.log(`PASS ${checks} actual-mounted native/0057 browser checks; SDK/provider synthetic, real Meta/delivery not proved`);
 }finally{await browser.close();}
