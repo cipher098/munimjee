@@ -29,15 +29,24 @@ compatibility followup is isolated and not covered by those prior results.
 Comment safety0055 is reviewed/composed through88882f7: owner92 checks plus a
 5-check tail (one overlapping expanded case) pass on actual0055. Native comment
 management and durable inferred-WA visibility are owned next in0056, not complete.
-Channel/session repairs and truthful onboarding readiness are isolated work in
-progress; confirmed provider-wait session-revocation failures and private-DOM
-retention have preserved repros. No later full-suite, runtime-image, release,
+Channel/session repairs through0f5e5f0 are reviewed/composed:126 focused
+actual0055/mixed checks,25 actual-main browser checks and17 controlled-JS checks
+pass. Native onboarding through52fdda8 is reviewed/composed:190 focused
+(170 synthetic provider/parser/transport +20 native actual-DB) and6 actual-main
+browser journeys pass. Session/role changes discard private results and staged
+invitation/session writes roll back before commit. Local setup now advances from
+current facts; authorized messaging acceptance remains explicitly unavailable.
+Their confirmed failing-before-fix source/HTTP repros remain preserved.
+Native comment0056 service/schema has an initial134-pass actual-chain gate;
+final preview/browser/source review is still underway. Current composition is
+not covered by the older2325-pass run. No later full-suite, runtime-image, release,
 provider entitlement or live-delivery acceptance is implied.
 
 DB-heavy work is serialized on disk-backed55443 only. Catalogue owns channel
 hardening and compatible legacy WA generation writers; integrator owns native
 workspace/readiness and composition; social owns0056 and independent review.
-Remote follow-up QA is unconfirmed/host unavailable; it is not credited as running.
+Remote mobile/accessibility/offline QA dispatch is now confirmed active after the
+connection recovered; no result is credited before its exact reviewed handoff.
 Exact ownership is in `docs/v1-wave7-contracts.md`.
 
 ## Wave6 verified bounded checkpoint

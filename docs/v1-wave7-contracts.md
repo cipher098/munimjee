@@ -36,9 +36,9 @@ No live provider/customer action, running app change or production deployment.
 - Channel activity producers remain uninstalled: enquiry/outcome fields stay null,
  not zero. New dedup internal hooks must be reviewed against current IG/WA/comment
  ownership before reporting coverage. IG processed ingress is not send evidence.
-- Remote next tasks are unconfirmed: last verified idle revision29; two dispatch
- attempts lacked acknowledgement and were not retried again. No work is credited
- to an unconfirmed remote assignment. Local official Meta research is complete.
+- Remote mobile/accessibility/offline QA is now confirmed active after connection
+ recovery. Earlier unacknowledged attempts are not execution evidence. Exact
+ reviewed results are still pending; local official Meta evidence is complete.
 
 New disk-backed dedicated PG16 on55443 only. DB-heavy runs are serialized and use
 P01 reset leases in dedicated names: wave6_integration, instagram_w6, payment_w6;
@@ -69,3 +69,12 @@ and real template delivery remain separate open gates.
 
 Current frozen0055 full run3820d14:2325 passed,2 failed,8 skipped in982.14s;
 fixture corrections and a new full gate remain required. Raw failures preserved.
+
+
+Reviewed current partial gates: channel0f5e5f0 (126 focused/25 mounted/17 VM),
+onboarding52fdda8 (190 focused/6 mounted), comment0056 initial134 atfe95e9c.
+The provider-wait native race and retained private-DOM failures are repaired within
+their reviewed source scopes. A fresh composed full gate is still required.
+V07 supported Embedded Signup/current protocol/account selection and authorized
+recipient-test/result policy are contract-first with catalogue; manual-token entry
+does not complete self-service onboarding. No0057 migration allocated yet.
