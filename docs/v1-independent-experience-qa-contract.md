@@ -45,3 +45,9 @@ Rebuild fixtures against that source and report fixed/remaining case IDs. Other
 workers review only attribution/harness changes. Current local `789db95` /0056 is
 reported context; fetched integration remained `abab30a` at this handoff request.
 Neither older 1,950-test evidence nor new follow-up reports certify that local head.
+
+The storefront worker also owns its same QA paths in
+`munimjee-wave8-storefront-followup-qa` / `codex/v1-storefront-followup-independent-qa`
+and `docs/v1-independent-storefront-followup-comparison.md`, to rerun the same 75
+cases against fresh `8ae97c2` source. Preserve the original branch/evidence. No
+additional activity acceptance or new production ownership is implied.
