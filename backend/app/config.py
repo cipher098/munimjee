@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     V1_SUPPORT_OPERATOR_IDS: List[UUID] = []  # Explicit trusted subjects; no browser provisioning.
     V1_CUSTOMER_LINKS_ENABLED: bool = False
     V1_SKU_FACT_REPLIES_ENABLED: bool = False
+    V1_WHATSAPP_ONBOARDING_ENABLED: bool = False  # Supported v4 flow remains closed pending configured provider readiness.
+    V1_CHANNEL_TESTS_ENABLED: bool = False  # Explicit owner/recipient-bound test only; never general send permission.
     V1_ACTIVITY_ENABLED: bool = False
     V1_ACTIVITY_RETENTION_READY: bool = False  # Explicit scheduled-cleanup readiness; collection stays closed until verified.
     V1_PARCEL_CONNECTORS_JSON: str = ""  # Private, explicitly provisioned per-Business machine bindings.
