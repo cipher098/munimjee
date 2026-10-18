@@ -1,0 +1,15 @@
+{
+  "reviewed_source": "01b0ce4841ba36d9adb1f06fadc122a31bea8185",
+  "scenario": "staged deletion of an allowlisted non-required Python module while main remains tracked",
+  "git_diff_head_names": [
+    "backend/app/optional.py"
+  ],
+  "tracked_source_names_after_index_deletion": [
+    "backend/app/main.py"
+  ],
+  "runtime_source_dirty": false,
+  "expected_dirty": true,
+  "real_repo_modified": false,
+  "network_or_db": false,
+  "release_clean_guard": "accepted"
+}

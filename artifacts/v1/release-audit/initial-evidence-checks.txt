@@ -1,0 +1,40 @@
+test_every_referenced_saved_test_is_present_and_passed_in_historical_xml (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_exact_references_exist_at_the_audited_application_and_hash (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_final_gate_and_native_source_hashes_match_actual_blobs (test_v1_release_audit_evidence.SavedEvidenceAudit) ... FAIL
+test_full_saved_xml_and_console_count_and_skip_categories (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_saved_runtime_manifest_matches_286_source_files_without_rebuilding_image (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_scope_covers_every_agreed_outcome_acceptance_gate_and_migration (test_v1_release_audit_evidence.SavedEvidenceAudit) ... FAIL
+
+======================================================================
+FAIL: test_final_gate_and_native_source_hashes_match_actual_blobs (test_v1_release_audit_evidence.SavedEvidenceAudit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/user/Documents/ChatGPT/munimjee-wave5-audit/backend/tests/test_v1_release_audit_evidence.py", line 117, in test_final_gate_and_native_source_hashes_match_actual_blobs
+    self.assertEqual(digest(git('show', f'{commit}:{path}')), expected, path)
+AssertionError: '706d1bf3804a370e4b6754c1403ca370f1cb237506c14dc45f5bae59a1ecad1e' != 'bf6445cad49b490a61f879c15eb362c62031296e67b7fb275b9f0b6501f95ce4'
+- 706d1bf3804a370e4b6754c1403ca370f1cb237506c14dc45f5bae59a1ecad1e
++ bf6445cad49b490a61f879c15eb362c62031296e67b7fb275b9f0b6501f95ce4
+ : backend/tests/browser/import_workspace_native.mjs
+
+======================================================================
+FAIL: test_scope_covers_every_agreed_outcome_acceptance_gate_and_migration (test_v1_release_audit_evidence.SavedEvidenceAudit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/user/Documents/ChatGPT/munimjee-wave5-audit/backend/tests/test_v1_release_audit_evidence.py", line 55, in test_scope_covers_every_agreed_outcome_acceptance_gate_and_migration
+    self.assertEqual(expected_acceptance, [r['requirement'] for r in rows if r['group'] == 'acceptance'])
+AssertionError: Lists differ: ['---', 'Fresh seller onboarding', 'Sales a[497 chars]ack'] != ['Fresh seller onboarding', 'Sales assistan[490 chars]ack']
+
+First differing element 0:
+'---'
+'Fresh seller onboarding'
+
+First list contains 1 additional elements.
+First extra element 23:
+'Backup and rollback'
+
+Diff is 657 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 6 tests in 3.467s
+
+FAILED (failures=2)

@@ -1,0 +1,11 @@
+test_every_referenced_saved_test_is_present_and_passed_in_historical_xml (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_exact_references_exist_at_the_audited_application_and_hash (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_final_gate_and_native_source_hashes_match_actual_blobs (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_full_saved_xml_and_console_count_and_skip_categories (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_saved_runtime_manifest_matches_286_source_files_without_rebuilding_image (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+test_scope_covers_every_agreed_outcome_acceptance_gate_and_migration (test_v1_release_audit_evidence.SavedEvidenceAudit) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 3.593s
+
+OK
