@@ -83,7 +83,7 @@
     if (generation !== fenceGeneration || epoch !== businessLoad || document.hidden || !document.hasFocus() || view.hidden || view.contains(document.activeElement)) return;
     const heading = $(headingId); heading.tabIndex = -1; heading.focus();
   }
-  const startupReload = text('button', 'Reload workspace', 'button secondary');
+  const startupReload = text('button', 'Reload and try again', 'button secondary');
   startupReload.id = 'startup-reload'; startupReload.type = 'button'; startupReload.hidden = true;
   startupReload.addEventListener('click', () => location.reload());
   $('global-error').after(startupReload);
