@@ -12,6 +12,7 @@ from tests.safety import install_test_safety
 install_test_safety()
 
 import asyncio
+import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -23,7 +24,12 @@ from app.api.v1.identity import business_view
 from app.services.identity import Actor, BusinessAccess
 from app.services import onboarding
 
-OUT = ROOT / "artifacts/v1/independent-onboarding-experience"
+ARTIFACT_ROOT = ROOT / "artifacts/v1/independent-onboarding-experience"
+parser = argparse.ArgumentParser()
+parser.add_argument("--output", default=str(ARTIFACT_ROOT / "comparison-8ae97c2"))
+OUT = Path(parser.parse_args().output).resolve()
+if OUT != ARTIFACT_ROOT and ARTIFACT_ROOT not in OUT.parents:
+    raise ValueError("Fixture output must remain in the owned onboarding artifact directory")
 IDS = [UUID("10000000-0000-4000-8000-000000000081"), UUID("10000000-0000-4000-8000-000000000082")]
 UID = UUID("20000000-0000-4000-8000-000000000081")
 SOURCES = ["backend/app/services/onboarding.py", "backend/app/services/identity.py",
@@ -42,10 +48,23 @@ async def main():
                     profile_version=3, profile_confirmed_at=datetime(2026, 10, 18, tzinfo=timezone.utc))
                 access = BusinessAccess(business, SimpleNamespace(role=role), SimpleNamespace())
                 onboarding.require_business_access = AsyncMock(return_value=access)
-                db = SimpleNamespace(scalar=AsyncMock(side_effect=[0, 0]))
+                # New readiness formatter: actual local_channels runs against
+                # synthetic absent account/control/store rows, never credentials.
+                db = SimpleNamespace(scalar=AsyncMock(side_effect=[0, False]),
+                    execute=AsyncMock(side_effect=[
+                        SimpleNamespace(one=lambda: (0, 0)),
+                        SimpleNamespace(one_or_none=lambda: None),
+                        SimpleNamespace(one_or_none=lambda: None),
+                        SimpleNamespace(all=lambda: []),
+                        SimpleNamespace(one_or_none=lambda: None),
+                        SimpleNamespace(one=lambda: business),
+                    ]))
                 available = frozenset(f"/v1/businesses/{bid}/{suffix}" for suffix in ("catalogue", "channels"))
                 record = await onboarding.onboarding_view(db, Actor(UID, "v1_user"), bid, available_actions=available)
                 assert db.scalar.await_count == 2
+                assert db.execute.await_count == 6
+                assert len(record["steps"]) == 6
+                assert not any(channel["ready"] for channel in record["local_channels"].values())
                 records[str(bid)] = record
                 businesses.append(business_view(access).model_dump(mode="json"))
             fixtures[role] = {"session": {"user_id": str(UID), "auth_method": "v1_user",
@@ -55,7 +74,7 @@ async def main():
     finally:
         onboarding.require_business_access = original
     OUT.mkdir(parents=True, exist_ok=True)
-    result = {"mode": "actual-onboarding-formatter-with-fake-access-and-counts-no-database",
+    result = {"mode": "actual-onboarding-formatter-with-fake-access-counts-and-readiness-rows-no-database",
         "source_sha256": {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in SOURCES},
         "roles": fixtures, "database_connections": 0, "provider_calls": 0}
     (OUT / "fixtures.json").write_text(json.dumps(result, default=str, indent=2) + "\n")
