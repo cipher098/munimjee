@@ -24,11 +24,12 @@ from app.api.v1.identity import business_view
 from app.services.identity import Actor, BusinessAccess
 from app.services import onboarding
 
-ARTIFACT_ROOT = ROOT / "artifacts/v1/independent-onboarding-experience"
+ARTIFACT_ROOTS = [ROOT / "artifacts/v1" / name for name in
+    ("independent-onboarding-experience", "native-onboarding-repair-qa")]
 parser = argparse.ArgumentParser()
-parser.add_argument("--output", default=str(ARTIFACT_ROOT / "comparison-8ae97c2"))
+parser.add_argument("--output", default=str(ARTIFACT_ROOTS[1]))
 OUT = Path(parser.parse_args().output).resolve()
-if OUT != ARTIFACT_ROOT and ARTIFACT_ROOT not in OUT.parents:
+if not any(OUT == parent or parent in OUT.parents for parent in ARTIFACT_ROOTS):
     raise ValueError("Fixture output must remain in the owned onboarding artifact directory")
 IDS = [UUID("10000000-0000-4000-8000-000000000081"), UUID("10000000-0000-4000-8000-000000000082")]
 UID = UUID("20000000-0000-4000-8000-000000000081")
