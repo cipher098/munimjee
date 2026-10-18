@@ -1,0 +1,67 @@
+{
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "contract_original": "4cded0c72d9e0caef54f05b8134f32cc3ef2c2ca",
+  "review_composition": "c6e838a8ad0c0dd2f28e321315a7416ca6b22b75",
+  "contract_sha256": "7f13ea36e39c75e82f66165a6603eca6686fcfe24323c731f45fa90e6335686e",
+  "files": [
+    {
+      "path": "backend/alembic/versions/0057_v1_whatsapp_self_service.py",
+      "sha256": "cd47c7c62c4904a47bfd4ebdcc6f4398dd790c36baf869b10562cff4bb8edb10",
+      "git_blob": "e0e3ce941538e8e5af379153114ea84c754310d9"
+    },
+    {
+      "path": "backend/app/models/identity_auth.py",
+      "sha256": "9f70fee5dd090e6ac5609094e4e70d454949b393cbd769e9db3fecea2a6f4a67",
+      "git_blob": "0ac94dbf3292a6abd6928926b750cee01ff87a03"
+    },
+    {
+      "path": "backend/app/services/auth_sessions.py",
+      "sha256": "a94537fa42b74e438eac1c7b0101694b9090e4a71b503b6baed0cc80226ac06d",
+      "git_blob": "3c156732d4f8e1637727768bb69f61aac566b99a"
+    },
+    {
+      "path": "backend/app/services/whatsapp_context.py",
+      "sha256": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+      "git_blob": "6a9bf194efac3c455470b85a5097d1358011140b"
+    },
+    {
+      "path": "backend/app/services/whatsapp.py",
+      "sha256": "0c1d041c721da43095403369942a119d412d52f46e885018915686e3ce6a17f7",
+      "git_blob": "70e0d3d4d7149702da59c5be027845bdd326f893"
+    },
+    {
+      "path": "backend/app/services/whatsapp_reel_queue.py",
+      "sha256": "da8986305d7c2f2cae94e1097470acf51074c37e92259d49ce8aba522b678bed",
+      "git_blob": "e60ec583a5fa676ebdac32d5cdcb6fdd1735c84a"
+    },
+    {
+      "path": "backend/app/services/sku_fact_replies.py",
+      "sha256": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+      "git_blob": "b915e4fe5b54db97d0a71030e5fb526b77901c38"
+    },
+    {
+      "path": "backend/app/workers/whatsapp.py",
+      "sha256": "9c5dcdfe18f0febc6040b431645ec84aabc830bf4591d4617451d94aa7f5a02a",
+      "git_blob": "1de683389da83cfb4bd90b5af43624b7320d73f0"
+    },
+    {
+      "path": "backend/app/api/v1/session.py",
+      "sha256": "55be1d82ba17f804edf49be0c9cf415ba6e01bed9a5fde53ecccd6f7c5689066",
+      "git_blob": "974b8ca1fc7fb91d08e7f7322a117336b7946ba0"
+    }
+  ],
+  "execution": "static baseline read only; no tests/application/provider/DB/browser/process services",
+  "review_allocations": {
+    "pure_cases": 18,
+    "node_cases": 8,
+    "database_cases_authored_only": 20,
+    "total": 46,
+    "reviewer_execution": "none; source/hash/assertion review only",
+    "local_execution_pending": [
+      "0058 actual migration constraints/triggers",
+      "native session+CSRF mounted journey",
+      "canonical worker installation and synthetic provider boundary",
+      "concurrent commands and post-claim changes"
+    ]
+  }
+}

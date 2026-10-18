@@ -1,0 +1,12 @@
+{
+  "checkpoint": "ee8060c4592e20a0a85415947c4ca16c2d3baec1",
+  "path": "artifacts/v1/reel-operator-coordination/design.html",
+  "sha256": "b88ce55aaa3f056318d3f3419bd43e8b0041887a44fab3c278c0b8b1a0b3a341",
+  "method": "source-only static HTML inspection; no browser/render execution",
+  "disposition": "one-inbound scope and truthful queued/held/uncertain copy align; runtime not yet reviewed",
+  "runtime_requirements": [
+    "confirmation defaults unchecked for each newly selected enquiry/product",
+    "real dialog labels/focus and current-session scrub still require source/test review",
+    "inferred context remains no-resume and no rewrite of original classification"
+  ]
+}

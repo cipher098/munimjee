@@ -1,0 +1,99 @@
+{
+  "source_original": "34f2125e547be76c10890c0087e1c40e587e9dff",
+  "source_followup": "a2d41098e476e1df3e025b1fcf8cc793fe0f1ce2",
+  "files": [
+    {
+      "path": "backend/app/api/v1/whatsapp_reel_operator.py",
+      "sha256": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+      "git_blob": "12fe189106c2115a0870a80cc6c2b674d8af5a10",
+      "syntax": "stdlib ast.parse only; no imports/execution",
+      "top_level_functions": [
+        "read_actor",
+        "collection",
+        "detail",
+        "link"
+      ]
+    },
+    {
+      "path": "backend/app/schemas/whatsapp_reel_operator.py",
+      "sha256": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+      "git_blob": "8ad494b168f9d999d8368a253322a32c14d89d30",
+      "syntax": "stdlib ast.parse only; no imports/execution",
+      "top_level_functions": []
+    },
+    {
+      "path": "backend/app/services/whatsapp_reel_operator.py",
+      "sha256": "9534a28fcee143548e813fe7aceadd42b58dab4ed48827b0f738e5c681451777",
+      "git_blob": "03b06a558666e6559cc6f915c1bddf11154e7dff",
+      "syntax": "stdlib ast.parse only; no imports/execution",
+      "top_level_functions": [
+        "canonical",
+        "fingerprint",
+        "request_hash",
+        "source_digest",
+        "mapping_digest",
+        "access",
+        "source_row",
+        "original_reference",
+        "review_state",
+        "review_view",
+        "read_enquiry",
+        "list_enquiries",
+        "receipt_view",
+        "link_enquiry",
+        "revalidate_resume"
+      ]
+    },
+    {
+      "path": "backend/app/models/whatsapp_reel_operator.py",
+      "sha256": "3393fd496991d76af4ad55b42dd9c2357ffa076ee90a4fb040f0b402dd147360",
+      "git_blob": "354854792ee3227517d8f66d8376fd929c10a25e",
+      "syntax": "stdlib ast.parse only; no imports/execution",
+      "top_level_functions": []
+    },
+    {
+      "path": "backend/alembic/versions/0058_v1_reel_operator.py",
+      "sha256": "aa871711f9b370bee42dbc5569e6bf23855268b74aae31faedcb444ba99dba5c",
+      "git_blob": "079168d6208e21496bda29cb936e3fe74ccd1cba",
+      "syntax": "stdlib ast.parse only; no imports/execution",
+      "top_level_functions": [
+        "upgrade",
+        "downgrade"
+      ]
+    }
+  ],
+  "contract_clarification": {
+    "commit": "24f746f21247fca5a716018d8858241721b3990e",
+    "sha256": "f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c",
+    "last_await": "unconditional outer revalidate_resume; native-unbound must delegate incumbent exact_test_authority as final inner await then returnNone",
+    "approved_helper_adaptation": "native-unbound exact_test_authority await immediately followed by None; native-bound final scalar remains final await"
+  },
+  "findings": [
+    {
+      "id": "R01",
+      "issue": "nullable quoted fingerprint CHECK could evaluate UNKNOWN",
+      "status": "resolved in a2d4109 model+DDL; actual constraint execution unrun"
+    },
+    {
+      "id": "R02",
+      "issue": "immutable result allowed action/resume/reason mismatch",
+      "status": "resolved in a2d4109 plus deferred complete Authorization trigger; DB unrun"
+    },
+    {
+      "id": "R03",
+      "issue": "closed reel dialog private DOM survived tab change",
+      "status": "resolved in root f01cee5; actual browser unrun"
+    },
+    {
+      "id": "R04",
+      "issue": "unconditional final reel lookup could occur after0057exact-test final scalar",
+      "status": "resolved helper adaptation9f7a2e: native-unbound incumbent exact-test helper is final inner await; actual unconditional sender install remains pending"
+    }
+  ],
+  "limits": [
+    "no DB/browser/provider/server/test execution",
+    "source-only DDL/SQL review cannot establish PostgreSQL parsing, xmin or deferred-trigger behavior",
+    "actual sender integration, current session+CSRF, concurrency and unknown-effect behavior await local allocation"
+  ],
+  "final_reviewed_source": "9f7a2e85de41f01065e6e5ef9d79c355f110d72c"
+}
