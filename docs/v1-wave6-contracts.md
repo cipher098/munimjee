@@ -1,7 +1,9 @@
 # Next bounded V1 ownership
 
-18 October 2026. Wave5 functional candidate is `515c538`; its clean complete
-regression rerun is active. All peers remain GPT-6.1 Sol/high. This contract
+18 October 2026. Verified/pushed prior checkpoint is `32de1ac`. Current composed
+0053 runtime `0e658fc` passes the new disk-backed complete gate at invocation
+`b608f6f`:1950 passed,8 documented skips,0 failed. Mounted final gates remain
+separate. All peers remain GPT-6.1 Sol/high. This contract
 does not declare release acceptance or permit live provider/customer actions.
 
 - Catalogue owns CSV import through reviewed `3bf7cf2` and `32a2d11`, reserved
@@ -33,15 +35,16 @@ does not declare release acceptance or permit live provider/customer actions.
   observed-browser contexts/events are not people or marketing attribution.
   Missing/expired/foreign optional proof never blocks checkout or promotes it to
   measured production; exact financial retries never backfill classification.
-  Raw events retain at most90 days with explicit bounded cleanup; immutable order
+  Raw events have a90-day cleanup target with visible lag and bounded cleanup; immutable order
   classification/link provenance stays separate. Source/coverage/test/bot limits
   remain visible. Shared shell/order/IG/WA hooks require separate coordination.
 - Remote next owns a seller-authorized Instagram retrieval adapter in a separate
   module. Integrator owns connection-generation rechecks and guarded original-byte
   persistence in shared import services, coordinated after CSV; no blind overwrite.
 
-Release tooling remains on an isolated branch. Compatibility is explicitly
-reviewed for0052; CSV0053 requires its own compatibility update before execution.
+Reviewed release tooling is composed locally. Historical0052 restore/package
+proof remains separate from the fresh0053 retained-CSV restore pair (53 checks).
+The0053 pair has no mounted package-switch proof; later heads need explicit review.
 Restore uses newly allocated empty source/target lanes and never resets a used
 pair or overwrites newer orders. Actual locked-image startup, native architecture
 proof and mounted prior/current package compatibility remain separate gates.

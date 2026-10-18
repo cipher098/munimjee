@@ -13,7 +13,10 @@ remain under `artifacts/v1/integration/wave6/`. Earlier completed gates below
 remain separate. No old container/database/archive was modified or removed.
 A new bounded2GiB disk-backed dedicated PG16 container uses loopback55443;
 `wave6_integration` and `instagram_w6` are its guarded lanes. DB-heavy runs are
-serialized across peers. A fresh complete candidate gate is required; no tests
+serialized across peers. The fresh disk-backed complete0053 gate passes **1950 tests,8 skipped,0 failed
+in852.31s** at invocation `b608f6f` (runtime `0e658fc`; later status-only
+commits do not change tested runtime). Five missing historical cassettes and three
+Redis cases without an allocated TEST_REDIS_URL are the documented skips. No tests
 resume on the unstable old tmpfs instance.
 
 Base verified/pushed32de1ac. Reviewed release tooling, CSV0053 and SEO/legacy
@@ -21,8 +24,12 @@ redirects are composed locally; no new release claim. Actual0053
 focused gate passes372 checks after repairing the shared native import fixture's
 middleware/startup teardown (the initial361-pass/11-error run is retained). Actual
 central app.main CSV browser passes74 checks; mounted SEO passes28 actual HTTP
-checks (not a device/browser claim). Complete regression/image gates remain
-pending. Current trusted flags stay off by default.
+checks (not a device/browser claim). The complete regression is now green. A new
+315-file locked arm64 image from `b608f6f` passes all three offline startup/asset
+modes with per-file hash equality, no network/DB attempt and CID-only cleanup.
+Final central native-import47 and SKU5 mounted reruns remain pending while the
+exclusive new `payment_w6` lane runs the activity owner final checks. Current
+trusted flags stay off by default.
 
 SKU fact replies are reviewed and composed through8712dcc (owner runtime741a45b:
 227 passed/3 existing Redis skips and5 mounted journeys). The reproduced first/last
@@ -30,7 +37,8 @@ product selection in conflicting buffered reels/reply-to turns is fixed by froze
 whole-batch agreement, including activation/rollout/vision crossover withholding.
 The real failed-before-fix evidence is retained. The existing WA legacy guard now
 uses a nonblocking savepoint/handoff under Account locks;2 migrated regressions
-pass. Central complete/mounted acceptance remains pending; the rollout stays off.
+pass. Central complete acceptance is green; the final central SKU mounted rerun remains
+pending. The rollout stays off.
 
 V10 owner-consented observed activity reserves0054 after0053. Peer source/API/UI
 is independently reviewed within its bounded contract, with final new-lane checks
@@ -42,7 +50,9 @@ new-disk lane404 checks and33 mounted checks pass atb5a; independent source revi
 then found optimized-assert integrity and late-authority gaps, fixed in source
 with optimized checks. Final race/mounted reruns remain pending. Both retrieval
 and carousel capability gates stay closed; official primary API compatibility is
-still being checked. Integrator owns the shared service/config/main/package and
+now has an official documentation packet. It identifies unresolved principal
+wrapper/account-type compatibility and unavailable licensed-audio originals; docs
+do not clear a provider canary or enablement gate. Integrator owns the shared service/config/main/package and
 legacy-writer seams.
 
 V08 independent actual tests reproduce5 queued-comment safety failures
