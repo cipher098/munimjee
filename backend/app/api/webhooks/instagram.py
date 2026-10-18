@@ -80,7 +80,7 @@ async def receive_webhook(
         for messaging_event in entry.get("messaging", []):
             await _handle_messaging_event(messaging_event, db)
         for change in entry.get("changes", []):
-            await ingest_comment(db, entry.get("id"), change, entry.get("time"))
+            await ingest_comment(db, entry.get("id"), change, entry.get("time"), verified_source=True)
 
     # Actionable DM receipts have committed before acknowledging Meta.
     return {"status": "ok"}

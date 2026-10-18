@@ -21,22 +21,33 @@ from app.database import get_db
 from app.models import Seller, Product
 from app.models.commerce import Storefront
 from app.models.comment_automation import CommentRule, CommentEvent, CommentAction
-from app.services.comment_automation import ingest_comment, matches
+from app.services.comment_automation import ingest_comment as verified_ingest, matches
 from app.workers.comment_automation import dispatch_one
 from tests.conftest_db import db_session
+
+
+async def ingest_comment(db, account_id, change, entry_time=None):
+    # Domain tests explicitly stand in for the trusted signature-verified hook.
+    # Forged/unsigned producer denial is covered independently in binding tests.
+    return await verified_ingest(db,account_id,change,entry_time,verified_source=True)
 
 
 @pytest_asyncio.fixture
 async def scene(db_session, monkeypatch):
     monkeypatch.setattr(settings, 'PUBLIC_BASE_URL', 'https://shop.example.com')
     monkeypatch.setattr(settings, 'META_WEBHOOK_SECRET', 'test-secret')
-    sellers = [Seller(id=uuid4(), email=f'{uuid4()}@example.test', password_hash='unused', instagram_page_id=str(100+i), instagram_id=str(100+i), instagram_token='test') for i in range(2)]
+    sellers = [Seller(id=uuid4(), email=f'{uuid4()}@example.test', password_hash='unused', instagram_page_id=str(100+i), instagram_id=str(100+i), instagram_token='test',instagram_token_expires_at=datetime.now(timezone.utc)+timedelta(days=1)) for i in range(2)]
     db_session.add_all(sellers)
     await db_session.flush()
+    from app.services.identity import ensure_legacy_owner_bridge
+    from app.models.channel_operator import ChannelConnectionState
+    for seller in sellers:
+        await ensure_legacy_owner_bridge(db_session,seller)
+        db_session.add(ChannelConnectionState(business_id=seller.id,channel='instagram',version=1,provider_account_id=seller.instagram_page_id,automation_enabled=True,check_status='verified',checked_at=datetime.now(timezone.utc)))
     products = [Product(id=uuid4(), seller_id=s.id, name='Dress', listed_price=50000, floor_price=20000, active=True) for s in sellers]
     db_session.add_all(products + [Storefront(seller_id=s.id,slug=f'store-{i}',name='Store',published=True) for i,s in enumerate(sellers)])
     await db_session.flush()
-    rule = CommentRule(seller_id=sellers[0].id,name='Price', enabled=True, keywords=['price'], product_id=products[0].id, private_reply='Here are the details', public_reply='Details are in your inbox')
+    rule = CommentRule(seller_id=sellers[0].id,name='Price', enabled=True, media_id='300', keywords=['price'], product_id=products[0].id, private_reply='Here are the details', public_reply='Details are in your inbox')
     db_session.add(rule)
     await db_session.commit()
     app = FastAPI(); app.include_router(router); app.include_router(webhook_router)
@@ -82,8 +93,8 @@ async def test_duplicate_comment_one_private_across_rules(scene):
 @pytest.mark.parametrize('override,reason',[
     ({'parent_id':'parent'},'nested_comment'),
     ({'from':{'id':'100'}},'own_comment'),
-    ({'timestamp':(datetime.now(timezone.utc)-timedelta(days=8)).isoformat()},'private_reply_window_expired'),
-    ({'timestamp':(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()},'unverified_timestamp'),
+    ({'timestamp':(datetime.now(timezone.utc)-timedelta(days=8)).isoformat()},'source_too_old'),
+    ({'timestamp':(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()},'source_time_unverified'),
     ({'media':{'id':'300','media_product_type':'LIVE'}},'live_comment_not_supported'),
 ])
 @pytest.mark.asyncio
@@ -100,7 +111,7 @@ async def test_missing_timestamp_uses_provider_not_entry_time(scene,monkeypatch)
     lookup=AsyncMock(return_value={'timestamp':(datetime.now(timezone.utc)-timedelta(days=8)).isoformat(),'parent_id':None})
     monkeypatch.setattr(InstagramClient,'get_comment_details',lookup)
     eid=await ingest_comment(scene.db,'100',change(timestamp=None),datetime.now(timezone.utc).timestamp())
-    assert (await scene.db.get(CommentEvent,eid)).reason=='private_reply_window_expired'
+    assert (await scene.db.get(CommentEvent,eid)).reason=='source_too_old'
     lookup.assert_awaited_once()
 
 
@@ -153,7 +164,7 @@ async def test_rule_disabled_cancels_queued(scene,monkeypatch):
     actions=(await scene.db.scalars(select(CommentAction))).all()
     for a in actions:
         assert await dispatch_one(scene.db,a.id) is False
-        assert a.status=='cancelled'
+        assert a.status=='review_required'
 
 
 @pytest.mark.asyncio
@@ -201,10 +212,10 @@ async def test_graph_rejection_and_rule_edit_prevents_stale_send(scene,monkeypat
     private=next(a for a in actions if a.kind=='private')
     public=next(a for a in actions if a.kind=='public')
     await dispatch_one(scene.db,private.id)
-    assert private.status=='rejected' and private.error_code=='http_400'
+    assert private.status=='unknown' and private.error_code=='provider_http_result_unconfirmed'
     scene.rule.public_reply='Changed since queuing';await scene.db.commit()
     assert await dispatch_one(scene.db,public.id) is False
-    assert public.status=='cancelled'
+    assert public.status=='review_required'
     await dispatch_one(scene.db,private.id)
     rejected.assert_awaited_once()
 
@@ -300,8 +311,10 @@ async def test_disabled_or_wrong_media_no_actions_and_event_tenant_filter(scene)
 async def test_creation_lookup_transient_error_retries_read_not_send(scene,monkeypatch):
     from app.integrations.instagram import InstagramClient
     monkeypatch.setattr(InstagramClient,'get_comment_details',AsyncMock(side_effect=httpx.ReadTimeout('temporary')))
-    with pytest.raises(httpx.ReadTimeout):
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as failure:
         await ingest_comment(scene.db,'100',change(timestamp=None))
+    assert failure.value.status_code==503
     assert await scene.db.scalar(select(func.count()).select_from(CommentEvent))==0
     monkeypatch.setattr(InstagramClient,'get_comment_details',AsyncMock(return_value={'timestamp':datetime.now(timezone.utc).isoformat(),'parent_id':'existing-parent'}))
     eid=await ingest_comment(scene.db,'100',change(timestamp=None))
@@ -313,7 +326,7 @@ async def test_unknown_comment_creation_time_never_uses_delivery_time(scene,monk
     from app.integrations.instagram import InstagramClient
     monkeypatch.setattr(InstagramClient,'get_comment_details',AsyncMock(return_value={}))
     eid=await ingest_comment(scene.db,'100',change(timestamp=None),datetime.now(timezone.utc).timestamp())
-    assert (await scene.db.get(CommentEvent,eid)).reason=='unverified_timestamp'
+    assert (await scene.db.get(CommentEvent,eid)).reason=='source_time_unverified'
     assert await scene.db.scalar(select(func.count()).select_from(CommentAction))==0
 
 
@@ -324,7 +337,7 @@ async def test_stale_inflight_held_for_review(scene,monkeypatch):
     await ingest_comment(scene.db,'100',change());await scene.db.commit()
     actions=(await scene.db.scalars(select(CommentAction))).all()
     for action in actions:
-        action.status='sending';action.attempted_at=datetime.now(timezone.utc)-timedelta(minutes=10)
+        action.status='sending';action.claim_token=uuid4();action.attempted_at=datetime.now(timezone.utc)-timedelta(minutes=10)
     await scene.db.commit()
     @asynccontextmanager
     async def session():
