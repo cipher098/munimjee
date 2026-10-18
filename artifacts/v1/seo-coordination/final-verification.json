@@ -1,0 +1,26 @@
+{
+  "tested_source": "4da0b9f5c29183d9ac8e00fc3b64939dea05bc5b",
+  "python": "3.11.16",
+  "backend": {
+    "passed": 1153,
+    "skipped": 576,
+    "failed": 0,
+    "errors": 0
+  },
+  "actual_database": false,
+  "actual_image_build": false,
+  "mounted_actual_execution": false,
+  "mounted_preflight_without_lane_exit": 1,
+  "owner_hashes_verified": 24,
+  "qa_hashes_verified": 11,
+  "csv_owner": "local catalogue_commerce",
+  "reserved_local_csv_migration": "0053 -> 0052",
+  "remote_csv_writes": false,
+  "no_shared_migration_or_recovery_changes": true,
+  "worker_heads": {
+    "codex/v1-seo-publication": "e8873f8b92e283170d3e848b7dfa5a7821cfbd3d",
+    "codex/v1-seo-independent-qa": "8cf923b30d3463e0d2e4d05d0067b7f23734a8d0",
+    "codex/v1-acceptance-delta": "383159c214f267aadfc0282574f15693229c78b6"
+  },
+  "release_ready": false
+}

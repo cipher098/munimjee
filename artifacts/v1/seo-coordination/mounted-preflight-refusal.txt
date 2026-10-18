@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/user/Documents/ChatGPT/munimjee/backend/tests/run_v1_seo_independent_mounted.py", line 76, in <module>
+    asyncio.run(main())
+  File "/Users/user/.local/share/uv/python/cpython-3.11.16-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/user/.local/share/uv/python/cpython-3.11.16-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/user/.local/share/uv/python/cpython-3.11.16-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/user/Documents/ChatGPT/munimjee/backend/tests/run_v1_seo_independent_mounted.py", line 38, in main
+    validate_test_database(os.environ)
+  File "/Users/user/Documents/ChatGPT/munimjee/backend/tests/safety.py", line 47, in validate_test_database
+    raise TestSafetyError("Destructive tests require explicit TEST_DB_RESET=1")
+tests.safety.TestSafetyError: Destructive tests require explicit TEST_DB_RESET=1

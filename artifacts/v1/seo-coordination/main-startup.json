@@ -1,0 +1,9 @@
+{
+  "tested_source": "4da0b9f5c29183d9ac8e00fc3b64939dea05bc5b",
+  "actual_main_source_startup": "passed",
+  "publication_flag_enabled": true,
+  "seo_routes_registered": true,
+  "legacy_order_routes_retained": true,
+  "database_or_provider_calls": false,
+  "listener_started": false
+}

@@ -1,0 +1,37 @@
+.....sssssssssssssssss...................ssssssssssssssssssssssssss..... [  4%]
+........ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [  8%]
+sssssssssssssssssssssss..................s.....ssssssssssssss..ssssss.ss [ 12%]
+ssssssssssssssssssssssssssssssssssssssss.ssssssssssssss................. [ 16%]
+....................................................ssssssssssssssssssss [ 20%]
+.sss.sssssssssss........................ssssssssssssssssssss.......ss... [ 24%]
+...........................................................sss......ssss [ 29%]
+ssssssssssssssssssssssssssssssssssssssssssssss.......................... [ 33%]
+.........ssssssss.....................sssssssssssss.sssss............... [ 37%]
+.................................sssssssssss............................ [ 41%]
+..........................................................ssssssssssssss [ 45%]
+ssssssssss.ssss.............................................sssssss.ssss [ 49%]
+sssssssssssssssssssss..............................ssssssss............. [ 54%]
+........................................................................ [ 58%]
+.........................ss..........................sssssssss.......... [ 62%]
+.....................................sssssssssssssssssssssssssssssssssss [ 66%]
+sssssssss.sssssssssss................................................... [ 70%]
+........................................................................ [ 74%]
+......................................sssssss........................... [ 79%]
+........................................................................ [ 83%]
+.............................................sssssss.................... [ 87%]
+......................................s....................sssssssssss.s [ 91%]
+sssssssssss.......sssss................................................. [ 95%]
+.................ss.sssssssssssssss.sssss........sssssssssssssssssssssss [ 99%]
+s                                                                        [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee/artifacts/v1/seo-coordination/final-backend.xml -
+1153 passed, 576 skipped, 2 warnings in 8.50s
