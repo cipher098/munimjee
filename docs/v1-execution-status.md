@@ -14,19 +14,38 @@ rehearsal is independent and cannot authorize production changes.
 
 Current combined actual PG16/0052 focused gate passed97 checks, including support
 expiry/revocation/tenant/native-final-commit negatives, analytics and signed-provider
-customer consent HTTP tests. Mounted support passed31 checks; independent source/render
-review accepted its bounded scope. Analytics owner passed22 focused and21 mounted
-checks; customer-link owner reports47 backend and14 mounted checks with final
-active-association projection/capture verification still running. These are interim lane results, not integrated product acceptance.
-Default flags/allowlist remain deny-by-default. Final mounted/full/image gates are
-pending for this batch; the Wave4 verified checkpoint below remains authoritative.
+customer consent HTTP tests. Node80 passed. The first complete run at backend
+source7a5974f finished **1514 passed,8 skipped,7 failed in644.02s**. All seven
+failures were synthetic runtime-package fixtures missing the newly required private
+support/analytics/customer assets; d369656 repairs the fixture and adds three missing-
+asset negatives. Its17 pure packaging checks pass. A clean complete rerun is pending;
+no full-pass claim is made from the partial remediation.
 
-Queued code-owned V1 work after this batch: CSV import, seller-authorized Instagram
-media retrieval adapter, replies using authoritative activated-SKU facts, sitemap
-and reviewed legacy URL redirects. These are implementation work, not all external
-permission gates. Real provider approval/canaries and physical-device tests remain
-separate. Preserve historical raw evidence while an independent remote runner/hash
-consistency review is investigated; no result is silently rewritten.
+Final central app.main mounted support31 and customer-link14 checks pass on actual
+0052. Analytics final central mounted run is active. Customer owner47 focused and14
+mounted checks are separately preserved; analytics owner22 focused/21 mounted and
+3 Node checks are separately preserved. Independent existing-peer source/render
+reviews accepted these bounded slices; a fresh additional reviewer was capacity-
+blocked and is not claimed. Default flags and trusted support allowlist remain denied
+by default. Real provider consent/delivery and physical-device proof remain external.
+
+Release tooling from remotee750e5a is isolated in codex/v1-release-integration for
+review, not yet central. Two newly allocated PG16 source/target lanes executed real
+pg_dump/pg_restore: all table row hashes and totals matched, but strict schema
+fingerprinting rejected equivalent PostgreSQL literal-array CHECK cast formatting.
+A narrow outside-SQL-token canonicalization is under independent security review;
+a new empty pair must pass the full rehearsal before restore acceptance. No older
+snapshot was restored over newer data. Hosted CI has a saved zero-step billing-lock
+failure and will not be retried without that external state changing.
+
+Queued code-owned work is active: local CSV import (reserved0053,159 focused and74
+mounted owner checks; central integration pending) and deterministic read-only replies
+from authoritative activated-SKU facts (contract-only; no DDL); remote SEO/legacy
+redirects. Seller-authorized Instagram retrieval adapter remains queued. These are
+implementation work, not all external permission gates. Historical importer hash
+review resolved applicationdd36b0d versus screenshot-harness47b1b83 attribution; no
+product defect was demonstrated. Preserve historical artifacts and record both app
+and harness hashes in the next mounted importer rerun.
 
 ## Wave 4 local integration
 

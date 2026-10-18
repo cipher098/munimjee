@@ -1,11 +1,28 @@
 """Dedicated import browser runner; native mode holds a P01 migrated DB lease."""
 import argparse
 import asyncio
+import hashlib
+import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def source_manifest():
+    def hashes(paths):
+        return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in sorted(paths)}
+    application = list((ROOT/'backend/app').rglob('*.py'))
+    application += list((ROOT/'backend/alembic').rglob('*.py'))
+    application += [ROOT/'backend/static'/name for name in
+                    ('import_workspace.html','import_workspace.js','import_workspace.css','v1_client.js')]
+    harness = [Path(__file__), ROOT/'backend/tests/import_workspace_native_server.py',
+               ROOT/'backend/tests/browser/import_workspace_native.mjs']
+    return {'commit': subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            'application':hashes(application),'harness':hashes(harness)}
 
 
 async def run(native):
@@ -34,8 +51,27 @@ async def main(native):
         install_test_safety()
         os.environ.update(browser_env)
         from tests.isolated_database import migrated_database
-        async with migrated_database():
-            await run(True)
+        async with migrated_database() as engine:
+            from sqlalchemy import text
+            async with engine.connect() as connection:
+                head = await connection.scalar(text('SELECT version_num FROM alembic_version'))
+            before, passed = source_manifest(), False
+            try:
+                await run(True)
+                passed = True
+            finally:
+                after = source_manifest()
+                output = ROOT/'artifacts/v1/import-workspace'
+                captures = {path.name:hashlib.sha256(path.read_bytes()).hexdigest()
+                            for path in sorted(output.glob('native-*.png'))}
+                evidence = {'actual_alembic_head':head,'before':before,'after':after,
+                            'source_unchanged':before==after,'captures':captures,
+                            'browser_exit_success':passed,'physical_device':False,
+                            'provider_scope':'Synthetic worker retrieval; no provider send or fetch.'}
+                output.mkdir(parents=True,exist_ok=True)
+                (output/'native-source-manifest.json').write_text(json.dumps(evidence,indent=2)+'\n')
+                if before != after:
+                    raise RuntimeError('Native import application or harness changed during acceptance')
     else:
         await run(False)
 
