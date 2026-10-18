@@ -192,7 +192,7 @@ class TestView(Contract):
         if self.delivery_confirmed and (
             self.status not in {"delivered", "read"} or not self.is_current_generation
             or self.inbound_observed_at is None or self.message_id is None
-            or self.provider_delivery_observed_at is None or self.proof_source == "not_recorded"
+            or self.provider_delivery_observed_at is None or self.proof_source != "signed_provider_webhook"
         ):
             raise ValueError("Delivery confirmation requires current bound observations")
         return self
