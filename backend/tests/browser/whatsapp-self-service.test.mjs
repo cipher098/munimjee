@@ -155,6 +155,31 @@ test('unknown account selection erases PIN and never persists or replays it on r
   assert.equal(f.get('page-error').textContent,'The result could not be confirmed. Check saved state before another action.');
   const raw=[...f.stored.values()].join('');assert(!raw.includes('123456'));assert(!raw.includes('registration_pin'));
   const reloaded=await fixture({entries:f.stored});assert(!reloaded.calls.some(v=>v.options.method==='POST'));assert.equal(reloaded.get('retry-action').hidden,true);
+  reloaded.apiHook(async path=>path.endsWith('/self-service')?{...ready,connection_version:2}:attempt('attached'));
+  await reloaded.get('check-action').fire('click');await wait(()=>reloaded.get('recovery').hidden===true);
+  assert.equal(reloaded.get('connection-status').textContent,'Saved with automation paused');
+  assert(reloaded.get('signup-status').textContent.includes('Account saved with automation paused'));
+  assert(!reloaded.get('signup-status').textContent.includes('attached'));
+  assert(reloaded.calls.some(v=>v.path.endsWith('/self-service')));
+});
+
+test('current unknown receipt never claims provider acceptance or a fresh test',async()=>{
+  const f=await fixture();f.get('recipient-authorized').checked=true;await f.get('challenge-form').fire('submit');await wait(()=>f.get('private-command').value);
+  f.apiHook(async()=>({...testView('unknown'),message_id:randomUUID(),recorded_effect_status:'unknown',can_prepare_new_test:false}));
+  await f.get('check-test').fire('click');await wait(()=>f.get('test-status').textContent.includes('send result is uncertain'));
+  assert(!f.get('test-status').textContent.includes('provider accepted'));assert.equal(f.get('prepare-new-test').hidden,true);
+});
+
+test('confirmed signup without a fresh readiness read withholds old connection controls',async()=>{
+  const fingerprint=createHash('sha256').update('synthetic-native-csrf').digest('hex');
+  const value={version:1,user_id:uid,business_id:bid,session_fingerprint:fingerprint,created_at:new Date().toISOString(),
+    signup:{body:{idempotency_key:randomUUID(),expected_connection_version:1,notice_reviewed:true},attempt_id:aid,
+      stage:'selection_unknown',assets:null,selection_key:randomUUID()},test:null};
+  const f=await fixture({entries:[['munimjee.v1.whatsapp-setup:'+uid+':'+bid+':'+fingerprint,JSON.stringify(value)]]});
+  f.apiHook(async path=>{if(path.endsWith('/self-service'))throw Error('Synthetic readiness read failed');return attempt('attached');});
+  await f.get('check-action').fire('click');
+  assert.equal(f.get('workspace').hidden,true);assert.equal(f.get('challenge-fields').disabled,true);
+  assert.equal(f.get('connection-status').textContent,'');assert(!f.calls.some(v=>v.options.method==='POST'));
 });
 
 test('explicit new-test review only reads the old receipt and resets recipient permission',async()=>{

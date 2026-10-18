@@ -36,7 +36,8 @@ async def pending_test_effect(db,business_id):
     """
     known=(WhatsAppMessage.status=='failed')|(
         WhatsAppMessage.status.in_(('accepted','sent','delivered','read'))&
-        func.nullif(WhatsAppMessage.provider_message_id,'').is_not(None))
+        (func.length(WhatsAppMessage.provider_message_id).between(1,255)&
+         ~WhatsAppMessage.provider_message_id.op('~')('[^!-~]')).is_(True))
     return await db.scalar(select(WhatsAppTestAuthorization.test_id).join(WhatsAppMessage,
         (WhatsAppMessage.id==WhatsAppTestAuthorization.outbound_message_id)&
         (WhatsAppMessage.seller_id==WhatsAppTestAuthorization.business_id)).where(
@@ -66,12 +67,16 @@ async def test_view(db,row):
     if message: state=message.status if message.status in ('queued','sending','accepted','sent','delivered','read','failed','unknown') else 'unknown'
     elif row.expires_at<=now() or row.cancelled_at is not None: state='expired'
     if not current: state='stale_connection'
+    receipt=bool(message and type(message.provider_message_id) is str and
+        1<=len(message.provider_message_id)<=255 and all(33<=ord(c)<=126 for c in message.provider_message_id))
     confirmed=bool(current and row.evidence_kind=='provider' and row.inbound_message_id and message and
-        message.status in ('delivered','read') and message.provider_message_id)
+        message.status in ('delivered','read') and receipt)
     effect=None
     if auth:
         effect=message.status if message and message.status in ('queued','sending','unknown','accepted','sent','delivered','read','failed') else 'unknown'
-        if effect in ('accepted','sent','delivered','read') and not message.provider_message_id: effect='unknown'
+        if effect in ('accepted','sent','delivered','read') and not receipt:
+            effect='unknown'
+            if current: state='unknown'
     retired_challenge=not auth and (not current or row.cancelled_at is not None or row.expires_at<=now())
     safe_effect=effect in ('accepted','sent','delivered','read','failed')
     can_prepare=bool((retired_challenge or safe_effect) and not await pending_test_effect(db,row.business_id))
