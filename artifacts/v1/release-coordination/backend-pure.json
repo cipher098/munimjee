@@ -1,0 +1,13 @@
+{
+  "python": "3.11.16",
+  "source_revision": "5999419c05d15d65772fd9e9c33857797c8656ce",
+  "command": "python -m pytest tests -q -ra --junitxml=/tmp/munimjee-release-coordination-backend.xml",
+  "working_directory": "backend",
+  "passed": 887,
+  "skipped": 562,
+  "failed": 0,
+  "errors": 0,
+  "actual_database": false,
+  "actual_container": false,
+  "note": "P01 DB cases remain explicit skips; historical1417 actual PG16 results were not rerun here."
+}

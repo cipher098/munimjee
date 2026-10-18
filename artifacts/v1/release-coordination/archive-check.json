@@ -1,0 +1,9 @@
+{
+  "source_revision": "5999419c05d15d65772fd9e9c33857797c8656ce",
+  "source_dirty": false,
+  "files": 288,
+  "content_sha256": "ae4eaadeb905bca50bdf03b58be966858d3dc8de45d59ac5fdbc9b7b2362272b",
+  "archive_sha256": "070ef9c29e9df1ba48644854948482182e2a0a3831418d0209a03eaf641008c4",
+  "archives_equal_after_distinct_umask_and_mtime": true,
+  "actual_container_build": false
+}

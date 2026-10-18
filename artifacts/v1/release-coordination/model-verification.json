@@ -1,0 +1,38 @@
+[
+  {
+    "name": "/root",
+    "configured_model": "gpt-6.1-sol",
+    "configured_effort": "high",
+    "latest_actual_turn": {
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  {
+    "name": "/root/release_ci",
+    "configured_model": "gpt-6.1-sol",
+    "configured_effort": "high",
+    "latest_actual_turn": {
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  {
+    "name": "/root/release_rehearsal",
+    "configured_model": "gpt-6.1-sol",
+    "configured_effort": "high",
+    "latest_actual_turn": {
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  {
+    "name": "/root/release_audit",
+    "configured_model": "gpt-6.1-sol",
+    "configured_effort": "high",
+    "latest_actual_turn": {
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  }
+]
