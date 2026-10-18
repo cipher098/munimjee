@@ -1,0 +1,11 @@
+{
+  "mode": "source-only scoped color proposal; actual computed browser verification pending",
+  "existing_outline": "#95ae95",
+  "proposed_existing_native_green": "#2e5141",
+  "existing_outline_white_ratio": 2.3955324812741465,
+  "proposed_outline_white_ratio": 8.862737535767886,
+  "proposed_outline_paper_ratio": 8.236895205397976,
+  "width_offset": "preserve3px/3px",
+  "native_page_scope_required": true,
+  "full_WCAG_claim": false
+}
