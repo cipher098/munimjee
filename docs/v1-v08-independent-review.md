@@ -32,3 +32,24 @@ Unknown and ambiguous explicit references currently return no reply and no revie
 ## Peer review checkpoints
 
 Pending exact committed test/evidence checkpoints. Review criteria fixed before results: real context/decision/classifier/read/render functions; independently keyed raw rows; unexpected SQL call rejection; independent literal expected facts; no outbound clients/model execution; exact source and safety hashes; failures remain red; no database or live delivery claims.
+
+## Final independent disposition
+
+Exact peer checkpoints reviewed:
+
+- Context: `8a1860dd592ebe865f28c1d069fa1b0d83622ea3`, `test_v08_context_acceptance.py` SHA256 `da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41`.
+- Semantics: `98fe4bb61c37875fd3fa7f82dad3f0d8037ced25`, `test_v08_semantics_acceptance.py` SHA256 `9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c`.
+
+Both adapters retain real parser/context/decision/facts-validation/render functions. They check projection columns and independently expected tenant/product/reel bindings and reject unexpected queries. Context uses finite per-method result queues and checks consumption; semantic cases assert the complete five-call chain. Expected fact replies are independent literals, not `render(expected_facts) == render(actual_facts)`. Both install unchanged shared safety before application imports, request no DB fixtures and admit no model/provider/send seam. Their committed source and artifact hashes match immutable Git blobs and current peer files; context before/after source hashes match, and all nine semantic function line/hash records independently match the base. Changed paths contain only each lane's new test and corresponding documentation/evidence. No safety or assertion-fidelity blocker found within this bounded workload.
+
+The context six pass. Their added value is composition around current-SKU resolution and normalized mixed explicit references, rather than previously absent ambiguity safeguards. The semantic 15 yield 14 pass and one red: `missing-approved-material`. The English/Hinglish exact fact cases, Devanagari safe handoffs, three buyer overrides, empty SKU projection and missing-price withholding all retain their declared narrow meanings. The material predicate accepts explicit handoff or material/fabric/composition-specific uncertainty; it is a bounded English clarity check, not a full natural-language safety oracle.
+
+Independent reproduction of the same frozen 21 cases: **20 passed, 1 failed, 0 errors, 0 skips**, pytest exit 1. Raw text/XML and command are saved here. The sole red is the material question, with the same generic SKU dump. This confirms the P2 actionability gap without establishing a fabricated fact or financial action. No runtime fix or expected-result weakening was made.
+
+An initial cross-worktree pytest invocation failed during collection because both peer worktrees registered `tests.conftest` under the same module name. No test ran in that invocation; its raw diagnostic is retained. The completed invocation explicitly loaded the unchanged review checkout's safety conftest once with `--noconftest -p tests.conftest`, `--import-mode=importlib`, Python `-B`, disabled pytest cache and a 30-second process bound. Only output artifacts were written; peer test bytes were checked before/after. This supplemental reproduction is distinct from the coordinator's canonical composed-checkout run. Coordinator separately reports baseline44 plus new21 as 64 pass / same one red; that report is not counted as an additional independent execution here.
+
+## Remaining acceptance
+
+A same-account reconnect followed by delivery of a previously queued activated-SKU WhatsApp intent was not found as a dedicated scenario in the audited tests. Existing comment credential-generation and Instagram final-token tests do not close that journey. This is an unverified coverage/policy gap requiring a frozen expected outcome and allocated migrated/mounted acceptance, not a reproduced reconnect defect.
+
+Unknown/ambiguous withholding must still be evaluated through seller-visible queue/clarification/handoff and eligible link/resume, with current policy and deduplication. Actual SQL tenant/activation/publication/revision predicates, persistence, transaction/restart/concurrency behavior were not executed here. Approved provider/account policy and actual authorized comment/DM/WhatsApp delivery, physical-device acceptance, wider language/source-injection regression and any declared soft quality thresholds remain separate gates. The accepted red and passing deterministic checks do not complete V08/X01 or justify a green release claim.
