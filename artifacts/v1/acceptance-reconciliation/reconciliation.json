@@ -1,0 +1,3356 @@
+{
+  "format": "munimjee.v1.acceptance-reconciliation.v1",
+  "reviewed_central_commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+  "historical_matrix_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "review_mode": "Read-only exact source/saved evidence audit; no product tests/DB/browser/provider/container/CI runs. New verifier only validates this document metadata.",
+  "classification_definitions": {
+    "implemented_actual_local_proof": "Implemented bounded local behavior has actual migration/API/browser evidence; provider methods may be synthetic. This does not certify full release or listed remaining gates.",
+    "implemented_no_complete_actual_proof": "Code/local fragments exist, but the whole required integrated journey/current-head operation has no complete saved actual proof.",
+    "missing_code": "A required local workflow/tool or central composition is absent; safe withholding is not completion. Already isolated0057 work is recorded separately, not duplicated.",
+    "external_provider_device_ops_customer": "Remaining observation/decision requires authorized account/device/domain/customer/operations input; any conditional code gap remains explicit."
+  },
+  "counts_must_not_be_summed": true,
+  "release_ready": false,
+  "references": {
+    "h_auth": {
+      "path": "backend/app/services/identity_auth.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f56afe150a6ade53b223af1c4eb3aeb8ebc8a8933854de42b760ef812740ca0d",
+      "line": 50,
+      "anchor": "async def signup",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_identity": {
+      "path": "backend/app/services/identity.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+      "line": 131,
+      "anchor": "async def require_business_access",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_onboarding": {
+      "path": "backend/app/services/onboarding.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+      "line": 46,
+      "anchor": "async def onboarding_view",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_assistance": {
+      "path": "backend/app/services/assistance.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "986e0f27a64c9661719871c6f70044f52509025abdad6ab09057032e2e594d36",
+      "line": 101,
+      "anchor": "async def businesses",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_themes": {
+      "path": "backend/app/services/storefront_theme_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "58dad62d14ed4471f5d0af8cad9c516e32ccbf7b8b12b4e3f3b4ddc188f93ee0",
+      "line": 15,
+      "anchor": "async def",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_publication": {
+      "path": "backend/app/services/storefront_publication.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "47e1679cf44c1cff6d9f7eacbe9d232167438989721ccaabc48bb8c9011c3295",
+      "line": 22,
+      "anchor": "async def public_store",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_imports": {
+      "path": "backend/app/services/imports_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f9600e8da8ad7084663b5fca698b05a1f4e4f35957bd447c2f42fb65db19509f",
+      "line": 380,
+      "anchor": "async def collect_claim",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_import_worker": {
+      "path": "backend/app/workers/v1_imports.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f212be6a865069363487b0e0dc6163e569f3f1783f7ff41c78887be6ca7f581d",
+      "line": 17,
+      "anchor": "async def _drain",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_import_schema": {
+      "path": "backend/app/schemas/imports_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ed1a9209a5adcdfe324d2f910deedbb0c34913670904b2ce1e74329bee010ef8",
+      "line": 30,
+      "anchor": "class ImportJobCreate",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_fetch": {
+      "path": "backend/app/v1/imports/fetching.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "9e3973f810cfe47dbbe82809d399de39f9169b05932eb8f94f2cd484456f485a",
+      "line": 211,
+      "anchor": "class SafeFetcher",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_bridge": {
+      "path": "backend/app/services/import_catalogue.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "7930b6a279ccf4eb17fdbe80dfd1e3482670ebe8f5c6c7d6c483aa8c6df9da5d",
+      "line": 69,
+      "anchor": "async def",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_catalogue": {
+      "path": "backend/app/services/catalogue_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "d70dc74fb0c4a8a9e3fef51fb1d38c64f6f2855c816260a8877846365b52e98f",
+      "line": 219,
+      "anchor": "def serialize_preview",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_checkout": {
+      "path": "backend/app/services/checkout_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "6fa01c2df96456ea8d8fcbc2d8091ff0885111a6188b5f2b64c265eecbf89dc7",
+      "line": 227,
+      "anchor": "async def create_sku_order",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_checkout_api": {
+      "path": "backend/app/api/v1/catalogue.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "633ea97e509e4529fe11c5956feacb3aaa42ee14aab173415ec7a1a0d8d3b3c4",
+      "line": 305,
+      "anchor": "async def collect_cod",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_order": {
+      "path": "backend/app/models/commerce.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "9490ddbd08a1d11882a43fcc81fbf279b9168334dd86d8f6c14743afcc668215",
+      "line": 38,
+      "anchor": "class CommerceOrder",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_address": {
+      "path": "backend/app/services/commerce.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "1f0ac4fea269956048f589aa5f073e5c214013c93681337503a79f1e1f887577",
+      "line": 84,
+      "anchor": "class AddressInput",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_payment": {
+      "path": "backend/app/services/sku_payments.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "adf101c947b561dd8579aa96bcacf3ab4035be2eb9953af70abc5de062c7475a",
+      "line": 29,
+      "anchor": "async def ensure_gateway_order",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_payment_settings": {
+      "path": "backend/app/api/v1/payment_settings.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5cb821a567c4854d03c930f4ccc4f4f7ada6d814d4fa3c26f2b711d9e72a2bdf",
+      "line": 12,
+      "anchor": "router =",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_channels": {
+      "path": "backend/app/services/channel_connections.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "96256906f8eb0e2f37945715341b84a1683a778acddcbf18b0d94b4f2f2e1ca5",
+      "line": 228,
+      "anchor": "async def start_instagram",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_operator": {
+      "path": "backend/app/services/channel_operator.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2c437bed35c6b32aa5ec420685cd4d4788525003bbddcecceecbfe0c06c9e7dc",
+      "line": 41,
+      "anchor": "async def",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_context": {
+      "path": "backend/app/services/whatsapp_context.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+      "line": 127,
+      "anchor": "async def reel_catalogue_reply",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_unknown": {
+      "path": "backend/app/services/whatsapp_reel_queue.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "da8986305d7c2f2cae94e1097470acf51074c37e92259d49ce8aba522b678bed",
+      "line": 36,
+      "anchor": "async def",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_parcel": {
+      "path": "backend/app/services/parcel_tracking.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "4d751ec234d15c6201a8a78299317b08257cf46e40288ecc852ea4ddfcd1e8dc",
+      "line": 75,
+      "anchor": "async def confirm",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_parcel_review": {
+      "path": "backend/app/services/parcel_reviews.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ccedd01c4f8079d4b31596dba881f48bcf1c90379567c7bbea7faf8a868057ce",
+      "line": 23,
+      "anchor": "async def",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_ssr": {
+      "path": "backend/app/api/v1/storefront.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "fbbe48b2fd7ab456b1a8903add230934b2fc8898080c4faa119a1568916110f1",
+      "line": 37,
+      "anchor": "def create_router",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_render": {
+      "path": "backend/app/v1/storefront/rendering.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "line": 92,
+      "anchor": "def render_storefront",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_guard": {
+      "path": "backend/tests/safety.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+      "line": 39,
+      "anchor": "def validate_test_database",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_lease": {
+      "path": "backend/tests/isolated_database.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "cfb401d855bee562f664297f129905a4278281d3b98f3d3a87bb8e36b5e45a42",
+      "line": 59,
+      "anchor": "async def migrated_database",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_package": {
+      "path": "scripts/v1_runtime_package.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "1e4d9e880ec41c246044ba8b1a123610ac49c527311ec6ba95d79bae4fa4da7a",
+      "line": 158,
+      "anchor": "def create_context",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_smoke": {
+      "path": "scripts/smoke_v1_runtime.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ba440d5ad430a65136975376fe118119c893044f4f8ce14245e42144af591cf9",
+      "line": 104,
+      "anchor": "def cleanup_created_container",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_workflow": {
+      "path": ".github/workflows/tests.yml",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5d7dfa5c5e4f60437643f024c4b3fee12e3074eb5143ecf5e76fdd149776d5e5",
+      "line": 7,
+      "anchor": "permissions:",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_docker": {
+      "path": "deploy/v1/Dockerfile",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "c2f73ed4f746e3a0e2a0b5731af8311e164b90254e9de19ada3de1d1bfb0be20",
+      "line": 2,
+      "anchor": "FROM ",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_migration_identity": {
+      "path": "backend/alembic/versions/0040_v1_identity.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "c39728689dc28e6d20bb92277a27d0dc3ff39cbdcea7f8758de0130b253f8ce0",
+      "line": 13,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_migration_catalogue": {
+      "path": "backend/alembic/versions/0041_v1_catalogue.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "94f81c146bef1bfc286dc15e57ad04d93ad2f95f21bc68f42d4e8d2007685536",
+      "line": 16,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_migration_checkout": {
+      "path": "backend/alembic/versions/0044_v1_checkout.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "54c4b54bdf4f270e2526e1397bc637b1bd3f325bbc33c6e5f75191052b8d0a2c",
+      "line": 16,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_migration_head": {
+      "path": "backend/alembic/versions/0050_v1_assistance.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "d1bedfed3e29210f895e668e307e4739d97e9fc8ce5f4208948ee809ef6f2dbe",
+      "line": 12,
+      "anchor": "def upgrade",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_startup": {
+      "path": "backend/app/config.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "548de1d2396247416ce6439321bed4c251bed122cdce288f2c0ad6b9c3aba7b5",
+      "line": 10,
+      "anchor": "V1_AUTH_ENABLED",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_channel_tests": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "line": 334,
+      "anchor": "async def test_activated_catalogue_handoffs",
+      "kind": "source",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_full": {
+      "path": "artifacts/v1/integration/wave4/full.xml",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "c09434fea301124e1822ddecc9354dd493c9fb60182943aa0eaf685b2577a92e",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_full_log": {
+      "path": "artifacts/v1/integration/wave4/full.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "fd6846d2d2d1fbcacc646d0108619bf0c636e500c3806cc933e90222412bd9e9",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_gates": {
+      "path": "artifacts/v1/integration/wave4/final-gates.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e54b1e3165830912b3278201987bc604066be710e18c4b2f1e72218eede1752f",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_assistance": {
+      "path": "artifacts/v1/integration/wave4/assistance-browser.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "4c7c55dbb6034959654ee392bbac3968f387b40a1b9ecb7164b7383dc9b07729",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_import": {
+      "path": "artifacts/v1/integration/wave4/import-mounted-browser-final.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f02c475576b59ee0baf01aa0e536a90b641c3efe6287fb47a6f3ee3e937789b6",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_themes": {
+      "path": "artifacts/v1/integration/wave4/native-mounted-browser.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5abff2a521deaae230808abfb0ab27cc281012da4a54a6ca920b432a442960bb",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_recovery": {
+      "path": "artifacts/v1/integration/wave4/native-recovery-mounted/browser-results.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "93ab5e00af4bb4a334d4b7521471db7b24c616fe3d0d4a7d480b4f8afd65f57c",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_recovery_source": {
+      "path": "artifacts/v1/integration/wave4/native-recovery-mounted-source.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "caa5d49df3553597e5c4ebd54b9a5744dead6d140894874183f595590e3bb648",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_payment": {
+      "path": "artifacts/v1/integration/wave4/payment-settings-mounted-review.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "b005982a1eabf5f5bf377d699df767a6a9b481aa7f81a42bf7842bdd0f08354c",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_payment_browser": {
+      "path": "artifacts/v1/public-payment/browser-results.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "001f7d1cf1f8faa67c9ee3f346997a013722eda639ab52b2e7625ce08c3848e8",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_parcel": {
+      "path": "artifacts/v1/integration/wave4/parcel-review-mounted-browser.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "3d581750f391739ac7f93bbe902907dd011d176f2e97fb978885cac352cf5aad",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_channel": {
+      "path": "artifacts/v1/channel-operator/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0ccaf8bd0f6fd3b9d57740a95ffd7860e04127e3f0d7cd794c84dc44b4d131a6",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_onboarding": {
+      "path": "docs/v1-execution-status.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "37b1338de125b58e91586d8c2c6648a70c8c9fb575c74d689276ee71628774cb",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_runtime": {
+      "path": "artifacts/v1/runtime-package/wave4-final-manifest.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "3ac85b7625d1405a76533f978dbefc0bb899e2418104cd0822b89702cac26162",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_image": {
+      "path": "artifacts/v1/runtime-package/wave4-final-image-verification.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "74d7f88fe54f572ab377917670cc2dbb3f164c409a1e45228fa6d8c1c389389d",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_image_smoke": {
+      "path": "artifacts/v1/integration/wave4/image-smoke-final.txt",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e0e377a818474c7e14de9f8daa80238a0e47c674fc7d9083f6921dbe3f140ce6",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_history": {
+      "path": "docs/v1-execution-status.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "37b1338de125b58e91586d8c2c6648a70c8c9fb575c74d689276ee71628774cb",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_e_validation": {
+      "path": "docs/v1-wave4-validation.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "7283213de5dcc91490b61e55969ee9b9ce5f117900dc8b700d1a60737f8c4e4f",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_auth": {
+      "path": "backend/tests/test_v1_auth_onboarding.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "d310ba5029ad441b6d56340dc314684af2085c68fe9178f51dcf02dc3ece4ba3",
+      "line": 66,
+      "anchor": "test_fresh_signup_profile_and_resumed_checklist",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_identity": {
+      "path": "backend/tests/test_v1_identity_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "efc230acc43ac989488f2a8b7a6e568fc8609c520052c1aa2cc3fbb6a85d1cb9",
+      "line": 100,
+      "anchor": "test_tenant_isolation_and_revocation",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_onboarding": {
+      "path": "backend/tests/test_v1_identity.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "33b97efeda5286e14e97ca0928fdd8f493eed2c912ab327fd56e6dd47bddb163",
+      "line": 113,
+      "anchor": "test_readiness_does_not_claim_complete_onboarding",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_assistance": {
+      "path": "backend/tests/test_assistance.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "b7f7cc99b7e264a407fa3d63b11d777c1b1c17a3f971696de41b0589a39cf431",
+      "line": 34,
+      "anchor": "test_actual_chain_and_private_readiness_projection",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_themes": {
+      "path": "backend/tests/test_v1_theme_publication.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "01813bf6e450760f8178a2afaec2c8e1b7e4d48622725720fc65bd5bb91fbf23",
+      "line": 28,
+      "anchor": "test_actual_ssr_uses_strict_published_allowlist_and_defaults",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_publication": {
+      "path": "backend/tests/test_storefront_publication.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "6116195bffd426bf20deb97eee21bc5b9287eafa61460007f6285b7271ed8019",
+      "line": 63,
+      "anchor": "test_native_setup_published_activated_sku_ssr_and_cod_replay",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_imports": {
+      "path": "backend/tests/test_v1_import_jobs_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e840f6843f23ccf40c722131b46ebaaf518983086c19cd00b4efa8a253c336bf",
+      "line": 53,
+      "anchor": "test_migrated_concurrent_job_idempotency_and_durable_recovery",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_fetch": {
+      "path": "backend/tests/test_v1_import_jobs_fetch.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "483dde9098b3bad5ba6a850c04ac148b7e437d4bb8e9c102a311dd3a09c1acc3",
+      "line": 36,
+      "anchor": "test_fetch_pins_ip_and_revalidates_every_redirect",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_bridge": {
+      "path": "backend/tests/test_import_catalogue.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "a4a56c6e4961788a13807cfb85a57efa841164e7cfc196139563b8baae54a3fb",
+      "line": 59,
+      "anchor": "test_atomic_approval_private_creation_and_exact_replay",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_catalogue": {
+      "path": "backend/tests/test_v1_catalogue_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "8ff6e47c36d1b840583e0fdaf8a0473256ac75d1ad46eae4126bab074ad3dd8f",
+      "line": 132,
+      "anchor": "test_actual_fk_and_service_both_reject_cross_tenant_product",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_checkout": {
+      "path": "backend/tests/test_v1_checkout.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2b773295aa9b3300205159067191ef70a9e9eaf11ac12042772e6fe3a51c57e4",
+      "line": 76,
+      "anchor": "test_actual_single_sku_contention_never_oversells",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_checkout_api": {
+      "path": "backend/tests/test_v1_checkout_api.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "932b1a9293b17b1e87f2040df1e9c9d94544b188e971fcc8645fafcedb2aab84",
+      "line": 72,
+      "anchor": "test_reviewed_create_activation_public_browse_checkout_and_protected_status",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_payment": {
+      "path": "backend/tests/test_v1_checkout_api.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "932b1a9293b17b1e87f2040df1e9c9d94544b188e971fcc8645fafcedb2aab84",
+      "line": 188,
+      "anchor": "test_gateway_unknown_attempt_is_durable_no_blind_retry_and_exact_reconciliation",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_payment_settings": {
+      "path": "backend/tests/test_payment_settings.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e0371b6d9381a8a5afa03286ef2b8cdff512d38ee8a5534fde43bd69000c5f7c",
+      "line": 44,
+      "anchor": "test_absent_revision_is_tenant_bound_and_full_response_never_contains_secrets",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_channels": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "line": 281,
+      "anchor": "test_owner_oauth_uses_actor_browser_and_current_generation_and_no_live_provider",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_operator": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "line": 187,
+      "anchor": "test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_context": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "line": 353,
+      "anchor": "test_whatsapp_activated_context_handoffs_without_frozen_price_or_stock",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_unknown": {
+      "path": "backend/tests/test_whatsapp.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "cd1240647f241009e77b93193dd7044eeb15646850edb07618c7457388162b38",
+      "line": 623,
+      "anchor": "test_unlinked_queue_groups_messages_and_resumes_once_per_customer",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_parcel": {
+      "path": "backend/tests/test_parcel_tracking.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "16251c8ca7cb07244d76c67bb3b1660e5469e35938dcad25827933abea7c9a70",
+      "line": 87,
+      "anchor": "test_actual_two_service_confirm_replay_poll_history_no_order_transition",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_parcel_review": {
+      "path": "backend/tests/test_parcel_reviews.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "aa07bbffe925d6abfb89aabbab206d8647108088e00c3fe3dfad9f97a689a1b8",
+      "line": 52,
+      "anchor": "test_review_resume_preserves_history_no_order_change_no_notification_and_replays",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_ssr": {
+      "path": "backend/tests/test_v1_storefront_rendering.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "88be379201bf830deae6f934cc388a14e85ee8ede7164c1e7b264a8ffd1dbfac",
+      "line": 28,
+      "anchor": "test_public_projection_escapes_html_json_and_excludes_every_private_extra",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_render": {
+      "path": "backend/tests/test_v1_wave2_storefront.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "7149d19391c2c7de0f41dc6a42b9c2367a5c5defd78282f5a9bde38ed53c7928",
+      "line": 92,
+      "anchor": "test_canonical_origin_is_configuration_bound_and_foreign_ids_are_404",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_guard": {
+      "path": "backend/tests/test_test_safety.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "08066383c20654de4d9cb123fbeab8dbfe1c0a966a3a642ae49aa91962549785",
+      "line": 86,
+      "anchor": "test_no_runtime_or_admin_fallback",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_lease": {
+      "path": "backend/tests/test_test_safety.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "08066383c20654de4d9cb123fbeab8dbfe1c0a966a3a642ae49aa91962549785",
+      "line": 26,
+      "anchor": "test_accepts_only_explicit_literal_lane_target",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_migration_identity": {
+      "path": "backend/tests/test_v1_identity_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "efc230acc43ac989488f2a8b7a6e568fc8609c520052c1aa2cc3fbb6a85d1cb9",
+      "line": 76,
+      "anchor": "test_domain_migration_backfill_and_rerun_preserve_revocation",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_migration_catalogue": {
+      "path": "backend/tests/test_v1_catalogue_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "8ff6e47c36d1b840583e0fdaf8a0473256ac75d1ad46eae4126bab074ad3dd8f",
+      "line": 54,
+      "anchor": "test_real_migration_backfill_preserves_pending_reservations_and_replays",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_migration_checkout": {
+      "path": "backend/tests/test_v1_checkout.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2b773295aa9b3300205159067191ef70a9e9eaf11ac12042772e6fe3a51c57e4",
+      "line": 236,
+      "anchor": "test_pending_legacy_reservation_blocks_activation_then_requires_fresh_review",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_package": {
+      "path": "backend/tests/test_v1_runtime_package.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5a02e0d59f4732db7337bdab032146d0dd7d2ede33c8c9fd873d44b3a409baa4",
+      "line": 33,
+      "anchor": "test_context_excludes_tracked_and_untracked_sensitive_sentinels",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_startup": {
+      "path": "backend/tests/test_v1_startup.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f707ca8d51a6d894dd8a08a71f6f26e453b1e8d2774cf58c01f7a1028c9ca3d0",
+      "line": 8,
+      "anchor": "test_all_foundation_models_are_registered",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "h_t_channel_tests": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "line": 334,
+      "anchor": "test_activated_catalogue_handoffs_before_legacy_fact_reply",
+      "kind": "test",
+      "scope": "Reanchored current source/test or unchanged historical saved evidence; original invocation is retained inside artifact."
+    },
+    "plan": {
+      "path": "go-live-plan.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "3922721777b11d788f2ef756d8ae0fe7ea5333f660c9cb54e43ef63f75992a94",
+      "line": 95,
+      "anchor": "## 2. Scope and completion criteria",
+      "kind": "requirement",
+      "scope": null
+    },
+    "full": {
+      "path": "artifacts/v1/integration/wave7/full-0056-producers-verification.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5e03e4077f8699a329dbe706dcb59b90cc260e7d1885874a7a04497dded9c605",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "full_scope": {
+      "path": "docs/v1-wave7-producer-validation.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "7ebe12982f088a77be8ec91bba7ab0117239ed0962e6a566d2de8a9c792c7781",
+      "line": 3,
+      "anchor": "Frozen invocation:",
+      "kind": "scope",
+      "scope": null
+    },
+    "v08_scope": {
+      "path": "docs/v1-wave7-v08-validation.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "76e02d8d7af4fb72b101050efd0431ed8083155c1cb3017bc75d02cb4eaaeefd",
+      "line": 3,
+      "anchor": "Frozen source",
+      "kind": "scope",
+      "scope": null
+    },
+    "v08_actual": {
+      "path": "artifacts/v1/wa-reconnect-queue/verification.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "37112ccdecaa152ab7b71a3c80f9c8daaa7e5f2dbef7e834bbbec2102a92987b",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "native": {
+      "path": "backend/app/services/onboarding.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+      "line": 46,
+      "anchor": "async def onboarding_view",
+      "kind": "source",
+      "scope": null
+    },
+    "native_test": {
+      "path": "backend/tests/test_v1_onboarding_progress.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2c17120119de5be327863b0446c6d9169c01a33dc11e43249c003615f085dae7",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "native_evidence": {
+      "path": "artifacts/v1/onboarding-followup/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ee4f15ae208e0e094082172e7e20e8f72973060efc918295a8f79f8e815acde4",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "support": {
+      "path": "backend/app/services/support_grants.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "51ebad3bdae081eab593bfed10e57902f765476b16f3f56f522aa73214294c22",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "support_test": {
+      "path": "backend/tests/test_support_grants.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0e218254915f7e672f7f3e9c8f38c7164dfa11d29585a09aa75139b356c03294",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "support_evidence": {
+      "path": "artifacts/v1/support-grants/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "6941852bda6f008abc78133d9ce6b1ed1f1f3d0fa0fa6b9a744774bf4a355359",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "customer": {
+      "path": "backend/app/services/customer_links.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "e7ee001c4994a964a1b612bc27a5b4230f367f4e82fc25acc22c3e7be303c2e1",
+      "line": 344,
+      "anchor": "async def verified_customer_id",
+      "kind": "source",
+      "scope": null
+    },
+    "customer_contract": {
+      "path": "docs/v1-customer-links.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "48c41afa429b8adbac46fc5e7616823b84ac2c674783aacd4e072288593bb696",
+      "line": 44,
+      "anchor": "The sole automation seam",
+      "kind": "scope",
+      "scope": null
+    },
+    "customer_test": {
+      "path": "backend/tests/test_customer_links_http.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ff53d627c149839803fef69b8e273a0ff559fde9fa3f78f23cb2c6654b6b0915",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "customer_evidence": {
+      "path": "artifacts/v1/customer-links/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "8d0844ba1d8590fb3d9167080c036a3b6a7c9738b475ce08550d78906e510094",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "csv": {
+      "path": "backend/app/services/imports_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "f9600e8da8ad7084663b5fca698b05a1f4e4f35957bd447c2f42fb65db19509f",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "csv_test": {
+      "path": "backend/tests/test_v1_csv_import_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "3a6de5a8a8b41696b8a3671519ec18f95b8351b3c949b4a3546083d63f5bb05c",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "csv_evidence": {
+      "path": "artifacts/v1/integration/wave6/csv-mounted/browser-results.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "46328ebd996c625954b1394a2d9e86505bf075efdc4a21836327f05dd927bbc1",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "ig_import": {
+      "path": "backend/app/services/instagram_imports.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "63c4e37e3d6cea3bab62f26f0523879441ae818e489412cecfe5e4a6ffb6a971",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "ig_originals": {
+      "path": "backend/app/services/import_originals.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "6b3a5b623d30b8417622b001c4a2dbb43d8c81fdf588144412f6cfb61ca03f5b",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "ig_test": {
+      "path": "backend/tests/test_v1_instagram_import_integration.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "983a02781097ce3cb069f3540b8a572f8cd2a75e2ebfca39aa74a1a596aaf8e7",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "ig_evidence": {
+      "path": "artifacts/v1/instagram-owned-integration/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ad12a752916e87020b678d96cd51cd33169abe6c8c4202bcad8013b3d37f448c",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "sku": {
+      "path": "backend/app/services/sku_fact_replies.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+      "line": 108,
+      "anchor": "def factual_request",
+      "kind": "source",
+      "scope": null
+    },
+    "sku_test": {
+      "path": "backend/tests/test_sku_fact_replies_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "a19e189279ef8f58e2fe04789baaa3514ee1ba5d42cb0febd841713161f1babd",
+      "line": 216,
+      "anchor": "test_wa_delivery_regenerates_actual_current_facts_once_and_keeps_unknown_effect",
+      "kind": "test",
+      "scope": null
+    },
+    "semantics": {
+      "path": "backend/tests/test_v08_semantics_acceptance.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+      "line": 3,
+      "anchor": "No SQL is executed.",
+      "kind": "test",
+      "scope": null
+    },
+    "comment": {
+      "path": "backend/app/services/comment_operator.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "40e3500b79615d73c51d9c4dbb1c64d4a394d8021cca0f11e14064e793de1cb4",
+      "line": 123,
+      "anchor": "Static comment replies cannot be enabled",
+      "kind": "source",
+      "scope": null
+    },
+    "comment_dispatch": {
+      "path": "backend/app/workers/comment_automation.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "412777c4d4a4957c4b3f2b73dc5787c2ec15bfc04a0d76c64847a0d207b7481a",
+      "line": 61,
+      "anchor": "if recent>=250",
+      "kind": "source",
+      "scope": null
+    },
+    "comment_test": {
+      "path": "backend/tests/test_comment_operator_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "cb8358001ce7f167de37651dadb603cb444ba04bf6e1d9ea2616bde5e193e91a",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "comment_evidence": {
+      "path": "artifacts/v1/comment-operator/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "71a2ac776f25cdbc9a77b45ae0aff084b078bf56d276ca9695e0af0c2115232b",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "enquiries": {
+      "path": "backend/app/api/v1/comment_operator.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "84354a1a5026822896bea0550ccae28d87eabd274f48fb4ceed6094e5edad313",
+      "line": 122,
+      "anchor": "@router.get(WA)",
+      "kind": "source",
+      "scope": null
+    },
+    "legacy_link": {
+      "path": "backend/app/api/routes/whatsapp.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "b50cf90d9a660273ca0a25e363641110a51178bf2b0e1ca2deb9584da16321da",
+      "line": 281,
+      "anchor": "@router.post('/unlinked-reels/{shortcode}/link')",
+      "kind": "source",
+      "scope": null
+    },
+    "legacy_auth": {
+      "path": "backend/app/api/dashboard_auth.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "70dae3d9793b03fc1714be7f0128c34efd2b0d561a19dc747a4d7e3bbf1449b4",
+      "line": 90,
+      "anchor": "def current_seller_id",
+      "kind": "source",
+      "scope": null
+    },
+    "native_comment_ui": {
+      "path": "backend/static/comment_operator.js",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "42dc2f5c7d5832489b433ae2a86c74ddb5ac25a2456e59dc00e3f4e1da5ceb8c",
+      "line": 147,
+      "anchor": "Review here sends no customer message.",
+      "kind": "source",
+      "scope": null
+    },
+    "activity": {
+      "path": "backend/app/services/activity_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "8413710667c5b06ba86f184da66edc316e038b1c7a2150a480c8304c090f5372",
+      "line": 276,
+      "anchor": "async def record_source",
+      "kind": "source",
+      "scope": null
+    },
+    "activity_producers": {
+      "path": "backend/app/services/activity_producers.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "fd31cd34f97c7ddc2fbb192415b6aa1c68df8aaf7dcb76486845651296e1dcc7",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "activity_test": {
+      "path": "backend/tests/test_v1_activity_producer_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "519b8587d1ef4f68d8cf070bbbb906a553c12349fa3b2a9c768aa58e11049098",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "activity_evidence": {
+      "path": "artifacts/v1/channel-activity/verification.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0d9f384a18720cc2ccbce458cca56198320de9cf6b44752c5e5c877c15385d42",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "activity_mounted": {
+      "path": "artifacts/v1/integration/wave7/channel-composed/browser-results.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "7dc3621c8b28002d92cfd103887c2e55aaf7b3665e4896c023d8f809934ca138",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "analytics": {
+      "path": "backend/app/services/analytics_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "310c2996af70c0247c74ff6d5838a49132f8c615cfe9ceb926b1e8bd90fae944",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "seo": {
+      "path": "backend/app/v1/storefront/seo.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "86100cd438343ba55272001e03b165b8e8e6be7dbc4d5d08dd6c1f2ebb6e3433",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "seo_test": {
+      "path": "backend/tests/test_v1_seo_independent_db.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "621874d6ab6ae688cea8e729227838fdcebb011d9dd31afb9fe96688fb409536",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "seo_evidence": {
+      "path": "artifacts/v1/seo-independent-qa/verification.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "8362f0e26956eb9e4afed6907f96bb78046b06819db9c6461e90c5f67d9ed444",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "cart": {
+      "path": "artifacts/v1/independent-storefront-experience/cart-repair-mounted/result.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "d97a4059733b0dc2fb0c235942b9d3a936b604941cb803178fc5640464508730",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "ui_scope": {
+      "path": "docs/v1-wave7-ui-validation.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "360a964934d6795d0aa41983de093050a23f66b824be8d04da3b6c2092349bce",
+      "line": 1,
+      "anchor": null,
+      "kind": "scope",
+      "scope": null
+    },
+    "checkout": {
+      "path": "backend/app/services/checkout_v1.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "6fa01c2df96456ea8d8fcbc2d8091ff0885111a6188b5f2b64c265eecbf89dc7",
+      "line": 227,
+      "anchor": "async def create_sku_order",
+      "kind": "source",
+      "scope": null
+    },
+    "checkout_test": {
+      "path": "backend/tests/test_v1_checkout.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2b773295aa9b3300205159067191ef70a9e9eaf11ac12042772e6fe3a51c57e4",
+      "line": 76,
+      "anchor": "test_actual_single_sku_contention_never_oversells",
+      "kind": "test",
+      "scope": null
+    },
+    "payment": {
+      "path": "artifacts/v1/public-payment/browser-results.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "001f7d1cf1f8faa67c9ee3f346997a013722eda639ab52b2e7625ce08c3848e8",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "release": {
+      "path": "docs/v1-release-rehearsal.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "2a15453168f1dfc6081414b92d72e4f3b4fda7833b1305a2d04f24e6bd2ab0f8",
+      "line": 134,
+      "anchor": "## Application rollback",
+      "kind": "scope",
+      "scope": null
+    },
+    "restore": {
+      "path": "artifacts/v1/release-rehearsal/local-pg16-w6/restore-evidence.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "c8e73d667d5ad680a8b97f5d7a59c66a9f7a7b47cd94079a3187bc98df5ad00b",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "app_compat": {
+      "path": "artifacts/v1/release-rehearsal/local-pg16-w5/application-compatibility.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "0fc7fcec16987b18dedc7870ecd80ad901cedbd5d88cbacbe917214c9346cd73",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "image": {
+      "path": "artifacts/v1/integration/wave6/image-runtime-manifest.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "b00cb4a98d0397c1210b3d8437ba0f97bca9959475ef9a07dbd65dc7807d5437",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "ci": {
+      "path": "artifacts/v1/release-ci/verification-summary.json",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "87f3c7814e52feeabd87a81a0cda94a9fb6d1b677812fa6bd2ca844fb2e6922f",
+      "line": 1,
+      "anchor": null,
+      "kind": "saved_evidence",
+      "scope": null
+    },
+    "workflow": {
+      "path": ".github/workflows/tests.yml",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "5d7dfa5c5e4f60437643f024c4b3fee12e3074eb5143ecf5e76fdd149776d5e5",
+      "line": 1,
+      "anchor": null,
+      "kind": "source",
+      "scope": null
+    },
+    "release_test": {
+      "path": "tests/release/test_v1_release_rehearsal.py",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "25d34162ef37e476bc4fc1278d300cf37276c498a55322acf42c4e8a997b235a",
+      "line": 1,
+      "anchor": null,
+      "kind": "test",
+      "scope": null
+    },
+    "scope_release": {
+      "path": "docs/v1-wave7-validation.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "ac00bbf63f14aa3db50fe67837e4e36708474e4eedf2d3b9881ab3a76764ca63",
+      "line": 34,
+      "anchor": "New-head image/restore/rollback",
+      "kind": "scope",
+      "scope": null
+    },
+    "conditional": {
+      "path": "go-live-plan.md",
+      "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+      "sha256": "3922721777b11d788f2ef756d8ae0fe7ea5333f660c9cb54e43ef63f75992a94",
+      "line": 111,
+      "anchor": "| V13 |",
+      "kind": "requirement",
+      "scope": null
+    },
+    "isolated57": {
+      "path": "artifacts/v1/whatsapp-independent-review/actual-0057-first/verification.json",
+      "commit": "d5253fa",
+      "sha256": "09300e8d4f222f303145bf845fef57fb7fa792832d8c6b2f90f8b45d6864e603",
+      "line": 1,
+      "anchor": null,
+      "kind": "isolated_saved_evidence",
+      "scope": "Executed646bb952, actual0057, six independent native/SQL races; no browser/live provider; NOT central1c4."
+    },
+    "isolated57_source": {
+      "path": "backend/app/api/v1/whatsapp_self_service.py",
+      "commit": "b853f4a",
+      "sha256": "ff167b36059bb84f89a194a80ac31218fbde6ed1656be345453533cdc5b0576d",
+      "line": 1,
+      "anchor": null,
+      "kind": "isolated_source",
+      "scope": "Isolated owned0057 source/header repair, not present in central1c4."
+    }
+  },
+  "rows": [
+    {
+      "id": "V01",
+      "group": "outcome",
+      "requirement": "Seller and sales-team onboarding",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Native signup/invite/profile, derived local readiness, current-session fences and explicit read-only support grants have actual local evidence; permanent local placeholders are repaired.",
+      "remaining_required_result": "One complete fresh/assisted seller acceptance including logout/resume remains unrecorded; messaging acceptance is unavailable at central1c4 and provider approval is not inferred.",
+      "references": [
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full",
+        "support",
+        "support_test",
+        "support_evidence",
+        "h_assistance",
+        "h_t_assistance"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Native signup/invitation, persistent sessions, business profile and resumable checklist exist; historical mounted onboarding and current assistance evidence exercise scoped membership.",
+      "historical_remaining": "Complete fresh seller journey and audited expiring support access; current onboarding_complete is always false. Local team owns support grants/global sales.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V02",
+      "group": "outcome",
+      "requirement": "Three premium website templates",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Three persisted themes, SSR and local purchase paths are implemented; actual-mounted cart6 repairs320/390 overlap. Synthetic75 UI assertions pass but runnerexit1 retains153 denied optional measurement requests.",
+      "remaining_required_result": "Full required viewport/keyboard/contrast/error matrix and approved media/physical phones remain distinct from bounded browser proof.",
+      "references": [
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "All three persisted published designs render through actual API/SSR/JS and local COD fixtures; private draft/public publication remain distinct.",
+      "historical_remaining": "Full desktop/phone parity, real approved media, keyboard/focus/contrast acceptance across all critical states and physical phone evidence.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V03",
+      "group": "outcome",
+      "requirement": "Catalogue import",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Website/upload/CSV and owned-Instagram provider/retention wiring are implemented and locally exercised with actual persistence and synthetic retrieval.",
+      "remaining_required_result": "Authorized real seller sources/supported Meta wire, permissions and originals remain external; uploads/CSV never count as API retrieval.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Durable bounded website JSON-LD and JPEG/PNG/MP4 upload review/recovery exist. 47 mounted native checks use synthetic retrieval. Instagram owned-media is an injected interface only.",
+      "historical_remaining": "Implement/wire owned-media retrieval adapter and native CSV fallback. Production _drain passes no instagram_provider; collect_claim fails provider_capability_pending. Then verify seller-authorized real website/Instagram sources; uploaded fallback does not prove API import.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V04",
+      "group": "outcome",
+      "requirement": "Catalogue review and maintenance",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Reviewed drafts, overrides, duplicate/source identity, SKU allocation and reimport preservation have actual SQL/native evidence.",
+      "remaining_required_result": "Complete approved seller maintenance/reimport acceptance on actual source/media remains; no automatic inventory-sync claim.",
+      "references": [
+        "h_catalogue",
+        "h_t_catalogue",
+        "h_bridge",
+        "h_t_bridge",
+        "h_e_import",
+        "csv_evidence",
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Draft provenance, seller overrides, duplicate/source identity, explicit SKU allocation and private receipt recovery are represented in source and saved migrated/native cases.",
+      "historical_remaining": "Actual complete seller maintenance/reimport journey with approved real source/media, multi-product reel mapping and correction review remains acceptance work.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V05",
+      "group": "outcome",
+      "requirement": "Storefront and purchase",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Current-SKU SSR/cart/COD/private status and synthetic online shell/reconciliation operate through actual APIs/native/browser fixtures.",
+      "remaining_required_result": "Actual Razorpay SDK/CSP/domain/callback/webhook/capture and phone acceptance remain external; synthetic Paid requires server state but is not real payment proof.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Product/category SSR routes, current SKU/cart/COD/status, conditional payment settings and synthetic online handoff exist; three local COD orders cover three themes.",
+      "historical_remaining": "Real Razorpay SDK/domain/CSP/callback/webhook/capture canary; full checkout failure paths and supported-device product acceptance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V06",
+      "group": "outcome",
+      "requirement": "Orders and customer CRM",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Native order transitions/payment/parcel views and dual-endpoint-control identity links have actual evidence; source history is preserved.",
+      "remaining_required_result": "Full seller/customer conversation/order-history acceptance is not demonstrated; links return only opaque ID and do not merge/aggregate histories or grant context/marketing authority.",
+      "references": [
+        "customer",
+        "customer_contract",
+        "customer_test",
+        "customer_evidence",
+        "h_order",
+        "h_checkout_api",
+        "checkout",
+        "checkout_test",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Tenant orders, protected bearer status, transitions, COD collection, payment recovery and channel inbox exist. Channel-independent identity provenance is not established by matching phone.",
+      "historical_remaining": "Verified customer identity links and unified conversation/order history remain local-team-owned; demonstrate full fulfilment/cancellation/customer-history acceptance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V07",
+      "group": "outcome",
+      "requirement": "Self-service Instagram and WhatsApp",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Central1c4 has bound IG OAuth/manual WA connection, reconnect/privacy/generation guards and local readiness; isolated0057 now has source and six actual race proofs separately.",
+      "remaining_required_result": "Supported WA self-service/test workflow is absent from this central head; compose/review isolated0057 and complete signed-ingress/worker/mounted proof, then authorized live account/recipient canary.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Bound OAuth, credential check/save/disconnect/reconnect and readiness states exist; provider verification in saved tests is synthetic.",
+      "historical_remaining": "Actual supported seller authorization/account selection/Meta access and authorized connection/reconnect/delivery acceptance. WhatsApp manual credential flow alone is not a complete supported embedded signup proof.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V08",
+      "group": "outcome",
+      "requirement": "Catalogue-aware messaging and comments",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Current explicit-focus SKU replies, conservative material handoff, durable ingress, native comment/no-send review and pause/takeover safeguards have local evidence.",
+      "remaining_required_result": "Native unknown-reel explicit link/eligible resume is missing; activated static comment actions remain withheld. Live comments/DM/WA and full quality acceptance are not passed.",
+      "references": [
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence",
+        "enquiries",
+        "legacy_link",
+        "legacy_auth",
+        "native_comment_ui",
+        "h_unknown",
+        "h_t_unknown"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Durable ingress, unknown queue, context, comment policy, takeover and replay guards exist for legacy paths. Activated SKU enquiries deliberately hand off before legacy facts.",
+      "historical_remaining": "Implement authoritative current-SKU catalogue-aware responses and demonstrate native rule enable/pause/handoff/resume plus regression set. Real comment/DM/WhatsApp canaries remain separate. Safe handoff is partial implementation, not complete V08.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V09",
+      "group": "outcome",
+      "requirement": "Parcel tracking and customer updates",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Order-first explicit parcel association/replacement, two-service HMAC adapter, append-only status and consent-aware outbox have local real-DB/browser evidence.",
+      "remaining_required_result": "Private ParcelDesk deployment/D1/TLS, authorized parcel lookup/update, templates and physical camera remain external; cache sync is not courier/live delivery proof.",
+      "references": [
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Order-first scan/confirmation, tenant HMAC Worker/SQLite connector, review replacement/history and deduplicated monotone reconciliation are locally exercised. Carrier/cache and customer-send transports are synthetic.",
+      "historical_remaining": "Private connector provisioning/D1/TLS, authorized existing-parcel refresh and permitted utility delivery canary; physical camera/touch; no shipment booking required.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V10",
+      "group": "outcome",
+      "requirement": "Basic analytics",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Purchase cohorts, public funnel and trusted channel producers/reporting now exist with exact dataset/tenant/partial-null/test-exclusion evidence.",
+      "remaining_required_result": "Coverage stays partial: IG DM sends/resolved enquiries/unobserved attribution unavailable; real pilot observations and metric acceptance are not inferred from producer method names.",
+      "references": [
+        "analytics",
+        "activity",
+        "activity_producers",
+        "activity_test",
+        "activity_evidence",
+        "activity_mounted",
+        "h_e_history"
+      ],
+      "historical_dispositions": [
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "No V1 reconciled analytics event/metric surface in audited application source; current team explicitly owns ongoing work.",
+      "historical_remaining": "Visits/views/enquiries/checkout/placed/paid/cancelled/revenue/conversion/automation metrics, attribution limits and test exclusion need implemented source plus exact dataset reconciliation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V11",
+      "group": "outcome",
+      "requirement": "Sales onboarding console",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Membership-scoped assignment/readiness board and separately owner-consented readiness.summary access are implemented and locally exercised.",
+      "remaining_required_result": "Full sales-assisted onboarding by an operator who did not build it remains unrecorded; assignment/grant never creates tenant membership or write access; live test result pending.",
+      "references": [
+        "support",
+        "support_test",
+        "support_evidence",
+        "h_assistance",
+        "h_t_assistance",
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Membership-scoped board exposes readiness, assigned eligible owner/manager, import issues and current channel checks; 37 mounted checks. Assignment never grants access.",
+      "historical_remaining": "Expiring support grants/global sales authorization and full assisted onboarding acceptance remain local-team-owned. Existing membership is not sales/support access acceptance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V12",
+      "group": "outcome",
+      "requirement": "Search visibility and migration",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Canonical/meta/SSR, bounded published sitemap and explicit-inventory redirects are implemented/tested; old missing-sitemap claim is stale.",
+      "remaining_required_result": "Real legacy URL/order-link inventory, domain/provider routing authority, selected-store reconciliation and current-head rollback remain open.",
+      "references": [
+        "seo",
+        "seo_test",
+        "seo_evidence",
+        "h_ssr",
+        "h_t_ssr",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "not_implemented"
+      ],
+      "historical_claim_reconciled": "Search-readable product/category HTML, configured canonical origin, metadata and JSON-LD exist.",
+      "historical_remaining": "Sitemap, legacy URL inventory/redirect implementation and actual domain-owner redirect validation; full migration/order-link reconciliation and safe rollback rehearsal.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "V13",
+      "group": "outcome",
+      "requirement": "International pilot support (conditional Dharaa migration)",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Canonical commerce remains IN-address/six-digit postcode and INR only; no confirmed Dharaa destination artifact is present.",
+      "remaining_required_result": "If migrating Dharaa, owner confirms destinations/address/charges/shipping/payment/display; missing international code and per-destination evidence must close, otherwise retain route/defer migration.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Canonical checkout address is IN-only with six-digit Indian postcode; current-SKU/render currency is INR-only. No confirmed Dharaa destination acceptance artifact found.",
+      "historical_remaining": "If Dharaa migrates, confirm countries/address/shipping/charges/payment/display requirements and pass each destination before cutover. Otherwise retain existing international route or defer that migration; worldwide support is not claimed.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A01",
+      "group": "acceptance",
+      "requirement": "Fresh seller onboarding",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Native and catalogue/theme/publish/checkout fragments are actual; derived local checklist resumes current facts.",
+      "remaining_required_result": "No single complete fresh invitation/signup→settings→reviewed catalogue→theme/publication→logout-resume acceptance proves the entire required journey without engineering edits.",
+      "references": [
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full",
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence",
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Native fragments exist; saved mounted signup/profile and import/theme/COD journeys use synthetic tenants.",
+      "historical_remaining": "No complete invitation/signup→settings→approved source→theme→publication→logout resume matrix on integrated release candidate; support local work pending.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A02",
+      "group": "acceptance",
+      "requirement": "Sales assistance",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Assigned-member readiness and named allowlisted owner-consented expiring read-only support summary have actual tenant/revocation/browser evidence.",
+      "remaining_required_result": "Complete real sales-assisted onboarding remains; minimal readiness.summary is not support write/discovery/impersonation authority.",
+      "references": [
+        "support",
+        "support_test",
+        "support_evidence",
+        "h_assistance",
+        "h_t_assistance",
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Board denies foreign membership and audits assignment; current source requires active membership.",
+      "historical_remaining": "Assigned sales rep using explicit expiring support grant and credential-safe tools across complete journey.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A03",
+      "group": "acceptance",
+      "requirement": "Website import",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Authorized-source URL fetch, repeat/override/provenance and SSRF/error behavior are implemented and locally exercised.",
+      "remaining_required_result": "Approved seller-owned real website repeat/correction acceptance needs permission/source and a separate authorized retrieval run.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Website JSON-LD fetch/reimport/override domain tests and native synthetic retrieval exist.",
+      "historical_remaining": "Approved seller-owned actual website retrieval and repeat/correction acceptance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A04",
+      "group": "acceptance",
+      "requirement": "Instagram/media import",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Owned-IG adapter/generation/retained-originals plus CSV/upload fallbacks are implemented; local actual DB/native tests use synthetic provider responses.",
+      "remaining_required_result": "Actual supported connected media, account/grants/expired-access recovery and multi-product/unknown-fact source acceptance remain canaries; fallback cannot satisfy API import.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Synthetic owned-media provider and actual upload bytes/review are distinct fixture paths.",
+      "historical_remaining": "Production owned-media adapter and native CSV; expired real access and multi-product supported media acceptance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A05",
+      "group": "acceptance",
+      "requirement": "Three-theme parity",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "All three SSR/module themes have local COD purchase evidence; synthetic75 UI assertions pass with runnerexit1/153 denied optional measurement requests, while actual-mounted cart6 passes.",
+      "remaining_required_result": "Full360/390/768/1440 parity, theme-switch semantics/accessibility/error states and physical phone acceptance are not replaced by320/390 cart or viewport emulation.",
+      "references": [
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "29 actual mounted checks include all three SSR/JS themes and one local COD order per design.",
+      "historical_remaining": "Every browse/variant/cart/checkout/confirmation and theme-switch semantics on required layouts plus physical phone.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A06",
+      "group": "acceptance",
+      "requirement": "Product integrity",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Actual SKU/publication/checkout tests deny sold-out, inactive/unpublished/foreign products and keep private floor/cost data out of public/fact projections.",
+      "remaining_required_result": "Approve real catalogue/media and execute required final candidate/device acceptance; unknown stock is not invented stock.",
+      "references": [
+        "h_catalogue",
+        "h_t_catalogue",
+        "h_bridge",
+        "h_t_bridge",
+        "h_e_import",
+        "csv_evidence",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Migrated tests cover sold out/unknown stock, floor-price projection, inactive product and tenant boundaries.",
+      "historical_remaining": "Complete release-candidate UI/API matrix with approved catalogue fixtures.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A07",
+      "group": "acceptance",
+      "requirement": "COD purchase",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Local actual COD placement/status and SQL transition/collection/release checks exist; native order controls are implemented.",
+      "remaining_required_result": "Complete customer+seller confirm→pack→ship→deliver→COD collection consistency is not shown as one final mounted journey.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Actual mounted COD placement/status for three themes; migrated transition/release authority tests exist.",
+      "historical_remaining": "Full customer/seller confirm→pack→ship→deliver→collect consistency journey on release candidate.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A08",
+      "group": "acceptance",
+      "requirement": "Razorpay test purchase",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Actual local order/payment state and synthetic SDK/provider recovery/failure/late paths have evidence.",
+      "remaining_required_result": "Real Razorpay test SDK/domain/CSP/callback/webhook/capture/failure/cancel/late canary remains authorized-account work.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Synthetic SDK/provider payment handoff, unknown creation and exact reconciliation are exercised.",
+      "historical_remaining": "Actual provider test checkout, callback/webhook/capture and failed/cancelled/late paths; domain/CSP.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A09",
+      "group": "acceptance",
+      "requirement": "Stock contention",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Actual PostgreSQL concurrent stock reservation/once-release/capture/expiry tests exist in complete/focused gates.",
+      "remaining_required_result": "Current-hosted-CI and actual pilot inventory acceptance remain separate; do not sum contention cases across overlapping suites.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Saved full XML includes actual single-SKU contention and competing cancellation/release cases.",
+      "historical_remaining": "Repeat relevant cases on final integrated release candidate/hosted PG16 CI, preserving actual migrated fixture guard.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A10",
+      "group": "acceptance",
+      "requirement": "Instagram comment",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Comment source/generation/claim safety and native explicit static rule/review controls have actual evidence; five historic safety failures are repaired.",
+      "remaining_required_result": "Full configured linked-media action/duplicate observation lacks authorized actual-provider proof. Activated static contexts deliberately withhold; no-send safety is not full catalogue-comment experience and no new action mode is invented by this audit.",
+      "references": [
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence",
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Comment/ingress replay and permission guards tested with blocked provider sockets.",
+      "historical_remaining": "Authorized actual linked-media comment/action and duplicate observation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A11",
+      "group": "acceptance",
+      "requirement": "Instagram DM",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Signed synthetic IG ingress/current approved SKU reply/handoff and durable unknown-effect tests operate on actual DB/single writer.",
+      "remaining_required_result": "Authorized actual inbound DM, correct reply and takeover observation need real account/recipient; no live delivery is inferred.",
+      "references": [
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Durable inbox/handoff fixture paths; activated SKU response hands off.",
+      "historical_remaining": "Current-SKU catalogue reply implementation + authorized actual inbound/correct reply and handoff observation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A12",
+      "group": "acceptance",
+      "requirement": "WhatsApp connection and reply",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Central manual WA reconnect/paused/current-fact behavior is actual; isolated0057 native signup/exact-test infrastructure is separate.",
+      "remaining_required_result": "Central supported consent/explicit-account/test workflow not installed at1c4; isolated canonical signed-ingress/paused-worker/mounted evidence then real recipient statuses required.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Synthetic account membership/credential and outbound policy tests.",
+      "historical_remaining": "Correct real authorized account and test recipient with inbound/outbound provider status; account/approval evidence.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A13",
+      "group": "acceptance",
+      "requirement": "Unknown reel",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Legacy WA unresolved queue/link/resume exists; native0056 inferred enquiries are visible and explicitly closable with no send.",
+      "remaining_required_result": "Native current-session/capability explicit-link/eligible-once-only-resume workflow is missing. Inferred visibility must not be promoted to explicit context or treated as resolution/send.",
+      "references": [
+        "enquiries",
+        "legacy_link",
+        "legacy_auth",
+        "native_comment_ui",
+        "h_unknown",
+        "h_t_unknown",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "historical_claim_reconciled": "Unlinked queue, deduplicated eligible legacy resume and policy exclusions have saved cases.",
+      "historical_remaining": "Complete native unknown→link→current SKU reply/resume journey; activated-SKU handoff limit and live delivery.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A14",
+      "group": "acceptance",
+      "requirement": "Product context switch",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Actual multi-product/reply-to batch conflicts withhold instead of first/last selection; current context/fact regeneration and remote finite language fixtures exist.",
+      "remaining_required_result": "Remote15semantic+6context+6material fixtures are synthetic projections, not actual multilingual delivery/quality. Preserve finite hard safety vs declared soft thresholds and real acceptance.",
+      "references": [
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "historical_claim_reconciled": "Legacy context tests distinguish new/unknown/ambiguous references and contact scope.",
+      "historical_remaining": "Current-SKU-aware reply implementation and mixed-language/multi-product integrated acceptance with declared quality thresholds.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A15",
+      "group": "acceptance",
+      "requirement": "Messaging policy",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Actual controlled pause/window/opt-out/takeover/disconnect/generation tests exercise current safeguards and no duplicate unknown retry.",
+      "remaining_required_result": "Current official policy/account mode and authorized boundary/live withheld-delivery canary are still external; row age/local cap is not provider permission.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Window, opt-out, pause, disconnection, revoked actor and unknown-send guards have controlled fixtures.",
+      "historical_remaining": "Current supported provider policy/account mode and authorized live withheld/delivery evidence; cannot infer live policy readiness from fixtures.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A16",
+      "group": "acceptance",
+      "requirement": "Parcel association and updates",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Actual local order-first two-service/DB/browser parcel associations, duplicates, state ordering, review and consent/window rechecks exist.",
+      "remaining_required_result": "Private connector provision/D1/TLS/refresh schedule, real parcel/approved utility delivery and physical scan remain. No booking requirement is introduced.",
+      "references": [
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "20 actual mounted review cases, real local Worker/HMAC/SQLite; no external courier/customer sends.",
+      "historical_remaining": "Private connector/authorized existing parcel + permitted actual update and physical scan; booking excluded.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A17",
+      "group": "acceptance",
+      "requirement": "Order privacy and history",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Protected per-order capability/status, native order/payment/parcel history and unlinkable verified endpoint-control links have actual local proof.",
+      "remaining_required_result": "Full consistent seller/customer conversation/history acceptance remains unrecorded; no unified cross-channel history or legal-person/marketing authority is implied by opaque canonical ID.",
+      "references": [
+        "customer",
+        "customer_contract",
+        "customer_test",
+        "customer_evidence",
+        "h_order",
+        "h_checkout_api",
+        "checkout",
+        "checkout_test",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "Protected session-held order status, no token URL, tenant order view and local parcel history verified.",
+      "historical_remaining": "Unified verified identity/conversation history is local-team work; full release-candidate customer/seller history matrix.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A18",
+      "group": "acceptance",
+      "requirement": "Analytics reconciliation",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Known SQL datasets reconcile defined purchase/funnel/channel observations, test exclusions, null unobserved families and partial attribution.",
+      "remaining_required_result": "Observe an approved production cohort before claiming live rates; IG send/resolved/unknown attribution gaps stay unavailable, not zero.",
+      "references": [
+        "analytics",
+        "activity",
+        "activity_producers",
+        "activity_test",
+        "activity_evidence",
+        "activity_mounted",
+        "h_e_history"
+      ],
+      "historical_dispositions": [
+        "local_team_owned_in_progress"
+      ],
+      "historical_claim_reconciled": "No completed reconciled analytics artifact found in audited source.",
+      "historical_remaining": "Exact known dataset, excluded synthetic/test activity and unknown attribution display after local implementation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A19",
+      "group": "acceptance",
+      "requirement": "Disconnect/reconnect",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Actual same-phone reconnect pauses effective Account flags, changes credentials/version and withholds queued work; deliberate current-owner re-enable regenerates fresh facts once.",
+      "remaining_required_result": "Control flag metadata remains observedTrue after reconnect but is not effective send authority; authorized live revoke/reconnect/account ownership remains canary.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Bound OAuth generation/revocation/replay and different-account denial source/tests.",
+      "historical_remaining": "Authorized real revoke/reconnect and queued delivery state; full UI journey.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A20",
+      "group": "acceptance",
+      "requirement": "Import/worker restart",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Durable leases/claims/replay/unknown dispositions have domain crash/cancellation fixtures and real DB evidence.",
+      "remaining_required_result": "Combined isolated real process/worker/Redis restart across imports/sends/payments/parcel is unproved; three real-Redis cases remain skipped and no shared service restart occurred.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence",
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "historical_claim_reconciled": "Durable lease/retry/receipt and unknown operation tests plus 30 native recovery cases exist.",
+      "historical_remaining": "Combined real process/worker/Redis restart acceptance across imports/messages/payment/parcel without duplicate effects; CI Redis cases remain skipped.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A21",
+      "group": "acceptance",
+      "requirement": "Search and migration",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "SEO infrastructure/synthetic explicit redirects and protected order links are implemented and locally checked.",
+      "remaining_required_result": "Actual supported legacy URL ownership/inventory/redirect routing and existing customer order-link reconciliation plus selected-store migration remain external/ops acceptance.",
+      "references": [
+        "seo",
+        "seo_test",
+        "seo_evidence",
+        "h_ssr",
+        "h_t_ssr",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "not_implemented"
+      ],
+      "historical_claim_reconciled": "SSR canonical/meta are exercised; old order capability shell remains usable after unpublish in saved native cases.",
+      "historical_remaining": "Sitemap, redirect source/inventory/domain acceptance, migration ledger and existing order-link compatibility.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A22",
+      "group": "acceptance",
+      "requirement": "International pilot",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "IN/INR checkout explicitly bounds supported current scope; international support is not inferred from currency labels.",
+      "remaining_required_result": "Conditional Dharaa destinations/address/eligibility/shipping charges/payment/display must be confirmed and coded/tested before migration, or preserve route/defer.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "not_implemented",
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "IN address and INR guards explicitly bound current checkout.",
+      "historical_remaining": "Conditional on selected pilot: all confirmed supported destinations/payment/shipping/confirmation tested; retain legacy international route if deferred.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "A23",
+      "group": "acceptance",
+      "requirement": "Backup and rollback",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Historical fresh0052/0053 real dump/restore53 and narrower packaged current-create→old-read→current-read proof exist.",
+      "remaining_required_result": "No current0056/0057 backup/restore/image/old-writer or full safe application-switch/forward-fix proof. Old read-only compatibility is not rollback approval.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Additive migrated-schema evidence is historical; new disposable rehearsal lane owns tooling.",
+      "historical_remaining": "No actual backup/restore/reconciliation/application rollback executed here. Review stable rehearsal source, then actual allocated synthetic PG16 run; no destructive downgrade/old snapshot overwrite.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G0",
+      "group": "gate",
+      "requirement": "Baseline",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Preserved source, failed/interrupted logs, source maps, isolated test safety and scoped package/secret evidence exist.",
+      "remaining_required_result": "No whole-repo or production-secret absence claim; final approved source/environment/provenance check remains required.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Preserved baseline/application commits and saved failure runs exist; source hashes are independently checked in this audit.",
+      "historical_remaining": "No whole-repo credential absence claim; limited path/fixture scan is distinct from secret provenance review.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G1",
+      "group": "gate",
+      "requirement": "Parallel readiness",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Frozen contracts, ownership, P01 guarded disposable lanes/held leases and actual migration-based integration are established.",
+      "remaining_required_result": "Each later isolated0057 composition still needs its own exact gate; hosted/runtime/provider permissions are not implicit.",
+      "references": [
+        "plan",
+        "full_scope",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Ownership contract and exact P01 lane/reset/lease policy exist.",
+      "historical_remaining": "New release CI/rehearsal stable source and adversarial checks, hosted allocated environments/PG16 must pass.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G2",
+      "group": "gate",
+      "requirement": "Functional integration",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Current real0056 composition has complete2441 baseline plus targeted later105/5 material gates and bounded native modules.",
+      "remaining_required_result": "No new full-run claim at1c4; central0057 missing, nativeA13 missing, activated-comment scope and conditional migration gaps remain; placeholders are not waived.",
+      "references": [
+        "plan",
+        "full_scope",
+        "enquiries",
+        "legacy_link",
+        "legacy_auth",
+        "native_comment_ui",
+        "h_unknown",
+        "h_t_unknown",
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence",
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Historical actual 0050 PG16 and native composed slices exist.",
+      "historical_remaining": "Every in-scope module still includes implementation gaps: Instagram adapter/CSV, SKU replies, SEO, local support/CRM/analytics, conditional international; no placeholder waiver.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G3",
+      "group": "gate",
+      "requirement": "Provider readiness",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Only synthetic/local adapter/provider evidence exists for current accepted features.",
+      "remaining_required_result": "Actual supported Meta consent/media/comment/DM/WA, real Razorpay test and private ParcelDesk/permitted update canaries all remain.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Only synthetic transport and real local connector evidence reviewed.",
+      "historical_remaining": "Actual supported Meta connection/comment/DM/WA, Razorpay test SDK/capture, private ParcelDesk and permitted delivery canaries all pending.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G4",
+      "group": "gate",
+      "requirement": "Product readiness",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Bounded actual mounted/local feature gates exist; matrix reconciliation now preserves their distinct scope.",
+      "remaining_required_result": "All23 complete journeys on one integrated final candidate, approved media/real users, full UI matrix and physical phone acceptance are not established.",
+      "references": [
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Bounded mounted browsers and viewport fixtures available.",
+      "historical_remaining": "All 23 full acceptance rows on final integrated candidate, real media and physical-device evidence; full assisted/self-service onboarding.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G5",
+      "group": "gate",
+      "requirement": "Pilot readiness",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Default-off policy, comment250/hour local cap, durable unknown states and historical release tools exist.",
+      "remaining_required_result": "Pilot load/report/usage/alert tooling and combined restart evidence are incomplete; owner-approved envelope/budgets/on-call/runbooks/current-head restore+rollback/deployment rehearsal remain.",
+      "references": [
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Default-off flags and preserved schema chain exist; release engineering source work is ongoing.",
+      "historical_remaining": "Named pilot destinations/traffic/thresholds, restore/rollback actual run, alerts, quotas/usage limits, operational support runbooks and deployment rehearsal.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "G6",
+      "group": "gate",
+      "requirement": "Production cutover",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "No production cutover was authorized or executed by this work.",
+      "remaining_required_result": "Owner approval, current provider production readiness, final backup, rollout smoke/reconciliation and staffed operations are required.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "No cutover was authorized or executed.",
+      "historical_remaining": "Owner approval after evidence, production provider readiness, final backup, controlled rollout, production smoke and reconciliation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M01",
+      "group": "migration_rollback",
+      "requirement": "Preserve stable IDs and provenance",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Additive migrations preserve IDs/source provenance; dual-endpoint links preserve existing histories and have actual tests.",
+      "remaining_required_result": "Real selected-store inventory/identity provenance/source→target reconciliation still requires approved data; no name/phone merge/backfill is invented.",
+      "references": [
+        "customer",
+        "customer_contract",
+        "customer_test",
+        "customer_evidence",
+        "h_order",
+        "h_checkout_api",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Additive identity/catalogue migrations preserve tenant/product IDs and explicit legacy bridges.",
+      "historical_remaining": "Actual selected-store migration inventory/reconciliation, verified customer provenance.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M02",
+      "group": "migration_rollback",
+      "requirement": "Historic orders/payment credentials",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Immutable order/payment snapshots and encrypted credential references have actual SQL tests and historical restore hashes.",
+      "remaining_required_result": "Actual selected seller historic orders/payment/customer IDs/totals/evidence/credential references require private sanitized reconciliation, not public secrets.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Order lines/totals, encrypted credential snapshots and pending/unknown payment state source exist.",
+      "historical_remaining": "Reconcile sanitized source→target order/payment/customer IDs, totals, evidence and credential references; do not publish secrets.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M03",
+      "group": "migration_rollback",
+      "requirement": "Reservations/stock",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Authoritative SKU reservation/once-release and legacy activation reconciliation guards are actual.",
+      "remaining_required_result": "Selected-store variant/stock mapping and ledger reconciliation before activation remain owner/migration work; unknown stays unknown.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "SKU reservation/once-release checks and legacy pending-reservation activation block exist.",
+      "historical_remaining": "Real store inventory mapping and ledger reconciliation before activating SKU writer; unknown stock must remain unknown.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M04",
+      "group": "migration_rollback",
+      "requirement": "Consents and pending/unknown sends",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Durable ingress/outbox, consent/unknown handling and historical synthetic restore sources exist.",
+      "remaining_required_result": "Current-head populated consent/pending/unknown reconciliation and process/recovery proof remain; never blindly replay uncertain effects.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Durable ingress, quarantine and consent-aware outbox are source-implemented with synthetic transports.",
+      "historical_remaining": "Backup/reconcile consents, pending/unknown actions and side-effect-free forward recovery across workers; never blindly replay unknown sends.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M05",
+      "group": "migration_rollback",
+      "requirement": "Backfill before reader switch",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Legacy identity/catalogue backfill/idempotence/revocation preservation are migration-tested.",
+      "remaining_required_result": "Real seller side-effect-free reconciliation and staged reader switch need actual inventory and approval.",
+      "references": [
+        "h_catalogue",
+        "h_t_catalogue",
+        "h_bridge",
+        "h_t_bridge",
+        "h_e_import",
+        "csv_evidence",
+        "customer",
+        "customer_contract",
+        "customer_test",
+        "customer_evidence",
+        "h_order",
+        "h_checkout_api",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Legacy identity/catalogue actual migration tests include backfill/idempotence and revocation preservation.",
+      "historical_remaining": "Selected store side-effect-free reconciliation and staged reader switch evidence.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M06",
+      "group": "migration_rollback",
+      "requirement": "One authoritative writer/feature flags",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "One authoritative checkout/outbox writer and activation/flags/replay fences have actual domain evidence.",
+      "remaining_required_result": "Operational prior/current switch/forward-fix/worker recovery proof for newer transactions and pending actions is not established.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Activation rejects legacy SKU checkout; flags default off.",
+      "historical_remaining": "Operational switch/rollback and worker fencing proving no double reserve/send after cutover.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M07",
+      "group": "migration_rollback",
+      "requirement": "URL inventory and ownership",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Published sitemap/explicit redirect infrastructure and canonical/status routes are implemented/tested.",
+      "remaining_required_result": "Actual legacy URL inventory/domain-provider authority, redirect targets and historic order links require authorized mapping/routing; default inventory empty.",
+      "references": [
+        "seo",
+        "seo_test",
+        "seo_evidence",
+        "h_ssr",
+        "h_t_ssr",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Canonical origin/SSR routes exist.",
+      "historical_remaining": "Supported legacy URL inventory, owner/provider routing authority, redirects/sitemap and existing customer order-link preservation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M08",
+      "group": "migration_rollback",
+      "requirement": "Isolated backup/restore",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Fresh0052/0053 dual-lane real restore and schema/table/totals checks passed historically.",
+      "remaining_required_result": "Current0056/isolated0057 schema/data/retained-media/claims restoration remains unproved; no target reuse or new image/restore copy under headroom limits.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Actual migrations are historical evidence, not backup/restore evidence.",
+      "historical_remaining": "New rehearsal tool source review and explicitly allocated synthetic source→distinct empty target execution with IDs/totals/reservations/pending-action reconciliation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M09",
+      "group": "migration_rollback",
+      "requirement": "Application rollback preserves newer transactions",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Read-only old/current packaged ASGI compatibility and newer target-only order preservation have narrow historical evidence.",
+      "remaining_required_result": "Old writer/background-worker/proxy/browser or equivalent full forward-fix rollback preserving newer orders/identity/consent/pending work remains unproved.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Routine rollback must be application switch or forward fix. Destructive schema downgrade is not acceptable.",
+      "historical_remaining": "Actual forward-fix/schema compatibility rehearsal; demonstrate preserved post-cutover orders, reservations, identity and pending actions. Offline downgrade planning is not execution.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "M10",
+      "group": "migration_rollback",
+      "requirement": "Pilot-specific cutover approval",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Scope is bounded; no migration/cutover approval is implied.",
+      "remaining_required_result": "Named seller/pilot, conditional Dharaa requirements or retained route, current backup and owner-approved controlled reconciliation remain.",
+      "references": [
+        "plan",
+        "full_scope",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "No release/production operation performed by this audit.",
+      "historical_remaining": "Named seller scope, conditional Dharaa international evidence or retained route, final backup, owner approval and controlled reconciliation.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "X01",
+      "group": "cross_cutting",
+      "requirement": "AI regression and factual safety",
+      "classification": "implemented_actual_local_proof",
+      "implemented_and_observed_scope": "Current-SKU, tenant/context/policy, malicious-source and finite mixed-language/material safeguards have local actual+projection evidence with hard safety assertions.",
+      "remaining_required_result": "Five historical missing LLM cassettes are still skips; finite fixtures are not broad answer-quality/live-language certification. Full final acceptance/declared soft-quality evaluation remains.",
+      "references": [
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence",
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified",
+        "simulated_provider"
+      ],
+      "historical_claim_reconciled": "Saved deterministic safeguards/context tests exist; five historical scenario cassettes skipped.",
+      "historical_remaining": "Declared hard/soft thresholds and complete current-SKU, mixed-language, multi-product, malicious-source regression set on final candidate.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "X02",
+      "group": "cross_cutting",
+      "requirement": "Load/performance/recovery envelope",
+      "classification": "missing_code",
+      "implemented_and_observed_scope": "Bounded domain race/recovery tests exist; no pilot p50/p95/p99/error/backlog/mobile-budget runner/report found in current inspected source inventory.",
+      "remaining_required_result": "Existing plan requires synthetic load/envelope/recovery measurement tooling; budget/pilot agreement and physical/field metrics remain external, not invented defaults.",
+      "references": [
+        "plan",
+        "full_scope",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "not_implemented"
+      ],
+      "historical_claim_reconciled": "No agreed pilot envelope or saved latency/error/backlog/mobile budget report located.",
+      "historical_remaining": "Agree synthetic traffic/latency/error/backlog thresholds and run bounded fake-provider load/restart checks; field/device metrics separate.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "X03",
+      "group": "cross_cutting",
+      "requirement": "Reproducible source package versus image",
+      "classification": "implemented_no_complete_actual_proof",
+      "implemented_and_observed_scope": "Pinned source context/Dockerfile/locks/arm64 image and three offline modes were executed historically at0053.",
+      "remaining_required_result": "New head image/build/smoke/restore and nativeamd64 remain unproved; source hashes/deterministic archive are not OCI reproducibility or runtime execution.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented",
+        "actual_migrated_native_verified"
+      ],
+      "historical_claim_reconciled": "Historical 286-file arm64 package/image hashes and offline smoke verified as saved artifacts.",
+      "historical_remaining": "New pinned lock/base/action changes need new image build/smoke. Deterministic context is not reproducible OCI image; amd64/arm64 execution still pending.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "X04",
+      "group": "cross_cutting",
+      "requirement": "Hosted CI and mandatory migrated gate",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Pinned workflow, mandatory migrated/held-lease check and local validation exist; saved hosted billing-lock runs executed zero steps.",
+      "remaining_required_result": "Hosted CI billing/capacity permission must be resolved externally; wheel downloads/actionlint/local full pass are not hosted workflow proof.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ],
+      "historical_dispositions": [
+        "source_implemented"
+      ],
+      "historical_claim_reconciled": "Existing workflow has read-only permissions, synthetic PG16 and guarded tests; it is not new workflow execution proof.",
+      "historical_remaining": "Independent stable workflow review, mandatory actual migrated/held-lease testcase passing in JUnit, pinned dependencies/actions and CI evidence; all-DB-skipped pytest cannot pass release gate.",
+      "not_a_release_pass": true
+    },
+    {
+      "id": "X05",
+      "group": "cross_cutting",
+      "requirement": "Physical-device/accessibility acceptance",
+      "classification": "external_provider_device_ops_customer",
+      "implemented_and_observed_scope": "Viewport/browser and scoped focus/contrast/cart repairs have local evidence.",
+      "remaining_required_result": "Actual iPhone/Android login/checkout/camera/touch and full360/390/768/1440 keyboard/contrast/error/long-name matrix remain; no physical phone proof.",
+      "references": [
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel",
+        "plan",
+        "full_scope"
+      ],
+      "historical_dispositions": [
+        "live_provider_physical_device_pending"
+      ],
+      "historical_claim_reconciled": "Mounted Chromium emulates viewports; no physical device result is claimed.",
+      "historical_remaining": "Real iPhone/Android login/checkout/camera/touch and 360/390/768/1440, keyboard/focus/labels/contrast/error/long-name checks.",
+      "not_a_release_pass": true
+    }
+  ],
+  "original_plan_journeys": [
+    "Fresh seller onboarding",
+    "Sales assistance",
+    "Website import",
+    "Instagram/media import",
+    "Three-theme parity",
+    "Product integrity",
+    "COD purchase",
+    "Razorpay test purchase",
+    "Stock contention",
+    "Instagram comment",
+    "Instagram DM",
+    "WhatsApp connection and reply",
+    "Unknown reel",
+    "Product context switch",
+    "Messaging policy",
+    "Parcel association and updates",
+    "Order privacy and history",
+    "Analytics reconciliation",
+    "Disconnect/reconnect",
+    "Import/worker restart",
+    "Search and migration",
+    "International pilot",
+    "Backup and rollback"
+  ],
+  "supplement15_reconciliation": [
+    {
+      "id": "D01",
+      "current_scope": "Current code/actual local proof supersedes injected-interface-only claim; real Meta retrieval remains external.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ]
+    },
+    {
+      "id": "D02",
+      "current_scope": "Explicit-focus current-SKU replies implemented/proved; unresolved native link/resume and activated-comment first-slice withholding remain, so fullV08 is not closed.",
+      "references": [
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "enquiries",
+        "legacy_link",
+        "legacy_auth",
+        "native_comment_ui",
+        "h_unknown",
+        "h_t_unknown",
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence"
+      ]
+    },
+    {
+      "id": "D03",
+      "current_scope": "Pilot load/latency/backlog/mobile measurement harness remains missing; no approved envelope/budget inferred.",
+      "references": [
+        "plan",
+        "full_scope",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ]
+    },
+    {
+      "id": "D04",
+      "current_scope": "Existing cap/durable states retained; full operational alerts/usage/runbook/pilot readiness not proved or replaced by activity dashboard.",
+      "references": [
+        "comment",
+        "comment_dispatch",
+        "comment_test",
+        "comment_evidence",
+        "plan",
+        "full_scope"
+      ]
+    },
+    {
+      "id": "D05",
+      "current_scope": "Domain durable recovery exists; combined process/Redis restart acceptance unproved, three realRedis skips retained.",
+      "references": [
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence",
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ]
+    },
+    {
+      "id": "D06",
+      "current_scope": "Derived local readiness and support grants implemented/proved; complete fresh+assisted journey and messaging readiness remain bounded/open.",
+      "references": [
+        "h_auth",
+        "native",
+        "native_test",
+        "native_evidence",
+        "full",
+        "support",
+        "support_test",
+        "support_evidence",
+        "h_assistance",
+        "h_t_assistance"
+      ]
+    },
+    {
+      "id": "D07",
+      "current_scope": "Many later native/cart/semantic/material/current-fact gates exist; no complete final23journey/device/accessibility certification.",
+      "references": [
+        "h_themes",
+        "h_t_themes",
+        "h_e_themes",
+        "cart",
+        "ui_scope",
+        "sku",
+        "sku_test",
+        "semantics",
+        "v08_actual",
+        "v08_scope",
+        "plan",
+        "full_scope"
+      ]
+    },
+    {
+      "id": "D08",
+      "current_scope": "Conditional international requirement decision still external; IN/INR code does not satisfy confirmed non-IN scope.",
+      "references": [
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "full",
+        "plan",
+        "full_scope"
+      ]
+    },
+    {
+      "id": "L01",
+      "current_scope": "CSV is now implemented/actual locally, not merely assigned.",
+      "references": [
+        "h_imports",
+        "h_t_imports",
+        "csv",
+        "csv_test",
+        "csv_evidence",
+        "ig_import",
+        "ig_originals",
+        "ig_test",
+        "ig_evidence"
+      ]
+    },
+    {
+      "id": "L02",
+      "current_scope": "Expiring explicit readiness.summary grants now implemented/actual; broader write/discovery deliberately not granted.",
+      "references": [
+        "support",
+        "support_test",
+        "support_evidence",
+        "h_assistance",
+        "h_t_assistance"
+      ]
+    },
+    {
+      "id": "L03",
+      "current_scope": "Dual-endpoint-control links now implemented/actual; full combined CRM history/consent/personhood is not implied.",
+      "references": [
+        "customer",
+        "customer_contract",
+        "customer_test",
+        "customer_evidence",
+        "h_order",
+        "h_checkout_api"
+      ]
+    },
+    {
+      "id": "L04",
+      "current_scope": "Analytics/funnel/trusted channel producers now installed/actual; partial/null clocks and test exclusions remain explicit.",
+      "references": [
+        "analytics",
+        "activity",
+        "activity_producers",
+        "activity_test",
+        "activity_evidence",
+        "activity_mounted",
+        "h_e_history"
+      ]
+    },
+    {
+      "id": "S01",
+      "current_scope": "SEO sitemap and explicit redirect infrastructure now installed/actual; real inventory/routing remains gate.",
+      "references": [
+        "seo",
+        "seo_test",
+        "seo_evidence",
+        "h_ssr",
+        "h_t_ssr"
+      ]
+    },
+    {
+      "id": "R01",
+      "current_scope": "Historical0053 restore/image and narrower0052package read compatibility exist; current-head release proof/old-writer rollback remains pending.",
+      "references": [
+        "release",
+        "restore",
+        "app_compat",
+        "image",
+        "ci",
+        "workflow",
+        "release_test",
+        "scope_release"
+      ]
+    },
+    {
+      "id": "E01",
+      "current_scope": "Provider/device/domain/customer/pilot/cutover gates remain; they do not waive known localA13/comment/tooling code gaps.",
+      "references": [
+        "plan",
+        "full_scope",
+        "h_channels",
+        "h_t_channels",
+        "h_operator",
+        "h_t_operator",
+        "h_e_channel",
+        "full",
+        "checkout",
+        "checkout_test",
+        "h_checkout_api",
+        "h_t_checkout_api",
+        "h_payment",
+        "h_t_payment",
+        "payment",
+        "h_parcel",
+        "h_parcel_review",
+        "h_t_parcel",
+        "h_t_parcel_review",
+        "h_e_parcel"
+      ]
+    }
+  ],
+  "isolated0057": {
+    "part_of_reviewed_central": false,
+    "references": [
+      "isolated57",
+      "isolated57_source"
+    ],
+    "observed": "Independent16noDB/source and six actual migrated/main/signup claim/App races pass at their recorded sources. Owner main/fixture/browser remains separately isolated; no central1c4/full/provider credit.",
+    "remaining": "Signed reserved-ingress→canonical exactMessageFK→paused existing worker and mounted native lifecycle evidence must be scored separately once frozen; liveSDK/CSP/permissions/recipient delivery stay external."
+  },
+  "confirmed_local_gap": {
+    "id": "A13",
+    "evidence": [
+      "legacy_link",
+      "legacy_auth",
+      "enquiries",
+      "native_comment_ui"
+    ],
+    "root_confirmed_existing_scope": true,
+    "scope": "Native explicit product link and eligible once-only resume; no expansion into inferred context promotion or blind unknown retry."
+  },
+  "retained_release_gates": [
+    "Current-head0056/0057 backup/restore and populated-domain reconciliation",
+    "Current-head locked image/offline smoke/nativeamd64 and OCI reproducibility",
+    "Actual prior/current writer/worker/application switch or safe forward-fix preserving newer transactions",
+    "HostedCI billing-lock execution; no steps ran in recorded blocked jobs",
+    "Physical iPhone/Android login/checkout/camera/touch",
+    "Live approved Meta/Razorpay/privateParcelDesk/TLS/D1/utility canaries",
+    "Actual seller legacy URLs/order links/domain-routing authority",
+    "ConditionalDharaa confirmed destinations or retain existing international route/defer migration",
+    "Approved pilot envelope/budgets/alerts/on-call/runbooks/finalbackup/ownercutoverapproval"
+  ],
+  "scoped_pilot_source_inventory": {
+    "path": "artifacts/v1/acceptance-reconciliation/pilot-source-inventory.json",
+    "sha256": "77727e35008be3e91a82b73dae0a33c453b5924c2972a6ce362d9c88be64abb8",
+    "files": 444,
+    "matches": 0,
+    "scope": "Scoped code-path name/metric search only; not a whole-repository absence claim or approved budget."
+  }
+}

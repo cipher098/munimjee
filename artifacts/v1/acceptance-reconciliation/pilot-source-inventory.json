@@ -1,0 +1,20 @@
+{
+  "commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+  "inspected_roots": [
+    "scripts",
+    "backend/app",
+    "backend/tests"
+  ],
+  "files": 444,
+  "patterns": [
+    "\\bp50\\b",
+    "\\bp95\\b",
+    "\\bp99\\b",
+    "\\bbacklog\\b",
+    "pilot.{0,30}(?:traffic|load)",
+    "usage_limit",
+    "(?:stuck|unknown).{0,30}alert"
+  ],
+  "hits": [],
+  "scope": "Scoped named pilot-load/metric/alert source inventory, not proof of global nonexistence or permission to invent budgets/limits. Existing generic counters/claims/recovery are retained."
+}
