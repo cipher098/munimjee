@@ -73,6 +73,35 @@ specific shared change is justified. Explicitly define:
 - Typed credential-free failure codes, redacted exceptions/results, no raw API
   bodies or token-bearing pagination URLs crossing durable/log boundaries.
 
+Frozen implementation API: `OwnedInstagramProvider`, `OwnedCredentialSnapshot`,
+`OwnedMediaLimits`, `OriginalMediaAsset`, `OwnedMediaResult`; isolated transport
+`OwnedRequest`, `OwnedResponse`, `PinnedOwnedTransport.request(request)`.
+Constructor receives trusted async credential loader/checkpoint, required explicit
+Graph version, resolver/transport and limits. `fetch_owned_media` keyword seam and
+matching result identity/products remain unchanged. One stable `media-product`
+placeholder contains `DraftFacts()` with unknown facts, independent of asset count.
+
+Trusted frozen capabilities default `ig_login_media=False`, `carousel=False`.
+Closed capability raises existing `provider_capability_pending` before credential
+loading or network I/O. Only synthetic tests explicitly enable the proposed media
+contract here; production composition cannot infer this from request input. Exact
+IG Login media fields remain a primary-documentation verification gate. Safe DTO,
+transport and gated account-owned-edge code implementation proceeds meanwhile.
+
+Credential snapshots use actual tenant/account/token/expiry/connection generation/
+revocation/login-route state. Optional known granted scopes must come from real
+grant evidence: absent metadata stays unknown, never inferred from requested OAuth
+scopes. Known missing basic permission refuses. The adapter verifies `/me` principal
+and professional account type before owned-media edge retrieval; Graph permission
+failures stay closed. No new permission/type storage or database schema is invented.
+
+Default deadline is 14 seconds, hard maximum 15, inclusive of loaders/checkpoints,
+DNS and transport; check before later I/O even if a callback suppresses cancellation.
+Limits cap five 25-item pages, eight Graph requests, ten assets, 5 MB per original,
+10 MB total originals and 256 KB per JSON response. Fresh credentials/checkpoint
+must be rechecked after DNS, before each request and before return. Ignore provider
+`paging.next` URLs and rebuild requests using only bounded cursor data.
+
 ## Research and acceptance truth
 
 The existing native OAuth is Instagram Login: Instagram authorize/code exchange,
