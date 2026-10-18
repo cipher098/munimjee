@@ -35,7 +35,8 @@ async def test_same_account_connection_change_after_download_cannot_retain_any_r
 
 
 @pytest.mark.asyncio
-async def test_original_bytes_manifest_exact_replay_foreign_access_and_tamper(migrated_engine):
+@pytest.mark.parametrize('tamper',['bytes','candidate'])
+async def test_original_bytes_manifest_exact_replay_foreign_access_and_tamper(migrated_engine,tamper):
     sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
     job=await enqueue(sessions,bid,actor)
     assert await jobs.run_job(sessions,bid,job.job_id,instagram_provider=FakeProvider(bid))
@@ -55,8 +56,14 @@ async def test_original_bytes_manifest_exact_replay_foreign_access_and_tamper(mi
         with pytest.raises(HTTPException) as denied:await import_originals.originals(db,other,bid,draft.id)
         assert denied.value.status_code==404
     async with sessions.begin() as db:
-        asset=await db.scalar(select(ImportAsset).where(ImportAsset.business_id==bid))
-        asset.content=b'\x89PNG\r\n\x1a\n'+b'x'*(asset.size_bytes-8)
+        if tamper=='bytes':
+            asset=await db.scalar(select(ImportAsset).where(ImportAsset.business_id==bid))
+            asset.content=b'\x89PNG\r\n\x1a\n'+b'x'*(asset.size_bytes-8)
+        else:
+            row=await db.get(ImportDraft,draft.id)
+            import copy
+            document=copy.deepcopy(row.document);document['provenance']['source']['media_id']='different-media'
+            row.document=document
     async with sessions() as db:
         with pytest.raises(HTTPException) as invalid:await import_originals.originals(db,actor,bid,draft.id)
         assert invalid.value.status_code==409

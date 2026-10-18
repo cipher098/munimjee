@@ -23,7 +23,7 @@ async def test_corrupt_original_rejected_even_when_python_assertions_are_removed
     job=SimpleNamespace(id=jid,creator_id=uid,source={'kind':'instagram','media_id':'123','_connection':{'version':1}})
     asset=SimpleNamespace(id=aid,idempotency_key=aid,creator_id=uid,sha256=sha,size_bytes=len(content),content_type='image/png',content=b'\x89PNG\r\n\x1a\n'+b'x'*(len(content)-8))
     class DB:
-        def __init__(self):self.rows=iter([SimpleNamespace(last_job_id=jid),job,asset])
+        def __init__(self):self.rows=iter([SimpleNamespace(last_job_id=jid,document={'id':str(cid),'provenance':{'business_id':str(bid),'import_job_id':str(jid),'source':{'kind':'instagram','media_id':'123'}}}),job,asset])
         async def scalar(self,_):return next(self.rows)
         async def scalars(self,_):return SimpleNamespace(all=lambda:[audit])
     monkeypatch.setattr(imports_v1,'_access',AsyncMock())
