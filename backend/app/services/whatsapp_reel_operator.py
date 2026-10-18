@@ -121,7 +121,10 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
     contact=await db.scalar(select(WhatsAppContact).where(WhatsAppContact.id==message.contact_id,WhatsAppContact.seller_id==business_id).execution_options(populate_existing=True,autoflush=False))
     if contact is None:
         raise HTTPException(404,'Enquiry not found')
-    version=await db.scalar(select(ChannelConnectionState.version).where(ChannelConnectionState.business_id==business_id,ChannelConnectionState.channel=='whatsapp'))
+    control=(await db.execute(select(ChannelConnectionState.version,ChannelConnectionState.automation_enabled).where(
+        ChannelConnectionState.business_id==business_id,ChannelConnectionState.channel=='whatsapp'))).one_or_none()
+    version=control.version if control else None
+    control_enabled=control.automation_enabled if control else False
     source,quoted_id,quoted_fp,reason=await original_reference(db,business_id,message)
     matches=await facts.exact_reel_products(db,business_id,reel_url=source['url']) if source['url'] else ()
     ids=tuple(matches or ())
@@ -131,7 +134,7 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
         Product.seller_id==business_id,Product.active.is_(True),Product.id.in_(ids)).order_by(Product.id).execution_options(autoflush=False))).mappings()] if ids else []
     newer=await db.scalar(select(WhatsAppMessage.id).where(WhatsAppMessage.seller_id==business_id,
         WhatsAppMessage.contact_id==contact.id,WhatsAppMessage.direction=='inbound',
-        tuple_(WhatsAppMessage.created_at,WhatsAppMessage.id)>tuple_(message.created_at,message.id)).limit(1))
+        WhatsAppMessage.created_at>=message.created_at,WhatsAppMessage.id!=message.id).limit(1))
     prior=await db.scalar(select(WhatsAppMessage.id).where(WhatsAppMessage.seller_id==business_id,
         WhatsAppMessage.contact_id==contact.id,WhatsAppMessage.direction=='outbound',
         WhatsAppMessage.created_at>=message.created_at).limit(1))
@@ -139,7 +142,7 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
     if reason is None:
         reason=('account_unavailable' if not account or not account.access_token else
             'account_changed' if account.phone_number_id!=message.phone_number_id else
-            'automation_paused' if not (account.enabled and account.automation_enabled and account.reel_replies_enabled) else
+            'automation_paused' if not (account.enabled and account.automation_enabled and account.reel_replies_enabled and control_enabled) else
             'opted_out' if contact.opted_out else
             'reply_window_closed' if not wa.window_open(contact) or not at-timedelta(hours=24)<message.created_at<=at else
             'newer_customer_message' if newer else 'reply_already_attempted' if prior else
@@ -148,10 +151,10 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
             'ambiguous_mapping' if matches is None or len(ids)>1 else None)
     credential=hashlib.sha256(account.access_token.encode()).hexdigest() if account else hashlib.sha256(b'').hexdigest()
     state=dict(source_fingerprint=source_fp,quoted_id=quoted_id,quoted_fingerprint=quoted_fp,source=source,
-        connection_version=version if version is not None else 0,credential=credential,
+        connection_version=version if version is not None else 0,control_present=version is not None,credential=credential,
         account_phone=account.phone_number_id if account else None,waba=account.waba_id if account else None,
         enabled=account.enabled if account else False,automation=account.automation_enabled if account else False,
-        reels=account.reel_replies_enabled if account else False,contact_last=contact.last_inbound_at,
+        reels=account.reel_replies_enabled if account else False,control_enabled=control_enabled,contact_last=contact.last_inbound_at,
         opted_out=contact.opted_out,newer=newer,prior=prior,matches=ids)
     return message,account,contact,state,reason,names,candidates
 
@@ -160,7 +163,7 @@ def review_view(business_id,values,can_manage):
     message,account,contact,state,reason,names,candidates=values
     source=state['source']; can_link=bool(source['shortcode'] and source['classification']!='unknown')
     return canonical(dict(business_id=business_id,inbound_id=message.id,message=message.text,received_at=message.created_at,
-        customer_name=contact.name,customer_ref=contact.phone[-4:],account_hint='…'+account.phone_number_id[-6:] if account else None,
+        customer_name=contact.name,customer_ref=contact.phone[-4:],account_hint='…'+account.phone_number_id[-6:] if account else 'Not connected',
         source=source,connection_version=state['connection_version'],fingerprint=fingerprint(state),matches=names,products=candidates,
         eligibility=dict(can_link=can_link,can_resume=can_link and reason is None,reason=reason),can_manage=can_manage))
 
@@ -235,6 +238,8 @@ async def link_enquiry(db,actor,business_id,inbound_id,command,*,request_authori
         reject('source_changed')
     values=await review_state(db,business_id,inbound_id,locked=locked)
     message,account,contact,state,reason,_,_=values
+    if not state['control_present'] or not message.provider_message_id:
+        reject('source_or_connection_unverified')
     if fingerprint(state)!=command.expected_fingerprint or state['connection_version']!=command.expected_connection_version:
         reject('review_changed')
     if reason in {'ambiguous_source','source_changed','quoted_source_unavailable','unsupported_source'} or state['source']['shortcode']!=command.shortcode or state['source']['classification']=='unknown':
@@ -255,6 +260,10 @@ async def link_enquiry(db,actor,business_id,inbound_id,command,*,request_authori
     if product is None:
         reject('product_unavailable')
     product,before_mapping=product
+    current_matches=await facts.exact_reel_products(db,business_id,reel_url=state['source']['url'])
+    await guard()
+    if current_matches is None or any(identity!=product.id for identity in current_matches):
+        reject('mapping_conflict')
     # Everything below is staged atomically; no typed pre-mutation rejection.
     accepted_at=await db.scalar(select(func.transaction_timestamp()))
     product.reel_urls=list(dict.fromkeys([*(product.reel_urls or []),state['source']['url']]))
@@ -332,12 +341,13 @@ AND wa_reel_source_fingerprint(src.payload,src.text,src.kind,src.created_at,src.
 AND src.payload->'reel_context'->>'source'=c.source_classification
 AND src.created_at>clock_timestamp()-interval '24 hours' AND src.created_at<=clock_timestamp()
 AND (c.quoted_message_id IS NULL OR (quoted.contact_id=contact.id AND quoted.phone_number_id=c.phone_number_id
+AND quoted.provider_message_id=src.payload->>'reply_to_message_id'
 AND wa_reel_source_fingerprint(quoted.payload,quoted.text,quoted.kind,quoted.created_at,quoted.provider_message_id,quoted.contact_id,quoted.phone_number_id)=c.quoted_fingerprint))
 AND session.user_id=c.actor_user_id AND session.auth_version=c.actor_auth_version AND reviewer.auth_version=c.actor_auth_version
 AND session.revoked_at IS NULL AND session.expires_at>clock_timestamp() AND reviewer.is_active AND reviewer.revoked_at IS NULL
 AND member.is_active AND member.revoked_at IS NULL AND member.role IN ('owner','manager') AND business.is_active AND seller.is_active
 AND account.phone_number_id=c.phone_number_id AND account.waba_id=c.waba_id AND account.access_token<>''
-AND account.enabled AND account.automation_enabled AND account.reel_replies_enabled AND control.version=c.connection_version
+AND account.enabled AND account.automation_enabled AND account.reel_replies_enabled AND control.automation_enabled AND control.version=c.connection_version
 AND encode(sha256(convert_to(account.access_token,'UTF8')),'hex')=c.credential_fingerprint
 AND NOT contact.opted_out AND contact.last_inbound_at>clock_timestamp()-interval '24 hours' AND contact.last_inbound_at<=clock_timestamp()
 AND product.active AND product.name=:product_name AND store.published AND mapping.state='reviewed'
@@ -354,7 +364,7 @@ AND dst.contact_id=auth.contact_id AND dst.phone_number_id=c.phone_number_id AND
 AND dst.idempotency_key='auto:reel:' || c.provider_mid AND dst.status IN ('queued','sending') AND dst.provider_message_id IS NULL
 AND dst.text=:expected_text AND dst.payload=jsonb_build_object('reel_context',c.reply_context,'customer_text',src.text)
 AND NOT EXISTS(SELECT 1 FROM whatsapp_messages newer WHERE newer.seller_id=auth.business_id AND newer.contact_id=auth.contact_id
-AND newer.direction='inbound' AND (newer.created_at,newer.id)>(src.created_at,src.id))
+AND newer.direction='inbound' AND newer.created_at>=src.created_at AND newer.id<>src.id)
 AND NOT EXISTS(SELECT 1 FROM whatsapp_messages attempted WHERE attempted.seller_id=auth.business_id AND attempted.contact_id=auth.contact_id
 AND attempted.direction='outbound' AND attempted.id<>dst.id AND attempted.created_at>=src.created_at)
 AND lower(btrim(src.text)) NOT IN ('stop','unsubscribe','start')
