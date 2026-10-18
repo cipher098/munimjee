@@ -94,11 +94,11 @@ Supplemental evidence covers explicit reload followed by fresh allowed/denied
 session checks, transport/503 recovery, stale interactive auth/logout callbacks,
 passive focus retention and settled callback completion. The cookie fixture only
 proves the DOM/focus generation fence; real server logout/Set-Cookie ordering remains
-a separate integration boundary. The observed keyboard outline contrast is8.8627:1,
-and the unbroken160-character business name fits360px without document overflow.
+a separate integration boundary. The observed keyboard outline contrast is 8.8627:1,
+and the unbroken 160-character business name fits 360px without document overflow.
 
 Independent final review `ed35aa77d280b525d7649b3c503db9b92f1bdeb3` verified the
-exact source, harness/fixture/artifact hashes and nine screenshots at360/390/768/1440,
+exact source, harness/fixture/artifact hashes and nine screenshots at 360/390/768/1440,
 including focused long-name reflow. It reports no blocking finding in the scoped
 repair. Shared parcel/customer isolation is static proof through their unchanged
 HTML/JS/commerce CSS and absent native body marker; no shared-page computed-style
