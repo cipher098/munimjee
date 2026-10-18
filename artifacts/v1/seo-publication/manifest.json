@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-18",
+  "base_sha": "e750e5a5a78da74390572d116f5c98649a7334a1",
+  "application_checkpoint_sha": "387268eb8cc41cde992a6da45e4291f9e57884c8",
+  "branch": "codex/v1-seo-publication",
+  "python": "3.11.16 (main, Sep  1 2026, 14:08:22) [Clang 22.1.3 ]",
+  "commands": [
+    {
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave6-seo/backend",
+      "command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest -q tests/test_v1_seo_publication.py tests/test_v1_seo_publication_db.py tests/test_v1_storefront_bootstrap.py tests/test_v1_storefront_rendering.py tests/test_storefront_publication.py tests/test_test_safety.py --junitxml=../artifacts/v1/seo-publication/verification.xml > ../artifacts/v1/seo-publication/verification.txt 2>&1",
+      "exit_code": 0,
+      "passed": 255,
+      "skipped": 20
+    },
+    {
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave6-seo/backend",
+      "command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest -q tests/test_v1_runtime_package.py tests/test_v1_release_ci.py --junitxml=../artifacts/v1/seo-publication/package.xml > ../artifacts/v1/seo-publication/package.txt 2>&1",
+      "exit_code": 0,
+      "passed": 41,
+      "skipped": 0
+    }
+  ],
+  "skips": [
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[unpublished]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[inactive_seller]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[inactive_business]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[unactivated]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[inactive_product]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_current_publication_revocation_sitemap_redirect_and_order[inactive_sku]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_v1_seo_publication_db",
+      "name": "test_actual_main_category_tenant_scope_private_draft_and_existing_capability",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_native_setup_published_activated_sku_ssr_and_cod_replay",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[unpublished]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[inactive_seller]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[inactive_business]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[unactivated]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[inactive_product]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_publication_never_falls_back_to_drafts_or_legacy[inactive_sku]",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_typed_stock_rejection_has_no_order_customer_reservation_or_token",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_all_three_presentations_use_identical_canonical_publication",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_seller_store_link_uses_enabled_publication_and_configured_origin",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_storefront_publication",
+      "name": "test_gateway_only_store_never_advertises_unimplemented_browser_payment",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_test_safety",
+      "name": "test_actual_migrated_schema_and_database_lease",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    },
+    {
+      "class": "tests.test_test_safety",
+      "name": "test_reusable_synthetic_tenants_have_distinct_persisted_ids",
+      "reason": "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1"
+    }
+  ],
+  "files_sha256": {
+    "backend/app/api/v1/storefront.py": "fbbe48b2fd7ab456b1a8903add230934b2fc8898080c4faa119a1568916110f1",
+    "backend/app/api/v1/storefront_bootstrap.py": "6219786c216197c41afca12bfb91236e1efbea4097834b040c2eb8f51354b548",
+    "backend/app/config.py": "0324f29c56bdc409b6e66257758f00a755a2d7ba43cf0a1857de0f7c08cc9678",
+    "backend/app/services/storefront_publication.py": "47e1679cf44c1cff6d9f7eacbe9d232167438989721ccaabc48bb8c9011c3295",
+    "backend/app/v1/storefront/seo.py": "86100cd438343ba55272001e03b165b8e8e6be7dbc4d5d08dd6c1f2ebb6e3433",
+    "backend/tests/test_v1_seo_publication.py": "0c2855af3ac5e53e720c4f4449fe340b9785ad3d33e1c3503e4041ab5dd76100",
+    "backend/tests/test_v1_seo_publication_db.py": "34960ec358248f97cef7dfc980de3505417a467e3a0493b9abdf7c45be546f00",
+    "docs/v1-seo-publication.md": "46f4c1fd720be3b561c549532e3e1cfa652b0d882b5a4b92af579f057b848025",
+    "backend/tests/test_storefront_publication.py": "6116195bffd426bf20deb97eee21bc5b9287eafa61460007f6285b7271ed8019",
+    "backend/tests/test_v1_storefront_bootstrap.py": "990a6726b7f43368b5d9e2d59abb083f8db73ceca128a063403addb8ef0dd45b",
+    "backend/tests/test_v1_storefront_rendering.py": "88be379201bf830deae6f934cc388a14e85ee8ede7164c1e7b264a8ffd1dbfac",
+    "backend/tests/test_test_safety.py": "08066383c20654de4d9cb123fbeab8dbfe1c0a966a3a642ae49aa91962549785",
+    "backend/tests/test_v1_runtime_package.py": "a53cdd9567f10a699c787fbf278088c907f3a448a619dd05699a4fc57d4cccbe",
+    "backend/tests/test_v1_release_ci.py": "1a9d61b08ec84d2c08797de5803d7ec3e81e2242ab041ac990b49164388cf7be",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/tests/isolated_database.py": "3c3248dca9547ed70d7fa57cecacae9214f7f75c41e39888746c322c1f403e06",
+    "backend/tests/conftest_db.py": "89ed254cbd6bdb76d0fa6f0e6e2b8fec4d1b932b8ee603c98f37becd9fcb8472",
+    "backend/tests/conftest.py": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84",
+    "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+    "backend/app/main.py": "ef63443f43e48111814d5501a42cb7c209886e8b6d5acfbcdb478f9a23e4ed85",
+    "artifacts/v1/seo-publication/package.txt": "b616d2f5d651267c6fed5e2020076636f9067f2362d0761e981face8a93aaf1f",
+    "artifacts/v1/seo-publication/package.xml": "540d8dc935bd314bf8d15a40c161d3ee9dbc665e45d3775ffdb0c8a5428486dc",
+    "artifacts/v1/seo-publication/verification.txt": "f873fa66121a9531b7d04ecdd2aa92fdad0e0a833c1c537cb17f9e5529b3b33f",
+    "artifacts/v1/seo-publication/verification.xml": "c4ee929aa0c51d8131e3d59209988f24c17ee786dfd1cddfcb004176658be02f"
+  },
+  "evidence_class": "pure_and_synthetic_ASGI_only",
+  "actual_postgresql16": "NOT_RUN_no_allocated_P01_lane",
+  "actual_main_ASGI": "PREPARED_7_guarded_tests_not_run",
+  "domain_provider_redirect_acceptance": "NOT_RUN_no_reviewed_real_inventory_or_authority",
+  "legacy_inventory_default": "[]",
+  "no_release_ready_claim": true,
+  "independent_qa_reported": {
+    "checkpoint": "387268e",
+    "passed": 109,
+    "actual_DB_skipped": 7,
+    "status": "reported_by_independent_lane_raw_evidence_owned_by_QA"
+  }
+}
