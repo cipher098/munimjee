@@ -13,7 +13,7 @@
   let epoch=0,sessionIssued=0,sessionApplied=0,latestSession=null;
   async function api(path,options={}){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);try{return await window.V1.api(path,{...options,signal:controller.signal,redirect:'error'});}finally{clearTimeout(timer);}}
   function clearReport(){report=null;for(const id of ['counts','money','daily','orders'])$(id).replaceChildren();for(const id of ['cohort-label','test-note','page-label'])$(id).textContent='';$('report').hidden=true;}
-  function end(message){if(ended)return;ended=true;epoch++;clearReport();$('filters').reset();context=null;latestSession=null;currentQuery=null;$('business-name').textContent='Purchases and payments';$('orders-link').removeAttribute('href');$('orders-link').hidden=true;$('workspace').hidden=true;$('logout').hidden=true;$('error').textContent='';$('loading').textContent='';$('access-message').textContent=message;$('access-needed').hidden=false;sync();}
+  function end(message){if(ended)return;ended=true;window.dispatchEvent(new Event('v1-analytics-access-ended'));epoch++;clearReport();$('filters').reset();context=null;latestSession=null;currentQuery=null;$('business-name').textContent='Purchases and payments';$('orders-link').removeAttribute('href');$('orders-link').hidden=true;$('workspace').hidden=true;$('logout').hidden=true;$('error').textContent='';$('loading').textContent='';$('access-message').textContent=message;$('access-needed').hidden=false;sync();}
   function cookie(){try{return document.cookie.split(';').map(x=>x.trim()).filter(x=>x.startsWith('v1_csrf=')).map(x=>decodeURIComponent(x.slice(8)))[0]||null;}catch(_){return null;}}
   async function session(){
     if(ended)throw Error('Ended');const sequence=++sessionIssued;
@@ -74,5 +74,6 @@
   $('logout').addEventListener('click',async()=>{end('Signing out…');try{await api('/api/v1/auth/logout',{method:'POST'});$('access-message').textContent='Signed out. Return to business setup to sign in again.';}catch(_){$('access-message').textContent='Sign-out could not be confirmed. Return to business setup to check your session.';}});
   async function recheck(){if(ended)return;if(checking){recheckPending=true;return;}checking=true;sync();try{await session();}catch(_){if(!ended)end('Your current sign-in could not be checked. Reopen analytics from business setup.');}finally{checking=false;sync();if(recheckPending&&!ended){recheckPending=false;recheck();}}}
   window.addEventListener('focus',recheck);window.addEventListener('pageshow',recheck);document.addEventListener('visibilitychange',()=>{if(document.hidden)$('workspace').hidden=true;else recheck();});window.addEventListener('pagehide',()=>{$('workspace').hidden=true;});
+  window.addEventListener('v1-analytics-access-ended',()=>end('Your analytics access ended. Reopen it from business setup.'));
   dates();load(capture());
 })();

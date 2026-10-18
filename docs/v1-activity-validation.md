@@ -1,0 +1,26 @@
+# Activity slice validation and integration gates
+
+Source worktree: munimjee-v1-analytics-events; branch codex/v1-analytics-events. Contract1e6f1ce, actual immutable schema foundation00ed382, collector/report/module89e89e8. Real0054 follows reviewed real0053; no create_all, fake migration predecessor, provider calls or production actions.
+
+## Current validation checkpoint
+
+P01 exclusive payment_w3 PostgreSQL16 lane only. The first complete focused run passed69 checks, then11 source/public-gate delta checks passed (8 overlap). Current source additionally includes deterministic UTC context-start versus next-day order-cohort and owner→viewer policy-read projection regressions; these are pending the integrator's shared DB hold. Prior raw logs are retained rather than overwritten. Twenty-eight Node checks passed for the exact activity/policy DTO allowlists, decimal money, bounded conversion, optional public client, memory-only proof and durable context identity/recovery.
+
+The last mounted Chromium run passed19 checks on actual native signup/session/CSRF, actual0054 and actual activity router. Its public-module hooks are invoked explicitly by the browser harness; it does **not** establish shared public shell/writer integration. It proves owner policy enablement, commit-then-dropped response→reload→explicit exact-key retry with a single policy revision, manager/viewer write denial, native test exclusion, private optional-client context/view/checkout event dedup, malformed ACK, unclassified409 uncertainty, typed CAS conflict review, malformed/restricted storage and physical ended-access scrub. All provider calls and outbound browser requests were0. Local server deployment classification is an explicitly synthetic fixture, not live customer traffic.
+
+After that19-check run, UI hardening clears the previous current-policy projection and disables fresh policy commands on an activity read failure; it also avoids claiming the current policy was checked when the post-acknowledgement refresh failed. This final UI delta needs one serialized browser rerun after the shared DB hold. No new DB/browser runs occur during the hold.
+
+Raw output and desktop/mobile states are under artifacts/v1/activity. The initial failures are fixture/assertion issues preserved transparently: fieldset matcher semantics, attempting a reviewed product before configuring its storefront, and an oversized synthetic WhatsApp contact value. The Product-FK lock regression was a real source improvement, not a test-only workaround: product views now acquire Product KEY SHARE before Policy→Context and cannot invert checkout's Product→Context order.
+
+Visual inspection covered the existing purchase dashboard, desktop off/observed, mobile owner/viewer/error/ended views. The owned extension retains commerce.css fonts, tokens and operating-page layout. The mechanical detector returned[] before the last behavior-only JS hardening; it does not replace source/render review. Independent integrator review accepted definitions/foundation; API/service/UI final review is pending. No fresh reviewer slot or production UX claim is implied.
+
+## Integration work remains separately owned
+
+- Integrator mounts app.api.v1.activity_v1.router and registers app.models.activity_v1. Runtime package needs analytics_activity.js and storefront activity-client.js in addition to existing analytics assets.
+- Shared native cleanup adds munimjee.activity-policy: on login/signup/invite accept/logout/logout-all/401. Owned UI also removes its current journal when access ends.
+- Shared checkout schema/encoder/CheckoutAttempt freezes optional activity_context_id into the first exact body/hash. Omit only the new null field for historical hash compatibility. Shared checkout calls record_order only for NEW accepted SKU orders, never accepted replay, and passes optional X-Activity-Context Bearer proof. No stock/payment writer is replaced.
+- Shared public shell invokes the optional module only on visible published mount, product detail and visible checkout form. GPC/DNT/storage refusal, collection failure and unavailable proof leave shopping available. Cross-reload frozen checkout context must not be replaced by a renewed browsing context.
+- Integrator installs and observes bounded cleanup. Collection remains default-off until actual retention readiness is explicitly true. A helper and a flag do not establish deployment scheduling or exact physical deletion timing.
+- Server record_source is tested but channel producer installation/coverage is not present. Enquiries and automation outcomes therefore remain null/producer_not_installed. Future integrator/social hooks must instrument only NEW deduplicated rows, preserve tenant/time/origin and immutable server test classification, and avoid bodies/provider identities. IG processing does not establish send/delivery/resolution. WA/comment provider association may support local accepted outcomes only after actual hooks/gates are reviewed.
+
+V10 remains bounded by these shared hooks and producer gates. The implemented slice does not claim complete visits, people, channel attribution, autonomous resolution, refund completion, settlement-period cashflow or net revenue. Existing diagnostic order history remains unchanged and explicitly retains historical test-marker limitations.
