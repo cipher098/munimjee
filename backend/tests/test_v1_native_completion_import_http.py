@@ -34,6 +34,10 @@ async def native_import(migrated_engine, monkeypatch):
     from app.main import app
     from app.api.v1.storefront_bootstrap import install_storefront
     original_routes = list(app.router.routes)
+    original_startup = list(app.router.on_startup)
+    original_middleware = list(app.user_middleware)
+    original_stack = app.middleware_stack
+    original_overrides = dict(app.dependency_overrides)
     monkeypatch.setattr(settings, 'V1_AUTH_ENABLED', True)
     monkeypatch.setattr(settings, 'V1_ENFORCE_LEGACY_ACCESS', True)
     monkeypatch.setattr(settings, 'V1_IMPORT_BRIDGE_ENABLED', True)
@@ -41,14 +45,17 @@ async def native_import(migrated_engine, monkeypatch):
     monkeypatch.setattr(settings, 'V1_STOREFRONT_ENABLED', True)
     # app.main may have been imported while the default-off flag was false.
     # Install the actual bootstrap only when its real public route is absent.
-    if not any(getattr(route, 'path', None) == '/stores/{slug}' for route in app.router.routes):
-        install_storefront(app)
     sessions = async_sessionmaker(migrated_engine, expire_on_commit=False)
     async def database():
         async with sessions.begin() as db:
             yield db
     app.dependency_overrides[get_db] = database
     try:
+        if not any(getattr(route, 'path', None) == '/stores/{slug}' for route in app.router.routes):
+            # Test-only reconstruction of the shared process app. Production
+            # installs middleware before serving; restore its whole prior state.
+            app.middleware_stack = None
+            install_storefront(app)
         # Canonical HTTPS makes native cookies Secure; use HTTPS ASGI requests
         # as well so the real cookie jar exercises authentication correctly.
         async with AsyncClient(transport=ASGITransport(app=app), base_url='https://test', headers={'Origin': 'https://test'}) as client:
@@ -65,8 +72,12 @@ async def native_import(migrated_engine, monkeypatch):
                 prefix=f'/api/v1/businesses/{bid}/imports/candidates',
                 csrf={'X-CSRF-Token': client.cookies['v1_csrf']})
     finally:
-        app.dependency_overrides.pop(get_db, None)
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(original_overrides)
         app.router.routes[:] = original_routes
+        app.router.on_startup[:] = original_startup
+        app.user_middleware[:] = original_middleware
+        app.middleware_stack = original_stack
 
 
 async def seed(j, **changes):
