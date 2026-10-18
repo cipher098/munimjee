@@ -130,7 +130,10 @@ async def view(db, row):
         current = False
     ig_name = await db.scalar(select(Conversation.customer_name).where(Conversation.id == row.conversation_id, Conversation.seller_id == row.business_id))
     wa_name = await db.scalar(select(WhatsAppContact.name).where(WhatsAppContact.id == row.contact_id, WhatsAppContact.seller_id == row.business_id))
+    active = await db.scalar(select(func.count()).select_from(Association).where(Association.business_id == row.business_id,
+        Association.challenge_id == row.id, Association.customer_id == row.customer_id, Association.revoked_at.is_(None))) if row.customer_id else 0
     return {'id': str(row.id), 'business_id': str(row.business_id), 'state': row.state,
+        'linked': active == 2,
         'instagram_label': f'{ig_name or "Unnamed Instagram account"} · …{row.instagram_subject[-6:]}',
         'whatsapp_label': f'{wa_name or "Unnamed WhatsApp account"} · …{row.whatsapp_subject[-6:]}',
         'expired': row.expires_at <= now(), 'binding_current': current,
@@ -330,7 +333,8 @@ async def ingest_whatsapp_command(db, account, event, provider_at):
     body = event.get('text')
     content = body.get('body') if isinstance(body, dict) else None
     if event.get('type') != 'text':
-        media = event.get(event.get('type'))
+        kind = event.get('type')
+        media = event.get(kind) if isinstance(kind, str) else None
         caption = media.get('caption') if isinstance(media, dict) else None
         return any(isinstance(value, str) and RESERVED.match(value) is not None for value in (content, caption))
     return await capture(db, account.seller_id, 'whatsapp', account.phone_number_id,

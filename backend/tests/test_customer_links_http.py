@@ -100,6 +100,7 @@ async def test_real_signed_proof_finalize_exact_replay_unlink_and_no_transcript_
     unlink={'idempotency_key':str(uuid4()),'expected_fingerprint':detail['association_fingerprint'],'confirmed':True,'reason':'Synthetic customer requested separation'}
     separated=await post(j,j.base+'/customers/'+result['customer_id']+'/unlink',unlink);assert separated.status_code==200,separated.text
     assert (await post(j,j.base+'/customers/'+result['customer_id']+'/unlink',unlink)).json()==separated.json()
+    assert (await j.client.get(j.base)).json()['items'][0]['linked'] is False
     async with j.sessions() as db:
         assert (await db.get(Conversation,j.conversation)).messages==[{'role':'customer','content':'Earlier synthetic message'}]
         assert await db.scalar(select(func.count()).select_from(WhatsAppMessage))==0
