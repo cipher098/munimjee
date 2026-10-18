@@ -38,7 +38,7 @@ def test_default_plan_does_not_import_db_or_call_process_or_network(monkeypatch,
     assert result["mode"] == "plan"
     assert result["database_effects"] is False
     assert result["container_effects"] is False
-    assert result["alembic_head"] == "0053_v1_csv_import"
+    assert result["alembic_head"] == "0056_v1_comment_operator"
 
 
 def test_pg16_literal_array_cast_reparse_keeps_exact_constraint_meaning():
@@ -228,6 +228,7 @@ async def test_both_p01_leases_span_mutations_and_failure_unwinds_owned_connecti
     monkeypatch.setattr(rehearsal, "snapshot", baseline)
     monkeypatch.setattr(synthetic, "seed", noop)
     monkeypatch.setattr(synthetic, "validate_fixture", noop)
+    monkeypatch.setattr(synthetic, "probe_comment_fk", noop)
     monkeypatch.setattr(rehearsal, "pg_tools", lambda *a: {"pg_dump": "pg_dump", "pg_restore": "pg_restore"})
     def command(argv, *a, **kwargs):
         assert held == {"release_src", "release_dst"}
@@ -271,7 +272,14 @@ async def test_writer_protection_or_sequence_change_changes_schema_digest(monkey
     async def query(connection, sql, params=None):
         original = connection == "original"
         rows = []
-        if "FROM pg_trigger" in sql:
+        if "SELECT n.nspname,c.relname,k.conname,k.contype" in sql:
+            rows = [["public", "comment_actions", "comment_action_event_tenant", "f", "public", "comment_events",
+                ["seller_id", "event_id"], ["seller_id", "id"], "a", "a", "s", False, False, False,
+                "FOREIGN KEY (seller_id, event_id) REFERENCES comment_events(seller_id, id) NOT VALID"]]
+        elif "FROM pg_constraint" in sql:
+            rows = [["comment_actions", "comment_action_event_tenant",
+                "FOREIGN KEY (seller_id, event_id) REFERENCES comment_events(seller_id, id) NOT VALID", False]]
+        elif "FROM pg_trigger" in sql:
             rows = [["commerce_orders", "catalogue_order_snapshot_guard", "CREATE TRIGGER immutable", "O"]]
             if changed == "trigger" and not original: rows = []
         elif "FROM pg_proc" in sql:
