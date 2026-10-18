@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="0.181" timestamp="2026-10-18T16:12:18.292290" hostname="user-ka-Mac-mini.local"><testcase classname="tests.test_v08_material_reply_regression" name="test_missing_material_requires_handoff_or_specific_uncertainty[M01-plural]" file="tests/test_v08_material_reply_regression.py" line="87" time="0.026"><properties><property name="scenario_id" value="M01-plural" /><property name="question" value="What materials are available?" /><property name="reply" value="Current catalogue: Semantic kurta.&#10;• Color: Indigo; Size: M — ₹123.45; recorded available: 2.&#10;• Color: Indigo; Size: L — ₹145.67; recorded out of stock.&#10;• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.&#10;Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team." /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties><failure message="AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'&#10;assert False&#10; +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1092e56c0&gt;)">case_id = 'M01-plural', question = 'What materials are available?'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x1092cf420&gt;
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("case_id,question", MATERIAL_CASES, ids=[row[0] for row in MATERIAL_CASES])
+    async def test_missing_material_requires_handoff_or_specific_uncertainty(case_id, question, record_property):
+        record_property("scenario_id", case_id)
+        reply = await compose(question, raw_observations(), record_property)
+&gt;       assert_material_uncertainty(reply)
+
+tests/test_v08_material_reply_regression.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+reply = 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size...vailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+
+    def assert_material_uncertainty(reply):
+        # A future truthful explicit-unknown answer is allowed; generic preferred-
+        # option confirmation alone cannot answer a missing material question.
+        if reply == HANDOFF:
+            return
+        relevant = [line for line in (reply or "").splitlines()
+                    if re.search(r"\b(material|materials|fabric|composition)\b", line, re.I)]
+&gt;       assert any(re.search(r"unknown|unrecorded|not (?:recorded|listed|confirmed|available)|need[s]? confirmation|please confirm|confirm with", line, re.I)
+                   for line in relevant), "Missing material needs specific uncertainty or human handoff; observed: " + repr(reply)
+E       AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+E       assert False
+E        +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1092e56c0&gt;)
+
+tests/test_v08_material_reply_regression.py:77: AssertionError</failure></testcase><testcase classname="tests.test_v08_material_reply_regression" name="test_missing_material_requires_handoff_or_specific_uncertainty[M02-price-material]" file="tests/test_v08_material_reply_regression.py" line="87" time="0.004"><properties><property name="scenario_id" value="M02-price-material" /><property name="question" value="What price and material is this?" /><property name="reply" value="Current catalogue: Semantic kurta.&#10;• Color: Indigo; Size: M — ₹123.45; recorded available: 2.&#10;• Color: Indigo; Size: L — ₹145.67; recorded out of stock.&#10;• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.&#10;Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team." /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties><failure message="AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'&#10;assert False&#10; +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1092e5b70&gt;)">case_id = 'M02-price-material', question = 'What price and material is this?'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x1095c7d80&gt;
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("case_id,question", MATERIAL_CASES, ids=[row[0] for row in MATERIAL_CASES])
+    async def test_missing_material_requires_handoff_or_specific_uncertainty(case_id, question, record_property):
+        record_property("scenario_id", case_id)
+        reply = await compose(question, raw_observations(), record_property)
+&gt;       assert_material_uncertainty(reply)
+
+tests/test_v08_material_reply_regression.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+reply = 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size...vailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+
+    def assert_material_uncertainty(reply):
+        # A future truthful explicit-unknown answer is allowed; generic preferred-
+        # option confirmation alone cannot answer a missing material question.
+        if reply == HANDOFF:
+            return
+        relevant = [line for line in (reply or "").splitlines()
+                    if re.search(r"\b(material|materials|fabric|composition)\b", line, re.I)]
+&gt;       assert any(re.search(r"unknown|unrecorded|not (?:recorded|listed|confirmed|available)|need[s]? confirmation|please confirm|confirm with", line, re.I)
+                   for line in relevant), "Missing material needs specific uncertainty or human handoff; observed: " + repr(reply)
+E       AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+E       assert False
+E        +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1092e5b70&gt;)
+
+tests/test_v08_material_reply_regression.py:77: AssertionError</failure></testcase><testcase classname="tests.test_v08_material_reply_regression" name="test_missing_material_requires_handoff_or_specific_uncertainty[M03-sizes-stock-materials]" file="tests/test_v08_material_reply_regression.py" line="87" time="0.003"><properties><property name="scenario_id" value="M03-sizes-stock-materials" /><property name="question" value="What sizes stock and materials are available?" /><property name="reply" value="Current catalogue: Semantic kurta.&#10;• Color: Indigo; Size: M — ₹123.45; recorded available: 2.&#10;• Color: Indigo; Size: L — ₹145.67; recorded out of stock.&#10;• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.&#10;Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team." /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties><failure message="AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'&#10;assert False&#10; +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1094195d0&gt;)">case_id = 'M03-sizes-stock-materials'
+question = 'What sizes stock and materials are available?'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x109581d00&gt;
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("case_id,question", MATERIAL_CASES, ids=[row[0] for row in MATERIAL_CASES])
+    async def test_missing_material_requires_handoff_or_specific_uncertainty(case_id, question, record_property):
+        record_property("scenario_id", case_id)
+        reply = await compose(question, raw_observations(), record_property)
+&gt;       assert_material_uncertainty(reply)
+
+tests/test_v08_material_reply_regression.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+reply = 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size...vailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+
+    def assert_material_uncertainty(reply):
+        # A future truthful explicit-unknown answer is allowed; generic preferred-
+        # option confirmation alone cannot answer a missing material question.
+        if reply == HANDOFF:
+            return
+        relevant = [line for line in (reply or "").splitlines()
+                    if re.search(r"\b(material|materials|fabric|composition)\b", line, re.I)]
+&gt;       assert any(re.search(r"unknown|unrecorded|not (?:recorded|listed|confirmed|available)|need[s]? confirmation|please confirm|confirm with", line, re.I)
+                   for line in relevant), "Missing material needs specific uncertainty or human handoff; observed: " + repr(reply)
+E       AssertionError: Missing material needs specific uncertainty or human handoff; observed: 'Current catalogue: Semantic kurta.\n• Color: Indigo; Size: M — ₹123.45; recorded available: 2.\n• Color: Indigo; Size: L — ₹145.67; recorded out of stock.\n• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.'
+E       assert False
+E        +  where False = any(&lt;generator object assert_material_uncertainty.&lt;locals&gt;.&lt;genexpr&gt; at 0x1094195d0&gt;)
+
+tests/test_v08_material_reply_regression.py:77: AssertionError</failure></testcase><testcase classname="tests.test_v08_material_reply_regression" name="test_m04_supported_mixed_request_preserves_zero_price_zero_and_unknown_stock" file="tests/test_v08_material_reply_regression.py" line="95" time="0.002"><properties><property name="scenario_id" value="M04-supported-mixed-zero-price" /><property name="question" value="What prices sizes and stock are available?" /><property name="reply" value="Current catalogue: Semantic kurta.&#10;• Color: Indigo; Size: M — ₹0.00; recorded available: 2.&#10;• Color: Indigo; Size: L — ₹145.67; recorded out of stock.&#10;• Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.&#10;Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team." /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties></testcase><testcase classname="tests.test_v08_material_reply_regression" name="test_m05_empty_material_observation_still_withholds_authority" file="tests/test_v08_material_reply_regression.py" line="104" time="0.002"><properties><property name="scenario_id" value="M05-empty-material-observation" /><property name="question" value="What material is this?" /><property name="reply" value="&lt;withheld&gt;" /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties></testcase><testcase classname="tests.test_v08_material_reply_regression" name="test_m06_null_required_price_still_withholds_mixed_material_reply" file="tests/test_v08_material_reply_regression.py" line="111" time="0.002"><properties><property name="scenario_id" value="M06-null-price-material" /><property name="question" value="What price and material is this?" /><property name="reply" value="&lt;withheld&gt;" /><property name="raw_projection_calls" value="[&quot;exact_reel_products&quot;, &quot;inbound_context_product_names&quot;, &quot;exact_reel_products&quot;, &quot;is_activated&quot;, &quot;read_facts&quot;]" /></properties></testcase></testsuite></testsuites>
