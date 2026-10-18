@@ -1,0 +1,48 @@
+{
+  "source_base": "36535c8161ad65aa1f8ef9495bbbbcb7959f177c",
+  "review_original_commit": "c0688726d77b99899b72781c8c56eb5c8f6bdd53",
+  "review_composed_commit": "92786f9",
+  "mode": "STDLIB_STATIC_PROPOSAL_REVIEW_ONLY_NO_DATABASE_TEST",
+  "source_inventory_files_verified": 27,
+  "delta_rows": 35,
+  "source_rows": 52,
+  "source_populated_tables": 32,
+  "target_post_rows": 58,
+  "proposal_sha256": "9e4511c5ef8438739782126892ef1b0cefe269e64038c21a3d0c6636ffa1865d",
+  "checks": [
+    "immutable source hashes",
+    "model AST field names",
+    "base/delta/source/target count arithmetic",
+    "claim/event/body HMAC under PUBLIC fixture key only",
+    "exact event/action/audit/command/enquiry/WA-source relationships",
+    "context time/retention arithmetic",
+    "one explicit expected NOT VALID metadata proposal",
+    "no runtime/schema/test/harness changes",
+    "exact review cherry-pick patch equality"
+  ],
+  "runtime_schema_test_harness_unchanged": true,
+  "plan_only_exit": 1,
+  "actual_restore": "NOT RUN",
+  "new_write_constraint_probe": "PROPOSED_NOT_EXECUTED",
+  "SQL_trigger_constraint_persistence_validation": false,
+  "docker_health_observed": "HTTP/1.0 503 Service Unavailable on local Unix endpoint;8s CLI server probe timeout",
+  "PG16_toolchain": "Not verified on PATH/checked common prefixes; no installed/started toolchain",
+  "final_free_bytes": 5165842432,
+  "artifact_sha256": {
+    "artifacts/v1/restore-0056-preparation/plan-refusal.txt": "c827c0a9eeb75f7001959a8c89ad2600485546fbcbad7346d3af9f1a17259422",
+    "artifacts/v1/restore-0056-preparation/capability.json": "545cb0fefbffa8e4a8ef36697e983f441c2047cb3932e683e7a45c1b2dd645b2",
+    "artifacts/v1/restore-0056-review/source-inventory.json": "1c0a0a618c88235174d60d6af75b9b098c1c69eb319ce1006580476c247e3f74",
+    "artifacts/v1/restore-0056-review/proposal-consistency.json": "4ebc7cb88a860f14fa3d967104f41b30420e9ed50410cc3b8d0dfc2bf296430b",
+    "artifacts/v1/restore-0056-review/fixture-delta-proposal.json": "9e4511c5ef8438739782126892ef1b0cefe269e64038c21a3d0c6636ffa1865d"
+  },
+  "limits": [
+    "No DB/container/daemon/service start or install",
+    "No actual dump/restore/image/package switch",
+    "No broad synthetic tests or app imports",
+    "No secrets/provider/livecalls/production/existing-target use",
+    "No cleanup/evidence deletion; all data is proposal-only"
+  ],
+  "review_remote_head_verified": "c0688726d77b99899b72781c8c56eb5c8f6bdd53",
+  "review_worktree_clean": true,
+  "docs_whitespace_pass": true
+}
