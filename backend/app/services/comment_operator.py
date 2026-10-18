@@ -309,9 +309,12 @@ async def preview(db, actor, business_id, body, *, authority=None):
     await access(db, actor, business_id, authority, write=True)
     rule = await one(db, CommentRule, business_id, body.rule_id)
     current = await policy.context(db, business_id, body.rule_id)
-    from app.services.comment_automation import matches
+    from app.services.comment_automation import matches, public_base_ready
     reason = (current.source_reason() or ('activated_context_requires_review' if current.activated else
-        'product_context_unavailable' if not current.product_available or not current.published else None)) if current else 'business_unavailable'
+        'rule_configuration_changed' if not current.rule.get('enabled') else
+        'product_context_unbound' if current.rule.get('media_id') != body.media_id else
+        'product_context_unavailable' if not current.product_available or not current.published else
+        'configuration_unavailable' if not public_base_ready() else None)) if current else 'business_unavailable'
     await access(db, actor, business_id, authority, write=True)
     return {'matches': matches(SimpleNamespace(**rule), body.text, body.media_id), 'private_reply': rule['private_reply'],
         'public_reply': rule['public_reply'], 'withheld_reason': reason, 'sends': False}

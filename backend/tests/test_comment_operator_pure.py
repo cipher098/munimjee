@@ -174,3 +174,16 @@ def test_native_router_imports_without_provider_or_db_and_never_exposes_resend_e
     assert '/api/v1/businesses/{business_id}/comment-automation/events/{event_id}/reviews' in paths
     assert '/api/v1/businesses/{business_id}/whatsapp/enquiries/{enquiry_id}/close' in paths
     assert not any(part in path for path in paths for part in ('resend', 'replay', 'rebind', 'mark-delivered'))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('enabled,public_base,expected', [(False, True, 'rule_configuration_changed'), (True, False, 'configuration_unavailable')])
+async def test_preview_does_not_hide_current_disabled_rule_or_missing_public_origin(monkeypatch, enabled, public_base, expected):
+    monkeypatch.setattr(domain, 'access', AsyncMock())
+    row = {'media_id': '300', 'keywords': ['price'], 'private_reply': 'Saved copy', 'public_reply': None}
+    monkeypatch.setattr(domain, 'one', AsyncMock(return_value=row))
+    monkeypatch.setattr(domain.policy, 'context', AsyncMock(return_value=NS(source_reason=lambda: None, activated=False,
+        product_available=True, published=True, rule={'enabled': enabled, 'media_id': '300'})))
+    monkeypatch.setattr('app.services.comment_automation.public_base_ready', lambda: public_base)
+    value = await domain.preview(NS(), NS(), uuid4(), NS(rule_id=uuid4(), text='price?', media_id='300'))
+    assert value['matches'] is True and value['sends'] is False and value['withheld_reason'] == expected
