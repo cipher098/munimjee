@@ -1,7 +1,7 @@
 {
   "base": "a2ea26d",
   "preserved_workspace_checkpoint": "8e1aeb9",
-  "chromium_checks": 123,
+  "chromium_checks": 150,
   "transport": "synthetic same-origin HTTP fixtures; external origins blocked",
   "provider_calls": 0,
   "database_tests": {

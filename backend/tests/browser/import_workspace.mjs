@@ -150,5 +150,21 @@ try {
  {
   const f=await fixture(),{page,state}=f;Object.assign(state.candidates[0].candidate.extracted,{stock:0,options:[]});state.candidates[0].candidate.overrides=[{field:'price',value:{currency:'INR',amount:'20'},reviewer_id:uid}];await select(page);await expect(page.locator('#allocation-form')).toBeVisible();for(const box of await page.locator('#allocation-confirmations input').all())await box.check();await page.locator('#create-draft').click();await saved(page);assert.equal(state.posts[0].path.endsWith('/catalogue-draft'),true);await expect(page.locator('#bridge-note')).toBeVisible();checks+=3;await f.close();
  }
+ // Digest promises may finish after a terminal identity fence. They must never
+ // repersist an old command or restore its private recovery details.
+ for(const phase of ['prepare','upload-transition','startup-recovery']) {
+  const f=await fixture(),{page,state,context}=f;await select(page);
+  const holdDigest=({needle})=>{const actual=crypto.subtle.digest.bind(crypto.subtle);let held=false;window.__digestHeld=false;window.__releaseDigest=null;crypto.subtle.digest=new Proxy(actual,{apply(target,thisArg,args){if(!held&&new TextDecoder().decode(args[1]).includes(needle)){held=true;window.__digestHeld=true;return new Promise((resolve,reject)=>{window.__releaseDigest=()=>Reflect.apply(target,thisArg,args).then(resolve,reject);});}return Reflect.apply(target,thisArg,args);}});};
+  if(phase==='startup-recovery') {
+   state.hook=async(route)=>{await route.abort('failed');return true;};await website(page);await expect(page.locator('#recovery-error')).not.toBeEmpty();assert.equal(state.posts.length,1);
+   await context.addInitScript(holdDigest,{needle:'["json","/jobs",'});await page.reload();
+  } else {
+   await page.evaluate(holdDigest,{needle:phase==='prepare'?'["json","/jobs",':'"source_kind":"uploaded_media"'});
+   if(phase==='prepare')await website(page);
+   else {const bytes=Buffer.from('digest-transition-original'),{createHash}=await import('node:crypto'),sha=createHash('sha256').update(bytes).digest('hex');state.hook=async(route,post,json)=>{if(post.path!=='/uploads')return false;await json(route,{asset_id:aid,content_type:'image/png',size_bytes:bytes.length,sha256:sha},201);return true;};await page.locator('#upload-file').setInputFiles({name:'original.png',mimeType:'image/png',buffer:bytes});await page.locator('#upload-consent').check();await page.getByRole('button',{name:'Upload and start import',exact:true}).click();}
+  }
+  await expect.poll(()=>page.evaluate(()=>window.__digestHeld)).toBe(true);const postsBeforeFence=state.posts.length;state.session.csrf_token='terminal-other-session';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#access-needed')).toBeVisible();await expect(page.locator('#workspace')).toBeHidden();await page.evaluate(()=>window.__releaseDigest());
+  await expect.poll(()=>page.evaluate(p=>Object.keys(sessionStorage).filter(k=>k.startsWith(p)),prefix)).toEqual([]);await expect(page.locator('#recovery-facts')).toHaveText('');await expect(page.locator('#candidate-evidence')).toHaveText('');await expect(page.locator('#candidate-source')).toHaveText('');await expect(page.locator('#fact-title')).toHaveValue('');await expect(page.locator('#website-url')).toHaveValue('');assert.equal(state.posts.length,postsBeforeFence);assert.equal(state.posts.filter(p=>p.path==='/jobs').length,phase==='startup-recovery'?1:0);checks+=9;await f.close();
+ }
  assert.deepEqual(errors,[]);checks++;await writeFile(new URL('browser-results.json',output),JSON.stringify({checks,transport:'synthetic same-origin HTTP mocks',database:'not exercised by this suite',provider_calls:0,errors},null,2));console.log(`${checks} import workspace browser checks passed; synthetic transport, no provider or DB claims.`);
 } finally {await browser.close();}
