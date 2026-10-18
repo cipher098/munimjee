@@ -1,0 +1,130 @@
+{
+  "format": "munimjee.a13-reel-operator-handoff.v1",
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "payload_parent": "82d946d8b9169934a8c9c85432699cdec95e2ef6",
+  "branch": "codex/v1-reel-operator-coordination",
+  "contract_sha256": "f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c",
+  "source": {
+    "backend_owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+    "UI_owner": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+    "canonical_tested_commit": "cba1fc48c4d23e2f20346a2b8aa3f90ef31f703b",
+    "canonical_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1",
+    "independent_review": "2a9920574e40d28dea7f7f709082336abab71652",
+    "runtime_UI_sha256": {
+      "backend/app/api/v1/whatsapp_reel_operator.py": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+      "backend/app/schemas/whatsapp_reel_operator.py": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+      "backend/app/services/whatsapp_reel_operator.py": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+      "backend/app/models/whatsapp_reel_operator.py": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+      "backend/alembic/versions/0058_v1_reel_operator.py": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f",
+      "backend/static/comment_operator.html": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11",
+      "backend/static/comment_operator.js": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6",
+      "backend/static/comment_operator_contract.js": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8",
+      "backend/static/comment_operator.css": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb"
+    }
+  },
+  "executed_test_sha256": {
+    "backend/tests/test_whatsapp_reel_operator_pure.py": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+    "backend/tests/test_comment_operator_pure.py": "a60dfe0642901d6598c333a2456faec44059313e540b4aa064d7fb4eb0a6bb07",
+    "backend/tests/comment_operator_contract.test.mjs": "62e500bfb42728bb65e4c5239bb383732a13462cc04d125786dcb3b850b4fac8",
+    "backend/tests/comment_operator_lifecycle.test.mjs": "f0def4d9267ff0d8a5009569ff2bdb131bd8fbb4f135f97a96abba6893b57666",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b"
+  },
+  "authored_only_DB_test_sha256": {
+    "backend/tests/test_whatsapp_reel_operator_db.py": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55"
+  },
+  "results": {
+    "Python": {
+      "passed": 47,
+      "new": 18,
+      "unchanged": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Node": {
+      "passed": 20,
+      "new": 8,
+      "unchanged": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "unique_executed_cases": 67,
+    "frozen_new_matrix": {
+      "pure": 18,
+      "Node": 8,
+      "DB_authored_only": 20
+    },
+    "DB_collected": false,
+    "DB_executed": false,
+    "initial_QA_evidence_preserved": true,
+    "source_tests_unchanged_since_canonical_run": true,
+    "independent_review": "No unresolved scoped source/assertion blocker"
+  },
+  "scope": {
+    "real_migration": "0058_v1_reel_operator -> 0057_v1_whatsapp_self_service",
+    "preexisting_test_files_unchanged": 243,
+    "shared_install_files_unchanged": 8,
+    "only_runtime_UI_changes": 9,
+    "new_test_files": 4,
+    "A10_0059": "Local catalogue owns future rule editor/action mode and real0059 after0058; exact UI patch/ownership delivered",
+    "no_actual_operations": [
+      "DB allocation/migration/collection",
+      "browser/server/provider/model/credential/send",
+      "tool installation/capacity retry",
+      "cleanup/deployment"
+    ],
+    "actual_acceptance": "PENDING LOCAL INTEGRATOR ALLOCATION; no remote actual0058/main/sender/browser proof"
+  },
+  "integration_required": [
+    "model/router/package/navigation/globaljournalcleanup installation",
+    "unconditional final helper immediately beforeprovider.send with noawaitgap; existing0057finalguard preserved insideunboundbranch",
+    "actual0058 FK/trigger/NOWAIT/nativeCSRF/concurrency/committedauthoritycases",
+    "signedsyntheticingress/nativeoneinboundreview/canonicalworker/syntheticprovider",
+    "physicalmobile/focus/privacy/reloadaccessibility acceptance"
+  ],
+  "payload_sha256_excluding_this_manifest": {
+    "artifacts/v1/reel-operator-coordination/canonical-invocation.json": "ecb9295adad405312a82dafb57d3294072f533447bba8161d29693e9421db17c",
+    "artifacts/v1/reel-operator-coordination/canonical-node.tap": "4379a48368d645d879911d8a3bcbf9216d0b297e523241f387016b815ff2d5e6",
+    "artifacts/v1/reel-operator-coordination/canonical-python.txt": "0d7371bb1943b9b206ea72111561146676919f67cef4b3c7c9fc8577cc86d6b9",
+    "artifacts/v1/reel-operator-coordination/canonical-python.xml": "a2b67f7b090bdc66bdefdecf23fb6eb15035df8dd3bfc557913a779ba7359303",
+    "artifacts/v1/reel-operator-coordination/design.html": "4ebab9c5bb27a5e785332990c2fbd8bc040d80b37b68fe547d775a18e5e555c8",
+    "artifacts/v1/reel-operator-coordination/final-source-audit.json": "a4f56fd4c17e7ff0bf8f897c4c54d734c5f7c0e7d8034b820d89470e447ed0c9",
+    "artifacts/v1/reel-operator-coordination/owned-ui.patch": "14ace655a158ad9551eab75fda591857518505f1a56f84442a9cb9fe4c001cc6",
+    "artifacts/v1/reel-operator-coordination/ui-ownership.json": "ec2c55ec36fd828761ed857480ee523d41a4e217261e9dc9354bd08fcf4b476e",
+    "artifacts/v1/reel-operator-implementation/source-preflight.json": "c62622e65fee066f6315f7a4b85d86cdfe10c87753be4f8a957de079566b1fd3",
+    "artifacts/v1/reel-operator-qa/node.tap": "91be3f0f4bd7c549486d5b3c6f48995ab8e19b6c3cb3f044122fc83c5ec954a8",
+    "artifacts/v1/reel-operator-qa/pure-final.log": "aee956915c7849e09b89fb4a4a9b989a24f4816042e4a8c4efaebfd81616f74b",
+    "artifacts/v1/reel-operator-qa/pure-final.xml": "ad88b3d2030cc99d3d13dd38ea6873763c1ac5c7d5c50788494f796577953f75",
+    "artifacts/v1/reel-operator-qa/pure.log": "3b02a9cb42b4ea94b624f669c3cd18b70c4e751bfe2e0fa6d6e5ab2e4ec811e7",
+    "artifacts/v1/reel-operator-qa/pure.xml": "57bf6a9c32d5ada48edca9789878d44660a17efc8e3be49f5048d4095d8ad728",
+    "artifacts/v1/reel-operator-qa/verification.json": "3aeefcdc2695e8d8df3e188dc6f4c5cb3c51b466ff2b3b9e26992fe9cb49f02c",
+    "artifacts/v1/reel-operator-review/backend-review.json": "f6aafc706a24f835abbce852b8a12ffe8bb2a28d8d6ccbe8ad1052aaa850b002",
+    "artifacts/v1/reel-operator-review/base-and-contract.json": "1b079356db957f50661136688b1b13dda60deae7aae62c38a3c230603b544e0e",
+    "artifacts/v1/reel-operator-review/design-review.json": "5ebee3c4a3894afdc8cd1a24c2a069a981b59b98caf9011eba36e20ec08d2c16",
+    "artifacts/v1/reel-operator-review/final-audit.json": "45084f17da244fe11aa9ce37869db98fdb0943dbfbe76aaff297da6f39bbb470",
+    "artifacts/v1/reel-operator-review/qa-evidence-audit.json": "648ccd93b046c5f9d9bdbd7a1b72343808114012a007eea561bebdf4f181c68e",
+    "artifacts/v1/reel-operator-review/qa-source-review.json": "90a71fb90dddfc457704ba2b2e7f1ceb7f35ec3f0b7ef8e0b60bccdcfdf10551",
+    "artifacts/v1/reel-operator-review/ui-review.json": "dff99d19763d17c59527a010bf5f5e9639c035075f53c028526fcfcf4b8f53e3",
+    "backend/alembic/versions/0058_v1_reel_operator.py": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f",
+    "backend/app/api/v1/whatsapp_reel_operator.py": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+    "backend/app/models/whatsapp_reel_operator.py": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+    "backend/app/schemas/whatsapp_reel_operator.py": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+    "backend/app/services/whatsapp_reel_operator.py": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+    "backend/static/comment_operator.css": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb",
+    "backend/static/comment_operator.html": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11",
+    "backend/static/comment_operator.js": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6",
+    "backend/static/comment_operator_contract.js": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8",
+    "backend/tests/test_whatsapp_reel_operator_db.py": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55",
+    "backend/tests/test_whatsapp_reel_operator_pure.py": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b",
+    "docs/v1-native-reel-resume-contract.md": "f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c",
+    "docs/v1-reel-operator-handoff.md": "59aa6022a2a6c0a7618503ab7940e385fa03e1e54659cf4f679e68675d8c643d",
+    "docs/v1-reel-operator-implementation.md": "006e6c11622f8134a6cb713e771a58c6d54466c572d93e08173032ace8b6ac63",
+    "docs/v1-reel-operator-integration.md": "4fb7bd2b57fe1b51990cdf45a72ff3f947f5a722e6fae41d2630f3d498c47faa",
+    "docs/v1-reel-operator-qa.md": "28a2eff711e337f169d0876dcadfbbca4223369ed53e8514df7206f9ba923048",
+    "docs/v1-reel-operator-review.md": "5a42cc8a302b6885b8c428fd24b86abaa6230d8dc23d982464b63f5a92fba587",
+    "docs/v1-reel-operator-task.md": "8ef078513a87cdb95dfbbd21401cecf041c1f3e55497f1ccb3f9785ad3a510b2",
+    "docs/v1-reel-operator-ui.md": "69a1b381309df668dcbe52fb5ba141303928e8bd492b9d6258258c81241bcda2"
+  }
+}

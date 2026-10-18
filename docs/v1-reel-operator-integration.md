@@ -4,8 +4,10 @@ Base `6ff11c3d073c5617e18cc439e04809db6dd760ad` is the supplied real0057
 composition. New migration is exactly `0058_v1_reel_operator` →
 `0057_v1_whatsapp_self_service`. The approved contract including24f746f hashes
 `f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c`.
-This is a coherent early review candidate, **not accepted source/unit/DB proof**.
-Finite independent QA and final review are still underway.
+This document records the early installation checkpoint at `034911e`. The final
+reviewed source/unit result is47Python+20Node passes with no scoped blocker;
+see `docs/v1-reel-operator-handoff.md`. Actual0058/main/sender/browser acceptance
+remains unrun here.
 
 Owner source: `34f2125` + `a2d4109` + `9f7a2e8`, composed here as
 `1ae794e`, `da90309`, `21cddc4`. Only new API/schema/service/model/0058 files
@@ -70,9 +72,10 @@ plus its locally captured exact request, without reading discarded raw detail.
 
 ## Evidence and known boundaries
 
-Source compilation/Node syntax and static review are the only completed checks
-at this early checkpoint. Independent46-case packet is being authored;20 are
-actual-DB source scenarios only. The source-only design is
+At the early checkpoint, only source compilation/Node syntax and static review
+were complete. The final46-case packet has26 executable new units and20
+actual-DB source scenarios only; final root evidence covers47Python+20Node.
+The source-only design is
 `artifacts/v1/reel-operator-coordination/design.html`; it has no browser paint
 evidence. Actual concurrency/NOWAIT usability, trigger/constraint behavior,
 source/queue preservation, shared sender install, native CSRF and mounted browser

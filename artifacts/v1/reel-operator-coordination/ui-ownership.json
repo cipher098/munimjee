@@ -1,0 +1,25 @@
+{
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "UI_checkpoint": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+  "owned_paths": [
+    "backend/static/comment_operator.html",
+    "backend/static/comment_operator.js",
+    "backend/static/comment_operator_contract.js",
+    "backend/static/comment_operator.css"
+  ],
+  "patch_sha256": "14ace655a158ad9551eab75fda591857518505f1a56f84442a9cb9fe4c001cc6",
+  "unchanged_rule_editor_and_contract_functions_sha256": {
+    "backend/static/comment_operator.js:loadProducts": "b56412d5c6b7c9c8083fb47365ab10a4ea6073303e8ba818950a5111153a94c6",
+    "backend/static/comment_operator.js:editRule": "83bd03d77f89777ef8524e4fbd25682bd665295d6d55c7211984922d7e1e5342",
+    "backend/static/comment_operator.js:preview": "480a4928be6161e3e9f25c0c72b886b4369c2cc1179771a73a83259fdf6adbd3",
+    "backend/static/comment_operator_contract.js:validFacts": "d55e061c991e92a09c8a4552e753981898ae8604f8c16c5e4340a79b44cf9e9d",
+    "backend/static/comment_operator_contract.js:validIntent": "76fbe083de477c1c3d6ddddd71ac730560dbb8615bc3f7f05c3183f6d1df87d5",
+    "backend/static/comment_operator_contract.js:validReceipt": "cd7cc655354df6da61a7eab0aa03d16011f171b2da38601becbfb0b71f36088e",
+    "backend/static/comment_operator_contract.js:validRule": "dcc20ba2fc44e4946ba835691835abdfdbb5b290fe3f988a8b816aa281412803"
+  },
+  "unchanged_old_rule_form_disable_preview_handler_lines": true,
+  "all_old_CSS_preserved_byte_for_byte_as_prefix": true,
+  "A10_0059_boundary": "Future rule editor/action mode requires local exact hunk allocation; preserve reel additions and shared intent/session guards",
+  "actual_UI_render": "NOT RUN; static design/NodeVM only",
+  "initial_static_audit_correction": "Initial helper assumed oldCSS suffix; actual patch appended new selectors so oldCSS is the unchanged prefix. Corrected audit only, no source/test change."
+}

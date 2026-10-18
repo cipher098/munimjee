@@ -39,6 +39,7 @@ identity/review permission loss. Selection/list epochs discard stale responses.
 - Local actual-main/browser allocation must verify mobile wrapping, focus, native
   CSRF, identity replacement, reload recovery and receipt/dispatch outcomes.
 
-Node syntax checks pass. Independent finite Node/source/pure checks and final
-source review remain pending. No DB/browser/provider/model/server/install or live
-send operation ran in this UI lane.
+Node syntax checks pass. Final composed checks pass47Python+20Node, including
+8 new controlled-VM/contract cases. Independent final source/evidence review found
+no scoped blocker. No DB/browser/provider/model/server/install or live send
+operation ran in this UI lane; actual paint/focus/storage reload remains unverified.

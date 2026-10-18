@@ -1,0 +1,238 @@
+diff --git a/backend/static/comment_operator.css b/backend/static/comment_operator.css
+index 1a84178..2fb6fdf 100644
+--- a/backend/static/comment_operator.css
++++ b/backend/static/comment_operator.css
+@@ -1 +1,2 @@
+ :root{--muted:#59665e}::selection{background:#d5e3d5;color:#173422}input,textarea{caret-color:var(--green)}a{text-underline-offset:.2em}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#38684c;outline-offset:3px}.scope-note,.limits{max-width:75ch;color:var(--muted)}.scope-note{margin-bottom:24px}.limits{margin:32px 0 0;font-size:13px}.recovery{background:#fff9e9;border:1px solid #d8c38c;border-radius:12px;padding:22px;margin-bottom:28px;max-width:75ch}.recovery p{white-space:pre-line;overflow-wrap:anywhere}.list-tools,.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.list-tools label{display:flex;gap:8px;align-items:center}.record{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;padding:22px 0;border-bottom:1px solid var(--line)}.record p{white-space:pre-line;overflow-wrap:anywhere;max-width:70ch;margin-bottom:8px}.record h3{margin-bottom:7px}.record small{color:var(--muted);display:block}.record-actions{display:flex;flex-wrap:wrap;gap:9px;align-content:start;max-width:250px}.status-line{color:#365443;font-weight:600}.delivery{padding:18px 0;border-bottom:1px solid var(--line)}.delivery p{white-space:pre-wrap;overflow-wrap:anywhere}.delivery strong{display:block;margin-bottom:8px}.check{display:flex!important;align-items:flex-start;gap:10px;line-height:1.6}.check input{width:auto!important;margin-top:5px;flex:0 0 auto}dialog{max-height:90dvh;overflow:auto;max-width:640px}dialog form>label{display:block;margin-bottom:18px}dialog textarea{width:100%;resize:vertical;margin-top:7px}dialog .error{margin-top:16px}#detail-content{white-space:pre-wrap;overflow-wrap:anywhere}#rule-form .full{grid-column:1/-1}.text-button{background:transparent;border:0;color:var(--green);text-decoration:underline;padding:8px 0}#rule-form small{display:block;color:var(--muted);margin-top:5px}#preview-result{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:20px}.tabs{flex-wrap:wrap}#page-label{font-variant-numeric:tabular-nums}@media(max-width:600px){.record{grid-template-columns:1fr;gap:14px;padding:20px 0}.record-actions{max-width:none}.list-tools{align-items:stretch;justify-content:space-between;width:100%}.list-tools label{flex-wrap:wrap}.tabs button{flex:1;min-width:100px;padding:11px 9px;white-space:normal;line-height:1.4;text-align:left}.actions .button{flex:1}dialog{max-width:calc(100vw - 24px);width:calc(100vw - 24px)}.recovery{padding:18px}.pagination{flex-wrap:wrap}}
++#reel-message,#reel-source{white-space:pre-wrap;overflow-wrap:anywhere}#reel-form select{width:100%;max-width:100%}
+diff --git a/backend/static/comment_operator.html b/backend/static/comment_operator.html
+index 8efbc39..4d15c38 100644
+--- a/backend/static/comment_operator.html
++++ b/backend/static/comment_operator.html
+@@ -4,11 +4,13 @@
+ <main class="container"><div class="page-heading"><div><h1>Comments &amp; enquiries</h1><p class="muted" id="business-name">Checking your access…</p></div><button class="button secondary" id="refresh" type="button">Refresh</button></div><p id="error" class="error" role="alert"></p><p id="notice" role="status" aria-live="polite"></p><a href="/v1" id="signin" hidden>Return to sign in</a>
+ <div id="workspace" hidden><p id="readiness" class="scope-note"></p>
+ <section id="recovery" class="recovery" aria-labelledby="recovery-heading" hidden><h2 id="recovery-heading">Keep the saved action</h2><p>The result is not confirmed yet. Check the same saved action before starting another one.</p><p id="recovery-summary"></p><button class="button primary" id="retry" type="button">Check saved action</button></section>
+-<nav class="tabs" aria-label="Automation operations"><button type="button" data-tab="events" aria-current="page">Comment activity</button><button type="button" data-tab="rules">Comment rules</button><button type="button" data-tab="enquiries">WhatsApp enquiries</button></nav>
++<section id="reel-recovery" class="recovery" aria-labelledby="reel-recovery-heading" hidden><h2 id="reel-recovery-heading">Keep the saved link action</h2><p>The result is not confirmed. Check the same saved action before starting another one.</p><p id="reel-recovery-summary"></p><button class="button primary" id="reel-retry" type="button">Check saved link action</button></section>
++<nav class="tabs" aria-label="Automation operations"><button type="button" data-tab="events" aria-current="page">Comment activity</button><button type="button" data-tab="rules">Comment rules</button><button type="button" data-tab="enquiries">Inferred follow-ups</button><button type="button" data-tab="reels">Unlinked reels</button></nav>
+ <section aria-labelledby="list-heading"><div class="panel-heading"><div><h2 id="list-heading">Review saved comment replies</h2><p id="list-description" class="muted">A provider receipt confirms acceptance, not delivery. Reviewing never sends another reply.</p></div><div class="list-tools"><label id="filter-label" for="state">Show <select id="state"><option value="open">Unreviewed</option><option value="closed">Closed after review</option><option value="all">All</option></select></label><button class="button primary" id="new-rule" type="button" hidden>Create rule</button></div></div>
+ <p id="list-state" role="status">Loading saved activity…</p><div id="records"></div><div class="pagination"><button class="button secondary" id="previous" type="button" disabled>Previous</button><span id="page-label">Page 1</span><button class="button secondary" id="next" type="button" disabled>Next</button></div></section>
+ <p class="limits">This workspace checks saved configuration and history. Provider permissions and a real message-delivery test are separate checks. A closed review is not a delivery confirmation.</p></div></main>
+ <dialog id="detail-dialog" aria-labelledby="detail-title"><button class="close" type="button" id="detail-close" aria-label="Close review">×</button><h2 id="detail-title">Review comment</h2><p id="detail-meta" class="muted"></p><div id="detail-content"></div><p id="detail-block" class="scope-note"></p><form id="review-form"><label for="review-reason">Review note<textarea id="review-reason" rows="3" minlength="10" maxlength="1000" required></textarea></label><label class="check"><input type="checkbox" id="review-confirm" required>I checked this conversation. Close the review without another send.</label><button class="button primary" type="submit" id="close-review">Close after review</button></form><p class="error" id="review-error" role="alert"></p></dialog>
+ <dialog id="rule-dialog" aria-labelledby="rule-title"><button class="close" type="button" id="rule-close" aria-label="Close rule editor">×</button><h2 id="rule-title">Create comment rule</h2><p class="muted">Saving changes future matching comments. It does not replay earlier replies.</p><form id="rule-form" class="form-grid"><label class="full" for="rule-name">Rule name<input id="rule-name" maxlength="100" required></label><label for="rule-media">Instagram post reference<input id="rule-media" inputmode="numeric" pattern="[0-9]{1,100}" maxlength="100" required><small>Use the post reference shown in comment details.</small></label><label for="rule-product">Linked product<select id="rule-product" required><option value="">Choose a product</option></select><button class="text-button" id="more-products" type="button" hidden>Load more products</button></label><label class="full" for="rule-keywords">Keywords or phrases<input id="rule-keywords" maxlength="1800" required><small>Separate up to 30 phrases with commas.</small></label><label class="full" for="rule-private">Private reply<textarea id="rule-private" rows="3" maxlength="700" required></textarea></label><label class="full" for="rule-public">Public reply (optional)<textarea id="rule-public" rows="2" maxlength="500"></textarea></label><label class="full check"><input id="rule-enabled" type="checkbox">Enable for future matching comments</label><p id="rule-enable-note" class="full scope-note">Activated catalogue products cannot use static comment replies.</p><div class="full actions"><button class="button primary" id="save-rule" type="submit">Save rule</button><button class="button secondary" id="disable-rule" type="button" hidden>Disable rule</button></div></form><p class="error" id="rule-error" role="alert"></p></dialog>
+ <dialog id="preview-dialog" aria-labelledby="preview-title"><button class="close" type="button" id="preview-close" aria-label="Close preview">×</button><h2 id="preview-title">Preview only — no message sent</h2><form id="preview-form"><label for="preview-text">Example comment<textarea id="preview-text" rows="3" maxlength="10000"></textarea></label><button class="button secondary" type="submit">Check this example</button></form><div id="preview-result" aria-live="polite"></div></dialog>
++<dialog id="reel-dialog" aria-labelledby="reel-title"><button class="close" type="button" id="reel-close" aria-label="Close product link review">×</button><h2 id="reel-title">Link this enquiry to a product</h2><p id="reel-meta" class="muted"></p><div id="reel-message"></div><p id="reel-source" class="scope-note"></p><p id="reel-eligibility" class="scope-note"></p><form id="reel-form"><label for="reel-product">Select the reviewed product<select id="reel-product" required><option value="">Choose a product</option></select></label><p>Linking does not change price, stock or the original customer message. Other customer enquiries are not resumed.</p><label class="check"><input id="reel-confirm" type="checkbox" required>I reviewed this exact message, reel and product.</label><div class="actions"><button id="reel-link-only" class="button secondary" type="button">Link only</button><button id="reel-resume" class="button primary" type="button">Link and request one eligible reply</button></div><p class="muted">Queued is not delivered. Current account, consent, conversation and catalogue checks still apply.</p></form><p id="reel-error" class="error" role="alert"></p></dialog>
+ </body></html>
+diff --git a/backend/static/comment_operator.js b/backend/static/comment_operator.js
+index 5a570a1..93af9fe 100644
+--- a/backend/static/comment_operator.js
++++ b/backend/static/comment_operator.js
+@@ -1,7 +1,9 @@
+-import {UUID,HASH,stable,digest,validFacts,validIntent,validReceipt,validRule} from './comment_operator_contract.js';
++import {UUID,HASH,stable,digest,validFacts,validIntent,validReceipt,validRule,validReelDetail,validReelIntent,validReelReceipt,validReelRejection} from './comment_operator_contract.js';
+ 
+ const $=id=>document.getElementById(id), business=location.pathname.split('/')[3];
+ const base=`/api/v1/businesses/${business}`, comments=`${base}/comment-automation`, enquiries=`${base}/whatsapp/enquiries`, prefix='munimjee.v1.comment-command:';
++const reelEnquiries=`${base}/whatsapp/reel-enquiries`,reelPrefix='munimjee.v1.reel-command:';
++let reelIntent=null,reelStorageKey=null,sessionScope=null;
+ let identity=null,storageKey=null,ended=false,generation=0,selectionEpoch=0,listEpoch=0,canManage=false,busy=false,intent=null,journalBlocked=false;
+ let sessionCounter=0,sessionApplied=0;
+ let viewReady=false;
+@@ -22,23 +24,29 @@ const date=value=>value?new Date(value).toLocaleString():'Not recorded';
+ const node=(tag,text,className)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(className)value.className=className;return value;};
+ function current(value){if(!ended&&identity&&csrfCookie()!==identity.split(':')[1])fence('Your sign-in changed. Private facts were cleared.');if(ended||generation!==value)throw Error('Your access changed. Private facts were cleared.');}
+ function fence(message,removeStorage=true){
+-  if(ended)return;ended=true;generation++;selectionEpoch++;listEpoch++;canManage=false;selected=null;editing=null;previewRule=null;intent=null;rules.clear();products.clear();
+-  $('workspace').hidden=true;$('business-name').textContent='';for(const id of ['records','detail-meta','detail-content','detail-block','preview-result','recovery-summary','notice','readiness','page-label'])$(id).replaceChildren();
++  if(ended)return;ended=true;generation++;selectionEpoch++;listEpoch++;canManage=false;selected=null;editing=null;previewRule=null;intent=null;reelIntent=null;rules.clear();products.clear();
++  $('workspace').hidden=true;$('business-name').textContent='';for(const id of ['records','detail-meta','detail-content','detail-block','preview-result','recovery-summary','notice','readiness','page-label','reel-meta','reel-message','reel-source','reel-eligibility','reel-recovery-summary','reel-error'])$(id).replaceChildren();
+   for(const dialog of document.querySelectorAll('dialog')){if(dialog.open)dialog.close();}
+-  for(const form of document.querySelectorAll('form'))form.reset();$('rule-product').replaceChildren();
++  for(const form of document.querySelectorAll('form'))form.reset();$('rule-product').replaceChildren();$('reel-product').replaceChildren();
+   for(const input of document.querySelectorAll('input,textarea'))input.value='';
+   for(const control of document.querySelectorAll('#workspace button,dialog button,input,select,textarea'))control.disabled=true;
+   if(removeStorage&&storageKey)try{sessionStorage.removeItem(storageKey);}catch{}
++  if(removeStorage&&reelStorageKey)try{sessionStorage.removeItem(reelStorageKey);}catch{}
+   $('error').textContent=message;$('signin').hidden=false;
+ }
+ function controls(){
+-  const blocked=busy||ended||Boolean(intent)||journalBlocked||!viewReady;
++  const blocked=busy||ended||Boolean(intent)||Boolean(reelIntent)||journalBlocked||!viewReady;
+   $('new-rule').hidden=tab!=='rules'||!canManage;$('new-rule').disabled=blocked;$('retry').disabled=busy||!canManage||ended||journalBlocked;
+   $('review-form').hidden=!selected?.can_close||!canManage;$('close-review').disabled=blocked;
+   $('save-rule').disabled=blocked||!canManage;$('disable-rule').disabled=blocked||!canManage;$('rule-form').hidden=!canManage;
+   $('preview-form').hidden=!canManage;$('refresh').disabled=busy||ended;
+   for(const element of document.querySelectorAll('#rule-form input,#rule-form textarea,#rule-form select'))element.disabled=blocked||!canManage;
+   for(const button of document.querySelectorAll('.record-actions button'))button.disabled=busy||ended||(button.dataset.manage==='true'&&!canManage);
++  $('reel-retry').disabled=busy||ended||!canManage||journalBlocked;
++  $('reel-form').hidden=!canManage||!selected?.can_manage||selected?.kind!=='reels';
++  const reelBlocked=blocked||!canManage||!selected?.eligibility?.can_link||!$('reel-product').value||!$('reel-confirm').checked;
++  $('reel-product').disabled=blocked||!canManage;$('reel-confirm').disabled=blocked||!canManage;
++  $('reel-link-only').disabled=reelBlocked;$('reel-resume').disabled=reelBlocked||!selected?.eligibility?.can_resume;
+ }
+ async function session(write=false){
+   const g=generation,sequence=++sessionCounter;current(g);let value;
+@@ -51,13 +59,16 @@ async function session(write=false){
+   if(identity&&identity!==binding){fence('Your sign-in changed. Private facts were cleared.');throw Error('The native session changed');}
+   identity=binding;const membership=value.businesses?.find(item=>item.id===business);
+   if(!membership?.capabilities?.includes('inbox.read')){fence('Your inbox access ended. Private facts were cleared.');throw Error('Current inbox access is required');}
+-  canManage=membership.capabilities.includes('automation.manage');controls();
++  const previousManage=canManage;canManage=membership.capabilities.includes('automation.manage');
++  if(previousManage&&!canManage&&(tab==='reels'||reelIntent||selected?.kind==='reels')){fence('Your review permission changed. Private facts were cleared.');throw Error('Current review permission is required');}
++  controls();
+   if(write&&!canManage)throw Error('An owner or manager must review this action.');
+   return value;
+ }
+ async function api(path,options={}){
+   const g=generation,write=Boolean(options.method&&options.method!=='GET');await session(write);current(g);
+-  let value;try{value=await window.V1.api(path,options);}catch(error){if(error.status===401)fence('Your sign-in ended. Private facts were cleared.');else if(error.status===403)await session();throw error;}
++  const frozenBody=write&&path.startsWith(reelEnquiries+'/')&&path.endsWith('/link')?stable(options.body):null;
++  let value;try{value=await window.V1.api(path,options);}catch(error){if(error.status===401)fence('Your sign-in ended. Private facts were cleared.');else if(error.status===403)await session();if(frozenBody!==null&&error.status===409&&error.code==='reel_operator_pre_mutation_rejection'){current(g);error.reel_request_path=path;error.reel_request_body=frozenBody;}throw error;}
+   current(g);await session(write);current(g);return value;
+ }
+ function renderIntent(){$('recovery').hidden=!intent;$('recovery-summary').textContent=intent?.summary||'';controls();}
+@@ -83,6 +94,7 @@ function button(label,action,manage=false){const result=node('button',label,'but
+ async function loadCurrent(){
+   const epoch=++listEpoch,kind=tab,state=kind==='rules'?'all':$('state').value,params=new URLSearchParams({state,limit:'20'});if(cursor)params.set('cursor',cursor);
+   $('list-state').textContent='Loading saved activity…';$('error').textContent='';
++  if(kind==='reels'){await loadReels(epoch);return;}
+   const value=await api(`${kind==='enquiries'?enquiries:comments+'/'+kind}?${params}`);
+   if(epoch!==listEpoch||kind!==tab)return;
+   if(!Array.isArray(value?.items)||value.items.length>20||typeof value.can_manage!=='boolean'||!(value.next_cursor===null||typeof value.next_cursor==='string'))throw Error('The saved list could not be verified.');
+@@ -118,7 +130,7 @@ async function send(){
+   }catch(error){if(!ended&&error.code==='comment_operator_context_changed'){sessionStorage.removeItem(storageKey);intent=null;renderIntent();$('notice').textContent='This action was not accepted. Refresh and review the current facts before deciding again.';}if(!ended){invalidateReads();$('error').textContent=error.message;}}
+   finally{busy=false;renderIntent();}
+ }
+-async function command(operation,resource,path,method,body,summary){if(busy||intent||ended||journalBlocked||!viewReady)return;busy=true;controls();let ready=false;try{await session(true);await prepare(operation,resource,path,method,body,summary);ready=true;}catch(error){if(!ended)$('error').textContent=error.message;}finally{busy=false;controls();}if(ready)await send();}
++async function command(operation,resource,path,method,body,summary){if(busy||intent||reelIntent||ended||journalBlocked||!viewReady)return;busy=true;controls();let ready=false;try{await session(true);await prepare(operation,resource,path,method,body,summary);ready=true;}catch(error){if(!ended)$('error').textContent=error.message;}finally{busy=false;controls();}if(ready)await send();}
+ async function loadProducts(){
+   const value=await api(`${comments}/products${productCursor?'?cursor='+encodeURIComponent(productCursor):''}`);
+   if(!Array.isArray(value?.items)||value.items.some(row=>!UUID.test(row.id)||typeof row.name!=='string'||typeof row.activated!=='boolean'))throw Error('The product list could not be verified.');
+@@ -134,20 +146,81 @@ async function editRule(row=null){
+ }
+ async function preview(row){const epoch=++selectionEpoch;await session(true);if(epoch!==selectionEpoch)return;previewRule=row;$('preview-form').reset();$('preview-result').textContent='A preview checks a saved rule. It never sends a reply.';$('preview-dialog').showModal();}
+ function invalidateReads(){if(ended)return;viewReady=false;selectionEpoch++;listEpoch++;selected=null;editing=null;previewRule=null;rules.clear();products.clear();productsStarted=false;productCursor=null;nextCursor=null;
+-  for(const id of ['records','detail-meta','detail-content','detail-block','preview-result','page-label'])$(id).replaceChildren();
++  for(const id of ['records','detail-meta','detail-content','detail-block','preview-result','page-label','reel-meta','reel-message','reel-source','reel-eligibility','reel-error'])$(id).replaceChildren();
+   for(const dialog of document.querySelectorAll('dialog'))if(dialog.open)dialog.close();for(const form of document.querySelectorAll('form'))form.reset();
+   $('rule-product').replaceChildren(node('option','Choose a product'));$('rule-product').firstElementChild.value='';$('list-state').textContent='Current activity could not be checked. Refresh before starting another action.';$('previous').disabled=true;$('next').disabled=true;controls();
++  $('reel-product').replaceChildren(node('option','Choose a product'));$('reel-product').firstElementChild.value='';
++}
++const reelSourceNames={message_link:'Explicit message link',referral_link:'Explicit referral link',quoted_message:'Quoted message reference',recent_message:'Inferred follow-up',unknown:'Reference needs review'};
++function clearReelDetail(){if(selected?.kind==='reels')selected=null;for(const id of ['reel-meta','reel-message','reel-source','reel-eligibility','reel-error'])$(id).replaceChildren();$('reel-form').reset();$('reel-product').replaceChildren();}
++function reelReason(reason){return ({inferred_context:'This follow-up is inferred. Link only; no reply can be requested.',activated_inferred_context:'This follow-up is inferred. Link only; no reply can be requested.',resume_not_requested:'No reply was requested.',reply_window_closed:'The reply window has closed.',opted_out:'This customer has opted out.',automation_paused:'Automated replies are paused.',newer_customer_message:'A newer customer message needs review.',reply_already_attempted:'A reply was already claimed or attempted. Its result is unchanged.',account_changed:'The receiving account changed. Refresh before deciding.',product_busy:'This product is being edited. Refresh and review again.'})[reason]||explain(reason);}
++function renderReelIntent(){$('reel-recovery').hidden=!reelIntent;$('reel-recovery-summary').textContent=reelIntent?.summary||'';controls();}
++async function recoverReel(){
++  const g=generation;let raw;try{raw=sessionStorage.getItem(reelStorageKey);}catch{journalBlocked=true;throw Error('Saved link actions cannot be checked. No new action will be sent.');}
++  if(!raw)return;
++  try{if(raw.length>10000)throw Error();const saved=JSON.parse(raw),claimed=saved.digest;delete saved.digest;
++    if(Object.keys(saved).sort().join(',')!==['format','user','business','session_scope','at','operation','resource','path','method','body','summary','request_hash'].sort().join(',')||saved.format!==1||saved.user!==identity.split(':')[0]||saved.business!==business||saved.session_scope!==sessionScope||!Number.isFinite(saved.at)||saved.at>Date.now()+60000||Date.now()-saved.at>86400000||!validReelIntent(saved,business)||claimed!==await digest(saved)||saved.request_hash!==await digest({business_id:business,inbound_id:saved.resource,body:saved.body}))throw Error();
++    current(g);reelIntent={...saved,digest:claimed};renderReelIntent();
++  }catch{journalBlocked=true;controls();throw Error('The saved link action cannot be verified. Review its history before starting another action.');}
++}
++async function loadReels(epoch){
++  viewReady=false;selectionEpoch++;selected=null;$('reel-dialog').close();$('reel-form').reset();$('reel-product').replaceChildren();for(const id of ['records','reel-meta','reel-message','reel-source','reel-eligibility','reel-error'])$(id).replaceChildren();controls();
++  const params=new URLSearchParams({limit:'20'});if(cursor)params.set('cursor',cursor);
++  const value=await api(`${reelEnquiries}?${params}`);if(epoch!==listEpoch||tab!=='reels')return;
++  if(!value||Object.keys(value).sort().join(',')!=='can_manage,items,next_cursor'||!Array.isArray(value.items)||value.items.length>20||typeof value.can_manage!=='boolean'||!(value.next_cursor===null||typeof value.next_cursor==='string'&&value.next_cursor.length<=2048)||value.items.some(row=>!validReelDetail(row,business)))throw Error('The enquiry list could not be verified.');
++  $('records').replaceChildren();rules.clear();nextCursor=value.next_cursor;
++  for(const row of value.items){const article=node('article',undefined,'record'),facts=node('div'),actions=node('div',undefined,'record-actions');facts.append(node('h3',row.customer_name||`Customer •${row.customer_ref}`),node('p',row.message),node('small',`${date(row.received_at)} · ${reelSourceNames[row.source.classification]}`),node('small',row.eligibility.reason?reelReason(row.eligibility.reason):'Review this exact reel and select a product.'));actions.append(button('Review product link',()=>openReel(row.inbound_id)));article.append(facts,actions);$('records').append(article);}
++  $('list-state').textContent=value.items.length?'':'No unresolved reel references need review in this view.';$('previous').disabled=pages.length===0;$('next').disabled=!nextCursor;$('page-label').textContent=`Page ${pages.length+1}`;viewReady=true;controls();
++}
++async function openReel(inbound){
++  const epoch=++selectionEpoch,row=await api(`${reelEnquiries}/${inbound}`);if(epoch!==selectionEpoch)return;
++  if(row.inbound_id!==inbound||!validReelDetail(row,business))throw Error('The selected enquiry could not be verified.');
++  selected={...row,kind:'reels'};$('reel-form').reset();$('reel-confirm').checked=false;$('reel-error').textContent='';
++  $('reel-meta').textContent=`${row.customer_name||'Customer'} · •${row.customer_ref} · Account ${row.account_hint} · ${date(row.received_at)}`;
++  $('reel-message').replaceChildren(node('p',row.message));$('reel-source').textContent=`${reelSourceNames[row.source.classification]}${row.source.url?' · '+row.source.url:''}`;
++  $('reel-eligibility').textContent=row.eligibility.reason?reelReason(row.eligibility.reason):'Review the exact source and product. Sending eligibility is checked again before dispatch.';
++  const placeholder=node('option','Choose a product');placeholder.value='';$('reel-product').replaceChildren(placeholder);
++  for(const product of row.products){const option=node('option',product.name);option.value=product.id;$('reel-product').append(option);}
++  $('reel-product').value='';controls();$('reel-dialog').showModal();
++}
++async function prepareReel(action){
++  if(busy||intent||reelIntent||ended||journalBlocked||!viewReady)return;
++  const row=selected,product=$('reel-product').value;if(row?.kind!=='reels'||!row.can_manage||!row.eligibility.can_link||!$('reel-confirm').checked||!row.products.some(item=>item.id===product)||action==='link_and_resume'&&!row.eligibility.can_resume)return;
++  busy=true;controls();let ready=false;const g=generation;
++  try{await session(true);current(g);if(selected!==row)throw Error('The selected enquiry changed. Review it again.');
++    const body={idempotency_key:crypto.randomUUID(),action,product_id:product,shortcode:row.source.shortcode,expected_fingerprint:row.fingerprint,expected_connection_version:row.connection_version,confirmed:true};
++    const saved={format:1,user:identity.split(':')[0],business,session_scope:sessionScope,at:Date.now(),operation:'reel_link',resource:row.inbound_id,path:`${reelEnquiries}/${row.inbound_id}/link`,method:'POST',body,summary:`${action==='link_only'?'Link only':'Link and request one eligible reply'} · ${row.products.find(item=>item.id===product).name}\nReel ${body.shortcode} · One selected enquiry`.slice(0,1000)};
++    saved.request_hash=await digest({business_id:business,inbound_id:saved.resource,body});saved.digest=await digest(saved);current(g);
++    if(!validReelIntent(saved,business))throw Error('The exact link action could not be verified. Nothing was sent.');
++    const raw=JSON.stringify(saved);try{sessionStorage.setItem(reelStorageKey,raw);if(sessionStorage.getItem(reelStorageKey)!==raw)throw Error();}catch{throw Error('Session storage is unavailable. No action was sent.');}
++    current(g);reelIntent=saved;ready=true;renderReelIntent();
++  }catch(error){if(!ended)$('reel-error').textContent=error.message;}finally{busy=false;controls();}
++  if(ready)await sendReel();
++}
++async function sendReel(){
++  if(!reelIntent||busy||ended||journalBlocked)return;busy=true;renderReelIntent();const saved=reelIntent;
++  try{const value=await api(saved.path,{method:saved.method,body:saved.body});if(saved!==reelIntent||!validReelReceipt(value,saved))throw Error('The exact saved link action was not confirmed. Keep it and check again.');
++    sessionStorage.removeItem(reelStorageKey);reelIntent=null;renderReelIntent();selected=null;$('reel-dialog').close();
++    $('notice').textContent=value.result.resume==='queued'?'Mapping saved. One reply was queued for current sending checks; delivery is not confirmed.':value.result.resume==='held'?`Mapping saved. No reply was queued. ${reelReason(value.result.reason)}`:'Mapping saved. No reply was requested.';await load();
++  }catch(error){if(!ended&&saved===reelIntent&&validReelRejection(error,saved)){sessionStorage.removeItem(reelStorageKey);reelIntent=null;renderReelIntent();$('notice').textContent='This link action was not accepted. Refresh and review the current facts.';}if(!ended){invalidateReads();$('error').textContent=error.message;}}
++  finally{busy=false;renderReelIntent();}
+ }
+ function onError(error){if(!ended){invalidateReads();$('error').textContent=error.message;}}
+ $('review-form').addEventListener('submit',event=>{event.preventDefault();if(!selected||!$('review-confirm').checked)return;const row=selected,operation=row.kind==='events'?'comment_close':'enquiry_close';command(operation,row.id,row.kind==='events'?`${comments}/events/${row.id}/reviews`:`${enquiries}/${row.id}/close`,'POST',{idempotency_key:crypto.randomUUID(),expected_fingerprint:row.fingerprint,confirmed:true,reason:$('review-reason').value.trim()},`Close review without send · ${row.kind==='events'?row.text:row.message}`.slice(0,1000)).catch(onError);});
+ $('rule-form').addEventListener('submit',event=>{event.preventDefault();const row=editing,facts={name:$('rule-name').value.trim(),enabled:$('rule-enabled').checked,media_id:$('rule-media').value.trim(),product_id:$('rule-product').value,keywords:[...new Set($('rule-keywords').value.split(',').map(value=>value.trim()))],private_reply:$('rule-private').value.trim(),public_reply:$('rule-public').value.trim()||null};if(!validFacts(facts)){ $('rule-error').textContent='Check the explicit post, product and bounded reply fields.';return;}command(row?'rule_update':'rule_create',row?.id||null,`${comments}/rules${row?'/'+row.id:''}`,row?'PUT':'POST',{idempotency_key:crypto.randomUUID(),facts,expected_fingerprint:row?.fingerprint||null},`${row?'Update':'Create'} rule · ${facts.name}\nPost ${facts.media_id} · ${products.get(facts.product_id)?.name||'Selected product'}\n${facts.enabled?'Enable future matches':'Keep disabled'}`).catch(onError);});
+ $('disable-rule').addEventListener('click',()=>{if(editing)command('rule_disable',editing.id,`${comments}/rules/${editing.id}/disable`,'POST',{idempotency_key:crypto.randomUUID(),expected_fingerprint:editing.fingerprint},`Disable rule · ${editing.name}`).catch(onError);});
+ $('preview-form').addEventListener('submit',async event=>{event.preventDefault();if(!previewRule||busy)return;const epoch=selectionEpoch,row=previewRule;try{const value=await api(`${comments}/preview`,{method:'POST',body:{rule_id:row.id,text:$('preview-text').value,media_id:row.media_id}});if(epoch!==selectionEpoch||previewRule!==row)return;if(value?.sends!==false||typeof value.matches!=='boolean')throw Error('The preview could not be verified.');$('preview-result').textContent=`${value.matches?'Keyword and post match':'No keyword/post match'}\n${value.withheld_reason?explain(value.withheld_reason):'Eligibility still depends on the actual incoming comment and current checks.'}\nPrivate copy: ${value.private_reply}\n${value.public_reply?'Public copy: '+value.public_reply:''}\nNo message was sent.`;}catch(error){if(!ended)$('preview-result').textContent=error.message;}});
+-for(const id of ['detail','rule','preview'])$(id+'-close').addEventListener('click',()=>{selectionEpoch++;$(id+'-dialog').close();});
+-document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(busy||ended)return;tab=button.dataset.tab;cursor=null;pages=[];selectionEpoch++;selected=null;$('filter-label').hidden=tab==='rules';$('list-heading').textContent=tab==='events'?'Review saved comment replies':tab==='rules'?'Rules for specific posts':'Follow-ups needing a person';$('list-description').textContent=tab==='enquiries'?'Inferred context is only a suggestion. Review here sends no customer message.':tab==='rules'?'Save or preview a static rule. Activated catalogue products remain withheld.':'A provider receipt confirms acceptance, not delivery. Reviewing never sends another reply.';document.querySelectorAll('[data-tab]').forEach(item=>item===button?item.setAttribute('aria-current','page'):item.removeAttribute('aria-current'));controls();load().catch(onError);}));
++for(const id of ['detail','rule','preview','reel'])$(id+'-close').addEventListener('click',()=>{selectionEpoch++;$(id+'-dialog').close();if(id==='reel'){clearReelDetail();controls();}});
++document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(busy||ended)return;clearReelDetail();tab=button.dataset.tab;cursor=null;pages=[];selectionEpoch++;selected=null;$('filter-label').hidden=tab==='rules'||tab==='reels';$('list-heading').textContent=tab==='events'?'Review saved comment replies':tab==='rules'?'Rules for specific posts':tab==='reels'?'Review one product enquiry':'Follow-ups needing a person';$('list-description').textContent=tab==='reels'?'Choose one message. A shared product link can inform future enquiries; a reply request applies only to the message you review.':tab==='enquiries'?'Inferred context is only a suggestion. Review here sends no customer message.':tab==='rules'?'Save or preview a static rule. Activated catalogue products remain withheld.':'A provider receipt confirms acceptance, not delivery. Reviewing never sends another reply.';document.querySelectorAll('[data-tab]').forEach(item=>item===button?item.setAttribute('aria-current','page'):item.removeAttribute('aria-current'));controls();load().catch(onError);}));
++$('reel-link-only').addEventListener('click',()=>prepareReel('link_only'));
++$('reel-resume').addEventListener('click',()=>prepareReel('link_and_resume'));
++$('reel-confirm').addEventListener('change',controls);
++$('reel-product').addEventListener('change',()=>{$('reel-confirm').checked=false;controls();});
++$('reel-retry').addEventListener('click',sendReel);
++$('reel-form').addEventListener('submit',event=>event.preventDefault());
+ $('new-rule').addEventListener('click',()=>editRule().catch(onError));$('more-products').addEventListener('click',()=>loadProducts().catch(onError));$('retry').addEventListener('click',send);
+ $('refresh').addEventListener('click',()=>load().catch(onError));$('state').addEventListener('change',()=>{cursor=null;pages=[];load().catch(onError);});
+ $('next').addEventListener('click',()=>{if(nextCursor){pages.push(cursor);cursor=nextCursor;load().catch(onError);}});$('previous').addEventListener('click',()=>{if(pages.length){cursor=pages.pop();load().catch(onError);}});
+ let checking=false;async function refocus(){if(ended||checking||!identity)return;checking=true;$('workspace').hidden=true;try{await session();}catch(error){onError(error);}finally{checking=false;if(!ended&&!document.hidden)$('workspace').hidden=false;}}
+ window.addEventListener('focus',refocus);window.addEventListener('pageshow',refocus);window.addEventListener('pagehide',()=>{$('workspace').hidden=true;});document.addEventListener('visibilitychange',()=>{if(document.hidden)$('workspace').hidden=true;else refocus();});
+-(async()=>{try{if(!UUID.test(business))throw Error('Open comments from an authorized business.');const g=generation,me=await session();storageKey=prefix+me.user_id+':'+business+':'+await digest(me.csrf_token);current(g);try{await recover();}catch(error){onError(error);}const overview=await api(comments);if(overview.business_id!==business||typeof overview.business_name!=='string')throw Error('This business could not be verified.');$('business-name').textContent=overview.business_name;$('back').href=`/v1?business=${encodeURIComponent(business)}`;$('readiness').textContent=overview.readiness_reason?explain(overview.readiness_reason):'Local account access is checked. Provider permissions and real delivery are not certified here.';await load();current(g);$('workspace').hidden=false;controls();}catch(error){onError(error);}})();
++(async()=>{try{if(!UUID.test(business))throw Error('Open comments from an authorized business.');const g=generation,me=await session();sessionScope=await digest(me.csrf_token);storageKey=prefix+me.user_id+':'+business+':'+sessionScope;reelStorageKey=reelPrefix+me.user_id+':'+business+':'+sessionScope;current(g);try{await recover();await recoverReel();}catch(error){onError(error);}const overview=await api(comments);if(overview.business_id!==business||typeof overview.business_name!=='string')throw Error('This business could not be verified.');$('business-name').textContent=overview.business_name;$('back').href=`/v1?business=${encodeURIComponent(business)}`;$('readiness').textContent=overview.readiness_reason?explain(overview.readiness_reason):'Local account access is checked. Provider permissions and real delivery are not certified here.';await load();current(g);$('workspace').hidden=false;controls();}catch(error){onError(error);}})();
+diff --git a/backend/static/comment_operator_contract.js b/backend/static/comment_operator_contract.js
+index b0683a0..7e49b54 100644
+--- a/backend/static/comment_operator_contract.js
++++ b/backend/static/comment_operator_contract.js
+@@ -32,3 +32,36 @@ export function validReceipt(value, intent) {
+ export function validRule(value) {
+   return UUID.test(value?.id) && HASH.test(value.fingerprint) && UUID.test(value.product_id) && text(value.name,100,1) && typeof value.enabled==='boolean' && (value.media_id===null||/^\d{1,100}$/.test(value.media_id)) && Array.isArray(value.keywords) && value.keywords.length<=30 && value.keywords.every(item=>text(item,60,1)) && text(value.private_reply,700,1) && (value.public_reply===null||text(value.public_reply,500));
+ }
++
++const reelActions = new Set(['link_only', 'link_and_resume']);
++const reelSources = new Set(['message_link', 'referral_link', 'quoted_message', 'recent_message', 'unknown']);
++const reelCode = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(value);
++const reasonCode = value => value === null || typeof value === 'string' && /^[a-z][a-z0-9_]{0,63}$/.test(value);
++const version = value => Number.isSafeInteger(value) && value >= 0;
++function reelProducts(value) {
++  return Array.isArray(value) && value.length <= 50 && new Set(value.map(row => row?.id)).size === value.length && value.every(row => keys(row, 'id,name') && UUID.test(row.id) && text(row.name, 300, 1));
++}
++export function validReelDetail(value, business) {
++  if (!keys(value, 'business_id,inbound_id,message,received_at,customer_name,customer_ref,account_hint,source,connection_version,fingerprint,matches,products,eligibility,can_manage') || value.business_id !== business || !UUID.test(value.inbound_id) || !text(value.message, 10000) || !text(value.received_at, 64, 1) || !Number.isFinite(Date.parse(value.received_at)) || !text(value.customer_name, 300) || !text(value.customer_ref, 4) || !text(value.account_hint, 50) || !version(value.connection_version) || !HASH.test(value.fingerprint) || typeof value.can_manage !== 'boolean' || !reelProducts(value.matches) || !reelProducts(value.products)) return false;
++  const source = value.source, eligibility = value.eligibility;
++  if (!keys(source, 'classification,shortcode,url') || !reelSources.has(source.classification) || !keys(eligibility, 'can_link,can_resume,reason') || typeof eligibility.can_link !== 'boolean' || typeof eligibility.can_resume !== 'boolean' || !reasonCode(eligibility.reason)) return false;
++  if (source.shortcode === null || source.url === null) return source.shortcode === null && source.url === null && !eligibility.can_link && !eligibility.can_resume;
++  if (!reelCode(source.shortcode) || typeof source.url !== 'string' || !new RegExp('^https://www\\.instagram\\.com/(reel|p|tv)/' + source.shortcode + '/$').test(source.url)) return false;
++  if (source.classification === 'unknown' && (eligibility.can_link || eligibility.can_resume)) return false;
++  return !eligibility.can_resume || eligibility.can_link && ['message_link', 'referral_link', 'quoted_message'].includes(source.classification);
++}
++export function validReelIntent(value, business) {
++  const body = value?.body;
++  return value?.operation === 'reel_link' && UUID.test(value.resource) && value.business === business && value.method === 'POST' && value.path === `/api/v1/businesses/${business}/whatsapp/reel-enquiries/${value.resource}/link` && HASH.test(value.request_hash) && text(value.summary, 1000, 1) && keys(body, 'idempotency_key,action,product_id,shortcode,expected_fingerprint,expected_connection_version,confirmed') && UUID.test(body.idempotency_key) && UUID.test(body.product_id) && reelActions.has(body.action) && reelCode(body.shortcode) && HASH.test(body.expected_fingerprint) && version(body.expected_connection_version) && body.confirmed === true;
++}
++export function validReelReceipt(value, intent) {
++  if (!keys(value, 'business_id,inbound_id,command_id,idempotency_key,action,product_id,request_hash,result,replayed') || value.business_id !== intent.business || value.inbound_id !== intent.resource || !UUID.test(value.command_id) || value.idempotency_key !== intent.body.idempotency_key || value.action !== intent.body.action || value.product_id !== intent.body.product_id || value.request_hash !== intent.request_hash || typeof value.replayed !== 'boolean') return false;
++  const result = value.result;
++  if (!keys(result, 'mapping,resume,reason,outbound_id,mapping_fingerprint') || result.mapping !== 'saved' || !HASH.test(result.mapping_fingerprint) || !reasonCode(result.reason)) return false;
++  if (result.resume === 'queued') return value.action === 'link_and_resume' && UUID.test(result.outbound_id) && result.reason === null;
++  if (result.resume === 'not_requested') return value.action === 'link_only' && result.outbound_id === null && result.reason === 'resume_not_requested';
++  return result.resume === 'held' && value.action === 'link_and_resume' && result.outbound_id === null && result.reason !== null;
++}
++export function validReelRejection(error, intent) {
++  return error?.status === 409 && error.code === 'reel_operator_pre_mutation_rejection' && validReelIntent(intent, intent.business) && error.reel_request_path === intent.path && error.reel_request_body === stable(intent.body);
++}
