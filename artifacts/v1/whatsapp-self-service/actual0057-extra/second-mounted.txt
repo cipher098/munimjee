@@ -1,0 +1,23 @@
+Actual Alembic head: 0057_v1_whatsapp_self_service
+Actual PostgreSQL: 16.15 (Debian 16.15-1.pgdg13+2)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+false !== true
+
+    at file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-whatsapp-self-service-contract/backend/tests/browser/whatsapp-self-service.mjs:86:10
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:472:9) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.0.0
+Stable application/harness hashes: 339

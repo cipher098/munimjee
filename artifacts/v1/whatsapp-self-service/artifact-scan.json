@@ -1,0 +1,33 @@
+{
+  "runtime_source": "f61ed55",
+  "test_metadata_followup": "1fefd17",
+  "scope": "UTF-8 txt/json/xml/md in this artifact packet; screenshots are masked and backed by boolean-only physical-secret-erasure assertions, not OCR-scanned",
+  "text_files_scanned": 46,
+  "secret_pattern_matches": {
+    "native_jwt": 0,
+    "owner_password": 0,
+    "pin_payload": 0,
+    "recipient_phone": 0,
+    "synthetic_one_use_code": 0,
+    "synthetic_provider_token": 0
+  },
+  "reserved_command_shape_matches": [
+    {
+      "path": "artifacts/v1/whatsapp-self-service/completion161/result.xml",
+      "sha256": "04ad5f17023f4de882e36ff83524bbd6a8d08aa1830b92c6fc171cd6726010cc",
+      "matches": 2,
+      "classification": "static malformed protocol fixture parameters in JUnit testcase names, not issued challenges",
+      "fixture_origin": "backend/tests/test_v1_whatsapp_protocol.py:test_all_reserved_malformed_commands_are_withheld_but_cannot_prove",
+      "bytes_modified": false
+    },
+    {
+      "path": "artifacts/v1/whatsapp-self-service/actual0057/final.xml",
+      "sha256": "a3e26915bca29ca6b47934b0f0639a32eb28ab00fde5fac6f303dcd640c504c3",
+      "matches": 2,
+      "classification": "static malformed protocol fixture parameters in JUnit testcase names, not issued challenges",
+      "fixture_origin": "backend/tests/test_v1_whatsapp_protocol.py:test_all_reserved_malformed_commands_are_withheld_but_cannot_prove",
+      "bytes_modified": false
+    }
+  ],
+  "result": "No issued secret pattern found; four static malformed fixture-name matches retained and explicitly classified. Original XML bytes preserved. No database/browser rerun for label-only followup."
+}

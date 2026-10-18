@@ -1,0 +1,4 @@
+Actual Alembic head: 0057_v1_whatsapp_self_service
+Actual PostgreSQL: 16.15 (Debian 16.15-1.pgdg13+2)
+PASS 30 actual-mounted native/0057 browser checks; SDK/provider synthetic, real Meta/delivery not proved
+Stable application/harness hashes: 339

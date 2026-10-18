@@ -1,0 +1,15 @@
+{
+  "checks": 30,
+  "actual_main_router": true,
+  "synthetic_provider": true,
+  "synthetic_sdk": true,
+  "synthetic_sdk_requests_fulfilled": 1,
+  "external_network_attempts": 0,
+  "held_old_get_handler_finished": true,
+  "held_old_get_route_fulfilled": true,
+  "ended_abort_may_cancel_held_get": true,
+  "actual_meta_sdk_network_requests": 0,
+  "page_errors": 0,
+  "real_meta_consent": false,
+  "live_delivery_proved": false
+}

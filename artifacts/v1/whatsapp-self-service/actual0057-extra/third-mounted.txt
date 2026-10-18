@@ -1,0 +1,23 @@
+Actual Alembic head: 0057_v1_whatsapp_self_service
+Actual PostgreSQL: 16.15 (Debian 16.15-1.pgdg13+2)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ null
+- '{"idempotency_key":"8351f482-3a09-4c5f-83b8-9437c966bc7f","expected_connection_version":1,"recipient_authorized":true,"recipient_contact_id":"d06eb38f-cadb-4374-a540-a2a05c40a17d","inbound_message_id":"aadf9e29-0d59-4dd7-8eac-f9b8b6740b3b","fixed_text_version":"wa-connection-test.v1"}'
+
+    at file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-whatsapp-self-service-contract/backend/tests/browser/whatsapp-self-service.mjs:115:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: '{"idempotency_key":"8351f482-3a09-4c5f-83b8-9437c966bc7f","expected_connection_version":1,"recipient_authorized":true,"recipient_contact_id":"d06eb38f-cadb-4374-a540-a2a05c40a17d","inbound_message_id":"aadf9e29-0d59-4dd7-8eac-f9b8b6740b3b","fixed_text_version":"wa-connection-test.v1"}',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.0.0
+Stable application/harness hashes: 339

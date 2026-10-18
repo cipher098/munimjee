@@ -1,0 +1,50 @@
+Actual Alembic head: 0057_v1_whatsapp_self_service
+Actual PostgreSQL: 16.15 (Debian 16.15-1.pgdg13+2)
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213
+        return matcher.call(target, ...args);
+                       ^
+
+A [Error]: expect(locator).toBeDisabled() failed
+
+Locator:  locator('#consent-fields')
+Expected: disabled
+Received: enabled
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.be.disabled" with timeout 5000ms
+  - waiting for locator('#consent-fields')
+    9 × locator resolved to <fieldset disabled id="consent-fields">…</fieldset>
+      - unexpected value "enabled"
+
+    at Proxy.<anonymous> (/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213:24)
+    at file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-whatsapp-self-service-contract/backend/tests/browser/whatsapp-self-service.mjs:54:108 {
+  matcherResult: {
+    message: 'expect(locator).toBeDisabled() failed\n' +
+      '\n' +
+      "Locator:  locator('#consent-fields')\n" +
+      'Expected: disabled\n' +
+      'Received: enabled\n' +
+      'Timeout:  5000ms\n' +
+      '\n' +
+      'Call log:\n' +
+      '  - Expect "to.be.disabled" with timeout 5000ms\n' +
+      "  - waiting for locator('#consent-fields')\n" +
+      '    9 × locator resolved to <fieldset disabled id="consent-fields">…</fieldset>\n' +
+      '      - unexpected value "enabled"\n',
+    pass: false,
+    actual: 'enabled',
+    name: 'toBeDisabled',
+    expected: 'disabled',
+    log: [
+      '  - Expect "to.be.disabled" with timeout 5000ms',
+      "  - waiting for locator('#consent-fields')",
+      '    9 × locator resolved to <fieldset disabled id="consent-fields">…</fieldset>',
+      '      - unexpected value "enabled"'
+    ],
+    timeout: 5000
+  }
+}
+
+Node.js v26.0.0
+Stable application/harness hashes: 339

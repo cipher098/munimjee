@@ -1,0 +1,32 @@
+✔ default-off projection withholds controls and never loads the SDK (5.32475ms)
+✔ viewer only sees coarse status, without any owner controls (0.722209ms)
+✔ restricted recovery storage fails before the first POST (1.020166ms)
+✔ lost prepare response survives reload without an automatic POST or new key (2.2925ms)
+✔ a held preparation guard reserves one intent before simultaneous submits (0.920875ms)
+✔ same-user session replacement during a pending read physically clears private DOM (1.268042ms)
+✔ a delayed owner session cannot revive a page ended by a newer401 (0.797458ms)
+✔ SDK code exchange occurs once and late FINISH data still reaches verified account review (1.757875ms)
+✔ unknown account selection erases PIN and never persists or replays it on reload (2.584042ms)
+✔ current unknown receipt never claims provider acceptance or a fresh test (0.98225ms)
+✔ confirmed signup without a fresh readiness read withholds old connection controls (1.027125ms)
+✔ explicit new-test review only reads the old receipt and resets recipient permission (1.109667ms)
+✔ stale queued cannot retire its journal or prepare another test (1.125833ms)
+✔ stale sending cannot retire its journal or prepare another test (2.616666ms)
+✔ stale unknown cannot retire its journal or prepare another test (1.511375ms)
+✔ private challenge and exact recipient stay outside recovery, unknown send keeps the same local command (1.453334ms)
+✔ an old ended page cannot remove a replacement session journal (0.491083ms)
+✔ withholds malformed recovery without a new action (0.499375ms)
+✔ withholds foreign_business recovery without a new action (0.46275ms)
+✔ withholds foreign_session recovery without a new action (0.442958ms)
+✔ withholds expired recovery without a new action (0.497583ms)
+✔ wrong-command valid200 signup ACK preserves original intent across reload (1.194458ms)
+✔ wrong-command valid200 test ACK preserves original intent across reload (0.986875ms)
+✔ held older test status cannot replace newer queued acknowledgement (1.325042ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101.037834
