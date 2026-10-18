@@ -129,7 +129,7 @@
       }
       $('business-tools').hidden = false;
     }
-    for (const [capability,label,page] of [['readiness.read','Onboarding','assistance'],['business.write','Payment setup','payments'],['analytics.read','Purchases and payments','analytics']]) {
+    for (const [capability,label,page] of [['inbox.read','Comments and enquiries','comment-automation'],['readiness.read','Onboarding','assistance'],['business.write','Payment setup','payments'],['analytics.read','Purchases and payments','analytics']]) {
       if (business.capabilities.includes(capability)) {
         const link = text('a', label, 'button secondary');
         link.href = `/v1/businesses/${business.id}/${page}`; $('business-tools').append(link); $('business-tools').hidden = false;

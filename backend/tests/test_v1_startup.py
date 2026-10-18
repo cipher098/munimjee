@@ -19,7 +19,8 @@ def test_all_foundation_models_are_registered():
             "v1_onboarding_assignments", "v1_assistance_commands",
             "v1_support_grants", "v1_support_commands", "v1_customers", "v1_customer_link_challenges",
             "v1_customer_link_proofs", "v1_customer_associations", "v1_customer_link_audits",
-            "v1_activity_policies", "v1_activity_contexts", "v1_activity_events", "v1_order_activity"} <= set(Base.metadata.tables)
+            "v1_activity_policies", "v1_activity_contexts", "v1_activity_events", "v1_order_activity", "comment_operator_commands", "comment_operator_reviews",
+            "whatsapp_enquiry_reviews", "whatsapp_enquiry_closures"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -39,6 +40,9 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/v1/support", "/api/v1/support/grants",
             "/api/v1/businesses/{business_id}/support/grants",
             "/v1/businesses/{business_id}/analytics", "/api/v1/businesses/{business_id}/analytics",
+            "/v1/businesses/{business_id}/comment-automation",
+            "/api/v1/businesses/{business_id}/comment-automation",
+            "/api/v1/businesses/{business_id}/whatsapp/enquiries",
             "/api/v1/businesses/{business_id}/analytics/activity",
             "/api/v1/businesses/{business_id}/analytics/measurement-policy",
             "/v1/businesses/{business_id}/customers", "/api/v1/businesses/{business_id}/customer-links",
@@ -59,7 +63,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0055_v1_comment_binding"]
+    assert scripts.get_heads() == ["0056_v1_comment_operator"]
+    assert scripts.get_revision("0056_v1_comment_operator").down_revision == "0055_v1_comment_binding"
     assert scripts.get_revision("0055_v1_comment_binding").down_revision == "0054_v1_activity"
     assert scripts.get_revision("0054_v1_activity").down_revision == "0053_v1_csv_import"
     assert scripts.get_revision("0053_v1_csv_import").down_revision == "0052_v1_customer_links"

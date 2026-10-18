@@ -19,6 +19,7 @@ STOREFRONT = (
     'components.js', 'commerce.js', 'theme-config.js', 'payment-handoff.js', 'published-design.js',
 )
 STATIC = frozenset((
+    'comment_operator.html', 'comment_operator.js', 'comment_operator.css', 'comment_operator_contract.js',
     'assistance.html', 'assistance.js', 'assistance.css',
     'payment_settings.html', 'payment_settings.js', 'payment_settings.css',
     'support_grants.html', 'support_grants.js', 'support_grants.css',
