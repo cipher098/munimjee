@@ -61,9 +61,14 @@ async def test_actual_postclaim_authority_change_starts_no_new_provider_operatio
             if not fired:
                 compiled = statement.compile()
                 sql = str(compiled)
+                # Selection performs subscription BEFORE registration. Match
+                # this exact stage so the later registration case cannot fire
+                # at the earlier subscription's otherwise-valid projection.
+                phase_matches = ('exchanging' in compiled.params.values() if stage == 'exchange' else
+                    f'whatsapp_signup_attempts.{stage}_state' in sql and 'requesting' in compiled.params.values())
                 # This is the actual coherent postclaim projection, not separate
                 # native guards or the earlier locked Attempt fetch.
-                if ('user_sessions' in sql and 'whatsapp_signup_attempts' in sql
+                if (phase_matches and 'user_sessions' in sql and 'whatsapp_signup_attempts' in sql
                     and 'requested_app_id' in sql and flow.aid in compiled.params.values()):
                     assert result is not None, 'The pre-rotation scalar must establish valid authority'
                     fired = True

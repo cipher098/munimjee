@@ -11,4 +11,4 @@ tests/test_v1_whatsapp_independent_db.py::test_actual_postclaim_authority_change
     warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-6 tests collected in 0.11s
+6 tests collected in 0.14s

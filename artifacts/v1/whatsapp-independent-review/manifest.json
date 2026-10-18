@@ -10,7 +10,7 @@
   },
   "owned_sha256": {
     "backend/tests/test_v1_whatsapp_independent.py": "37eaff15554030575ef6de61642bfb4e119ee86da14ba7d72e08e8396e180fd0",
-    "docs/v1-whatsapp-independent-security-review.md": "c4216be392dcd34e6b7052dfc3f6c4e44c93fa82c516c5a2070c847f3bdab280",
+    "docs/v1-whatsapp-independent-security-review.md": "58b032b4196cde2abbba8d4f4e5a56b5c9ea575bd1ae2b152fddb3de32069213",
     "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
     "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8",
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-extra-negatives.txt": "210cce537f2dc9dcd3013d14ba47f741248941e3bf7cb5b30fdb5efbdc104a80",
@@ -22,7 +22,10 @@
     "artifacts/v1/whatsapp-independent-review/fixed-0254-app-rotation-negative.txt": "46d7695978239c0d6fda95d23afabc4c86c36321506c90aa2f9a655ca108f623",
     "artifacts/v1/whatsapp-independent-review/fixed-85780-app-final-scalar.txt": "44432a74cf4fcb92404b8269a68bb3e17c8f86e06908210e6135b2d3969eb5eb",
     "artifacts/v1/whatsapp-independent-review/fixed-85780-independent.txt": "c99b175a03f5fd6fed60603969d70d11e4a5f217c2373e8cfdbd4f2cfe363f9c",
-    "artifacts/v1/whatsapp-independent-review/fixed-e897-independent.txt": "2e68aca7e1c8e93f8e99ed15823325081b6e96711671ea6ce1deb4fd6fe47b1b"
+    "artifacts/v1/whatsapp-independent-review/fixed-e897-independent.txt": "2e68aca7e1c8e93f8e99ed15823325081b6e96711671ea6ce1deb4fd6fe47b1b",
+    "backend/tests/test_v1_whatsapp_independent_db.py": "496534d6d57b9f88c872715fa35a9b7d3968efec66832fe41abf5b135cedc9b7",
+    "artifacts/v1/whatsapp-independent-review/prepared-actual-db-collection.txt": "9c593fb5928deae9afe27fc2da87e351a008a4685a5e9de6a620f904e3a85aa7",
+    "artifacts/v1/whatsapp-independent-review/shared-source-review.json": "288b035588eae4ea1c703bd0db50cf191a152afc8fe0e2d0be5ce47ea25f0fb5"
   },
   "coherent_snapshot": "6a8d6be95e202f30e4838ffadcaf6039e6128b60",
   "coherent_dependency_alias": "461006e",
@@ -97,5 +100,7 @@
     "backend/app/api/v1/whatsapp_self_service.py": true,
     "backend/app/models/whatsapp_self_service.py": true,
     "backend/app/schemas/whatsapp_self_service.py": true
-  }
+  },
+  "prepared_actual_db_cases": 6,
+  "prepared_actual_db_executed": false
 }

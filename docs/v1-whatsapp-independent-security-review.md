@@ -211,3 +211,15 @@ revocation of an external effect already invoked.
 These6 have NOT run on PostgreSQL. Owner actual fixture/shared mounting fixes and
 explicit serial allocation remain prerequisites. Catalogue currently owns the
 sole actual0057 lane; no parallel database/browser run was started here.
+
+
+Prepared fixture refinement before actual execution: catalogue's source review
+caught that the late-App registration hook could match the earlier subscription
+projection in the same select request. The hook now requires its exact requested
+stage column/requesting state (or exchange/exchanging) before rotating. All6
+still collect; no actual first-failure or runtime result is claimed.
+
+Read-only b853f4a header-tail review is clear: the custom route preserves private
+headers through HTTPException and supplies generic non-echoing validation errors;
+normal success remains private. It does not weaken native/session/capability
+checks. The email fixture compatibility correction7c501b6 is test-only.
