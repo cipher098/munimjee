@@ -22,26 +22,22 @@ async def _refresh() -> None:
     # Refresh tokens expiring within the next 10 days
     refresh_before = datetime.now(timezone.utc) + timedelta(days=10)
 
+    from app.services.instagram_credentials import snapshot, replace
     async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(Seller).where(
-                Seller.is_active == True,
-                Seller.instagram_token_expires_at <= refresh_before,
-            )
-        )
-        sellers = result.scalars().all()
-
-        if not sellers:
-            logger.info("No Instagram tokens due for refresh")
-            return
-
-        for seller in sellers:
-            try:
-                new_token = await exchange_for_long_lived_token(seller.instagram_token)
-                seller.instagram_token = new_token
-                seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
-                logger.info("Refreshed Instagram token for seller %s", seller.id)
-            except Exception as exc:
-                logger.error("Failed to refresh token for seller %s: %s", seller.id, exc)
-
-        await db.commit()
+        ids = (await db.scalars(select(Seller.id).where(
+            Seller.is_active.is_(True), Seller.instagram_token_expires_at <= refresh_before))).all()
+    for seller_id in ids:
+        async with AsyncSessionLocal() as db:
+            current = await snapshot(db, seller_id)
+        if not current.active or not current.token or not current.account_id:
+            continue
+        try:
+            new_token = await exchange_for_long_lived_token(current.token)
+            async with AsyncSessionLocal() as db:
+                changed = await replace(db, seller_id, expected=current.proof(), account_id=current.account_id,
+                    token=new_token, expires_at=datetime.now(timezone.utc) + timedelta(days=60))
+                await db.commit()
+            logger.info("Instagram token refresh for seller %s: %s", seller_id, 'saved' if changed else 'connection changed; discarded')
+        except Exception:
+            # Provider exception text can include credentials; never log it.
+            logger.warning("Failed to refresh token for seller %s", seller_id)
