@@ -63,6 +63,8 @@ def mapping_digest(model=Product):
 
 
 async def access(db, actor, business_id, *, write=False):
+    if not settings.V1_AUTH_ENABLED:
+        raise HTTPException(404,'Native sign-in is unavailable')
     if actor.auth_method!='v1_user':
         raise HTTPException(401,'Native sign-in required')
     return await require_business_access(db,actor,business_id,'automation.manage' if write else 'inbox.read')
@@ -148,7 +150,8 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
             'newer_customer_message' if newer else 'reply_already_attempted' if prior else
             'consent_command' if message.text.strip().casefold() in {'stop','unsubscribe','start'} else
             'source_unverified' if not message.provider_message_id else
-            'ambiguous_mapping' if matches is None or len(ids)>1 else None)
+            'ambiguous_mapping' if matches is None or len(ids)>1 else
+            'catalogue_authority_unavailable' if not facts.enabled() else None)
     credential=hashlib.sha256(account.access_token.encode()).hexdigest() if account else hashlib.sha256(b'').hexdigest()
     state=dict(source_fingerprint=source_fp,quoted_id=quoted_id,quoted_fingerprint=quoted_fp,source=source,
         connection_version=version if version is not None else 0,control_present=version is not None,credential=credential,
@@ -378,10 +381,15 @@ async def revalidate_resume(db,account,contact,message) -> None:
         (Authorization.command_id==Command.id)&(Authorization.business_id==Command.business_id)).where(
         Authorization.outbound_message_id==message.id).execution_options(autoflush=False,populate_existing=True))).scalar_one_or_none()
     if accepted is None:
+        # Approved unconditional installation: keep an existing0057 exact test's
+        # own final scalar LAST inside this outer guard. Never branch on or use
+        # its returned authorization object as a send exception.
+        from app.services.whatsapp_test_authority import exact_test_authority
+        await exact_test_authority(db,account,contact,message)
         return None
     def held():
         raise HTTPException(409,'The reviewed reel reply is no longer eligible; review its current source')
-    if not facts.enabled() or (account.seller_id,contact.id,message.seller_id)!=(accepted.business_id,accepted.contact_id,accepted.business_id):
+    if not settings.V1_AUTH_ENABLED or not facts.enabled() or (account.seller_id,contact.id,message.seller_id)!=(accepted.business_id,accepted.contact_id,accepted.business_id):
         held()
     observed=await facts.read_facts(db,accepted.business_id,accepted.product_id,reel=dict(reel_url=accepted.source_url))
     if observed is None:
@@ -396,6 +404,6 @@ async def revalidate_resume(db,account,contact,message) -> None:
         outbound_id=message.id,business_id=account.seller_id,contact_id=contact.id,
         product_name=observed.product_name,mapping_revision=observed.mapping_revision,
         reference_pattern=pattern,expected_text=current,expected_skus=json.dumps(expected_skus,sort_keys=True,separators=(',',':'))))
-    if allowed!=message.id or not facts.enabled():
+    if allowed!=message.id or not settings.V1_AUTH_ENABLED or not facts.enabled():
         held()
     return None
