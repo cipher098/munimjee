@@ -198,6 +198,33 @@ class TestView(Contract):
         return self
 
 
+class TestChallengeView(Contract):
+    __test__ = False
+    contract_version: Literal["whatsapp-test-challenge.v1"]
+    test: TestView
+    command: Annotated[StrictStr, Field(pattern=r"^MUNIMJEE-WA-TEST:[A-Za-z0-9_-]{22}$")] = Field(repr=False)
+
+
+class ReviewedChoicesView(Contract):
+    contract_version: Literal["whatsapp-signup-choices.v1"]
+    business_id: UUID
+    attempt_id: UUID
+    choices: Annotated[tuple[ReviewedChoice, ...], Field(max_length=100)]
+
+
+class RecipientReview(Contract):
+    contract_version: Literal["whatsapp-test-recipient.v1"]
+    business_id: UUID
+    test_id: UUID
+    connection_version: Version
+    recipient_contact_id: UUID
+    inbound_message_id: UUID
+    phone: Annotated[StrictStr, Field(pattern=r"^[1-9][0-9]{7,14}$")] = Field(repr=False)
+    inbound_observed_at: AwareDatetime
+    reply_window_expires_at: AwareDatetime
+    reply_allowed: StrictBool
+
+
 class ReadinessView(Contract):
     contract_version: Literal["whatsapp-self-service.v1"]
     business_id: UUID

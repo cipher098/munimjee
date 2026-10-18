@@ -4,19 +4,20 @@ Caller contract: ingress has verified the webhook signature and already locked
 Account; queue locks Account→Contact→Test; worker holds Account→Contact→Message.
 Worker reads immutable authorization only and never locks/updates the Test row.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import re
 from uuid import uuid4
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.orm import aliased
 
 from app.config import settings
 from app.models.channel_operator import ChannelConnectionState
 from app.models.identity import Business, Membership, User
 from app.models.identity_auth import UserSession
 from app.models.seller import Seller
-from app.models.whatsapp import WhatsAppContact, WhatsAppMessage
+from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage
 from app.models.whatsapp_self_service import (
     WhatsAppAuthorizationProvenance, WhatsAppConnectionTest, WhatsAppTestAuthorization,
 )
@@ -29,20 +30,36 @@ def now():
     return datetime.now(timezone.utc)
 
 
-async def current_owner_session(db, binding: SessionBinding):
+async def current_owner_session(db, binding: SessionBinding, *, generation=None, phone_id=None):
+    clock=func.clock_timestamp()
+    query=select(UserSession.id).join(User,User.id==UserSession.user_id).join(
+        Membership,(Membership.user_id==User.id)&(Membership.business_id==binding.business_id)).join(
+        Business,Business.id==Membership.business_id).join(Seller,Seller.id==Business.id).where(
+        UserSession.id==binding.session_id,UserSession.user_id==binding.user_id,
+        UserSession.auth_version==binding.auth_version,User.auth_version==binding.auth_version,
+        UserSession.revoked_at.is_(None),UserSession.expires_at>clock,
+        User.is_active.is_(True),User.revoked_at.is_(None),Membership.is_active.is_(True),
+        Membership.revoked_at.is_(None),Membership.role=='owner',Business.is_active.is_(True),Seller.is_active.is_(True))
+    if generation is not None:
+        query=query.join(ChannelConnectionState,(ChannelConnectionState.business_id==Business.id)
+            &(ChannelConnectionState.channel=='whatsapp')).where(ChannelConnectionState.version==generation)
+    if phone_id is not None:
+        query=query.join(WhatsAppAccount,WhatsAppAccount.seller_id==Business.id).where(
+            WhatsAppAccount.phone_number_id==phone_id,WhatsAppAccount.access_token!='')
+    if await db.scalar(query.execution_options(autoflush=False)) is not None:
+        return
+    # These follow-up projections select an error only; no successful authority
+    # can be reconstructed from separate stale statements.
     valid=await db.scalar(select(UserSession.id).join(User,User.id==UserSession.user_id).where(
         UserSession.id==binding.session_id,UserSession.user_id==binding.user_id,
         UserSession.auth_version==binding.auth_version,User.auth_version==binding.auth_version,
-        UserSession.revoked_at.is_(None),UserSession.expires_at>now(),User.is_active.is_(True),User.revoked_at.is_(None)
-    ).execution_options(autoflush=False))
+        UserSession.revoked_at.is_(None),UserSession.expires_at>func.clock_timestamp(),
+        User.is_active.is_(True),User.revoked_at.is_(None)).execution_options(autoflush=False))
     if valid is None:
         raise HTTPException(401,'The authorizing native session ended')
-    role=await db.scalar(select(Membership.role).join(Business,Business.id==Membership.business_id).join(
-        Seller,Seller.id==Business.id).where(Membership.business_id==binding.business_id,
-        Membership.user_id==binding.user_id,Membership.is_active.is_(True),Membership.revoked_at.is_(None),
-        Business.is_active.is_(True),Seller.is_active.is_(True)).execution_options(autoflush=False))
-    if role!='owner':
-        raise HTTPException(403,'Current business owner authorization required')
+    if generation is not None or phone_id is not None:
+        raise HTTPException(409,'Current owner or connection authority changed')
+    raise HTTPException(403,'Current business owner authorization required')
 
 
 async def current_provenance(db, account, version, *, at=None):
@@ -89,7 +106,7 @@ async def intercept_reserved(db, account, event, *, received_at=None):
     if type(event) is not dict:
         return True
     mid,phone,stamp=event.get('id'),event.get('from'),event.get('timestamp')
-    if type(mid) is not str or not 1<=len(mid)<=255 or type(phone) is not str or not re.fullmatch(r'[1-9][0-9]{7,14}',phone) or type(stamp) is not str or not re.fullmatch(r'[0-9]{1,12}',stamp):
+    if type(mid) is not str or not 1<=len(mid)<=255 or reserved_command(mid) or any(ord(c)<33 or ord(c)>126 for c in mid) or type(phone) is not str or not re.fullmatch(r'[1-9][0-9]{7,14}',phone) or type(stamp) is not str or not re.fullmatch(r'[0-9]{1,12}',stamp):
         return True
     try:
         provider_at=datetime.fromtimestamp(int(stamp),timezone.utc)
@@ -149,6 +166,7 @@ async def exact_test_authority(db, account, contact, message, *, at=None):
         WhatsAppTestAuthorization.outbound_message_id==message.id).execution_options(autoflush=False))
     if auth is None:
         return None
+    projection_at=at
     at=at or now()
     if not settings.V1_CHANNEL_TESTS_ENABLED or auth.expires_at<=at or auth.authorized_at>at:
         raise HTTPException(409,'Connection-test authorization is unavailable or expired')
@@ -159,6 +177,55 @@ async def exact_test_authority(db, account, contact, message, *, at=None):
         or contact.opted_out or not contact.last_inbound_at
         or not 0<=(at-contact.last_inbound_at).total_seconds()<86400):
         raise HTTPException(409,'The exact recipient, reply window or account changed')
-    await current_owner_session(db,SessionBinding(auth.business_id,auth.actor_user_id,auth.actor_session_id,auth.actor_auth_version))
     await current_provenance(db,account,auth.connection_version,at=at)
+    await current_owner_session(db,SessionBinding(auth.business_id,auth.actor_user_id,auth.actor_session_id,auth.actor_auth_version))
+    if not await final_test_projection(db,message.id,account.seller_id,contact.id,at=projection_at):
+        raise HTTPException(409,'Current exact connection-test authority could not be established')
     return auth
+
+
+async def final_test_projection(db,message_id,business_id,contact_id,*,at=None):
+    """One fresh scalar statement is the final pre-provider authority boundary.
+
+    Never refreshes ORM or locks Test. The sender already owns canonical
+    Account→Contact→Message locks. No persisted JWT or client boolean is read.
+    """
+    auth=WhatsAppTestAuthorization; test=WhatsAppConnectionTest
+    provenance=WhatsAppAuthorizationProvenance
+    outbound=aliased(WhatsAppMessage); inbound=aliased(WhatsAppMessage)
+    clock=at if at is not None else func.clock_timestamp()
+    query=select(auth.outbound_message_id).join(test,(test.id==auth.test_id)&(test.business_id==auth.business_id)).join(
+        outbound,(outbound.id==auth.outbound_message_id)&(outbound.seller_id==auth.business_id)).join(
+        inbound,(inbound.id==auth.inbound_message_id)&(inbound.seller_id==auth.business_id)).join(
+        WhatsAppAccount,WhatsAppAccount.seller_id==auth.business_id).join(
+        ChannelConnectionState,(ChannelConnectionState.business_id==auth.business_id)&(ChannelConnectionState.channel=='whatsapp')).join(
+        provenance,(provenance.business_id==auth.business_id)&(provenance.connection_version==auth.connection_version)).join(
+        WhatsAppContact,(WhatsAppContact.id==auth.recipient_contact_id)&(WhatsAppContact.seller_id==auth.business_id)).join(
+        UserSession,UserSession.id==auth.actor_session_id).join(User,User.id==auth.actor_user_id).join(
+        Membership,(Membership.user_id==auth.actor_user_id)&(Membership.business_id==auth.business_id)).join(
+        Business,Business.id==auth.business_id).join(Seller,Seller.id==auth.business_id).where(
+        auth.outbound_message_id==message_id,auth.business_id==business_id,auth.recipient_contact_id==contact_id,
+        auth.authorized_at<=clock,auth.expires_at>clock,auth.fixed_text_version=='wa-connection-test.v1',
+        UserSession.user_id==auth.actor_user_id,UserSession.auth_version==auth.actor_auth_version,
+        UserSession.auth_version==User.auth_version,UserSession.revoked_at.is_(None),UserSession.expires_at>clock,
+        User.is_active.is_(True),User.revoked_at.is_(None),Membership.role=='owner',
+        Membership.is_active.is_(True),Membership.revoked_at.is_(None),Business.is_active.is_(True),Seller.is_active.is_(True),
+        ChannelConnectionState.version==auth.connection_version,WhatsAppAccount.phone_number_id==auth.phone_number_id,
+        WhatsAppAccount.access_token!='',provenance.phone_number_id==WhatsAppAccount.phone_number_id,
+        provenance.waba_id==WhatsAppAccount.waba_id,
+        ((provenance.token_expiry_kind=='permanent')|((provenance.token_expiry_kind=='at')&(provenance.token_expires_at>clock))),
+        WhatsAppContact.opted_out.is_(False),WhatsAppContact.last_inbound_at<=clock,
+        WhatsAppContact.last_inbound_at>clock-timedelta(hours=24),
+        test.cancelled_at.is_(None),test.connection_version==auth.connection_version,
+        test.actor_user_id==auth.actor_user_id,test.actor_session_id==auth.actor_session_id,
+        test.actor_auth_version==auth.actor_auth_version,test.recipient_contact_id==auth.recipient_contact_id,
+        test.inbound_message_id==auth.inbound_message_id,test.phone_number_id==auth.phone_number_id,
+        test.waba_id==WhatsAppAccount.waba_id,test.evidence_kind==provenance.evidence_kind,
+        inbound.direction=='inbound',inbound.kind=='text',inbound.text==REDACTED_COMMAND,inbound.payload=={},
+        inbound.contact_id==contact_id,inbound.phone_number_id==WhatsAppAccount.phone_number_id,
+        inbound.provider_message_id.is_not(None),inbound.provider_message_id!='',
+        outbound.direction=='outbound',outbound.kind=='text',outbound.text==FIXED_REPLY,outbound.payload=={},
+        outbound.contact_id==contact_id,outbound.phone_number_id==WhatsAppAccount.phone_number_id,
+        outbound.status.in_(('queued','sending')),outbound.provider_message_id.is_(None),
+    ).execution_options(autoflush=False)
+    return await db.scalar(query) is not None

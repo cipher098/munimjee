@@ -170,9 +170,14 @@ class SignupProvider:
         # Validate token before placing it in any debug request.
         if type(body) is not dict or set(body)!={'access_token'} or type(body.get('access_token')) is not str or not re.fullmatch(r'[\x21-\x7e]{1,8192}',body['access_token']):
             raise ProtocolError('provider_response_invalid')
+        return await self.inspect(body['access_token'],now=now)
+
+    async def inspect(self, token, *, now):
+        app_id=self.settings.WHATSAPP_EMBEDDED_APP_ID
+        secret=self.settings.WHATSAPP_EMBEDDED_APP_SECRET
         debug=await self.transport.request(GraphRequest('GET','/v26.0/debug_token',query=(
-            ('input_token',body['access_token']),('access_token',app_id+'|'+secret))))
-        return verified_token(body,debug,app_id=app_id,now=now)
+            ('input_token',token),('access_token',app_id+'|'+secret))))
+        return verified_token({'access_token':token},debug,app_id=app_id,now=now)
 
     async def choices(self, verified, waba_id):
         choices=[]; after=None; seen_cursors=set(); seen_phones=set()
