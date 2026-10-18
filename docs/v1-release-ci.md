@@ -1,5 +1,12 @@
 # Bounded V1 CI and package release checks
 
+**Hosted execution blocked:** fixed workflow run
+<https://github.com/cipher098/munimjee/actions/runs/39105879610> created four jobs,
+but none executed any step. GitHub's exact check annotation says:
+“The job was not started because your account is locked due to a billing issue.”
+No retry, account setting change or payment was attempted. Workflow/image/PG16
+acceptance remains pending.
+
 18 October 2026. Application baseline `dd36b0d`, release lane base `3082f1a`.
 This lane changes release tooling only. Product/schema/auth/recovery source and
 `backend/requirements.txt` remain unchanged. Flags remain default off.
@@ -54,6 +61,11 @@ separate dependency/product compatibility review.
 Only tracked allowlisted application/migration/static files, fixed storefront
 modules, the immutable Docker recipe and validated runtime inputs enter the context.
 Every enumerated static asset is now required, including scanner WASM/license.
+An independent review found that staged deletions disappeared from the current
+index allowlist used by the clean guard. The guard now diffs all HEAD names with
+rename detection disabled before filtering runtime paths. Three regressions cover
+a staged optional-module deletion, a rename inside runtime and a rename out of
+runtime; release archives/builds refuse each.
 Symlinks, development dependencies, URL/options/local requirement entries, dotenv,
 uploads, tests and keys fail or remain excluded. The builder checks runtime direct
 pins against the unchanged backend input before creating the destination.
@@ -84,7 +96,8 @@ no persisted checkout credentials, no secrets, no deployment/push and job timeou
 It validates workflow syntax/contexts using upstream-checksummed actionlint 1.7.12,
 installs the hashed test closure, runs safety/package/Node contracts and maintained
 Playwright fixture journeys. Those fixture journeys remain fixture evidence.
-The PostgreSQL 16 job uses a random published port, literal 127.0.0.1 and exact
+The PostgreSQL job checks out full history for the independent historical evidence
+verifier. The PostgreSQL 16 job uses a random published port, literal 127.0.0.1 and exact
 `munimjee_test_ci` P01 lane. Existing guards block provider sockets and hold the
 advisory lease across reset, actual migrations and each complete DB fixture.
 A required dedicated migration/lease test writes JUnit and a second command rejects
@@ -95,10 +108,11 @@ external browser requests aborted and no provider transports.
 Native amd64 and arm64 jobs build and run the network-disabled image smoke; no
 multiarch registry manifest is published.
 
-Local Python 3.11.16: **116 passed, 2 skipped** in the pure package/CI/P01-safety
+Local Python 3.11.16: **119 passed, 2 skipped** in the pure package/CI/P01-safety
 selection; the two actual DB cases skipped explicitly because no lane was allocated.
 The hashed test closure installed successfully on local macOS arm64 and passed
-`uv pip check`; Python 3.11 compile checks passed. Raw sanitized output is under
+`uv pip check`; Python 3.11 compile checks passed. A separate source startup/route/model/revision
+chain selection passed **5/5**; it did not connect to a database. Raw sanitized output is under
 `artifacts/v1/release-ci/`. The first YAML validation found an unquoted colon in a command; it was corrected.
 The early actual hosted run at checkpoint `dafc175` then failed before any job
 started: <https://github.com/cipher098/munimjee/actions/runs/39105746311>.
@@ -112,8 +126,24 @@ The single permitted read-only Docker info probe timed out at six seconds. No
 Docker restart, local build, actual new image smoke, actual PostgreSQL execution,
 successful remote CI run or multiarch result is claimed. Earlier wave4 image/database evidence
 belongs to its recorded source/inputs and does not certify this changed base/lock.
-Actual hashed wheel availability on both Linux architectures, hosted workflow runs,
-new image smoke and any OCI reproducibility claim remain pending. Rehearsal CLI
-composition awaits its independent safety-reviewed source checkpoint. Live provider,
+Real CPython 3.11 hash-required wheel downloads succeeded for **90/90 packages
+on each Linux amd64 and arm64 target** using Python 3.11.16/pip 24.0; all downloaded
+wheel digests were independently rechecked against the runtime lock. The target
+wheel manifests are `linux-wheel-downloads.json`. This proves availability and
+hash matching, not installation/execution on those architectures. Initial downloads
+using macOS system Python 3.9/pip 21 were rejected on its Python-marker resolution;
+the successful downloads used the actual Python 3.11 interpreter.
+
+Two clean-source CLI archives at fixed source `01b0ce4` matched byte-for-byte:
+3,399,680 bytes, SHA256
+`49a4c17a0c63c929ff10c428bcf9f42ff08939374a02adc181470ab362c11a57`.
+The canonical packaged content-map hash is
+`ae4eaadeb905bca50bdf03b58be966858d3dc8de45d59ac5fdbc9b7b2362272b`.
+Archive evidence includes the exact full source revision; a new commit changes the
+embedded revision and therefore the archive hash even when content-map bytes match.
+
+Successful hosted workflow runs, new image smoke and any OCI reproducibility claim remain pending. Rehearsal CLI
+execution composition remains deferred until its independent safety review and
+coordinator integration. Its standalone plan/pure checks are reported by that lane. Live provider,
 physical phone, migration/restore, business readiness and all other G0-G6 gates
 remain separate release requirements; this CI work does not make V1 released.

@@ -1,0 +1,921 @@
+{
+  "source_head": "01b0ce4841ba36d9adb1f06fadc122a31bea8185",
+  "python": "3.11.16",
+  "pip": "24.0",
+  "command": "python -m pip download --require-hashes --only-binary=:all: --implementation cp --python-version 3.11 --abi cp311 --platform manylinux_2_28_<arch> --platform manylinux2014_<arch> --dest <new temporary wheel directory> -r deploy/v1/runtime.lock",
+  "targets": {
+    "amd64": {
+      "wheel_count": 90,
+      "sha256_rechecked_against_runtime_lock": true,
+      "files": [
+        {
+          "filename": "PyYAML-6.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 757729,
+          "sha256": "d2b04aac4d386b172d5b9692e2d2da8de7bfb6c387fa4f801fbf6fb2e6ba4673"
+        },
+        {
+          "filename": "SQLAlchemy-2.0.30-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 3192184,
+          "sha256": "a1429a4b0f709f19ff3b0cf13675b2b9bfa8a7e79990003207a011c0db880a13"
+        },
+        {
+          "filename": "alembic-1.13.1-py3-none-any.whl",
+          "size_bytes": 233424,
+          "sha256": "2edcc97bed0bd3272611ce3a98d98279e9c209e7186e43e75bbb1b2bdfdbcc43"
+        },
+        {
+          "filename": "amqp-5.4.1-py3-none-any.whl",
+          "size_bytes": 51858,
+          "sha256": "ac2b816a14a380ed10c5ebbf85a334fd68111fa476496867a5ccd2fd09926d5e"
+        },
+        {
+          "filename": "annotated_doc-0.0.5-py3-none-any.whl",
+          "size_bytes": 5302,
+          "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"
+        },
+        {
+          "filename": "annotated_types-0.8.0-py3-none-any.whl",
+          "size_bytes": 13427,
+          "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+        },
+        {
+          "filename": "anthropic-0.40.0-py3-none-any.whl",
+          "size_bytes": 199484,
+          "sha256": "442028ae8790ff9e3b6f8912043918755af1230d193904ae2ef78cc22995280c"
+        },
+        {
+          "filename": "anyio-4.15.1-py3-none-any.whl",
+          "size_bytes": 132079,
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+        },
+        {
+          "filename": "async_timeout-5.0.1-py3-none-any.whl",
+          "size_bytes": 6233,
+          "sha256": "39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"
+        },
+        {
+          "filename": "asyncpg-0.29.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 2809108,
+          "sha256": "dc600ee8ef3dd38b8d67421359779f8ccec30b463e7aec7ed481c8346decf99f"
+        },
+        {
+          "filename": "bcrypt-4.2.0-cp39-abi3-manylinux_2_28_x86_64.whl",
+          "size_bytes": 273804,
+          "sha256": "3d3a6d28cb2305b43feac298774b997e372e56c7c7afd90a12b3dc49b189151c"
+        },
+        {
+          "filename": "billiard-4.3.1-py3-none-any.whl",
+          "size_bytes": 90178,
+          "sha256": "2c7075283191d9c0add66cf8fca8e06ba599e75fe7319b67186759f8877dfdaf"
+        },
+        {
+          "filename": "boto3-1.34.100-py3-none-any.whl",
+          "size_bytes": 139335,
+          "sha256": "bbe2bb0dfcd92380da2a2fa2c2f586ba06c118b796380b2d0f3d0ebd103ec28d"
+        },
+        {
+          "filename": "botocore-1.34.162-py3-none-any.whl",
+          "size_bytes": 12468049,
+          "sha256": "2d918b02db88d27a75b48275e6fb2506e9adaaddbec1ffa6a8a0898b34e769be"
+        },
+        {
+          "filename": "celery-5.3.6-py3-none-any.whl",
+          "size_bytes": 422035,
+          "sha256": "9da4ea0118d232ce97dff5ed4974587fb1c0ff5c10042eb15278487cdd27d1af"
+        },
+        {
+          "filename": "certifi-2026.7.22-py3-none-any.whl",
+          "size_bytes": 136983,
+          "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+        },
+        {
+          "filename": "cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "size_bytes": 217807,
+          "sha256": "34e261f78cb6ceaaa36f42f2613f4380d94d9c759a9c73c769ee6e0247364632"
+        },
+        {
+          "filename": "charset_normalizer-3.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 269972,
+          "sha256": "211d5a3eb6af8f513b8d4ca19a8c1b7accab1b5f0d3175f9826b03c1a920dc1f"
+        },
+        {
+          "filename": "click-8.5.0-py3-none-any.whl",
+          "size_bytes": 125251,
+          "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
+        },
+        {
+          "filename": "click_didyoumean-0.3.1-py3-none-any.whl",
+          "size_bytes": 3631,
+          "sha256": "5c4bb6007cfea5f2fd6583a2fb6701a22a41eb98957e63d0fac41c10e7c3117c"
+        },
+        {
+          "filename": "click_plugins-1.1.1.2-py2.py3-none-any.whl",
+          "size_bytes": 11051,
+          "sha256": "008d65743833ffc1f5417bf0e78e8d2c23aab04d9745ba817bd3e71b0feb6aa6"
+        },
+        {
+          "filename": "click_repl-0.4.1-py3-none-any.whl",
+          "size_bytes": 14988,
+          "sha256": "5cb10881d4c5ebaa8695eceb69911af3062ee78342812b713564b17aad333eb5"
+        },
+        {
+          "filename": "cryptography-50.0.2-cp311-abi3-manylinux_2_28_x86_64.whl",
+          "size_bytes": 4753050,
+          "sha256": "4061c0079120205fb760c58acab6443e217307dcf05e3702cf970e0689972856"
+        },
+        {
+          "filename": "distro-1.9.0-py3-none-any.whl",
+          "size_bytes": 20277,
+          "sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"
+        },
+        {
+          "filename": "dnspython-2.9.0-py3-none-any.whl",
+          "size_bytes": 354822,
+          "sha256": "9a4aedb833c3c1b49214d04d44d3032ab7a9135f7c1d29a549b4ff78fd82fda9"
+        },
+        {
+          "filename": "ecdsa-0.19.2-py2.py3-none-any.whl",
+          "size_bytes": 150818,
+          "sha256": "840f5dc5e375c68f36c1a7a5b9caad28f95daa65185c9253c0c08dd952bb7399"
+        },
+        {
+          "filename": "email_validator-2.3.0-py3-none-any.whl",
+          "size_bytes": 35604,
+          "sha256": "80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4"
+        },
+        {
+          "filename": "fastapi-0.111.0-py3-none-any.whl",
+          "size_bytes": 91993,
+          "sha256": "97ecbf994be0bcbdadedf88c3150252bed7b2087075ac99735403b1b76cc8fc0"
+        },
+        {
+          "filename": "fastapi_cli-0.0.32-py3-none-any.whl",
+          "size_bytes": 14670,
+          "sha256": "8dcc286fa32f01bbd3f65dd09cfd5a2540ed5f2230b77db7fd30978d6165f3c4"
+        },
+        {
+          "filename": "google_api_core-2.30.3-py3-none-any.whl",
+          "size_bytes": 173274,
+          "sha256": "a85761ba72c444dad5d611c2220633480b2b6be2521eca69cca2dbb3ffd6bfe8"
+        },
+        {
+          "filename": "google_auth-2.62.0-py3-none-any.whl",
+          "size_bytes": 267911,
+          "sha256": "4ff4319aeb4ad128409759d397a9fcafad126d0031d241cc0dd6b9a00b43e3f3"
+        },
+        {
+          "filename": "google_cloud_vision-3.7.2-py2.py3-none-any.whl",
+          "size_bytes": 459614,
+          "sha256": "a313088fcd9c016af0427c2447eea1ad01bc192ca4cc33babaace1be587bbf75"
+        },
+        {
+          "filename": "googleapis_common_protos-1.75.0-py3-none-any.whl",
+          "size_bytes": 300631,
+          "sha256": "961ed60399c457ceb0ee8f285a84c870aabc9c6a832b9d37bb281b5bebde43ed"
+        },
+        {
+          "filename": "greenlet-3.5.6-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 624428,
+          "sha256": "1c20ea32a73d17b9b60e3371240e17b0068120c98a5ec01a224a7dd8c89733ba"
+        },
+        {
+          "filename": "grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "size_bytes": 7187959,
+          "sha256": "bd8ea8eb3817b226057cc1c0e7ec4b378dcda52043b972b6ff12b1152178967d"
+        },
+        {
+          "filename": "grpcio_status-1.62.3-py3-none-any.whl",
+          "size_bytes": 14448,
+          "sha256": "f9049b762ba8de6b1086789d8315846e094edac2c50beaf462338b301a8fd4b8"
+        },
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "size_bytes": 37515,
+          "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+        },
+        {
+          "filename": "httpcore-1.0.9-py3-none-any.whl",
+          "size_bytes": 78784,
+          "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+        },
+        {
+          "filename": "httptools-0.9.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+          "size_bytes": 499139,
+          "sha256": "b68fb053b37c258a473ab67f4965c3b439500dc160fe364667035a6833eaf50a"
+        },
+        {
+          "filename": "httpx-0.27.0-py3-none-any.whl",
+          "size_bytes": 75590,
+          "sha256": "71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"
+        },
+        {
+          "filename": "idna-3.20-py3-none-any.whl",
+          "size_bytes": 69583,
+          "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+        },
+        {
+          "filename": "jinja2-3.1.6-py3-none-any.whl",
+          "size_bytes": 134899,
+          "sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+        },
+        {
+          "filename": "jiter-0.17.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 346052,
+          "sha256": "5888fe5abc1ca2fa834a3e1b4c7ef0dcece286a7d7e95a609ef0934b777b9fc9"
+        },
+        {
+          "filename": "jmespath-1.1.0-py3-none-any.whl",
+          "size_bytes": 20419,
+          "sha256": "a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"
+        },
+        {
+          "filename": "kombu-5.6.2-py3-none-any.whl",
+          "size_bytes": 214219,
+          "sha256": "efcfc559da324d41d61ca311b0c64965ea35b4c55cc04ee36e55386145dace93"
+        },
+        {
+          "filename": "mako-1.4.3-py3-none-any.whl",
+          "size_bytes": 80164,
+          "sha256": "723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f"
+        },
+        {
+          "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+          "size_bytes": 91687,
+          "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a"
+        },
+        {
+          "filename": "markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 22961,
+          "sha256": "6da83a088f8ef93b2d483a8232a4dbf4d69d3d8496b568a03c56becac43e1808"
+        },
+        {
+          "filename": "mdurl-0.1.2-py3-none-any.whl",
+          "size_bytes": 9979,
+          "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"
+        },
+        {
+          "filename": "orjson-3.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 130518,
+          "sha256": "89bcf2d4bc6c9a7e1763c8cf534f38712e66b76a0fefda7fb7785462f0d635e4"
+        },
+        {
+          "filename": "packaging-26.3-py3-none-any.whl",
+          "size_bytes": 129956,
+          "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+        },
+        {
+          "filename": "pdfminer.six-20231228-py3-none-any.whl",
+          "size_bytes": 5614515,
+          "sha256": "e8d3c3310e6fbc1fe414090123ab01351634b4ecb021232206c4c9a8ca3e3b8f"
+        },
+        {
+          "filename": "pdfplumber-0.11.1-py3-none-any.whl",
+          "size_bytes": 57895,
+          "sha256": "8f3f087001fc3ec72d2c8be23d4ad59a763356e70d659a9180b5250919a3e5a8"
+        },
+        {
+          "filename": "pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 7140667,
+          "sha256": "a625df9a2a5597fa5e5266e01aefc82604bb85d291e3547981e863560d75da6c"
+        },
+        {
+          "filename": "prompt_toolkit-3.0.53-py3-none-any.whl",
+          "size_bytes": 392288,
+          "sha256": "01c0891d7f9237d5e339f7d3e42cdae80b7534abb1c7c0e3352efba6231492f2"
+        },
+        {
+          "filename": "proto_plus-1.28.2-py3-none-any.whl",
+          "size_bytes": 50693,
+          "sha256": "b874236fcac2358f601e4330bcb76cb8b89c851303ccf4078408b3d4774d1c52"
+        },
+        {
+          "filename": "protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl",
+          "size_bytes": 295178,
+          "sha256": "438c636de8fb706a0de94a12a268ef1ae8f5ba5ae655a7671fcda5968ba3c9be"
+        },
+        {
+          "filename": "pyasn1-0.6.4-py3-none-any.whl",
+          "size_bytes": 84410,
+          "sha256": "deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b"
+        },
+        {
+          "filename": "pyasn1_modules-0.4.2-py3-none-any.whl",
+          "size_bytes": 181259,
+          "sha256": "29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"
+        },
+        {
+          "filename": "pycparser-3.11-py3-none-any.whl",
+          "size_bytes": 51178,
+          "sha256": "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80"
+        },
+        {
+          "filename": "pydantic-2.7.1-py3-none-any.whl",
+          "size_bytes": 409311,
+          "sha256": "e029badca45266732a9a79898a15ae2e8b14840b1eabbb25844be28f0b33f3d5"
+        },
+        {
+          "filename": "pydantic_core-2.18.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 2056984,
+          "sha256": "470b94480bb5ee929f5acba6995251ada5e059a5ef3e0dfc63cca287283ebfa6"
+        },
+        {
+          "filename": "pydantic_settings-2.2.1-py3-none-any.whl",
+          "size_bytes": 13150,
+          "sha256": "0235391d26db4d2190cb9b31051c4b46882d28a51533f97440867f012d4da091"
+        },
+        {
+          "filename": "pygments-2.21.0-py3-none-any.whl",
+          "size_bytes": 1250147,
+          "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+        },
+        {
+          "filename": "pypdfium2-5.14.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 3799581,
+          "sha256": "11f281613fa22313d9c7ab89947665e84eccf8ebe40e1198a84a88352305648d"
+        },
+        {
+          "filename": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+          "size_bytes": 229892,
+          "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+        },
+        {
+          "filename": "python_dotenv-1.2.4-py3-none-any.whl",
+          "size_bytes": 23266,
+          "sha256": "42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc"
+        },
+        {
+          "filename": "python_jose-3.3.0-py2.py3-none-any.whl",
+          "size_bytes": 33530,
+          "sha256": "9b1376b023f8b298536eedd47ae1089bcdb848f1535ab30555cd92002d78923a"
+        },
+        {
+          "filename": "python_multipart-0.0.9-py3-none-any.whl",
+          "size_bytes": 22299,
+          "sha256": "97ca7b8ea7b05f977dc3849c3ba99d51689822fab725c3703af7c866a0c2b215"
+        },
+        {
+          "filename": "redis-5.0.4-py3-none-any.whl",
+          "size_bytes": 251954,
+          "sha256": "7adc2835c7a9b5033b7ad8f8918d09b7344188228809c98df07af226d39dec91"
+        },
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "size_bytes": 73075,
+          "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+        },
+        {
+          "filename": "rich-15.0.0-py3-none-any.whl",
+          "size_bytes": 310654,
+          "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb"
+        },
+        {
+          "filename": "rich_toolkit-0.20.6-py3-none-any.whl",
+          "size_bytes": 39466,
+          "sha256": "465453ba6f94f99401f59f79fb562827ba5f6b4d4759015d40019f5c67750262"
+        },
+        {
+          "filename": "rsa-4.9.1-py3-none-any.whl",
+          "size_bytes": 34696,
+          "sha256": "68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762"
+        },
+        {
+          "filename": "s3transfer-0.10.4-py3-none-any.whl",
+          "size_bytes": 83175,
+          "sha256": "244a76a24355363a68164241438de1b72f8781664920260c48465896b712a41e"
+        },
+        {
+          "filename": "shellingham-1.5.4-py2.py3-none-any.whl",
+          "size_bytes": 9755,
+          "sha256": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"
+        },
+        {
+          "filename": "six-1.17.0-py2.py3-none-any.whl",
+          "size_bytes": 11050,
+          "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+        },
+        {
+          "filename": "sniffio-1.3.1-py3-none-any.whl",
+          "size_bytes": 10235,
+          "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"
+        },
+        {
+          "filename": "starlette-0.37.2-py3-none-any.whl",
+          "size_bytes": 71908,
+          "sha256": "6fe59f29268538e5d0d182f2791a479a0c64638e6935d1c6989e63fb2699c6ee"
+        },
+        {
+          "filename": "typer-0.27.3-py3-none-any.whl",
+          "size_bytes": 123312,
+          "sha256": "e50022f28b82a86313e54501317a1db64bf8f8d036ff8cfe5ca7e47675454aff"
+        },
+        {
+          "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+          "size_bytes": 45571,
+          "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+        },
+        {
+          "filename": "tzdata-2026.5-py2.py3-none-any.whl",
+          "size_bytes": 347996,
+          "sha256": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+        },
+        {
+          "filename": "ujson-6.0.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 56248,
+          "sha256": "fd26d4b182b7138fc948cda55fe2e91b70d987731e169e628f42ba22cc6e3cce"
+        },
+        {
+          "filename": "urllib3-2.8.0-py3-none-any.whl",
+          "size_bytes": 135717,
+          "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+        },
+        {
+          "filename": "uvicorn-0.29.0-py3-none-any.whl",
+          "size_bytes": 60813,
+          "sha256": "2c2aac7ff4f4365c206fd773a39bf4ebd1047c238f8b8268ad996829323473de"
+        },
+        {
+          "filename": "uvloop-0.23.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "size_bytes": 3956355,
+          "sha256": "ab17b3a8aa754be0de0e397f7b95f13b14e56f077a4c6ae295e3d4afd199b325"
+        },
+        {
+          "filename": "vine-5.1.0-py3-none-any.whl",
+          "size_bytes": 9636,
+          "sha256": "40fdf3c48b2cfe1c38a49e9ae2da6fda88e4794c810050a728bd7413811fb1dc"
+        },
+        {
+          "filename": "watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 458353,
+          "sha256": "b5768b49e426fd5b550b012c866db347cdf15c398ef98dc557b6e6b72fa74cd1"
+        },
+        {
+          "filename": "wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "size_bytes": 769763,
+          "sha256": "751bef0ab404b6a1dc028b56b4b85d46486be1c55833f80da533e42dc691f389"
+        },
+        {
+          "filename": "websockets-12.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "size_bytes": 130872,
+          "sha256": "6e9e7db18b4539a29cc5ad8c8b252738a30e2b13f033c2d6e9d0549b45841c04"
+        }
+      ]
+    },
+    "arm64": {
+      "wheel_count": 90,
+      "sha256_rechecked_against_runtime_lock": true,
+      "files": [
+        {
+          "filename": "PyYAML-6.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 732244,
+          "sha256": "42f8152b8dbc4fe7d96729ec2b99c7097d656dc1213a3229ca5383f973a5ed6d"
+        },
+        {
+          "filename": "SQLAlchemy-2.0.30-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 3192301,
+          "sha256": "69c9db1ce00e59e8dd09d7bae852a9add716efdc070a3e2068377e6ff0d6fdaa"
+        },
+        {
+          "filename": "alembic-1.13.1-py3-none-any.whl",
+          "size_bytes": 233424,
+          "sha256": "2edcc97bed0bd3272611ce3a98d98279e9c209e7186e43e75bbb1b2bdfdbcc43"
+        },
+        {
+          "filename": "amqp-5.4.1-py3-none-any.whl",
+          "size_bytes": 51858,
+          "sha256": "ac2b816a14a380ed10c5ebbf85a334fd68111fa476496867a5ccd2fd09926d5e"
+        },
+        {
+          "filename": "annotated_doc-0.0.5-py3-none-any.whl",
+          "size_bytes": 5302,
+          "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"
+        },
+        {
+          "filename": "annotated_types-0.8.0-py3-none-any.whl",
+          "size_bytes": 13427,
+          "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+        },
+        {
+          "filename": "anthropic-0.40.0-py3-none-any.whl",
+          "size_bytes": 199484,
+          "sha256": "442028ae8790ff9e3b6f8912043918755af1230d193904ae2ef78cc22995280c"
+        },
+        {
+          "filename": "anyio-4.15.1-py3-none-any.whl",
+          "size_bytes": 132079,
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+        },
+        {
+          "filename": "async_timeout-5.0.1-py3-none-any.whl",
+          "size_bytes": 6233,
+          "sha256": "39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"
+        },
+        {
+          "filename": "asyncpg-0.29.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 2788952,
+          "sha256": "5b52e46f165585fd6af4863f268566668407c76b2c72d366bb8b522fa66f1870"
+        },
+        {
+          "filename": "bcrypt-4.2.0-cp39-abi3-manylinux_2_28_aarch64.whl",
+          "size_bytes": 277934,
+          "sha256": "8d7bb9c42801035e61c109c345a28ed7e84426ae4865511eb82e913df18f58c2"
+        },
+        {
+          "filename": "billiard-4.3.1-py3-none-any.whl",
+          "size_bytes": 90178,
+          "sha256": "2c7075283191d9c0add66cf8fca8e06ba599e75fe7319b67186759f8877dfdaf"
+        },
+        {
+          "filename": "boto3-1.34.100-py3-none-any.whl",
+          "size_bytes": 139335,
+          "sha256": "bbe2bb0dfcd92380da2a2fa2c2f586ba06c118b796380b2d0f3d0ebd103ec28d"
+        },
+        {
+          "filename": "botocore-1.34.162-py3-none-any.whl",
+          "size_bytes": 12468049,
+          "sha256": "2d918b02db88d27a75b48275e6fb2506e9adaaddbec1ffa6a8a0898b34e769be"
+        },
+        {
+          "filename": "celery-5.3.6-py3-none-any.whl",
+          "size_bytes": 422035,
+          "sha256": "9da4ea0118d232ce97dff5ed4974587fb1c0ff5c10042eb15278487cdd27d1af"
+        },
+        {
+          "filename": "certifi-2026.7.22-py3-none-any.whl",
+          "size_bytes": 136983,
+          "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+        },
+        {
+          "filename": "cffi-2.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+          "size_bytes": 218716,
+          "sha256": "3311ed60d36f83378794e1009ac6258bafbf81f7888b4caa7b35a521e3f95813"
+        },
+        {
+          "filename": "charset_normalizer-3.5.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 259280,
+          "sha256": "d760fe2a4d7c3b226cb9026d6a842868d52a7901bd98420e1baf14e80da85cf5"
+        },
+        {
+          "filename": "click-8.5.0-py3-none-any.whl",
+          "size_bytes": 125251,
+          "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
+        },
+        {
+          "filename": "click_didyoumean-0.3.1-py3-none-any.whl",
+          "size_bytes": 3631,
+          "sha256": "5c4bb6007cfea5f2fd6583a2fb6701a22a41eb98957e63d0fac41c10e7c3117c"
+        },
+        {
+          "filename": "click_plugins-1.1.1.2-py2.py3-none-any.whl",
+          "size_bytes": 11051,
+          "sha256": "008d65743833ffc1f5417bf0e78e8d2c23aab04d9745ba817bd3e71b0feb6aa6"
+        },
+        {
+          "filename": "click_repl-0.4.1-py3-none-any.whl",
+          "size_bytes": 14988,
+          "sha256": "5cb10881d4c5ebaa8695eceb69911af3062ee78342812b713564b17aad333eb5"
+        },
+        {
+          "filename": "cryptography-50.0.2-cp311-abi3-manylinux_2_28_aarch64.whl",
+          "size_bytes": 4738340,
+          "sha256": "f9f6143a8c75945eb960d9eb98905a441394abfa24afaae239d514ffb2586480"
+        },
+        {
+          "filename": "distro-1.9.0-py3-none-any.whl",
+          "size_bytes": 20277,
+          "sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"
+        },
+        {
+          "filename": "dnspython-2.9.0-py3-none-any.whl",
+          "size_bytes": 354822,
+          "sha256": "9a4aedb833c3c1b49214d04d44d3032ab7a9135f7c1d29a549b4ff78fd82fda9"
+        },
+        {
+          "filename": "ecdsa-0.19.2-py2.py3-none-any.whl",
+          "size_bytes": 150818,
+          "sha256": "840f5dc5e375c68f36c1a7a5b9caad28f95daa65185c9253c0c08dd952bb7399"
+        },
+        {
+          "filename": "email_validator-2.3.0-py3-none-any.whl",
+          "size_bytes": 35604,
+          "sha256": "80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4"
+        },
+        {
+          "filename": "fastapi-0.111.0-py3-none-any.whl",
+          "size_bytes": 91993,
+          "sha256": "97ecbf994be0bcbdadedf88c3150252bed7b2087075ac99735403b1b76cc8fc0"
+        },
+        {
+          "filename": "fastapi_cli-0.0.32-py3-none-any.whl",
+          "size_bytes": 14670,
+          "sha256": "8dcc286fa32f01bbd3f65dd09cfd5a2540ed5f2230b77db7fd30978d6165f3c4"
+        },
+        {
+          "filename": "google_api_core-2.30.3-py3-none-any.whl",
+          "size_bytes": 173274,
+          "sha256": "a85761ba72c444dad5d611c2220633480b2b6be2521eca69cca2dbb3ffd6bfe8"
+        },
+        {
+          "filename": "google_auth-2.62.0-py3-none-any.whl",
+          "size_bytes": 267911,
+          "sha256": "4ff4319aeb4ad128409759d397a9fcafad126d0031d241cc0dd6b9a00b43e3f3"
+        },
+        {
+          "filename": "google_cloud_vision-3.7.2-py2.py3-none-any.whl",
+          "size_bytes": 459614,
+          "sha256": "a313088fcd9c016af0427c2447eea1ad01bc192ca4cc33babaace1be587bbf75"
+        },
+        {
+          "filename": "googleapis_common_protos-1.75.0-py3-none-any.whl",
+          "size_bytes": 300631,
+          "sha256": "961ed60399c457ceb0ee8f285a84c870aabc9c6a832b9d37bb281b5bebde43ed"
+        },
+        {
+          "filename": "greenlet-3.5.6-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 613429,
+          "sha256": "45bfd2b51e38aaa5f9849f114d9c7c1d75f69187c849b3549cd64c465283abfa"
+        },
+        {
+          "filename": "grpcio-1.84.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+          "size_bytes": 7029927,
+          "sha256": "158c1c11cfb61b4849c3caf4d52de6f5ecd376e14446feb4a90dc95a90d616f5"
+        },
+        {
+          "filename": "grpcio_status-1.62.3-py3-none-any.whl",
+          "size_bytes": 14448,
+          "sha256": "f9049b762ba8de6b1086789d8315846e094edac2c50beaf462338b301a8fd4b8"
+        },
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "size_bytes": 37515,
+          "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+        },
+        {
+          "filename": "httpcore-1.0.9-py3-none-any.whl",
+          "size_bytes": 78784,
+          "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+        },
+        {
+          "filename": "httptools-0.9.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 498141,
+          "sha256": "6e2780e33a58a93f27cc3bb74a55bae6f9a8278a1dbabdff392940d30d381671"
+        },
+        {
+          "filename": "httpx-0.27.0-py3-none-any.whl",
+          "size_bytes": 75590,
+          "sha256": "71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"
+        },
+        {
+          "filename": "idna-3.20-py3-none-any.whl",
+          "size_bytes": 69583,
+          "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+        },
+        {
+          "filename": "jinja2-3.1.6-py3-none-any.whl",
+          "size_bytes": 134899,
+          "sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+        },
+        {
+          "filename": "jiter-0.17.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 343275,
+          "sha256": "30c692d567ba206c7cca38c9d1d0ccc70c9786290173c184d871ca12e9981ed7"
+        },
+        {
+          "filename": "jmespath-1.1.0-py3-none-any.whl",
+          "size_bytes": 20419,
+          "sha256": "a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"
+        },
+        {
+          "filename": "kombu-5.6.2-py3-none-any.whl",
+          "size_bytes": 214219,
+          "sha256": "efcfc559da324d41d61ca311b0c64965ea35b4c55cc04ee36e55386145dace93"
+        },
+        {
+          "filename": "mako-1.4.3-py3-none-any.whl",
+          "size_bytes": 80164,
+          "sha256": "723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f"
+        },
+        {
+          "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+          "size_bytes": 91687,
+          "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a"
+        },
+        {
+          "filename": "markupsafe-3.0.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 24321,
+          "sha256": "849dd2bb0e5e4ab2b71c7191726a4a8d5aa8a610daa584728cbee0b710ddc4ef"
+        },
+        {
+          "filename": "mdurl-0.1.2-py3-none-any.whl",
+          "size_bytes": 9979,
+          "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"
+        },
+        {
+          "filename": "orjson-3.13.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 129138,
+          "sha256": "dd9d9a101bd8dbfad112170f009cd155e52bb8c936468821a0d03cbb96c0e426"
+        },
+        {
+          "filename": "packaging-26.3-py3-none-any.whl",
+          "size_bytes": 129956,
+          "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+        },
+        {
+          "filename": "pdfminer.six-20231228-py3-none-any.whl",
+          "size_bytes": 5614515,
+          "sha256": "e8d3c3310e6fbc1fe414090123ab01351634b4ecb021232206c4c9a8ca3e3b8f"
+        },
+        {
+          "filename": "pdfplumber-0.11.1-py3-none-any.whl",
+          "size_bytes": 57895,
+          "sha256": "8f3f087001fc3ec72d2c8be23d4ad59a763356e70d659a9180b5250919a3e5a8"
+        },
+        {
+          "filename": "pillow-13.0.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 6517304,
+          "sha256": "7c88c10dd432f3b39ccdafc9ed81d0c21b8fd634502574da76d1bfa4fe2c76d0"
+        },
+        {
+          "filename": "prompt_toolkit-3.0.53-py3-none-any.whl",
+          "size_bytes": 392288,
+          "sha256": "01c0891d7f9237d5e339f7d3e42cdae80b7534abb1c7c0e3352efba6231492f2"
+        },
+        {
+          "filename": "proto_plus-1.28.2-py3-none-any.whl",
+          "size_bytes": 50693,
+          "sha256": "b874236fcac2358f601e4330bcb76cb8b89c851303ccf4078408b3d4774d1c52"
+        },
+        {
+          "filename": "protobuf-4.25.9-cp37-abi3-manylinux2014_aarch64.whl",
+          "size_bytes": 294191,
+          "sha256": "999146ef02e7fa6a692477badd1528bcd7268df211852a3df2d834ba2b480791"
+        },
+        {
+          "filename": "pyasn1-0.6.4-py3-none-any.whl",
+          "size_bytes": 84410,
+          "sha256": "deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b"
+        },
+        {
+          "filename": "pyasn1_modules-0.4.2-py3-none-any.whl",
+          "size_bytes": 181259,
+          "sha256": "29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"
+        },
+        {
+          "filename": "pycparser-3.11-py3-none-any.whl",
+          "size_bytes": 51178,
+          "sha256": "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80"
+        },
+        {
+          "filename": "pydantic-2.7.1-py3-none-any.whl",
+          "size_bytes": 409311,
+          "sha256": "e029badca45266732a9a79898a15ae2e8b14840b1eabbb25844be28f0b33f3d5"
+        },
+        {
+          "filename": "pydantic_core-2.18.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 1821936,
+          "sha256": "05b7133a6e6aeb8df37d6f413f7705a37ab4031597f64ab56384c94d98fa0e90"
+        },
+        {
+          "filename": "pydantic_settings-2.2.1-py3-none-any.whl",
+          "size_bytes": 13150,
+          "sha256": "0235391d26db4d2190cb9b31051c4b46882d28a51533f97440867f012d4da091"
+        },
+        {
+          "filename": "pygments-2.21.0-py3-none-any.whl",
+          "size_bytes": 1250147,
+          "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+        },
+        {
+          "filename": "pypdfium2-5.14.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 3719672,
+          "sha256": "f1b696e6901e16f114a2ec6332e5e3f8f5033a901614ead28499ab18ca6024f5"
+        },
+        {
+          "filename": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+          "size_bytes": 229892,
+          "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+        },
+        {
+          "filename": "python_dotenv-1.2.4-py3-none-any.whl",
+          "size_bytes": 23266,
+          "sha256": "42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc"
+        },
+        {
+          "filename": "python_jose-3.3.0-py2.py3-none-any.whl",
+          "size_bytes": 33530,
+          "sha256": "9b1376b023f8b298536eedd47ae1089bcdb848f1535ab30555cd92002d78923a"
+        },
+        {
+          "filename": "python_multipart-0.0.9-py3-none-any.whl",
+          "size_bytes": 22299,
+          "sha256": "97ca7b8ea7b05f977dc3849c3ba99d51689822fab725c3703af7c866a0c2b215"
+        },
+        {
+          "filename": "redis-5.0.4-py3-none-any.whl",
+          "size_bytes": 251954,
+          "sha256": "7adc2835c7a9b5033b7ad8f8918d09b7344188228809c98df07af226d39dec91"
+        },
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "size_bytes": 73075,
+          "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+        },
+        {
+          "filename": "rich-15.0.0-py3-none-any.whl",
+          "size_bytes": 310654,
+          "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb"
+        },
+        {
+          "filename": "rich_toolkit-0.20.6-py3-none-any.whl",
+          "size_bytes": 39466,
+          "sha256": "465453ba6f94f99401f59f79fb562827ba5f6b4d4759015d40019f5c67750262"
+        },
+        {
+          "filename": "rsa-4.9.1-py3-none-any.whl",
+          "size_bytes": 34696,
+          "sha256": "68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762"
+        },
+        {
+          "filename": "s3transfer-0.10.4-py3-none-any.whl",
+          "size_bytes": 83175,
+          "sha256": "244a76a24355363a68164241438de1b72f8781664920260c48465896b712a41e"
+        },
+        {
+          "filename": "shellingham-1.5.4-py2.py3-none-any.whl",
+          "size_bytes": 9755,
+          "sha256": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"
+        },
+        {
+          "filename": "six-1.17.0-py2.py3-none-any.whl",
+          "size_bytes": 11050,
+          "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+        },
+        {
+          "filename": "sniffio-1.3.1-py3-none-any.whl",
+          "size_bytes": 10235,
+          "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"
+        },
+        {
+          "filename": "starlette-0.37.2-py3-none-any.whl",
+          "size_bytes": 71908,
+          "sha256": "6fe59f29268538e5d0d182f2791a479a0c64638e6935d1c6989e63fb2699c6ee"
+        },
+        {
+          "filename": "typer-0.27.3-py3-none-any.whl",
+          "size_bytes": 123312,
+          "sha256": "e50022f28b82a86313e54501317a1db64bf8f8d036ff8cfe5ca7e47675454aff"
+        },
+        {
+          "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+          "size_bytes": 45571,
+          "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+        },
+        {
+          "filename": "tzdata-2026.5-py2.py3-none-any.whl",
+          "size_bytes": 347996,
+          "sha256": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+        },
+        {
+          "filename": "ujson-6.0.0-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 57189,
+          "sha256": "2f3c0a77235d7ffcce5c54b872fa25de4f14e6ffc159c62ad93b0a9ca98a1d20"
+        },
+        {
+          "filename": "urllib3-2.8.0-py3-none-any.whl",
+          "size_bytes": 135717,
+          "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+        },
+        {
+          "filename": "uvicorn-0.29.0-py3-none-any.whl",
+          "size_bytes": 60813,
+          "sha256": "2c2aac7ff4f4365c206fd773a39bf4ebd1047c238f8b8268ad996829323473de"
+        },
+        {
+          "filename": "uvloop-0.23.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+          "size_bytes": 3896377,
+          "sha256": "8fcd721113260ffb5e38bf14a8725b17d431f34209f7d1c7005b667946e630b3"
+        },
+        {
+          "filename": "vine-5.1.0-py3-none-any.whl",
+          "size_bytes": 9636,
+          "sha256": "40fdf3c48b2cfe1c38a49e9ae2da6fda88e4794c810050a728bd7413811fb1dc"
+        },
+        {
+          "filename": "watchfiles-1.3.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 454994,
+          "sha256": "4af9c464d410e8c44b58ddf1cbec7c3a02c1cb2c6c80df9c74659ba2fbda0ab5"
+        },
+        {
+          "filename": "wcwidth-0.9.2-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+          "size_bytes": 771632,
+          "sha256": "674b518af28d38ee645ff97b74f5760abee5fad4bac74413bfc4b881ef2ce724"
+        },
+        {
+          "filename": "websockets-12.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "size_bytes": 131502,
+          "sha256": "8e332c210b14b57904869ca9f9bf4ca32f5427a03eeb625da9b616c85a3a506c"
+        }
+      ]
+    }
+  },
+  "scope": "Real hash-checked Linux CPython3.11 wheel downloads; neither installation/execution on Linux nor Docker image build"
+}
