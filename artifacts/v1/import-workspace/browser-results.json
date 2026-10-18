@@ -1,5 +1,5 @@
 {
-  "checks": 56,
+  "checks": 123,
   "transport": "synthetic same-origin HTTP mocks",
   "database": "not exercised by this suite",
   "provider_calls": 0,

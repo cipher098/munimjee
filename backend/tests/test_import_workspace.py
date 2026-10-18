@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.api.v1.auth import router as auth
 from app.api.v1.import_workspace import router as workspace
+from app.api.v1.import_catalogue import router as bridge
 from app.api.v1.imports import create_router
 from app.api.v1.session import require_v1_mutation
 from app.config import settings
@@ -18,9 +19,10 @@ from app.database import get_db
 async def client(migrated_engine, monkeypatch):
     monkeypatch.setattr(settings, "V1_AUTH_ENABLED", True)
     monkeypatch.setattr(settings, "V1_IMPORTS_ENABLED", True)
+    monkeypatch.setattr(settings, "V1_IMPORT_BRIDGE_ENABLED", True)
     monkeypatch.setattr(settings, "PUBLIC_BASE_URL", "http://test")
     app = FastAPI()
-    for router in (auth, workspace, create_router(require_v1_mutation)):
+    for router in (auth, workspace, bridge, create_router(require_v1_mutation)):
         app.include_router(router)
     factory = async_sessionmaker(migrated_engine, expire_on_commit=False)
     async def database():
@@ -70,6 +72,11 @@ async def test_import_workspace_read_only_roles_and_mutation_csrf(client, role):
     body = {"idempotency_key": str(uuid4()), "source_kind": "website",
             "source_url": "https://example.com/catalogue", "source_authorized": True}
     assert (await client.post(path+"/jobs", json=body)).status_code == 403
+    draft_path = path + f"/candidates/{uuid4()}/catalogue-draft"
+    draft_body = {"idempotency_key": str(uuid4()), "expected_revision": 1,
+        "seller_reviewed": True, "confirmed_fields": ["title", "description", "price", "stock", "options"],
+        "allocations": [{"options": {}, "stock_available": 0, "active": False}]}
+    assert (await client.post(draft_path, json=draft_body)).status_code == 403
     invitation = await client.post(f"/api/v1/businesses/{bid}/invitations", headers={"X-CSRF-Token": client.cookies["v1_csrf"]},
         json={"email": f"{uuid4().hex}@example.com", "role": role})
     assert invitation.status_code == 201
@@ -81,3 +88,4 @@ async def test_import_workspace_read_only_roles_and_mutation_csrf(client, role):
     assert (await client.get(path+"/jobs")).status_code == 200
     assert (await client.get(path+"/candidates")).status_code == 200
     assert (await client.post(path+"/jobs", json=body, headers={"X-CSRF-Token": client.cookies["v1_csrf"]})).status_code == 403
+    assert (await client.post(draft_path, json=draft_body, headers={"X-CSRF-Token": client.cookies["v1_csrf"]})).status_code == 403

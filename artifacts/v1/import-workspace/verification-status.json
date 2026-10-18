@@ -1,0 +1,24 @@
+{
+  "base": "a2ea26d",
+  "preserved_workspace_checkpoint": "8e1aeb9",
+  "chromium_checks": 123,
+  "transport": "synthetic same-origin HTTP fixtures; external origins blocked",
+  "provider_calls": 0,
+  "database_tests": {
+    "status": "skipped",
+    "count": 3,
+    "reason": "No explicitly provisioned P01 TEST_DATABASE_URL/TEST_LANE/TEST_DB_RESET; coordinator confirms disposable Docker/PostgreSQL unavailable"
+  },
+  "actual_native_browser": {
+    "status": "prepared_not_run",
+    "runner": "python -m tests.run_import_workspace_browser --native",
+    "requires": "allocated exact disposable P01 lane and held migration/reset lease"
+  },
+  "visual_review": [
+    "allocation-design-study.png",
+    "desktop-allocation-focused.png",
+    "mobile-allocation-focused.png"
+  ],
+  "physical_device": "not tested",
+  "production_actions": 0
+}
