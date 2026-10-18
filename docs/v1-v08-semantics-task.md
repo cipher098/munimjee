@@ -60,3 +60,32 @@ Root baseline: existing `test_sku_fact_replies.py`, `test_intent_classifier.py`
 and `test_prompt_builders.py` pass44 checks, with one existing Pydantic
 deprecation warning. Logs/XML are under the root-owned artifact directory.
 Finite worker matrices and final results will be recorded in the handoff.
+
+## Frozen new matrix
+
+Root approved the following21 cases before test writes. No additional scenario
+is authorized for this packet without a meaningful finding that changes scope.
+
+| Lane / cases | Required observation |
+| --- | --- |
+| Semantic: nine language × topic cases | English and supported Hinglish price/size/stock questions yield independently specified exact approved SKU facts. Three Devanagari questions safely hand off; this documents unsupported language behavior. |
+| Semantic: three policy-override texts | English, Hindi and Hinglish buyer text cannot replace catalogue facts or authorize financial actions; the bounded request path hands off. |
+| Semantic: three missing-fact cases | Empty SKU projection and missing required price withhold facts; missing approved material must explicitly identify uncertainty or hand off. |
+| Context C01 | Sequential explicit A then B overrides old quote A and renders exact B facts, with no A leakage. |
+| Context C02 | Two distinct explicit A+B references override an old quote and withhold rather than choose first/last. |
+| Context C03 | One explicit URL mapping to two products withholds. |
+| Context C04 | An explicit unknown B overrides old A; no unrelated fallback. |
+| Context C05 | Real Instagram normalization and batch freeze clarify/handoff when a new B URL conflicts with reply-to A. |
+| Context C06 | An unsupported new share URL plus valid old reply-to A cannot inherit A. |
+
+Both lanes use raw scripted read projections rather than replacing context or
+decision functions. Existing migrated sender freshness/pause/account-change and
+all-reference tests are credited by exact reference and remain unrun here.
+Reconnect-specific gaps must be explicit. No new fake-SQL test may masquerade
+as current gate or persistence proof.
+
+The missing-material criterion accepts a human handoff or clear material-specific
+unknown/confirmation wording. It does not require one exact response string.
+Generic preferred-option confirmation does not identify missing material.
+A failure is a response/actionability gap, not proof of invented facts or a
+financial safety violation. No intent-classifier robustness expansion is included.
