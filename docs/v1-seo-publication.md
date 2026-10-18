@@ -96,11 +96,13 @@ private details. The destination always combines the configured origin and
 reviewed path; neither request query nor request authority is reflected.
 
 A narrowly scoped ASGI request fence runs before Starlette's implicit slash
-redirects. It recognizes only declared source paths and their repeated/trailing
-slash aliases plus the new sitemap namespace, rejecting alias/raw-byte/query or
+redirects. It recognizes only declared source paths and their trailing-slash
+aliases (including multiple trailing slashes) plus the new sitemap namespace, rejecting alias/raw-byte/query or
 source-authority mismatches with 404 and no Location. This closes framework
 normalization paths that would otherwise run before endpoint validation and
-reflect a request Host. Other routes retain their existing slash behavior.
+reflect a request Host. Internal double-slash resources and other routes retain
+their existing behavior. Inventory uniqueness and startup collision checks also
+cover trailing-slash-equivalent routes, so the fence cannot mask existing resources.
 
 ## Frozen Python interfaces
 
