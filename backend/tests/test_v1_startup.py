@@ -56,7 +56,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0052_v1_customer_links"]
+    assert scripts.get_heads() == ["0053_v1_csv_import"]
+    assert scripts.get_revision("0053_v1_csv_import").down_revision == "0052_v1_customer_links"
     assert scripts.get_revision("0052_v1_customer_links").down_revision == "0051_v1_support_grants"
     assert scripts.get_revision("0051_v1_support_grants").down_revision == "0050_v1_assistance"
     assert scripts.get_revision("0050_v1_assistance").down_revision == "0049_v1_storefront_settings"

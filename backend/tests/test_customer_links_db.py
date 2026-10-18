@@ -1,4 +1,5 @@
 """Real0052/P01 service state, uniqueness and current account proofs; no sends."""
+from tests.isolated_database import current_migration_head
 import asyncio
 from datetime import timedelta
 from types import SimpleNamespace
@@ -65,7 +66,7 @@ async def final_body(j,cid):
 async def test_real_chain_and_hash_only_proofs_explicit_finalize_and_unlink_preserve_history(customer_lane):
     j=customer_lane;cid,command,body=await create(j)
     async with j.sessions() as db:
-        assert await db.scalar(text('select version_num from alembic_version'))=='0052_v1_customer_links'
+        assert await db.scalar(text('select version_num from alembic_version'))==current_migration_head()
         row=await service.challenge_for(db,j.bid,cid)
         assert command.split()[1] not in str(row.__dict__)
         assert not (await service.view(db,row))['proofs']

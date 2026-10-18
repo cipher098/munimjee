@@ -1,4 +1,5 @@
 """Actual 0053/P01 and mounted native HTTP; CSV never invokes providers."""
+from tests.isolated_database import current_migration_head
 import asyncio
 from datetime import timedelta
 from uuid import UUID, uuid4
@@ -51,7 +52,7 @@ async def test_csv_actual_chain_original_bytes_exact_commands_and_type_binding(n
     assert png.status_code==201,png.text
     assert (await job(j,png.json()['asset_id'])).status_code==422
     async with j.sessions() as db:
-        assert await db.scalar(text('SELECT version_num FROM alembic_version'))=='0053_v1_csv_import'
+        assert await db.scalar(text('SELECT version_num FROM alembic_version'))==current_migration_head()
         original=await db.get(ImportAsset,UUID(asset)); assert original.content==DATA
         assert original.creator_id==j.uid and original.authorized_at and original.sha256==first.json()['sha256']
         assert await db.scalar(select(func.count()).select_from(ImportJob).where(ImportJob.business_id==j.bid))==1

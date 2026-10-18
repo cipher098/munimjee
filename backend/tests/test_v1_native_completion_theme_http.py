@@ -3,6 +3,7 @@
 Fixtures are disposable synthetic tenants. No HTTP/domain projection is mocked.
 The shared P01 fixture is the only connection/reset path.
 """
+from tests.isolated_database import current_migration_head
 import asyncio
 import json
 from pathlib import Path
@@ -31,7 +32,7 @@ def test_actual_theme_revision_is_registered_after_actual_parcel_revision():
     config = Config()
     config.set_main_option('script_location', str(Path(__file__).parents[1] / 'alembic'))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_current_head() == '0052_v1_customer_links'
+    assert scripts.get_revision('0052_v1_customer_links').down_revision == '0051_v1_support_grants'
     assert scripts.get_revision('0050_v1_assistance').down_revision == '0049_v1_storefront_settings'
     assert scripts.get_revision('0049_v1_storefront_settings').down_revision == '0048_v1_parcel_tracking'
     assert scripts.get_revision('0048_v1_parcel_tracking').down_revision == '0047_v1_import_catalogue_bridge'
@@ -44,7 +45,7 @@ async def test_actual_main_draft_preview_publish_public_ssr_and_query_authority(
     url = f'/api/v1/businesses/{j.bid}/theme-settings'
     async with j.sessions() as db:
         slug = (await db.get(Storefront, j.bid)).slug
-        assert await db.scalar(text('SELECT version_num FROM alembic_version')) == '0052_v1_customer_links'
+        assert await db.scalar(text('SELECT version_num FROM alembic_version')) == current_migration_head()
     body = {'expected_version': 0, 'idempotency_key': str(uuid4()), 'config': {
         'theme': theme, 'palette': 'indigo', 'hero_headline': f'Published & {theme}',
         'story_body': 'Published seller story', 'show_story': True, 'show_categories': False}}

@@ -19,6 +19,15 @@ from tests.safety import TestSafetyError, sanitized_test_environment, validate_t
 LOCK_ID = 0x4D554E494D
 
 
+def current_migration_head() -> str:
+    """Expected repository revision for additive domain fixtures, without DB IO."""
+    from alembic.script import ScriptDirectory
+    heads = ScriptDirectory(str(Path(__file__).resolve().parents[1] / 'alembic')).get_heads()
+    if len(heads) != 1:
+        raise TestSafetyError('Tests require one actual repository migration head')
+    return heads[0]
+
+
 async def acquire_lease(connection, target) -> None:
     actual = await connection.scalar(text("SELECT current_database()"))
     if actual != target.database:
