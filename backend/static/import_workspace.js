@@ -13,14 +13,14 @@
   const same = (a,b) => JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
   let identity = null, access = null, stopped = false, busy = false, preparing = false, command = null, blocked = false, storageKey;
   let jobs = [], candidates = [], selected = null, baseline = null, jobsCursor = null, candidateCursor = null;
-  let preview = null, previewEpoch = 0;
+  let preview = null, previewEpoch = 0, fenceGeneration = 0;
   let jobHistory = [], candidateHistory = [], candidateNext = null, timer = null, pollCount = 0, loadEpoch = 0;
   const canWrite = () => !stopped && Boolean(access?.capabilities.includes('catalogue.write'));
   function el(tag, text, className) {const node = document.createElement(tag);if(text !== undefined)node.textContent = text;if(className)node.className = className;return node;}
   async function hash(value) {const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');}
   function clearCommands() {try {for(let i=sessionStorage.length-1;i>=0;i--){const key=sessionStorage.key(i);if(key?.startsWith(PREFIX))sessionStorage.removeItem(key);}}catch(_) {}}
   function fence(message) {
-    stopped = true;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
+    stopped = true;fenceGeneration++;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
     $('workspace').hidden=true;$('access-needed').hidden=false;$('loading').hidden=true;$('business-name').textContent='PRIVATE CATALOGUE';
     $('candidate-list').replaceChildren();$('job-list').replaceChildren();$('candidate-evidence').textContent='';$('candidate-source').textContent='';$('candidate-state').textContent='';$('review-heading').textContent='Choose a candidate';$('confirmations').replaceChildren();$('recovery-facts').textContent='';$('recovery-message').textContent='';$('recovery-file').value='';$('notice').textContent='';
     $('allocation-form').reset();$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('receipt-details').textContent='';$('bridge-note').hidden=true;$('allocation-form').hidden=true;$('allocation-status').textContent='';$('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('option-rows').replaceChildren();$('global-error').textContent=message;
@@ -76,31 +76,33 @@
     if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id)));
     if(!Number.isInteger(b.expected_revision)||b.expected_revision<1)return false;
     if(/^\/jobs\/[0-9a-f-]{36}\/(cancel|retry)$/i.test(value.path))return exact(b,['expected_revision','idempotency_key']);
-    if(/^\/candidates\/[0-9a-f-]{36}\/catalogue-draft$/i.test(value.path))return exact(b,['expected_revision','idempotency_key','seller_reviewed','confirmed_fields','allocations'])&&b.seller_reviewed===true&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f))&&Array.isArray(b.allocations)&&b.allocations.length>0&&b.allocations.length<=500&&b.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000&&a.active===false)&&new Set(b.allocations.map(a=>optionIdentity(a.options))).size===b.allocations.length;
+    if(/^\/candidates\/[0-9a-f-]{36}\/catalogue-draft$/i.test(value.path))return exact(b,['expected_revision','idempotency_key','seller_reviewed','confirmed_fields','allocations'])&&b.seller_reviewed===true&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f))&&Array.isArray(b.allocations)&&b.allocations.length>0&&b.allocations.length<=500&&b.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000&&typeof a.active==='boolean')&&new Set(b.allocations.map(a=>optionIdentity(a.options))).size===b.allocations.length;
     if(!/^\/candidates\/[0-9a-f-]{36}\/review$/i.test(value.path)||!['edit','approve','reject'].includes(b.action))return false;
     if(b.action==='edit')return exact(b,['expected_revision','idempotency_key','action','overrides'])&&Array.isArray(b.overrides)&&b.overrides.length>0&&b.overrides.length<=5&&new Set(b.overrides.map(o=>o.field)).size===b.overrides.length&&b.overrides.every(o=>exact(o,['field','value'])&&fields.includes(o.field)&&validFacts({...Object.fromEntries(fields.map(f=>[f,null])),[o.field]:o.value}));
     if(b.action==='approve')return exact(b,['expected_revision','idempotency_key','action','confirmed_fields'])&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f));
     return exact(b,['expected_revision','idempotency_key','action','reason'])&&typeof b.reason==='string'&&b.reason.trim().length>0&&b.reason.length<=1000;
   }
   function readStorage() {try{return sessionStorage.getItem(storageKey);}catch(_){throw Error('Browser session storage is unavailable. Enable it and reload before sending an import action.');}}
-  function persist(value) {const encoded=JSON.stringify(value);try{sessionStorage.setItem(storageKey,encoded);if(sessionStorage.getItem(storageKey)!==encoded)throw Error();}catch(_){throw Error('The action could not be preserved for recovery. No new request was sent. Enable browser session storage and reload.');}}
+  function current(generation) {if(stopped||generation!==fenceGeneration)throw Error('Your session ended. Sign in again.');}
+  function persist(value) {current(fenceGeneration);const encoded=JSON.stringify(value);try{sessionStorage.setItem(storageKey,encoded);if(sessionStorage.getItem(storageKey)!==encoded)throw Error();}catch(_){throw Error('The action could not be preserved for recovery. No new request was sent. Enable browser session storage and reload.');}}
   function remove() {try{sessionStorage.removeItem(storageKey);if(sessionStorage.getItem(storageKey)!==null)throw Error();}catch(_){throw Error('The confirmed action could not be cleared from recovery. Keep this page open and retry after enabling browser storage.');}}
-  async function decode(raw) {let value;try{value=JSON.parse(raw);}catch(_){throw Error('Saved action cannot be read. Review import activity with your business owner before starting another action.');}if(!validateCommand(value)||value.digest!==await hash(JSON.stringify([value.kind,value.path,value.body])))throw Error('Saved action is invalid, expired or belongs to a different sign-in. Review import activity with your owner before starting another action.');return value;}
+  async function decode(raw) {const generation=fenceGeneration;let value;try{value=JSON.parse(raw);}catch(_){throw Error('Saved action cannot be read. Review import activity with your business owner before starting another action.');}if(!validateCommand(value)||value.digest!==await hash(JSON.stringify([value.kind,value.path,value.body])))throw Error('Saved action is invalid, expired or belongs to a different sign-in. Review import activity with your owner before starting another action.');current(generation);return value;}
   function showRecovery() {
+    if(stopped)return;
     $('recovery-message').textContent=command?'This action may already have completed. Its exact request and idempotency key are preserved for this sign-in. Retry to confirm the result. Reload never sends it automatically.':'Recovery state needs reconciliation. Review activity with your owner; no new action will be sent.';
     $('recovery-facts').textContent=command?JSON.stringify({action:command.path,details:command.body},null,2):'';
     $('recovery-file-label').hidden=command?.kind!=='upload';sync();
   }
   async function makeCommand(kind,path,body) {
-    if(command||blocked||busy||preparing)throw Error('Confirm the saved action before starting another.');preparing=true;$('notice').textContent='';sync();try {await session(true);
+    if(stopped||command||blocked||busy||preparing)throw Error('Confirm the saved action before starting another.');preparing=true;$('notice').textContent='';sync();const generation=fenceGeneration;try {await session(true);
     const value={version:1,user:identity.user,business:businessId,fingerprint:identity.fingerprint,created:new Date().toISOString(),kind,path,body:clone(body),digest:await hash(JSON.stringify([kind,path,body]))};
-    if(!validateCommand(value))throw Error('The entered facts are outside the supported import contract.');persist(value);command=value;showRecovery();
+    current(generation);if(!validateCommand(value))throw Error('The entered facts are outside the supported import contract.');persist(value);command=value;showRecovery();
     } finally {preparing=false;sync();}
   }
   function validJob(job) {return object(job)&&uuid(job.job_id)&&job.business_id===businessId&&['pending','running','review_required','failed','cancelled'].includes(job.state)&&Number.isInteger(job.revision)&&job.revision>0&&object(job.source)&&Number.isInteger(job.attempts)&&job.attempts>=0&&Number.isInteger(job.candidate_count)&&job.candidate_count>=0;}
   function validCandidate(record) {const c=record?.candidate;return uuid(record?.candidate_id)&&Number.isInteger(record.revision)&&record.revision>0&&c?.id===record.candidate_id&&c.provenance?.business_id===businessId&&uuid(c.provenance.import_job_id)&&object(c.provenance.source)&&['pending','review_required','approved','rejected'].includes(c.state)&&validFacts(c.extracted)&&Array.isArray(c.overrides)&&c.overrides.every(o=>fields.includes(o.field)&&validFacts({...Object.fromEntries(fields.map(f=>[f,null])),[o.field]:o.value}));}
   async function rawUpload(file) {
-    const b=command.body;
+    const generation=fenceGeneration,b=command.body;
     if(!file||file.size!==b.size||file.type!==b.content_type||await hash(await file.arrayBuffer())!==b.sha256)throw Error('Reselect the exact original file saved for this upload. Its size, type and SHA-256 must match.');
     await session(true);
     const response=await fetch(root+'/uploads?idempotency_key='+b.idempotency_key+'&source_authorized=true',{method:'POST',body:file,headers:{'Content-Type':b.content_type,'X-CSRF-Token':V1.csrf},credentials:'same-origin',cache:'no-store',redirect:'error'});
@@ -108,7 +110,7 @@
     const result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(Error(typeof result.detail==='string'?result.detail:'The upload could not be confirmed.'),{status:response.status});await session();
     if(!uuid(result.asset_id)||result.sha256!==b.sha256||result.size_bytes!==b.size||result.content_type!==b.content_type)throw Error('The upload response did not confirm the original media. Retry the saved upload.');
     const body={idempotency_key:b.job_key,source_authorized:true,source_kind:'uploaded_media',asset_id:result.asset_id};
-    const next={...command,kind:'json',path:'/jobs',body,digest:await hash(JSON.stringify(['json','/jobs',body]))};persist(next);command=next;showRecovery();
+    const next={...command,kind:'json',path:'/jobs',body,digest:await hash(JSON.stringify(['json','/jobs',body]))};current(generation);persist(next);command=next;showRecovery();
   }
   async function sendCommand(file) {
     if(!command||blocked||busy)return;busy=true;sync();$('recovery-error').textContent='';
@@ -199,20 +201,20 @@
     $('allocation-issues').replaceChildren();for(const issue of preview.issues)$('allocation-issues').append(el('p',issue));
     if(preview.existing){$('allocation-status').textContent='This source already has a private catalogue draft.';$('bridge-note').hidden=false;$('receipt-details').textContent='Product '+preview.existing.product_id+' · approved revision '+preview.existing.candidate_revision;$('bridge-catalogue').href=preview.existing.catalogue_url;return;}
     if(preview.state==='unsupported'){$('allocation-status').textContent='Resolve the listed facts or setup requirements, then refresh. No draft can be created yet.';return;}
-    $('allocation-status').textContent=preview.allocations.length+' SKU combination'+(preview.allocations.length===1?'':'s')+' · confirmed stock '+preview.facts.stock+' · INR '+preview.facts.price.amount+'. All SKUs will start inactive.';
-    for(const [i,row] of preview.allocations.entries()) {const node=el('div',undefined,'allocation-row'),name=Object.entries(row.options).map(([k,v])=>k+': '+v).join(' / ')||'No options';node.append(el('strong',name));const label=el('label','Quantity'),input=el('input');input.type='number';input.min='0';input.max='1000000';input.step='1';input.required=true;input.name='allocation-'+i;input.setAttribute('aria-label','Quantity for '+name);input.value=row.stock_available===null?'':row.stock_available;label.append(input);node.append(label);$('allocation-rows').append(node);}
+    $('allocation-status').textContent=preview.allocations.length+' SKU combination'+(preview.allocations.length===1?'':'s')+' · confirmed stock '+preview.facts.stock+' · INR '+preview.facts.price.amount+'. The product remains private until separate catalogue activation.';
+    for(const [i,row] of preview.allocations.entries()) {const node=el('div',undefined,'allocation-row'),name=Object.entries(row.options).map(([k,v])=>k+': '+v).join(' / ')||'No options';node.append(el('strong',name));const label=el('label','Quantity'),input=el('input');input.type='number';input.min='0';input.max='1000000';input.step='1';input.required=true;input.name='allocation-'+i;input.setAttribute('aria-label','Quantity for '+name);input.value=row.stock_available===null?'':row.stock_available;label.append(input);node.append(label);const eligible=el('label',undefined,'check allocation-eligible'),box=el('input');box.type='checkbox';box.name='allocation-active-'+i;box.checked=row.active;box.setAttribute('aria-label','Include '+name+' when this product is activated');eligible.append(box,el('span','Include when this product is activated'));node.append(eligible);$('allocation-rows').append(node);}
     for(const field of fields){const label=el('label',undefined,'check'),box=el('input');box.type='checkbox';box.required=true;box.name='allocation-confirm-'+field;label.append(box,el('span','I checked the saved '+field));$('allocation-confirmations').append(label);}
     $('allocation-form').hidden=false;allocationTotal();sync();
   }
   function readAllocations() {
     if(!preview||preview.facts.stock===null)throw Error('Unknown stock blocks draft creation. Save an explicit confirmed total first.');
-    const inputs=[...$('allocation-rows').querySelectorAll('input')];if(inputs.length!==preview.allocations.length)throw Error('Refresh the complete SKU allocation preview.');
-    const allocations=inputs.map((input,i)=>{if(!/^\d+$/.test(input.value)||!Number.isInteger(Number(input.value))||Number(input.value)>1000000)throw Error('Enter a whole quantity, including explicit zero, for every combination.');return {options:clone(preview.allocations[i].options),stock_available:Number(input.value),active:false};});
+    const inputs=[...$('allocation-rows').querySelectorAll('input[type=number]')];if(inputs.length!==preview.allocations.length)throw Error('Refresh the complete SKU allocation preview.');
+    const allocations=inputs.map((input,i)=>{if(!/^\d+$/.test(input.value)||!Number.isInteger(Number(input.value))||Number(input.value)>1000000)throw Error('Enter a whole quantity, including explicit zero, for every combination.');return {options:clone(preview.allocations[i].options),stock_available:Number(input.value),active:$('allocation-rows').querySelector('[name=allocation-active-'+i+']').checked};});
     if(allocations.reduce((sum,a)=>sum+a.stock_available,0)!==preview.facts.stock)throw Error('Allocated stock must equal the confirmed total of '+preview.facts.stock+'.');return allocations;
   }
   function allocationTotal() {
-    const inputs=[...$('allocation-rows').querySelectorAll('input')],complete=inputs.every(input=>/^\d+$/.test(input.value)&&Number(input.value)<=1000000),sum=inputs.reduce((total,input)=>total+(Number(input.value)||0),0),valid=complete&&sum===preview?.facts.stock;
-    $('allocation-total').textContent=sum+' of '+preview?.facts.stock+' units allocated'+(!complete?' · enter every quantity':valid?' · total matches':' · total must match');$('allocation-total').classList.toggle('invalid',!valid);$('create-draft').disabled=!valid;
+    const inputs=[...$('allocation-rows').querySelectorAll('input[type=number]')],complete=inputs.every(input=>/^\d+$/.test(input.value)&&Number(input.value)<=1000000),sum=inputs.reduce((total,input)=>total+(Number(input.value)||0),0),valid=complete&&sum===preview?.facts.stock;
+    $('allocation-total').textContent=sum+' of '+preview?.facts.stock+' units allocated'+(!complete?' · enter every quantity':valid?' · total matches':' · total must match');$('allocation-total').classList.toggle('invalid',!valid);$('create-draft').disabled=!valid;const included=[...$('allocation-rows').querySelectorAll('input[type=checkbox]')].some(box=>box.checked);$('allocation-eligibility-warning').hidden=included;$('allocation-eligibility-warning').textContent=included?'':'No combinations are included for activation. This draft will need SKU eligibility reconciliation in Catalogue before it can be activated.';
   }
   async function load(resetPoll=true) {
     if(stopped)return;if(resetPoll){pollCount=0;$('notice').textContent='Refreshed current server state. Unsaved factual changes were replaced.';}
@@ -242,5 +244,5 @@
   $('refresh').addEventListener('click',()=>run(()=>load()));
   for(const type of ['jobs','candidates'])for(const direction of ['previous','next'])$(type+'-'+direction).addEventListener('click',()=>run(async()=>{const isJobs=type==='jobs',history=isJobs?jobHistory:candidateHistory;let cursor=isJobs?jobsCursor:candidateCursor;if(direction==='next'){history.push(cursor);cursor=isJobs?jobs.at(-1).job_id:candidateNext;}else cursor=history.pop()||null;if(isJobs)jobsCursor=cursor;else{candidateCursor=cursor;selected=null;}await load();}));
   window.addEventListener('focus',()=>run(()=>session()));document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);}else run(()=>session());});window.addEventListener('pagehide',()=>clearTimeout(timer));
-  (async()=>{try{await session();const raw=readStorage();if(raw!==null){try{command=await decode(raw);}catch(error){blocked=true;message(error,'recovery-error');}showRecovery();}await load(false);if(!stopped)$('workspace').hidden=false;}catch(error){if(storageKey&&!stopped){blocked=true;showRecovery();$('workspace').hidden=false;}message(error);}finally{$('loading').hidden=true;sync();}})();
+  (async()=>{try{await session();const raw=readStorage();if(raw!==null){try{const generation=fenceGeneration,value=await decode(raw);current(generation);command=value;}catch(error){if(stopped)return;blocked=true;message(error,'recovery-error');}showRecovery();}await load(false);if(!stopped)$('workspace').hidden=false;}catch(error){if(storageKey&&!stopped){blocked=true;showRecovery();$('workspace').hidden=false;}message(error);}finally{$('loading').hidden=true;sync();}})();
 })();

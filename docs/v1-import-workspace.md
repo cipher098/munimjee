@@ -58,9 +58,14 @@ review. A running total must match the saved confirmed total. Five separate
 saved-fact confirmations and an explicit Create private catalogue draft action
 send only revision, command key, review confirmation and allocations. Browser
 facts, arbitrary product IDs and inferred source-page/upload photo URLs are never
-sent to the bridge. All created SKUs explicitly use `active:false`; the UI says
-so. Product activation, store publication, checkout and existing inventory remain
-separate decisions.
+sent to the bridge. Each combination has a reviewed “Include when this product
+is activated” checkbox, defaulting to the validated preview proposal. The strict
+boolean is persisted exactly, including older all-false recovery commands. All-false
+is allowed with an explicit warning that Catalogue SKU eligibility reconciliation
+is needed before activation. SKU eligibility does not activate the Product: draft
+creation still leaves Product.active false with no CatalogueActivation. Product
+activation, store publication, checkout and existing inventory remain separate
+decisions.
 
 A valid `import-catalogue.v1` receipt must match the candidate and exact current
 business catalogue route, contain valid receipt/product IDs and preserve the
@@ -90,20 +95,23 @@ Current session checks run before/after API calls and on focus/visibility return
 Changed actor, CSRF session or lost tenant read access clears all private page
 facts and the `munimjee.v1.import-command:` prefix. Current read-only roles disable
 all writes and saved retries; backend role/session/CSRF checks remain authoritative.
-Shared auth cleanup/nav/main/runtime hooks are coordinator-owned and must be
+Terminal identity generations are rechecked after command/recovery digests and
+upload-to-job digests before storage or private UI can be restored. Controlled
+delayed-digest regressions cover all three waits. Shared auth cleanup/nav/main/runtime hooks are coordinator-owned and must be
 verified in the composed checkout.
 
 ## Evidence and remaining gates
 
 `backend/tests/browser/import_workspace.mjs` uses synthetic same-origin HTTP
 fixtures and Chromium, blocks external origins, and makes zero provider calls.
-`browser-results.json` records **123 passing checks**. It covers source permission,
+`browser-results.json` records **164 passing checks**. It covers source permission,
 raw byte/hash upload recovery, review/unknown/zero distinctions, stale revisions,
 source XSS safety, current role/session/tenant fences, corrupt/unavailable storage,
-rapid submit/poll races, full allocation totals, inactive payloads, lost draft
+rapid submit/poll races, full allocation totals, reviewed eligibility/default/toggle/all-false recovery, lost draft
 response/reload/same-body-key receipt replay, existing-source 409 reconciliation,
 invalid receipts/previews, unsupported currency/combination limits, keyboard access
 and 390px mobile overflow. Desktop/mobile full and focused captures are present.
+The prior digest-fence checkpoint `f841f32` passed its then-current 150 checks.
 These prove UI/transport behavior; they do not certify database/provider execution.
 
 The dedicated actual native-page/role/CSRF tests collect and explicitly skip
@@ -111,8 +119,10 @@ without P01 configuration. The prepared `--native` journey uses native signup,
 real protected APIs and actual migrations under a held P01 reset/migration lease.
 Only source retrieval uses a protected synthetic worker hook. It now also creates
 a private multi-SKU draft, loses the committed response, reloads/replays the exact
-body/key, checks one canonical product, inactive persisted SKUs/confirmed stock,
-existing receipt, checkout disabled and the store still unpublished. It has not
+body/key, checks one canonical product, reviewed SKU eligibility/confirmed stock,
+Product inactive and no CatalogueActivation on creation. A separate explicit
+Catalogue activation request then succeeds using the existing revision/fingerprint
+contract, while checkout remains disabled and the store stays unpublished. It has not
 been executed in this worker environment: the disposable PostgreSQL lane is
 unavailable, and shared Docker/services were not restarted or reprobed.
 
