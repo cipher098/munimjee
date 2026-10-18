@@ -42,6 +42,7 @@ class WhatsAppReelCommand(Base):
     product_id = Column(UUID(as_uuid=True), nullable=False)
     connection_version = Column(Integer, nullable=False)
     credential_fingerprint = Column(String(64), nullable=False)
+    recipient_fingerprint = Column(String(64), nullable=False)
     expected_fingerprint = Column(String(64), nullable=False)
     expected_mapping_fingerprint = Column(String(64), nullable=False)
     accepted_mapping_fingerprint = Column(String(64), nullable=False)
@@ -59,7 +60,7 @@ class WhatsAppReelCommand(Base):
         CheckConstraint("source_classification IN ('message_link','referral_link','quoted_message','recent_message')",name='wa_reel_command_class'),
         CheckConstraint('actor_auth_version>=0 AND connection_version>=0',name='wa_reel_command_versions'),
         CheckConstraint("shortcode ~ '^[A-Za-z0-9_-]{1,100}$' AND length(provider_mid) BETWEEN 1 AND 255",name='wa_reel_command_reference'),
-        CheckConstraint("request_hash ~ '^[a-f0-9]{64}$' AND source_fingerprint ~ '^[a-f0-9]{64}$' AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$' AND expected_mapping_fingerprint ~ '^[a-f0-9]{64}$' AND accepted_mapping_fingerprint ~ '^[a-f0-9]{64}$'",name='wa_reel_command_hashes'),
+        CheckConstraint("request_hash ~ '^[a-f0-9]{64}$' AND source_fingerprint ~ '^[a-f0-9]{64}$' AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND recipient_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$' AND expected_mapping_fingerprint ~ '^[a-f0-9]{64}$' AND accepted_mapping_fingerprint ~ '^[a-f0-9]{64}$'",name='wa_reel_command_hashes'),
         CheckConstraint("(source_classification='quoted_message')=(quoted_message_id IS NOT NULL) AND ((quoted_message_id IS NULL AND quoted_fingerprint IS NULL) OR (quoted_message_id IS NOT NULL AND quoted_fingerprint IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$'))",name='wa_reel_command_quote'),
         CheckConstraint("jsonb_typeof(reply_context)='object' AND octet_length(reply_context::text)<=4096",name='wa_reel_command_context'),
         CheckConstraint(RESULT_CHECK,name='wa_reel_command_result'),
