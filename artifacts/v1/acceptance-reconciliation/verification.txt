@@ -1,0 +1,18 @@
+{
+  "format": "munimjee.v1.acceptance-reconciliation-verification.v1",
+  "reviewed_central_commit": "1c4b3b451832bc94fceafa145c720bf74ac1433c",
+  "rows": 58,
+  "outcomes": 13,
+  "journeys": 23,
+  "supplement_items": 15,
+  "references_checked": 144,
+  "reference_hash_mismatches": [],
+  "scope": "Metadata/source-evidence integrity only; zero product/DB/browser/provider/container/hostedCI tests or calls.",
+  "release_ready": false,
+  "sha256": {
+    "artifacts/v1/acceptance-reconciliation/reconciliation.json": "80f31126182c8b449bb4fa6e229fabfb7e22ce6e328f54042ac4ead46bda3f57",
+    "artifacts/v1/acceptance-reconciliation/verify.py": "60799b34971d302a729801e198bd07cc1403f15d2dfa5866494ed51006a695e1",
+    "docs/v1-acceptance-reconciliation.md": "af2fca33e3cba1660f7ddd062934cd9ef1a7c497b971cc7a430cd973d054b671",
+    "artifacts/v1/acceptance-reconciliation/pilot-source-inventory.json": "77727e35008be3e91a82b73dae0a33c453b5924c2972a6ce362d9c88be64abb8"
+  }
+}
