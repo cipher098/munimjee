@@ -86,3 +86,5 @@ from app.models.customer_links import Customer, CustomerLinkChallenge, CustomerL
 __all__ += ['Customer', 'CustomerLinkChallenge', 'CustomerLinkProof', 'CustomerAssociation', 'CustomerLinkAudit']
 
 from app.models import activity_v1
+
+from app.models import comment_operator

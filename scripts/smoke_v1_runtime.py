@@ -83,7 +83,8 @@ with TestClient(app, base_url='https://configured.example') as client:
                       'payment_settings.html','payment_settings.js','payment_settings.css',
                       'support_grants.html','support_grants.js','support_grants.css',
                       'analytics_v1.html','analytics_v1.js','analytics_v1.css','analytics_activity.js',
-                      'customer_links.html','customer_links.js','customer_links.css'):
+                      'customer_links.html','customer_links.js','customer_links.css',
+                      'comment_operator.html','comment_operator.js','comment_operator.css','comment_operator_contract.js'):
             response=client.get('/static/'+asset)
             assert response.status_code==200 and len(response.content)>10
         # Private shell requires no DB, contains no order facts or capability.

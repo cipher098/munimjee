@@ -45,7 +45,8 @@ def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_p
     assert (output/'storefront-src/payment-handoff.js').is_file()
     assert (output/'storefront-src/activity-client.js').is_file()
     assert (output/'backend/static/analytics_activity.js').is_file()
-    for prefix in ('import_workspace','theme_settings','assistance','payment_settings','support_grants','analytics_v1','customer_links'):
+    assert (output/'backend/static/comment_operator_contract.js').is_file()
+    for prefix in ('import_workspace','theme_settings','assistance','payment_settings','support_grants','analytics_v1','customer_links','comment_operator'):
         for suffix in ('html','css','js'):
             assert (output/f'backend/static/{prefix}.{suffix}').is_file()
     assert (output/'backend/alembic/versions/0046.py').is_file()
@@ -64,7 +65,7 @@ def test_context_rejects_symlink_reads_and_preserves_existing_destination(source
     assert sentinel.read_text()=='keep'
 
 
-@pytest.mark.parametrize('missing',['import_workspace.js','theme_settings.html','assistance.js','payment_settings.html','support_grants.js','analytics_v1.html','customer_links.js'])
+@pytest.mark.parametrize('missing',['import_workspace.js','theme_settings.html','assistance.js','payment_settings.html','support_grants.js','analytics_v1.html','customer_links.js','comment_operator.js','comment_operator_contract.js'])
 def test_missing_native_runtime_assets_refuse_packaging(source,tmp_path,missing):
     (source/'backend/static'/missing).unlink()
     subprocess.run(['git','-C',str(source),'add','-u'],check=True)
