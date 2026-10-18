@@ -56,7 +56,8 @@ def test_challenge_is_deterministic_and_purpose_separated():
 
 
 @pytest.mark.parametrize('text', ['munimjee-wa-test:bad', 'prefix MUNIMJEE-WA-TEST suffix',
-    'MUNIMJEE-WA-TEST:', 'MUNIMJEE-WA-TEST:AAAAAAAAAAAAAAAAAAAAAB', 'MUNIMJEE-WA-TEST:AAAAAAAAAAAAAAAAAAAAAA\n'])
+    'MUNIMJEE-WA-TEST:', 'MUNIMJEE-WA-TEST:AAAAAAAAAAAAAAAAAAAAAB', 'MUNIMJEE-WA-TEST:AAAAAAAAAAAAAAAAAAAAAA\n'],
+    ids=['lowercase-short', 'embedded-namespace', 'missing-value', 'invalid-padding', 'trailing-newline'])
 def test_all_reserved_malformed_commands_are_withheld_but_cannot_prove(text):
     assert reserved_command(text)
     assert command_digest(SECRET, text) is None
