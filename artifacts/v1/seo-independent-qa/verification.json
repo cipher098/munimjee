@@ -1,0 +1,54 @@
+{
+  "base": "e750e5a",
+  "manifest_timing": "after final pure-ASGI runs; mounted harness records separate before/after manifests when actually executed",
+  "node": "v24.20.0",
+  "python": "Python 3.11.16",
+  "qa_composition_parent": "ac6a7a7059cd2a96f28dc34fb04941d44c63c09f",
+  "real_provider_or_DB_connections_performed": false,
+  "results": {
+    "affected-regression": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 177,
+      "skipped": 7,
+      "tests": 184
+    },
+    "checkpoint-b57934a": {
+      "errors": 0,
+      "failures": 4,
+      "passed": 103,
+      "skipped": 7,
+      "tests": 114
+    },
+    "independent-final": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 113,
+      "skipped": 7,
+      "tests": 120
+    },
+    "mounted-http": {
+      "executed": false,
+      "guard_negative_test_exit": 1,
+      "negative_test_port": "4399 was validation input only; no listener/probe executed",
+      "status": "pending_no_allocated_P01_lane_or_listener_port"
+    }
+  },
+  "sha256": {
+    "backend/app/api/v1/storefront.py": "fbbe48b2fd7ab456b1a8903add230934b2fc8898080c4faa119a1568916110f1",
+    "backend/app/api/v1/storefront_bootstrap.py": "6219786c216197c41afca12bfb91236e1efbea4097834b040c2eb8f51354b548",
+    "backend/app/config.py": "0324f29c56bdc409b6e66257758f00a755a2d7ba43cf0a1857de0f7c08cc9678",
+    "backend/app/services/storefront_publication.py": "47e1679cf44c1cff6d9f7eacbe9d232167438989721ccaabc48bb8c9011c3295",
+    "backend/app/v1/storefront/seo.py": "86100cd438343ba55272001e03b165b8e8e6be7dbc4d5d08dd6c1f2ebb6e3433",
+    "backend/tests/run_v1_seo_independent_mounted.py": "0520af9bd34e643aa2490cdd0248a1fa2794557b54d9c72d4f79975085bf77fd",
+    "backend/tests/test_v1_seo_independent.py": "4dc57f9774487a4261cc87ae726eb18c1671e17fc3fda6fac5769f51dfa36b4f",
+    "backend/tests/test_v1_seo_independent_db.py": "621874d6ab6ae688cea8e729227838fdcebb011d9dd31afb9fe96688fb409536",
+    "backend/tests/v1_seo_independent_mounted.mjs": "7e5914a2b31c6a2fd59481dcd50a57f61ddc4f799bc34c59693a8c281a200ddb",
+    "backend/tests/v1_seo_independent_server.py": "cd2ecf7f29e7129268ad513e94503f09b290ff86379956845807ad969eb9c83b"
+  },
+  "source_commits": [
+    "b57934afa1cb27572306052099e945d240f672db",
+    "387268eb8cc41cde992a6da45e4291f9e57884c8"
+  ],
+  "synthetic_inventory_only": true
+}
