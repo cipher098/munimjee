@@ -1,12 +1,12 @@
 {
   "contract_version": "whatsapp-self-service.proposal.v1",
-  "status": "policy_accepted_in_principle_exact_schema_hooks_review_required_no_runtime",
-  "source_base": "dddd81d",
+  "status": "approved_contract_unmounted_runtime_source_pending_actual_pg_browser",
+  "source_base": "eeb94a119736cae816af782f2af5e04cb877e616",
   "provider_wire_observed": false,
   "permissions_approved_for_this_app": null,
   "migration_revision": "0057_v1_whatsapp_self_service",
-  "migration_predecessor": "real_0056_exact_revision_dependency_pending",
-  "mutating_role": "native_owner_only_proposed",
+  "migration_predecessor": "0056_v1_comment_operator",
+  "mutating_role": "native_owner_only",
   "proposed_limits": {
     "signup_lifetime_seconds": 600,
     "provisional_ciphertext_retention_seconds": 900,
@@ -31,7 +31,10 @@
     "onboarding_available": false,
     "connection_version": 0,
     "local_status": "not_connected",
-    "blockers": ["operator_configuration_missing", "provider_grants_unverified"],
+    "blockers": [
+      "operator_configuration_missing",
+      "provider_grants_unverified"
+    ],
     "provider_approval": "not_evaluated",
     "current_generation_test": null
   },
@@ -42,8 +45,18 @@
     "status": "awaiting_selection",
     "connection_version": 4,
     "expires_at": "2026-10-18T12:10:00Z",
-    "choices": [{"choice_id": "33333333-3333-4333-8333-333333333333", "display_name": "Synthetic authorized account", "phone_hint": "••123456"}],
-    "setup": {"subscription": "not_started", "registration": "not_started", "billing": "unknown"},
+    "choices": [
+      {
+        "choice_id": "33333333-3333-4333-8333-333333333333",
+        "display_name": "Synthetic authorized account",
+        "phone_hint": "••123456"
+      }
+    ],
+    "setup": {
+      "subscription": "not_started",
+      "registration": "not_started",
+      "billing": "unknown"
+    },
     "provider_approval": "not_evaluated"
   },
   "safe_test_example": {
@@ -61,11 +74,62 @@
     "proof_source": "synthetic_fixture",
     "message": "The provider accepted the test reply. Delivery has not been confirmed."
   },
-  "unsupported_first_slice": ["coexistence", "account_migration", "multi_waba", "grant_only", "out_of_window_template_test", "broadcast", "arbitrary_message_composer"],
+  "unsupported_first_slice": [
+    "coexistence",
+    "account_migration",
+    "multi_waba",
+    "grant_only",
+    "out_of_window_template_test",
+    "broadcast",
+    "arbitrary_message_composer"
+  ],
   "test_authority": "exact_canonical_outbound_message_fk_to_immutable_native_owner_authorization",
-  "stored_worker_principal": ["actor_user_uuid", "exact_user_session_uuid", "auth_version"],
+  "stored_worker_principal": [
+    "actor_user_uuid",
+    "exact_user_session_uuid",
+    "auth_version"
+  ],
   "reserved_command_namespace": "MUNIMJEE-WA-TEST:",
   "reserved_namespace_redaction_when_invalid_expired_or_disabled": true,
-  "secrets_never_in_public_dto_or_browser_storage": ["app_secret", "provider_token", "exchange_code", "registration_pin", "native_session_jwt", "raw_provider_payload"],
-  "shared_owners": {"integrator": ["main", "config", "CSP", "model_registry", "migration_allocation", "onboarding_checklist", "worker", "signed_ingress", "channel_activity_producers"]}
+  "secrets_never_in_public_dto_or_browser_storage": [
+    "app_secret",
+    "provider_token",
+    "exchange_code",
+    "registration_pin",
+    "native_session_jwt",
+    "raw_provider_payload"
+  ],
+  "shared_owners": {
+    "integrator": [
+      "main",
+      "config",
+      "CSP",
+      "model_registry",
+      "migration_allocation",
+      "onboarding_checklist",
+      "worker",
+      "signed_ingress",
+      "channel_activity_producers"
+    ]
+  },
+  "recipient_review_example": {
+    "contract_version": "whatsapp-test-recipient.v1",
+    "business_id": "11111111-1111-4111-8111-111111111111",
+    "test_id": "44444444-4444-4444-8444-444444444444",
+    "connection_version": 5,
+    "recipient_contact_id": "66666666-6666-4666-8666-666666666666",
+    "inbound_message_id": "77777777-7777-4777-8777-777777777777",
+    "phone": "910000000000",
+    "inbound_observed_at": "2026-10-18T12:00:00Z",
+    "reply_window_expires_at": "2026-10-19T12:00:00Z",
+    "reply_allowed": false
+  },
+  "transient_phone_claim": {
+    "column": "selected_phone_number_id",
+    "unique_states": [
+      "setting_up",
+      "setup_unknown"
+    ],
+    "unknown_claim_automatically_released": false
+  }
 }

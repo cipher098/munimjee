@@ -214,7 +214,7 @@ reconnect/disconnect and never makes the new connection ready.
 provenance. A synthetic fixture may illustrate delivered/read status but its
 confirmation remains false; it cannot turn the seller checklist ready.
 
-## Proposed persistence and ownership decisions (not yet allocated)
+## Approved persistence and ownership decisions
 
 Existing tables do not safely hold short-lived provisional credentials or a one-use
 recipient challenge. Reserved additive migration **0057 after actual0056** covers:
@@ -228,7 +228,7 @@ recipient challenge. Reserved additive migration **0057 after actual0056** cover
   bound tenant contact/inbound/outbound FKs and explicit authorization time. Reuse
   existing message/outbox/provider status; no duplicate delivery engine.
 
-### Exact proposed columns and constraints (approval required before DDL)
+### Approved columns and constraints
 
 All IDs are UUID except provider IDs (ASCII decimal1–40); all times timestamptz.
 SHA/HMAC digests are lowercase64hex; versions nonnegative integers. No native JWT,
@@ -244,9 +244,10 @@ SDK code, raw command, PIN, customer phone/body or raw provider response is stor
 - `nonce_digest`; `provisional_token_ciphertext` nullable; `token_delete_after`
   (no later than created+15minutes); `token_expiry_kind` unknown/at/permanent;
   `token_expires_at` nullable; `verified_app_id` nullable.
-- `selected_choice_id` nullable; `subscription_state`, `registration_state` each
+- `selected_choice_id` and `selected_phone_number_id` nullable, bound to the exact immutable choice through a tenant/attempt/phone composite key; `subscription_state`, `registration_state` each
   not_started/requesting/unknown/confirmed/failed; `selected_key`/`selected_hash`
   nullable for one exact selection intent; `updated_at`.
+- A global partial UNIQUE(selected_phone_number_id) covers `setting_up`/`setup_unknown`. A selection claims it before provider POST, then fresh-queries incumbent ownership and exact current native owner/session/generation after any unique-index wait. Successful paused Account attachment and transient-claim release share one transaction. Existing Account.phone uniqueness protects attached ownership. Unknown/expired provider-claimed setup retains its claim; cleanup only clears secrets, never silently releases ownership.
 - UNIQUE(business,idempotency_key), UNIQUE(id,business); actor/sid linkage validated
   against actual UserSession on insertion; identity/hash/generation/expiry fields
   immutable. Ciphertext may only be cleared or replaced by the one consumed
@@ -370,3 +371,10 @@ phone verification; inspect real token/grant/account membership; then have a
 specifically consenting real recipient send the challenge and explicitly authorize
 one test reply, inspect signed inbound/delivered status and reconnect/disconnect.
 No part of that live canary is authorized or executed in this task.
+
+
+### Reviewed owner recipient projection and recovery seam
+
+`GET /tests/{id}/recipient` is current OWNER + the original exact native sid only. It reads the intended phone from the existing canonical Contact (no new PII column), with exact contact/inbound IDs, generation, observed inbound and reply-window bounds. A final fresh scalar owner/session/active-tenant/generation check follows all awaited lookups. The private response has no-store/no-referrer/noindex headers. This is an explicit confirmation view; browser-supplied recipient details cannot authorize a test, and its phone never enters journals/audits/result snapshots. `TestChallengeView` has a repr-hidden ephemeral raw command only for an explicit owner start response. Summary TestView remains masked.
+
+Reserved native recovery prefix `munimjee.v1.whatsapp-setup:` contains only exact nonsecret command keys/safe IDs/stage, bound to current user/business/native-session fingerprint. It never contains signed state, code, PIN, provider/native token, recipient phone or raw command. No automatic provider POST or new key follows reload, malformed storage or an unknown result. Shared cleanup dependency1805ea1 is separate from owned runtime.
