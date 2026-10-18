@@ -20,6 +20,8 @@ imports. It invokes actual `onboarding_view`, `business_view` and role capabilit
 with injected fake authorization/counts for two synthetic businesses/four roles.
 No secret/dotenv/provider/DB data is loaded. These DTOs are source-backed synthetic
 fixtures, not authenticated HTTP or persistence evidence.
+Before browser launch, the runner compares every exported formatter/capability/
+safety source SHA256 to the current checkout and fails fast on stale fixtures.
 
 The JS harness loads the unchanged native HTML, JS, shared client and CSS into a
 fresh isolated cached Chromium. Every browser request is intercepted and either
@@ -96,8 +98,20 @@ node backend/tests/independent_onboarding_experience_qa.mjs > artifacts/v1/indep
 The JS defaults point to the verified cached Playwright module in the wave3 QA
 checkout and cached Chromium headless shell; positional arguments can select other
 installed module/executable paths. No installation is performed. `result.json`
-records exact source/runner/fixture hashes, browser version, expected failing exit,
+records exact source/runner/fixture hashes, browser version, failure counts,
 all case outcomes and explicit unrun gates. `fixtures.json` records actual formatter
 source hashes and its injected-data boundary. All writes stay in the three owned
 test/doc/artifact paths. The harness is submitted for recovery/security peer review;
 source-backed UI failures are handoff items, not fixes made by this lane.
+
+The recovery/security peer reviewed committed checkpoint `d92406e` read-only,
+independently matched native/formatter/capability/safety hashes to `abab30a`, and
+viewed both visible-privacy screenshots. It found no network/effect safety blocker.
+Three small follow-ups preserve the same 32 cases: fail-fast fixture-source matching,
+and using the actual `munimjee.checkout.v1:synthetic` prefix in the logout storage
+assertion rather than an unrelated demonstration key; nominal synthetic emails now
+use `example.com`, which native LoginInput/ProfileInput accept, rather than the
+reserved `example.invalid` domain rejected by their validator. These improve
+repeatability and assertion fidelity without changing the ten red expectations.
+The same 32 cases rerun as 22 pass/10 fail. `verification.json` records observed
+command exits (export 0, browser 1); no backend acceptance is inferred from fixtures.
