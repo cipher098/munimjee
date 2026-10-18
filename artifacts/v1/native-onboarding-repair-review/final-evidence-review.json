@@ -1,0 +1,45 @@
+{
+  "source_owner_commit": "8e62ea770729d04bc0982aadf64dadae41973cb9",
+  "qa_evidence_commit": "a0350f779658093325e776acb18ef9d9f7dd8b1f",
+  "qa_completion_observation_commit": "b8d7f77068d7dc0b0bac709f010d256fad680103",
+  "original_32_execution_assertion_tail_byte_identical": true,
+  "execution_assertion_tail_sha256": "9f1a4c19a8d655b8d2ddc5d7aee7331d60a421dc995d4d8b2ca81e766b82a6ee",
+  "same_32_case_ids_order": true,
+  "main_counts": {
+    "passed": 32,
+    "failed": 0
+  },
+  "supplement_counts": {
+    "passed": 8,
+    "failed": 0
+  },
+  "both_native_before_after_unchanged": true,
+  "both_native_hashes_match_exact_owner_source": true,
+  "all_formatter_fixture_hashes_match_source": true,
+  "all_script_hashes_match_committed_qa": true,
+  "all_artifact_hashes_match_committed_qa": true,
+  "both_fixture_records_match": true,
+  "main_runner_record_matches": true,
+  "supplement_runner_record_matches": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "screenshots_independently_viewed": [
+    "signup-360.png",
+    "signup-390.png",
+    "signup-768.png",
+    "signup-1440.png",
+    "owner-360.png",
+    "owner-390.png",
+    "owner-768.png",
+    "owner-1440.png",
+    "focused-long-business-name-360.png"
+  ],
+  "viewed_screenshot_hashes_match_committed_qa": true,
+  "visual_conclusion": "Signup and owner layouts at360/390/768/1440 preserve incumbent styling and readable controls; long160-character name wraps within360px with a visible dark-green heading focus outline and no clipped literal text. No blocking visual defect observed in these nine captures.",
+  "shared_style_conclusion": "Static isolation proof: unchanged shared HTML/JS do not load native v1_app.js or add the marker; all six appended rules require that absent body marker, so none match shared parcel/customer documents. No shared-page computed-style/browser run claimed.",
+  "completion_wait_review": "Both existing deferred cases now wait source aria-busy cleanup after held response release, then inspect settled focus. This avoids two-rAF-only incomplete callback observation without adding scenarios.",
+  "synthetic_cookie_race_limit": "Superseded old logout cannot mutate newer cookie by explicit fixture semantics; verifies DOM/focus callback generation fence only, not real server logout/Set-Cookie ordering.",
+  "independent_reviewer_runtime_or_test_edits": false,
+  "independent_reviewer_browser_or_server_launched": false,
+  "final_disposition": "No blocking findings in scoped two-file UI repair, exact-source40-case synthetic evidence and nine independent screenshot reviews. Suitable for integration review; not mounted-session, physical-device, screen-reader, full-WCAG, provider or release certification."
+}
