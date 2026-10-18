@@ -169,3 +169,14 @@ def test_direct_runtime_manifest_must_match_incumbent_backend_pins(source,tmp_pa
 def test_all_allowlisted_native_assets_are_required(source,tmp_path,missing):
     (source/'backend/static'/missing).unlink();stage(source)
     with pytest.raises(ValueError,match='Required tracked runtime'):package.create_context(source,tmp_path/'context')
+
+
+def test_release_archives_and_builds_refuse_dirty_runtime_while_context_marks_it(source,tmp_path):
+    package.require_clean_runtime(source)
+    (source/'backend/app/main.py').write_text('# dirty release input\n')
+    with pytest.raises(ValueError,match='clean tracked runtime'):
+        package.require_clean_runtime(source)
+    assert package.create_context(source,tmp_path/'context')['source_dirty'] is True
+    stage(source)
+    with pytest.raises(ValueError,match='clean tracked runtime'):
+        package.require_clean_runtime(source)

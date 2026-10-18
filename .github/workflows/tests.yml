@@ -23,6 +23,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22.23.3'
+      - name: Validate GitHub workflow syntax and contexts
+        run: |
+          curl --fail --location --silent --show-error https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz --output "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -shellcheck= -pyflakes=
       - name: Install hashed test closure
         run: |
           python -m pip install --only-binary=:all: --require-hashes -r deploy/v1/test.lock
@@ -58,7 +64,6 @@ jobs:
           --health-cmd "pg_isready -U munimjee_test -d munimjee_test_ci"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      TEST_DATABASE_URL: postgresql+asyncpg://munimjee_test:local_test_only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/munimjee_test_ci
       TEST_LANE: ci
       TEST_DB_RESET: '1'
     steps:
@@ -71,13 +76,30 @@ jobs:
       - run: |
           python -m pip install --only-binary=:all: --require-hashes -r deploy/v1/test.lock
       - name: Required actual Alembic and held P01 lease proof
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://munimjee_test:local_test_only@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/munimjee_test_ci
         working-directory: backend
         run: |
           python -m pytest tests/test_test_safety.py::test_actual_migrated_schema_and_database_lease -q -ra --junitxml="$RUNNER_TEMP/p01-required.xml"
           python -c 'import os,xml.etree.ElementTree as X; r=X.parse(os.environ["RUNNER_TEMP"]+"/p01-required.xml"); c=r.findall(".//testcase"); assert len(c)==1 and c[0].get("name")=="test_actual_migrated_schema_and_database_lease" and not any(c[0].find(t) is not None for t in ("skipped","failure","error")), "Actual P01 migration gate must pass without skip"'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.23.3'
+      - name: Install locked maintained browser harness
+        working-directory: frontend/storefront
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx --no-install playwright install --with-deps chromium
       - name: Full backend regression using actual migrations and guarded resets
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://munimjee_test:local_test_only@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/munimjee_test_ci
         working-directory: backend
         run: python -m pytest tests -q -ra --junitxml="$RUNNER_TEMP/backend.xml"
+      - name: Actual mounted native review, persisted themes and COD journey
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://munimjee_test:local_test_only@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/munimjee_test_ci
+        working-directory: backend
+        run: python -m tests.run_wave4_native_browser
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -85,6 +107,7 @@ jobs:
           path: |
             ${{ runner.temp }}/p01-required.xml
             ${{ runner.temp }}/backend.xml
+            artifacts/v1/qa-product/wave4-mounted-browser/result.json
           if-no-files-found: error
           retention-days: 14
   runtime:

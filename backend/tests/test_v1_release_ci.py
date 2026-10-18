@@ -38,7 +38,11 @@ def test_workflow_limits_execution_to_hosted_readonly_no_secret_jobs():
     assert postgres['env']['POSTGRES_DB']=='munimjee_test_ci'
     env=config['jobs']['migrated-postgres']['env']
     assert env['TEST_LANE']=='ci' and env['TEST_DB_RESET']=='1'
-    assert env['TEST_DATABASE_URL'].endswith('/munimjee_test_ci') and '@127.0.0.1:' in env['TEST_DATABASE_URL']
+    for step in config['jobs']['migrated-postgres']['steps']:
+        if step.get('name','') in {'Required actual Alembic and held P01 lease proof','Full backend regression using actual migrations and guarded resets','Actual mounted native review, persisted themes and COD journey'}:
+            url=step['env']['TEST_DATABASE_URL']
+            assert url.endswith('/munimjee_test_ci') and '@127.0.0.1:' in url
+            assert "${{ job.services.postgres.ports['5432'] }}" in url
 
 
 @pytest.mark.parametrize('result',['pass','skipped','failure','error','missing','duplicate'])
@@ -73,3 +77,17 @@ def test_runtime_pin_hashes_are_backed_by_saved_primary_registry_metadata():
         assert record['version']==version
         hashes=set(re.findall(r'--hash=sha256:([a-f0-9]{64})',block))
         assert hashes and hashes.issubset(record['hashes'])
+
+
+def test_mounted_native_journey_runs_sequentially_inside_required_pg_job():
+    steps=workflow()['jobs']['migrated-postgres']['steps']
+    runs=[step.get('run','') for step in steps]
+    full=next(index for index,command in enumerate(runs) if 'pytest tests -q' in command)
+    mounted=next(index for index,command in enumerate(runs) if 'python -m tests.run_wave4_native_browser' in command)
+    assert mounted>full
+    runner=(ROOT/'backend/tests/run_wave4_native_browser.py').read_text()
+    assert 'async with migrated_database()' in runner
+    assert 'tests.wave4_native_browser_server' in runner
+    browser=(ROOT/'backend/tests/wave4_native_browser.mjs').read_text()
+    assert "return route.abort()" in browser
+    assert "assert.deepEqual(external,[])" in browser

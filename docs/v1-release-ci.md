@@ -61,8 +61,9 @@ pins against the unchanged backend input before creating the destination.
 `runtime-manifest.json` records the actual source file SHA256 values, generated
 context file hashes, source Git revision and a canonical content-map hash. The
 revision describes ancestry; **the content hash identifies packaged bytes**, including
-modified tracked files. Untracked files remain excluded. The package builder does
-not claim a clean checkout solely from its HEAD. File modes and timestamps are
+modified tracked files. Untracked files remain excluded. The context manifest explicitly records `source_dirty`. Release `archive` and
+`build` refuse staged or unstaged modified tracked runtime inputs; `context` still
+permits an explicitly marked development snapshot. File modes and timestamps are
 normalized. `archive --output <new-file.tar>` emits a sorted tar with uid/gid/mtime
 zero and empty owner/group names; existing outputs are never replaced. Identical
 HEAD/input bytes yield identical archives regardless of mtime and umask.
@@ -80,26 +81,36 @@ Docker inspect/cleanup calls are now bounded as well.
 
 The workflow uses ephemeral GitHub-hosted Ubuntu 24.04 runners, `contents: read`,
 no persisted checkout credentials, no secrets, no deployment/push and job timeouts.
-It installs the hashed test closure, runs safety/package/Node contracts and maintained
-Playwright fixture journeys. Those browser journeys remain fixture evidence.
+It validates workflow syntax/contexts using upstream-checksummed actionlint 1.7.12,
+installs the hashed test closure, runs safety/package/Node contracts and maintained
+Playwright fixture journeys. Those fixture journeys remain fixture evidence.
 The PostgreSQL 16 job uses a random published port, literal 127.0.0.1 and exact
 `munimjee_test_ci` P01 lane. Existing guards block provider sockets and hold the
 advisory lease across reset, actual migrations and each complete DB fixture.
 A required dedicated migration/lease test writes JUnit and a second command rejects
-missing, duplicate, failed, errored or skipped proof before the full backend suite.
+missing, duplicate, failed, errored or skipped proof before the full backend suite. The same job then runs the maintained actual
+`tests.run_wave4_native_browser` journey sequentially inside its own held P01 lease:
+native signup/review, all three persisted themes and synthetic COD orders, with
+external browser requests aborted and no provider transports.
 Native amd64 and arm64 jobs build and run the network-disabled image smoke; no
 multiarch registry manifest is published.
 
-Local Python 3.11.16: **114 passed, 2 skipped** in the pure package/CI/P01-safety
+Local Python 3.11.16: **116 passed, 2 skipped** in the pure package/CI/P01-safety
 selection; the two actual DB cases skipped explicitly because no lane was allocated.
 The hashed test closure installed successfully on local macOS arm64 and passed
 `uv pip check`; Python 3.11 compile checks passed. Raw sanitized output is under
-`artifacts/v1/release-ci/`. The first workflow-YAML validation found an unquoted
-colon in a command; it was corrected before the passing run.
+`artifacts/v1/release-ci/`. The first YAML validation found an unquoted colon in a command; it was corrected.
+The early actual hosted run at checkpoint `dafc175` then failed before any job
+started: <https://github.com/cipher098/munimjee/actions/runs/39105746311>.
+Dynamic service-port context was moved to step environment and object indexing
+uses a string key. Verified actionlint subsequently passed; this does not turn the
+initial failed run into a pass. Node contracts passed **77/77** and the maintained
+syntax check passed locally. Python Actions distribution metadata confirms 3.11.16
+on Linux x64 and arm64, saved in `python-action-version.json`.
 
 The single permitted read-only Docker info probe timed out at six seconds. No
 Docker restart, local build, actual new image smoke, actual PostgreSQL execution,
-remote CI run or multiarch result is claimed. Earlier wave4 image/database evidence
+successful remote CI run or multiarch result is claimed. Earlier wave4 image/database evidence
 belongs to its recorded source/inputs and does not certify this changed base/lock.
 Actual hashed wheel availability on both Linux architectures, hosted workflow runs,
 new image smoke and any OCI reproducibility claim remain pending. Rehearsal CLI
