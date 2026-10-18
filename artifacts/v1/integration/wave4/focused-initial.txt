@@ -1,0 +1,487 @@
+EEEEEEEEEEEEEEEEE.EEEEEEEEEEE.....................FFFFFFFFFFF.FFFFFFFFFF [ 46%]
+FF...................................................................... [ 92%]
+............                                                             [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_actual_main_explicit_four_combo_private_receipt_replay _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"d6120b80323f4f1c804406889c249406@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[missing_combo] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"93fbd2d455624b89be988a2143752a27@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[duplicate_combo] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"348e20ec5e3643fc94c55ab4644b56a1@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[unknown_combo] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"fda04a15dc724132ac8614efce90f3e9@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[wrong_total] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"0949ec8cd2a147589562f197aad9f19a@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[non_integer] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"5d79eb3713ec40578c669e0fd8c178a7@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[stale] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"b45962c22b9c4d908fb7f038fa0ccfd6@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_invalid_allocation_never_approves_or_creates[browser_facts] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"bd4aeb2387ac46b08e9762f0f3bd0a76@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts0] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"f056c105b8f34dda86f9f2b7d1bc7705@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts1] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"e401f666a1b84dcf8717f9bc5d16dbd1@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts2] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"3c3d2cc6fcd94b559aee8917b399a021@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+___ ERROR at setup of test_actual_main_csrf_tenant_disabled_and_current_role ___
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"cbb869292d4e407a9113e83620bf033e@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_reimport_changes_do_not_overwrite_linked_inventory _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"bc1baa2d100d46249c482ef41153ecc7@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-role] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"404785176259495b8296aa1f01174f38@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-session] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"44f1e19758a842ddae198167c6c9d73b@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-role] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"9eb9876ba84447a1bb27fde3c8a4a384@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-session] _
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"16479609979d48a09daf81545a88b700@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_draft_preview_publish_public_ssr_and_query_authority[editorial] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"589932da1e264290bf83e3fde630b02a@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_draft_preview_publish_public_ssr_and_query_authority[catalogue] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"7403069f1ff5453e8bc83f7c3e549908@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_draft_preview_publish_public_ssr_and_query_authority[video] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"5a9592a3ae0a4ee6b1feeb36ac4eca18@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-role] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"b886471b066c440a948665d017e958b3@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-session] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"ad27ef8b292c44e78adbade170b09be5@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-role] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"5e4dae97bc4149e7bb0e755478848114@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-session] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"57a5d912d22c49c59d28680fd4206da7@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-role] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"0869c635b0a94092ad4cf36180b214f9@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-session] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"6538fec3b3a94b618f3a48adb1e4b096@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-role] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"f3325197f99c4dd0872539fa9449dcf9@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ ERROR at setup of test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-session] _
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:344: in _asyncgen_fixture_wrapper
+    result = event_loop.run_until_complete(setup())
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py:326: in setup
+    res = await gen_obj.__anext__()
+backend/tests/test_v1_native_completion_import_http.py:58: in native_import
+    assert response.status_code == 201, response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"21db25331997410ab3ae05f20776e2bf@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+=================================== FAILURES ===================================
+____ test_theme_persistence_save_publish_replay_and_public_draft_isolation _____
+backend/tests/test_v1_theme_settings.py:89: in test_theme_persistence_save_publish_replay_and_public_draft_isolation
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"539eb452989e406680a34ddf302bd770@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+________ test_theme_conflicts_reject_changed_key_body_and_stale_version ________
+backend/tests/test_v1_theme_settings.py:114: in test_theme_conflicts_reject_changed_key_body_and_stale_version
+    c=theme_client;bid,_=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"c04ff453beef4ecca439329ee86ad95c@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+________ test_theme_current_roles_native_csrf_and_tenant_scope[viewer] _________
+backend/tests/test_v1_theme_settings.py:126: in test_theme_current_roles_native_csrf_and_tenant_scope
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"a4c157ad79ce43ccbd252e67d372c8c8@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_________ test_theme_current_roles_native_csrf_and_tenant_scope[staff] _________
+backend/tests/test_v1_theme_settings.py:126: in test_theme_current_roles_native_csrf_and_tenant_scope
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"eb9c55ee0bb646e9b8426ca78278b6a8@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+________ test_theme_current_roles_native_csrf_and_tenant_scope[manager] ________
+backend/tests/test_v1_theme_settings.py:126: in test_theme_current_roles_native_csrf_and_tenant_scope
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"36b32e83e651479eb692dc5d1458a91b@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_________ test_theme_current_roles_native_csrf_and_tenant_scope[owner] _________
+backend/tests/test_v1_theme_settings.py:126: in test_theme_current_roles_native_csrf_and_tenant_scope
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"f53ac88f87eb4a6a8e84ca3cf4b6bbf3@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+__ test_theme_preview_and_workspace_are_private_and_no_query_enables_checkout __
+backend/tests/test_v1_theme_settings.py:142: in test_theme_preview_and_workspace_are_private_and_no_query_enables_checkout
+    c=theme_client;bid,_=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"e33c1672d2964ca2b2e2eb3ebb2250ed@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+___________ test_theme_writes_do_not_create_or_publish_commerce_rows ___________
+backend/tests/test_v1_theme_settings.py:157: in test_theme_writes_do_not_create_or_publish_commerce_rows
+    c=theme_client;bid,_=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"c31736441bd84d039868bbf3a4af486e@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+___________ test_theme_concurrent_first_saves_are_serialized[False] ____________
+backend/tests/test_v1_theme_settings.py:170: in test_theme_concurrent_first_saves_are_serialized
+    c=theme_client;bid,_=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"9f813bfe05d147fd99280a521db532e2@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+____________ test_theme_concurrent_first_saves_are_serialized[True] ____________
+backend/tests/test_v1_theme_settings.py:170: in test_theme_concurrent_first_saves_are_serialized
+    c=theme_client;bid,_=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"2ce02fe2b36a45bdb4ee712ebe2ac04b@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_________ test_theme_rechecks_downgrade_while_waiting_on_business_lock _________
+backend/tests/test_v1_theme_settings.py:186: in test_theme_rechecks_downgrade_while_waiting_on_business_lock
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"0650d0681e7549f9acc8e9d13ee6f479@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-role] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"7bd87432596941858d5d914d9045049c@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-session] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"52c1112bad3949cdb9ef7835f7f35951@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-role] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"ddfbe4382a9b44c8a2dd953f36ef6d67@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-session] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"f2f7eacbbcd44b88b05ea465c425d10e@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-role] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"6c78ace599a342498c35fff0d311402a@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-session] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"a04bdf7ba7604604b00db27c4d06e0fa@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-role] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"6d71a74ac51c492eba8c24488847af3a@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-session] _
+backend/tests/test_v1_theme_settings.py:230: in test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"d90025d1e48a4821a0f17c0cd6ccea81@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+___ test_theme_guard_rechecks_after_staging_before_caller_commit[False-role] ___
+backend/tests/test_v1_theme_settings.py:272: in test_theme_guard_rechecks_after_staging_before_caller_commit
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"1726dbdbeba7494eac98d95da591ad70@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_theme_guard_rechecks_after_staging_before_caller_commit[False-session] __
+backend/tests/test_v1_theme_settings.py:272: in test_theme_guard_rechecks_after_staging_before_caller_commit
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"0a12249473bf41c88a58e65b20c9c5ad@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+___ test_theme_guard_rechecks_after_staging_before_caller_commit[True-role] ____
+backend/tests/test_v1_theme_settings.py:272: in test_theme_guard_rechecks_after_staging_before_caller_commit
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"f2e30f9448024023a3dd807a9b1c205c@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+__ test_theme_guard_rechecks_after_staging_before_caller_commit[True-session] __
+backend/tests/test_v1_theme_settings.py:272: in test_theme_guard_rechecks_after_staging_before_caller_commit
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+backend/tests/test_v1_theme_settings.py:78: in signup
+    assert response.status_code==201,response.text
+E   AssertionError: {"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.","input":"831865e89a3e4d6a8e01955f99a0b46c@example.test","ctx":{"reason":"The part after the @-sign is a special-use or reserved name that cannot be used with email."}}]}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave4/focused.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_persistence_save_publish_replay_and_public_draft_isolation
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_conflicts_reject_changed_key_body_and_stale_version
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_current_roles_native_csrf_and_tenant_scope[viewer]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_current_roles_native_csrf_and_tenant_scope[staff]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_current_roles_native_csrf_and_tenant_scope[manager]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_current_roles_native_csrf_and_tenant_scope[owner]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_preview_and_workspace_are_private_and_no_query_enables_checkout
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_writes_do_not_create_or_publish_commerce_rows
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_concurrent_first_saves_are_serialized[False]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_concurrent_first_saves_are_serialized[True]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_rechecks_downgrade_while_waiting_on_business_lock
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-session]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-session]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-session]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-session]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_guard_rechecks_after_staging_before_caller_commit[False-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_guard_rechecks_after_staging_before_caller_commit[False-session]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_guard_rechecks_after_staging_before_caller_commit[True-role]
+FAILED backend/tests/test_v1_theme_settings.py::test_theme_guard_rechecks_after_staging_before_caller_commit[True-session]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_explicit_four_combo_private_receipt_replay
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[missing_combo]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[duplicate_combo]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[unknown_combo]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[wrong_total]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[non_integer]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[stale]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[browser_facts]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts0]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts1]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts2]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_csrf_tenant_disabled_and_current_role
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_reimport_changes_do_not_overwrite_linked_inventory
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-role]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-session]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-role]
+ERROR backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-session]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_draft_preview_publish_public_ssr_and_query_authority[editorial]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_draft_preview_publish_public_ssr_and_query_authority[catalogue]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_draft_preview_publish_public_ssr_and_query_authority[video]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-role]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-session]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-role]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-session]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-role]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-session]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-role]
+ERROR backend/tests/test_v1_native_completion_theme_http.py::test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-session]
+23 failed, 105 passed, 2 warnings, 28 errors in 56.76s

@@ -1,0 +1,1 @@
+PASS 36 native payment settings Chromium checks: real signup/API/CAS, masked entry, no stored secret echo, same-key unknown-save recovery, stale response/conditional request fences, manager revocation and staff denial. No provider calls or charges.

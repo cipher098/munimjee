@@ -1,0 +1,18 @@
+{
+  "mode": "actual-mounted-main-api-and-p01-alembic-db",
+  "source_head": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "source_hashes": {
+    "backend/static/import_workspace.html": "a50c1c77edb1f18eac12d2588e0a4a0ed3574a79e85ba84aad8bc96d88be3710",
+    "backend/static/import_workspace.js": "d7cab283825e2145c63507c30abbad1a5fcb67696f0b9bc80376c120fcd79c89",
+    "backend/static/theme_settings.html": "2302b6bbec609c8451c46473ca2023a2b26cd7ef2421914676f128c03212dacc",
+    "backend/static/theme_settings.js": "5f4d5cb359862821b5dac07d4911d6131261cda6984a666713ed4d09cb1fbb81",
+    "backend/static/v1_client.js": "f8cd5d77b854c7d7e11b4b7dfa68aa182166dd962b0324cb626f357fee7440eb"
+  },
+  "source_facts": "literal synthetic fixture insertion; actual review/catalogue/theme endpoints",
+  "browser_version": "145.0.7632.6",
+  "checks": 29,
+  "physical_device": false,
+  "page_errors": [],
+  "external_requests": [],
+  "runner_sha256": "25234858fc534b71e8356a0b515f0df00bb8aa371d8a750d6a1a1f24bc2b1136"
+}

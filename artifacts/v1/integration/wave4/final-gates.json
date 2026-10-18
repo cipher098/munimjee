@@ -1,0 +1,70 @@
+{
+  "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "backend_full_source": "257b2733e5f7f61e2d3d9ed971a55a5f7a96fd94",
+  "backend_and_migration_diff_after_full": "empty",
+  "actual_migration_head": "0050_v1_assistance",
+  "postgres": "16.15",
+  "central_lane": "wave3_integration",
+  "full_backend": {
+    "passed": 1417,
+    "skipped": 8,
+    "failed": 0,
+    "seconds": 541.55,
+    "skip_reasons": {
+      "missing_historical_cassettes": 5,
+      "P01_blocked_Redis": 3
+    }
+  },
+  "node": {
+    "passed": 77,
+    "skipped": 0
+  },
+  "mounted_browser_checks": {
+    "assistance": 37,
+    "independent_payment_settings": 36,
+    "native_import_allocation": 47,
+    "persisted_all_three_themes_and_COD": 29,
+    "independent_native_recovery": 30,
+    "parcel_review": 20
+  },
+  "overlapping_counts_not_summed": true,
+  "provider_calls": 0,
+  "production_deployment": false,
+  "source_sha256": {
+    "backend/app/main.py": "ef63443f43e48111814d5501a42cb7c209886e8b6d5acfbcdb478f9a23e4ed85",
+    "backend/static/assistance.js": "4901211b664798ab576e4b10d67ec3b79247b364fe0b22e42735f7666f53be6e",
+    "backend/static/v1_app.js": "f3f456316fa2801c3bcf58701b3dea92b5c3364bd2fc1af6b535d253fe5d5dcb",
+    "backend/static/v1_client.js": "f8cd5d77b854c7d7e11b4b7dfa68aa182166dd962b0324cb626f357fee7440eb",
+    "backend/static/import_workspace.js": "d7cab283825e2145c63507c30abbad1a5fcb67696f0b9bc80376c120fcd79c89",
+    "backend/static/theme_settings.js": "5f4d5cb359862821b5dac07d4911d6131261cda6984a666713ed4d09cb1fbb81",
+    "backend/static/payment_settings.js": "dc615317f711eb7420b1fd2d688915329e16dd9e34f1cc90038c2ecea42a18dc",
+    "backend/static/parcel_tracking.js": "1f424953d12327a135967552ad9d04264a3dd98addd616f6435bd217f6a0d553",
+    "backend/alembic/versions/0049_v1_storefront_settings.py": "1d1fd498249ac0f6cda3ed21a090f353ea629613402e6aa53174dfa3b0099adf",
+    "backend/alembic/versions/0050_v1_assistance.py": "d1bedfed3e29210f895e668e307e4739d97e9fc8ce5f4208948ee809ef6f2dbe",
+    "backend/tests/browser/import_workspace_native.mjs": "bf6445cad49b490a61f879c15eb362c62031296e67b7fb275b9f0b6501f95ce4"
+  },
+  "runtime_image": {
+    "files": 286,
+    "static_files": 51,
+    "storefront_files": 13,
+    "migration_files": 50,
+    "source_revision": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+    "tag": "munimjee-v1-runtime:local-20261018-wave4-dd36b0d",
+    "image_id": "sha256:f37e01ecaf9294b20f83b186945a5f79b90a6dbfb67ce7b024900becefe01fb0",
+    "size_bytes": 130173942,
+    "architecture": "arm64",
+    "user": "10001:10001",
+    "offline_modes_passed": 3,
+    "manifest_and_per_file_hashes_equal": true,
+    "network_or_db_attempts": 0,
+    "smoke_container_removed": true,
+    "deployment": false
+  },
+  "independent_review": {
+    "console": "catalogue worker: tenant row/role and older concurrent session findings fixed and independently rechecked; mounted owner/viewer/ended render accepted",
+    "payment": "integrator: stale identity response and unchanged-revision secret ACK fixed; independent mounted main accepted",
+    "parcel": "integrator: final pre-commit native authority and exact replacement ACK fixed; preserved-history/ended render accepted",
+    "native_recovery": "integrator: exact intent, generation fence, typed stale and human summary accepted; central0050 verified",
+    "fresh_additional_reviewer": "capacity blocked, no such review claimed"
+  }
+}

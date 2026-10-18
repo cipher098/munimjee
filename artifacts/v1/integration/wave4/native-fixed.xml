@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="17" skipped="0" tests="74" time="50.564" timestamp="2026-10-18T11:41:35.274768" hostname="MacBook-Air-3.local"><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_explicit_four_combo_private_receipt_replay" time="1.394"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:111: in test_actual_main_explicit_four_combo_private_receipt_replay
+    candidate = await seed(j)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[missing_combo]" time="0.886"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[duplicate_combo]" time="0.878"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[unknown_combo]" time="0.899"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[wrong_total]" time="0.909"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[non_integer]" time="0.871"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[stale]" time="0.870"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_invalid_allocation_never_approves_or_creates[browser_facts]" time="0.887"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts0]" time="0.892"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts1]" time="0.874"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts2]" time="0.908"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_csrf_tenant_disabled_and_current_role" time="0.897"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:175: in test_actual_main_csrf_tenant_disabled_and_current_role
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_reimport_changes_do_not_overwrite_linked_inventory" time="0.855"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:192: in test_actual_main_reimport_changes_do_not_overwrite_linked_inventory
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-role]" time="0.867"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-session]" time="0.858"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-role]" time="0.902"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_import_http" name="test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-session]" time="0.856"><failure message="pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput&#10;provenance.source.url&#10;  Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]&#10;    For further information visit https://errors.pydantic.dev/2.7/v/value_error">backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error</failure></testcase><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_theme_revision_is_registered_after_actual_parcel_revision" time="0.004" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_draft_preview_publish_public_ssr_and_query_authority[editorial]" time="1.144" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_draft_preview_publish_public_ssr_and_query_authority[catalogue]" time="1.171" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_draft_preview_publish_public_ssr_and_query_authority[video]" time="1.128" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-role]" time="0.998" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[save-session]" time="0.955" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-role]" time="1.028" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[publish-session]" time="0.989" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-role]" time="0.986" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_save-session]" time="1.018" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-role]" time="1.005" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_observed_business_lock_wait_denies_theme_mutation_and_replay[replay_publish-session]" time="1.073" /><testcase classname="tests.test_v1_native_completion_theme_http" name="test_actual_main_private_theme_mounts_require_native_session_before_db" time="0.004" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra0]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra1]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra2]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra3]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra4]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_extra_authority_and_executable_fields[extra5]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[theme-unknown]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[palette-#ffffff]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[show_story-true]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[show_categories-1]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[story_body-&lt;script&gt;bad&lt;/script&gt;]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[hero_intro-bad\x00text]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_config_rejects_invalid_values[hero_headline-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_all_theme_previews_escape_and_disable_capabilities[editorial]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_all_theme_previews_escape_and_disable_capabilities[catalogue]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_all_theme_previews_escape_and_disable_capabilities[video]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_command_schema_is_strict[payload0]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_command_schema_is_strict[payload1]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_command_schema_is_strict[payload2]" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_design_publish_requires_saved_version" time="0.000" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_persistence_save_publish_replay_and_public_draft_isolation" time="1.084" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_conflicts_reject_changed_key_body_and_stale_version" time="0.970" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_current_roles_native_csrf_and_tenant_scope[viewer]" time="0.995" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_current_roles_native_csrf_and_tenant_scope[staff]" time="0.989" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_current_roles_native_csrf_and_tenant_scope[manager]" time="0.989" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_current_roles_native_csrf_and_tenant_scope[owner]" time="0.997" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_preview_and_workspace_are_private_and_no_query_enables_checkout" time="1.034" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_writes_do_not_create_or_publish_commerce_rows" time="0.978" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_concurrent_first_saves_are_serialized[False]" time="0.934" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_concurrent_first_saves_are_serialized[True]" time="0.940" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_rechecks_downgrade_while_waiting_on_business_lock" time="0.930" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_routes_deny_missing_native_session_without_database" time="0.004" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-role]" time="0.941" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[save-session]" time="0.989" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-role]" time="0.992" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[publish-session]" time="0.991" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-role]" time="1.055" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_save-session]" time="1.004" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-role]" time="1.113" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay[replay_publish-session]" time="1.116" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_guard_rechecks_after_staging_before_caller_commit[False-role]" time="0.988" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_guard_rechecks_after_staging_before_caller_commit[False-session]" time="0.992" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_guard_rechecks_after_staging_before_caller_commit[True-role]" time="0.989" /><testcase classname="tests.test_v1_theme_settings" name="test_theme_guard_rechecks_after_staging_before_caller_commit[True-session]" time="1.010" /></testsuite></testsuites>

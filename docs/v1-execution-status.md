@@ -2,7 +2,45 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave 3 local integration
+## Wave 4 local integration
+
+The current candidate composes native import review/allocation, persisted configuration
+and publication of all three storefront designs, native payment credential settings,
+reviewed parcel resume/closure/replacement, and a membership-scoped assisted onboarding
+board. Contracts remain in `docs/v1-wave4-contracts.md`. Actual migration head is
+`0050_v1_assistance`, following `0049_v1_storefront_settings` and the preserved
+0048 parcel revision. Every implementation and review worker retains GPT-6.1 Sol/high.
+
+The board provides current per-business readiness, assigned owner/manager, safe import
+issue counts and explicit links into the existing workflows. Assignment and opening
+are audited; ordinary membership never becomes support impersonation or global sales
+access. Import approval still creates a private inactive product and preserves unknown
+stock; design publication, product activation, storefront publication and checkout
+policy remain separate controls. Native credentials are saved without a provider call,
+and uncertain secret replacement requires manual re-entry with conditional revision.
+Parcel review preserves old links/history and suppresses old queued notifications;
+review itself sends nothing.
+
+Current central evidence: **1,417 backend tests passed, 8 documented skips,
+0 failures** on actual migrated PostgreSQL 16 in **541.55 seconds**; **77 Node**
+checks passed. Mounted browser evidence includes **37 assistance**, independent
+**36 payment settings**, and **29 native import/persisted-theme/COD**, **47 native import**, **20 parcel
+review**, and independent **30 native recovery** checks.
+Final records and exact sources are in
+`docs/v1-wave4-validation.md`. The final `dd36b0d` image passes all three offline
+modes and runtime hashes (286 allowlisted files, nonroot, no network/database).
+Backend source is `257b273`; the subsequent importer presentation/test-only diff
+has no backend or migration changes. Counts are not summed across overlapping
+suites. These results supersede historical pending statements below.
+
+No provider outcome, complete V1 or deployment is claimed. Analytics, explicit
+expiring support grants, verified customer identity links, global assistance access
+and the complete onboarding acceptance matrix remain visible scope.
+
+## Wave 3 historical checkpoint
+
+The following preserves the earlier verified checkpoint; Wave 4 above supersedes its
+then-pending native import, theme, payment-settings and parcel-review statements.
 
 Base `aa6ac940ef877a8a37baac39afec44268b49f84e` is preserved. Contracts and
 ownership remain frozen in `docs/v1-wave3-contracts.md`; all workers use
@@ -28,8 +66,8 @@ thread limit; no such review is claimed. Raw central results are under
 `artifacts/v1/public-payment/`, and parcel captures under
 `artifacts/v1/parcel-tracking/`. Overlapping counts are not added together.
 
-Current actual migration head is `0048_v1_parcel_tracking`; remote theme revision
-0049 remains reserved, not shipped. The full wave3 checkpoint through `1ac880a` passed **1223 tests, 8 documented
+At the Wave 3 checkpoint the actual migration head was `0048_v1_parcel_tracking`;
+remote theme revision 0049 was still reserved. The full wave3 checkpoint through `1ac880a` passed **1223 tests, 8 documented
 skips, 0 failures** in **363.48 seconds**, using actual PG16 migrations. The
 payment alias/DTO followup `626d62f` is integrated as `9729441` after that
 checkpoint; Final-source application `dd44d89` passed **1248 tests, 8 skips, 0 failures** in **377.61 seconds** on actual migrated PostgreSQL 16. The eight skips remain five missing historical scenario cassettes and three Redis cases blocked by P01. Raw final results are `artifacts/v1/integration/2026-10-18-wave3-final.{xml,txt}`. The refreshed `dd44d89` runtime image
@@ -73,20 +111,20 @@ Independent A20 review reproduced legacy-route native-session CSRF and invitatio
 
 ## Test environment and artifacts
 
-Dedicated loopback PostgreSQL **16.15** container `munimjee-v1-wave2-pg16` uses port **55442** and isolated `munimjee_test_<lane>` databases. Integration uses `wave2_integration`; auth browser runs use `auth_wave2`; catalogue and channel workers own separate lanes. The original dedicated PostgreSQL 15/Redis test containers remain separate; existing sellerbot runtime containers are unchanged. Every reset validates explicit `TEST_DATABASE_URL`, `TEST_LANE` and `TEST_DB_RESET=1`, holds a PostgreSQL advisory lease and applies actual Alembic migrations. No `create_all` proof or production fallback is used. Tests strip dotenv/provider settings and block outbound provider sockets.
+Dedicated loopback PostgreSQL **16.15** container `munimjee-v1-wave2-pg16` uses port **55442** and isolated `munimjee_test_<lane>` databases. Current central integration uses `wave3_integration`; settings and parcel/recovery workers use their separately allocated `payment_w3` and `parcel_w3` lanes. Earlier wave2 evidence used `wave2_integration` and `auth_wave2`. The original dedicated PostgreSQL 15/Redis test containers remain separate; existing sellerbot runtime containers are unchanged. Every reset validates explicit `TEST_DATABASE_URL`, `TEST_LANE` and `TEST_DB_RESET=1`, holds a PostgreSQL advisory lease and applies actual Alembic migrations. No `create_all` proof or production fallback is used. Tests strip dotenv/provider settings and block outbound provider sockets.
 
-The current full chain is `0040 identity → 0041 catalogue → 0042 ingress → 0043 auth → 0044 checkout → 0045 channel operator → 0046 imports → 0047 import receipt → 0048 parcel tracking`. Wave3 central checks use the separate `wave3_integration` lane; 0049 is only reserved for remote theme work. Unreleased 0044/0045 schema changes require rebuilding disposable schemas from the real chain. Startup tests verify the single head, models, routers and recovery task registration. Local PostgreSQL 16 parity is verified; remote/CI PostgreSQL 16 execution is not implied.
+The current full chain is `0040 identity → 0041 catalogue → 0042 ingress → 0043 auth → 0044 checkout → 0045 channel operator → 0046 imports → 0047 import receipt → 0048 parcel tracking → 0049 storefront settings → 0050 assistance`. Current central checks use the separate `wave3_integration` lane; both 0049 and 0050 are actual migrated revisions. Unreleased 0044/0045 schema changes require rebuilding disposable schemas from the real chain. Startup tests verify the single head, models, routers and recovery task registration. Local PostgreSQL 16 parity is verified; remote/CI PostgreSQL 16 execution is not implied.
 
 Evidence: `artifacts/v1/auth-wave2/`, `artifacts/v1/storefront-integration/`, `artifacts/v1/catalogue-workspace/`, `artifacts/v1/channel-operator/`, `artifacts/v1/B20/` and the combined XML under `artifacts/v1/integration/`. First-wave exact results (**782 passed, 8 skipped**) and Redis transfer proof are preserved in `artifacts/v1/integration/2026-10-17-foundations/execution-status.md`.
 
-Default-off rollout controls: `V1_AUTH_ENABLED`, `V1_ENFORCE_LEGACY_ACCESS`, `V1_IMPORTS_ENABLED`, `V1_STOREFRONT_ENABLED`, `V1_PUBLIC_PAYMENTS_ENABLED`, `V1_IMPORT_BRIDGE_ENABLED`, `V1_PARCEL_ENABLED`. Private parcel connector registry/origin configuration defaults empty. Public pages require a validated configured `PUBLIC_BASE_URL` and complete runtime assets; only the runtime JS/CSS directory is mounted. An optional explicit `V1_STOREFRONT_ASSETS_DIR` supports packaging. The existing backend-only Docker artifact remains unchanged. A separate allowlisted V1 package/image now passes local build and offline startup/static proof; existing deployment files/services are preserved. Source packaging commits `417cbee`, `8db5dca`, `6529550` are integrated as `d2b73a9`, `fc2e634`, `246350a`. The final integration image is `sha256:040c2625ed60a24f2dce2cabd1229da85fbe58afedeed59f00c98245b81f5b02`, Docker-reported 129636999 bytes, arm64, UID/GID 10001. Its 233-file context excludes environments, uploads, tests, fixtures, node_modules and keys; exact manifests and offline evidence are in `artifacts/v1/runtime-package/`. The package scripts are independently reviewed, including symlink/dependency guards and CID-only verified cleanup. No deployment is performed. Saved profile or credentials never turn the checklist into a full seller-ready/provider-approved claim. Support impersonation remains unavailable.
+Default-off rollout controls: `V1_AUTH_ENABLED`, `V1_ENFORCE_LEGACY_ACCESS`, `V1_IMPORTS_ENABLED`, `V1_STOREFRONT_ENABLED`, `V1_PUBLIC_PAYMENTS_ENABLED`, `V1_IMPORT_BRIDGE_ENABLED`, `V1_PARCEL_ENABLED`. Private parcel connector registry/origin configuration defaults empty. Public pages require a validated configured `PUBLIC_BASE_URL` and complete runtime assets; only the runtime JS/CSS directory is mounted. An optional explicit `V1_STOREFRONT_ASSETS_DIR` supports packaging. The existing backend-only Docker artifact remains unchanged. A separate allowlisted V1 package/image now passes local build and offline startup/static proof; existing deployment files/services are preserved. Source packaging commits `417cbee`, `8db5dca`, `6529550` are integrated as `d2b73a9`, `fc2e634`, `246350a`. The historical wave2 integration image is `sha256:040c2625ed60a24f2dce2cabd1229da85fbe58afedeed59f00c98245b81f5b02`, Docker-reported 129636999 bytes, arm64, UID/GID 10001. Its 233-file context excludes environments, uploads, tests, fixtures, node_modules and keys; exact manifests and offline evidence are in `artifacts/v1/runtime-package/`. The package scripts are independently reviewed, including symlink/dependency guards and CID-only verified cleanup. No deployment is performed. Saved profile or credentials never turn the checklist into a full seller-ready/provider-approved claim. Support impersonation remains unavailable.
 
 ## Remaining product/release gates
 
 - Complete deployment/migration/restore rehearsal and CI/multi-architecture certification. Local allowlisted image/startup/static proof is separate from deployment. Real SDK/provider/CSP/account-domain acceptance, physical-device critical flows and real product media remain open; SDK/provider transports in current browser evidence are synthetic.
-- Remote native import progress/review/allocation UI must consume the reviewed bridge and pass the actual mounted workflow. The atomic private-product adapter API is implemented; approval still never publishes, activates or invents unknown stock. Seller-authorized Instagram retrieval remains provider-gated.
-- Persistent seller selection/configuration of the three themes (reserved 0049) and actual public all-theme rendering remain open. Existing 22 theme checks use injected HTTP and do not close that gate.
-- Native payment credential entry UI remains open; the protected local configuration API and exact-order seller recovery pane exist. Unknown legacy inventory allocations/reservations, gateway live settlement/refund and selected international destination acceptance remain migration gates.
-- ParcelDesk local source connector and order-first barcode workflow are implemented. Private per-business provisioning/D1/TLS transport, physical-phone camera proof, permitted real utility-template delivery and reviewed resolution/replacement for review-required links remain open. No courier booking/new courier API is in scope.
-- Separate explicit expiring support grants, assisted sales console, verified customer identity links, analytics and the remaining complete onboarding acceptance matrix remain V1 scope. Support impersonation remains denied.
+- Native import progress/review/allocation and the private-product bridge are composed locally. Approved real sources and seller-authorized Instagram retrieval remain provider-gated; approval never publishes, activates or invents unknown stock.
+- Persisted seller configuration/publication and public rendering of all three designs are composed locally through actual 0049. Synthetic missing-media fallbacks are verified; real approved catalogue media and physical-device acceptance remain open.
+- Native payment credential entry and exact-order seller recovery are composed locally; configuration is explicitly not live connection verification. Unknown legacy inventory allocations/reservations, gateway live settlement/refund and selected international destination acceptance remain migration gates.
+- ParcelDesk local source connector and order-first barcode workflow are implemented. Private per-business provisioning/D1/TLS transport, physical-phone camera proof, and permitted real utility-template delivery remain open. Reviewed local resolution/replacement now preserves historical associations and audit. No courier booking/new courier API is in scope.
+- Separate explicit expiring support grants, global sales access, verified customer identity links, analytics and the remaining complete onboarding acceptance matrix remain V1 scope. The current assistance board requires existing business membership. Support impersonation remains denied.
 - Current Meta permissions/approval and authorized real-provider consent/canaries remain external gates. No real customer message, provider mutation, paid transaction or production cutover has been performed.

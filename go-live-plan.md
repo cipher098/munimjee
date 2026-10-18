@@ -2,24 +2,26 @@
 
 Updated: 18 October 2026, Asia/Kolkata.
 
-Status: execution authorized on 17 October 2026. The verified foundation is followed by a second bounded wave: native signup/invites and resumable business setup, an explicit SKU activation/order workspace, channel operator recovery and durable import jobs are integrated on isolated branches. Actual native browser journeys cover synthetic sellers and orders on migrated PostgreSQL 16. The public storefront adapter and real customer-facing COD checkout journey now pass isolated native/API browser checks, including uncertain-result replay and protected order status. 
+Status: execution remains authorized in isolated worktrees. The local implementation
+now composes native signup/invitations, resumable profiles, reviewed catalogue imports
+and private draft approval, explicit SKU activation, persisted publication of three
+storefront designs, customer COD/online handoff, native payment settings, channel
+operator recovery, ParcelDesk tracking/review and a membership-scoped assisted
+onboarding board. Actual migrated PostgreSQL 16 and mounted browser checks provide
+bounded local evidence; exact source, counts and failures are recorded in
+`docs/v1-execution-status.md` and `docs/v1-wave4-validation.md`.
 
-Wave 3 local integration now includes the atomic reviewed import-to-private-
-catalogue API bridge, the public Razorpay handoff/recovery shell and the scoped
-ParcelDesk order-first scan/link/tracking workflow. Actual app.main browser checks
-cover synthetic online payment, COD and the two-service parcel flow on migrated
-PostgreSQL 16. The final-source regression passed 1248 tests with 8 documented skips, and the
-refreshed allowlisted runtime image passed all three offline modes. New flags stay off; no real provider request, paid transaction,
-customer send or production cutover is authorized or claimed.
+Assignment does not grant membership or impersonation. The board covers current
+readiness and audited owner/manager assignment for businesses already accessible to
+the actor. Analytics, explicit expiring support grants, global sales access, verified
+customer identity links and the remaining complete onboarding matrix remain tracked
+scope. Saved credentials and local account checks do not prove provider approval.
 
-Complete native import review/allocation UI and persistent seller selection of
-the three website designs remain remote integration work. Real SDK/payment and
-Meta approvals, private ParcelDesk provisioning/D1/TLS, physical-phone testing,
-review-required parcel resolution and deployment/restore rehearsal remain gates.
-Sales console, analytics, explicit support grants and verified customer identity
-links remain tracked scope. See `docs/v1-execution-status.md` for exact source,
-counts and limitations and `docs/v1-wave3-contracts.md` for current boundaries.
-The verified earlier local runtime image remains evidence for wave2 only.
+Real SDK/payment and Meta approvals/canaries, approved import sources, private
+ParcelDesk provisioning/D1/TLS, physical-phone testing and deployment/restore rehearsal
+remain gates. Flags stay off by default. No real provider request, paid transaction,
+customer send, running-project change or production cutover is authorized or claimed.
+Current task boundaries are in `docs/v1-wave4-contracts.md`.
 
 ## 1. The V1 outcome
 
@@ -360,6 +362,15 @@ Rollback means a tested application switch or forward fix that preserves post-cu
 
 ## 14. Initial execution status
 
-Execution began on 17 October 2026. P00 preserved both dirty checkouts in private local snapshots and copied reviewed application changes into integration commit e7694ff. Original checkouts and running services remain unchanged. The Mac mini dev chat is available and has GitHub push access; its Docker daemon is unresponsive and disk free space is approximately 11 GiB, so database-backed verification runs on this Mac until remote capacity is resolved.
+Execution began on 17 October 2026. P00 preserved both dirty checkouts in private local snapshots and copied reviewed application changes into integration commit e7694ff. Original checkouts and running services remain unchanged. At initial execution the Mac mini had GitHub push access but unavailable Docker capacity; actual migrated database verification for this batch runs on this Mac. The current evidence does not certify a remote database environment.
 
-The isolated integration branch now has local actual-application proof for native onboarding, catalogue/order operations, public COD and synthetic online-payment recovery, channel review and the two-service ParcelDesk scan/link workflow. The reviewed import-to-private-product API is implemented; its complete native allocation UI and persistent public theme settings remain pending. Actual migrated PostgreSQL 16, browser, failure-matrix and runtime-image evidence are recorded separately from real provider/device/release gates in docs/v1-execution-status.md and docs/v1-wave3-validation.md. Nothing is released or deployed by this local proof. Full V1 onboarding, sales console, analytics, support grants and verified customer links remain tracked scope. Keep marketing claims synchronized with released features.
+The isolated integration branch now composes native onboarding, catalogue/order
+operations, reviewed import allocation into private drafts, persisted public settings
+for three designs, native payment settings and synthetic online-payment recovery,
+channel review, ParcelDesk scan/link and reviewed association recovery, and the scoped
+assistance board. Actual migrated PostgreSQL 16, mounted browser, failure-matrix and
+runtime-image evidence are recorded in docs/v1-execution-status.md and
+docs/v1-wave4-validation.md. No local proof is a release or deployment. Analytics,
+explicit support grants, global sales access, verified customer links and the complete
+V1 onboarding acceptance matrix remain tracked scope. Keep marketing claims aligned
+with released features.

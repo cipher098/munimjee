@@ -1,0 +1,20 @@
+{
+  "source_commit": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "lane": "parcel_w3",
+  "port": 8156,
+  "actual_migration_head": "0050_v1_assistance",
+  "scope": "Unedited central runner and app.main. Printed0049 harness label is stale; actual P01 migrations run current head0050. Controlled response/scheduling cases, no provider network.",
+  "hashes": {
+    "backend/static/import_workspace.js": "d7cab283825e2145c63507c30abbad1a5fcb67696f0b9bc80376c120fcd79c89",
+    "backend/static/theme_settings.js": "5f4d5cb359862821b5dac07d4911d6131261cda6984a666713ed4d09cb1fbb81",
+    "backend/tests/run_native_recovery_browser.py": "fda233ed197a1c4b239dd399735cdaddde6ab0d2a9f0676df708b1409bd52f47",
+    "backend/tests/native_recovery_server.py": "6f41b149a0e31c5f2b5b6e6f8b3451fd2d6b499e77cabcc58fbb2d8bea6cfbde",
+    "backend/tests/browser/native-recovery.mjs": "04f6958a6b1b8639f35f3d91cf74cdccbf8dae44903ee716f36b1342e574584f",
+    "backend/alembic/versions/0050_v1_assistance.py": "d1bedfed3e29210f895e668e307e4739d97e9fc8ce5f4208948ee809ef6f2dbe"
+  },
+  "actual_database": "munimjee_test_parcel_w3",
+  "exit_code": 0,
+  "checks": 30,
+  "post_run_source_hashes_match": true,
+  "checkout_after": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+}

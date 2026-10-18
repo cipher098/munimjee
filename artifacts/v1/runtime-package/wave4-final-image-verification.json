@@ -1,0 +1,17 @@
+{
+  "files": 286,
+  "static_files": 51,
+  "storefront_files": 13,
+  "migration_files": 50,
+  "source_revision": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "tag": "munimjee-v1-runtime:local-20261018-wave4-dd36b0d",
+  "image_id": "sha256:f37e01ecaf9294b20f83b186945a5f79b90a6dbfb67ce7b024900becefe01fb0",
+  "size_bytes": 130173942,
+  "architecture": "arm64",
+  "user": "10001:10001",
+  "offline_modes_passed": 3,
+  "manifest_and_per_file_hashes_equal": true,
+  "network_or_db_attempts": 0,
+  "smoke_container_removed": true,
+  "deployment": false
+}

@@ -1,0 +1,216 @@
+FFFFFFFFFFFFFFFFF....................................................... [ 97%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+_________ test_actual_main_explicit_four_combo_private_receipt_replay __________
+backend/tests/test_v1_native_completion_import_http.py:111: in test_actual_main_explicit_four_combo_private_receipt_replay
+    candidate = await seed(j)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_invalid_allocation_never_approves_or_creates[missing_combo] _
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_invalid_allocation_never_approves_or_creates[duplicate_combo] _
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_invalid_allocation_never_approves_or_creates[unknown_combo] _
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+__ test_actual_main_invalid_allocation_never_approves_or_creates[wrong_total] __
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+__ test_actual_main_invalid_allocation_never_approves_or_creates[non_integer] __
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_____ test_actual_main_invalid_allocation_never_approves_or_creates[stale] _____
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_invalid_allocation_never_approves_or_creates[browser_facts] _
+backend/tests/test_v1_native_completion_import_http.py:143: in test_actual_main_invalid_allocation_never_approves_or_creates
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_____ test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts0] _____
+backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_____ test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts1] _____
+backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_____ test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts2] _____
+backend/tests/test_v1_native_completion_import_http.py:164: in test_actual_main_unknown_or_unsupported_facts_remain_blocked
+    candidate = await seed(j, **facts)
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+____________ test_actual_main_csrf_tenant_disabled_and_current_role ____________
+backend/tests/test_v1_native_completion_import_http.py:175: in test_actual_main_csrf_tenant_disabled_and_current_role
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_____ test_actual_main_reimport_changes_do_not_overwrite_linked_inventory ______
+backend/tests/test_v1_native_completion_import_http.py:192: in test_actual_main_reimport_changes_do_not_overwrite_linked_inventory
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-role] _
+backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-session] _
+backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-role] _
+backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+_ test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-session] _
+backend/tests/test_v1_native_completion_import_http.py:222: in test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay
+    candidate, body = await seed(j), command()
+backend/tests/test_v1_native_completion_import_http.py:78: in seed
+    candidate = parse_candidate({'provenance': dict(business_id=j.bid, import_job_id=jid,
+backend/app/v1/imports/domain.py:31: in parse_candidate
+    source = CandidateInput.model_validate(payload)
+E   pydantic_core._pydantic_core.ValidationError: 1 validation error for CandidateInput
+E   provenance.source.url
+E     Value error, invalid source URL [type=value_error, input_value='https://shop.example.test/dress', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.7/v/value_error
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/artifacts/v1/integration/wave4/native-fixed.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_explicit_four_combo_private_receipt_replay
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[missing_combo]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[duplicate_combo]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[unknown_combo]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[wrong_total]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[non_integer]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[stale]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_invalid_allocation_never_approves_or_creates[browser_facts]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts0]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts1]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_unknown_or_unsupported_facts_remain_blocked[facts2]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_csrf_tenant_disabled_and_current_role
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_reimport_changes_do_not_overwrite_linked_inventory
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-role]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[False-session]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-role]
+FAILED backend/tests/test_v1_native_completion_import_http.py::test_actual_main_current_revocation_after_business_wait_blocks_new_and_replay[True-session]
+17 failed, 57 passed, 1 warning in 50.58s

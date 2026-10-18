@@ -1,0 +1,53 @@
+{"files": 286, "tag": "munimjee-v1-runtime:local-20261018-wave4-dd36b0d"}
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon  3.213MB
+Step 1/15 : FROM python:3.11-slim
+ ---> e88e9763f943
+Step 2/15 : WORKDIR /app
+ ---> Using cache
+ ---> 71dd39b1078a
+Step 3/15 : ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PIP_DISABLE_PIP_VERSION_CHECK=1     V1_STOREFRONT_ASSETS_DIR=/opt/munimjee/storefront-src
+ ---> Using cache
+ ---> 52dd85234eb3
+Step 4/15 : COPY requirements.txt /app/requirements.txt
+ ---> Using cache
+ ---> 590ddc6c9583
+Step 5/15 : RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+ ---> Using cache
+ ---> fde1bf88e0a4
+Step 6/15 : COPY backend/app /app/app
+ ---> Using cache
+ ---> 079a8b14f341
+Step 7/15 : COPY backend/alembic /app/alembic
+ ---> Using cache
+ ---> 2b48a9160344
+Step 8/15 : COPY backend/alembic.ini /app/alembic.ini
+ ---> Using cache
+ ---> 606ae6b27663
+Step 9/15 : COPY backend/static /app/static
+ ---> 7d7ad03e4c88
+Step 10/15 : COPY storefront-src /opt/munimjee/storefront-src
+ ---> 7ed4e13f382d
+Step 11/15 : COPY runtime-manifest.json /opt/munimjee/runtime-manifest.json
+ ---> c72a0eb06d98
+Step 12/15 : RUN mkdir /app/uploads && chown 10001:10001 /app/uploads
+ ---> Running in a34719728fec
+ ---> Removed intermediate container a34719728fec
+ ---> 8b49a586a303
+Step 13/15 : USER 10001:10001
+ ---> Running in 131185644aae
+ ---> Removed intermediate container 131185644aae
+ ---> 09d7c0a28a57
+Step 14/15 : EXPOSE 8000
+ ---> Running in bc15eb53704f
+ ---> Removed intermediate container bc15eb53704f
+ ---> 987cf9fe673c
+Step 15/15 : CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ ---> Running in 74c0d789ace0
+ ---> Removed intermediate container 74c0d789ace0
+ ---> f37e01ecaf92
+Successfully built f37e01ecaf92
+Successfully tagged munimjee-v1-runtime:local-20261018-wave4-dd36b0d

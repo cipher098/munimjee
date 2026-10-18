@@ -1,0 +1,19 @@
+{
+  "source_head": "257b2733e5f7f61e2d3d9ed971a55a5f7a96fd94",
+  "mode": "independent actual app.main mount + P01 migrated payment_w3 + Chromium",
+  "native_browser_checks": 36,
+  "native_browser_exit_code": 0,
+  "provider_calls": 0,
+  "paid_transactions": 0,
+  "actual_page_route_count": 1,
+  "actual_page_route_module": "app.api.v1.payment_settings",
+  "fixture_fallback_used": false,
+  "read_only_source": true,
+  "source_sha256": {
+    "backend/app/main.py": "ef63443f43e48111814d5501a42cb7c209886e8b6d5acfbcdb478f9a23e4ed85",
+    "backend/app/api/v1/payment_settings.py": "5cb821a567c4854d03c930f4ccc4f4f7ada6d814d4fa3c26f2b711d9e72a2bdf",
+    "backend/static/payment_settings.js": "dc615317f711eb7420b1fd2d688915329e16dd9e34f1cc90038c2ecea42a18dc",
+    "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882"
+  },
+  "bounded_video_placeholder_review": "resolved: video mobile and desktop placeholder text centered and readable on existing panel/ink; no theme redesign approval"
+}

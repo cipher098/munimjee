@@ -1,0 +1,1 @@
+47 actual native import workspace checks passed; synthetic worker retrieval, no provider calls.
