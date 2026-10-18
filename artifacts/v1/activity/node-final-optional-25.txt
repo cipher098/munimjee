@@ -1,0 +1,33 @@
+✔ strict activity view binds business/dates and preserves unavailable nulls (1.037125ms)
+✔ conversion must be bounded exact supported context fraction (0.130333ms)
+✔ policy acknowledgement binds exact key mode expected revision and business (2.846375ms)
+✔ stores only a bounded command/context/expiry, never capability (2.01675ms)
+✔ commit then dropped context response retries exact key after reload (0.216416ms)
+✔ reload reacquires memory proof with same context key (0.433667ms)
+✔ concurrent visible hooks share one context request and dedup events server-side (0.149833ms)
+✔ GPC prevents every optional POST (0.073375ms)
+✔ DNT prevents every optional POST (0.045709ms)
+✔ hidden prevents every optional POST (0.048459ms)
+✔ unavailable storage fails closed for measurement (0.073209ms)
+✔ silent storage write failure also prevents POST (0.080125ms)
+✔ malformed storage does not mint a fresh context: { (0.111917ms)
+✔ malformed storage does not mint a fresh context: null (0.044542ms)
+✔ malformed storage does not mint a fresh context: {"capability (0.042666ms)
+✔ malformed storage does not mint a fresh context: xxxxxxxxxxxx (0.026209ms)
+✔ foreign origin/context envelope is withheld (0.08475ms)
+✔ malformed but successful ACK never provides a checkout context (0.081459ms)
+✔ wrong context ID on reacquire does not replace persisted identity (0.124417ms)
+✔ expiry can start a new browsing context but never proof for frozen old intent (0.106666ms)
+✔ measurement transport failures return optional null/false (0.093833ms)
+✔ disposal or a newly enabled privacy preference removes access to proof (0.053375ms)
+✔ product view only accepts a literal product UUID (0.69425ms)
+✔ a definitively expired lost-ACK key permits only a later visible new context (0.116542ms)
+✔ malformed expiry acknowledgement cannot discard an uncertain key (0.060333ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.487625

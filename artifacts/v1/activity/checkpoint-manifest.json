@@ -1,17 +1,39 @@
 {
-  "source_checkpoint": "b27a9a0",
-  "state": "pending serialized replacement DB final gate and independent review",
+  "source_checkpoint": "a89be0e",
+  "state": "final owned gate passed; shared composition and producer installation remain separate",
+  "test_lane": "payment_w6",
+  "numeric_loopback_port": 55443,
+  "database_kind": "new disk-backed PostgreSQL16 dedicated disposable lane",
+  "actual_migration_head": "0054_v1_activity",
+  "actual_predecessor": "0053_v1_csv_import",
+  "focused_python_checks": 74,
   "pure_contracts": 25,
+  "actual_postgresql_checks": 49,
   "node_checks": 28,
-  "historical_mounted_checks": 19,
-  "mounted_captures_before_final_read_failure_hardening": true,
+  "mounted_chromium_checks": 19,
+  "failures": 0,
+  "skipped": 0,
+  "source_and_harness_hashes_unchanged": true,
+  "historical_old_lane": "payment_w3; not queried in final run",
+  "historical_captures_directory": "historical-before-final-rerun",
   "shared_public_shell_hooks_installed": false,
+  "shared_order_writer_hook_installed": false,
   "channel_producers_installed": false,
   "provider_calls": 0,
+  "external_browser_requests": 0,
+  "production_or_live_canary": false,
   "files": {
     "backend-69-before-final-delta.txt": {
       "sha256": "bc14648f0001f440065e691709c73c175f4c9f460e6c539711837639b3dfba7a",
       "bytes": 788
+    },
+    "backend-final-payment-w6.txt": {
+      "sha256": "b47aab0085cb2069aee3ccbaca7b04fd594358c81eb7547cf9ac3e9ea00d72d3",
+      "bytes": 1040
+    },
+    "backend-final-payment-w6.xml": {
+      "sha256": "652c29bb2791fd4ef1fb97a51c2d5dbc047c36ca08ea1e09cecf5b20ae96b221",
+      "bytes": 10537
     },
     "backend-initial-lock-14.txt": {
       "sha256": "273db705ff3366b04be257196d59a67942745d6bbcf573989bff2e5b8de76f55",
@@ -26,6 +48,10 @@
       "bytes": 788
     },
     "browser-19-before-final-read-hardening.txt": {
+      "sha256": "4b5ccf05cf7c2782e24cfe4c0d99a99efb938af5aa5724a68637d5a70e5eac65",
+      "bytes": 107
+    },
+    "browser-final-payment-w6.txt": {
       "sha256": "4b5ccf05cf7c2782e24cfe4c0d99a99efb938af5aa5724a68637d5a70e5eac65",
       "bytes": 107
     },
@@ -46,32 +72,44 @@
       "bytes": 460
     },
     "desktop-observed.png": {
-      "sha256": "5d4ba988cf21512a636d3cdef85a361b6c45decb380309557ed94d2a0019dd79",
-      "bytes": 420351
+      "sha256": "c525a2fa4e4b2b85d31d451e2092398dae1c254b105c8e438b1d0450be40c25d",
+      "bytes": 425939
     },
     "desktop-off.png": {
-      "sha256": "def3eed1b380584053671b0a8f611d389930d7eaf1b6c9c25794377df069b2bb",
-      "bytes": 412958
+      "sha256": "fbf78fa32e27255711cd967081a55189f8c7cdc7e72452fd42b7e381eec80816",
+      "bytes": 418256
     },
     "detector.json": {
       "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
       "bytes": 3
     },
+    "final-post-source-hashes.json": {
+      "sha256": "fa6abd075ca5259d8530e7e10532a9689e985ace436fb6b610dd355f41c1cb3a",
+      "bytes": 2403
+    },
+    "final-pre-source-hashes.json": {
+      "sha256": "9f3cacc3e0a447ffa0306d363fd77f8c097ef496dfe730c2ecf6273bcd2029a7",
+      "bytes": 2363
+    },
     "mobile-access-ended.png": {
       "sha256": "653f0110758e9f90f4ffe1a9515dc4e2ae9d4e73f190184e10e559bfc3cd0f99",
       "bytes": 32467
     },
+    "mobile-owner-policy.png": {
+      "sha256": "ea8bc1fb32a190f81051650a0b2bb80386bf96f5aec39e7c3e00af7c66758a10",
+      "bytes": 46195
+    },
     "mobile-owner.png": {
-      "sha256": "14bf42dca28563b4c8389dc35359aa68f733690c1399c871095b1e4ce962a56f",
-      "bytes": 397123
+      "sha256": "6f4cca2cd1c731664d2caf8ecf31424def6f919aa89f7ea13ee06d99132081a2",
+      "bytes": 401026
     },
     "mobile-read-error.png": {
-      "sha256": "9a0801ed4ae97261d9bc4e2a92355e698f0fa9bc37939c163478558f35495cff",
-      "bytes": 304394
+      "sha256": "e688951983c5216ff330bdf2588bd8c45a37cc3588e32065322acf1d2cc960e4",
+      "bytes": 302124
     },
     "mobile-viewer.png": {
-      "sha256": "28e6f6dd0cebf67a12ad8a1cf54dfb8b81c5a97634f2b1735228681bba66ff92",
-      "bytes": 396376
+      "sha256": "3f57c8c6aa1d0e147641d634e0450adaa2923d4a5b6e5fe4c91b5ba386a36105",
+      "bytes": 401172
     },
     "node-26.txt": {
       "sha256": "a2979136b83bb98149409a60805282b4f05cd5f088f932656c96fe06a23bca0c",
@@ -80,6 +118,14 @@
     "node-28.txt": {
       "sha256": "1af14095eded220e36101893a1cfdc1fc7214e2b839735cf06588e73dd87e15d",
       "bytes": 2302
+    },
+    "node-final-28.txt": {
+      "sha256": "01528087fed78779bde7ea1ffc2c49a58f1f8fa37c5e31b334d4db3c90b42401",
+      "bytes": 2303
+    },
+    "node-final-optional-25.txt": {
+      "sha256": "27c96c6ce3bff3c06e7a358626bbf12b4fd7fa19977410031dc444ee95bf7713",
+      "bytes": 2010
     },
     "pure-contract-25.txt": {
       "sha256": "1b01ab9a8bc7bb525e0640404571d54854afb5a8a28714c9ec74ca3099764ad8",
