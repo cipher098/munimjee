@@ -116,3 +116,15 @@ gap at0254: the final configuration shape check does not bind the already-built
 client/attempt to the currently configured app. Catalogue accepted an immutable
 requested-App binding; its next coherent freeze remains pending. No provider,
 DB or browser operation was performed by this recheck.
+
+
+The requested independent valid-App rotation proof now reproduces the gap at
+0254 in all three actual service paths: exchange, subscription and registration.
+The claim-commit callback changes configured App123 to456 while native authority
+stays current; a shape-valid configuration seam isolates App binding from other
+configuration failures. Each path attempts one synthetic provider method when
+zero is required. Original-app controls dispatch once; SID-revoked controls deny
+with401/provider0. The expanded source-only run is10pass/3intendedfail, retained in
+`fixed-0254-app-rotation-negative.txt`. No SQL persistence or live transport is
+claimed. The new fixture already supplies immutable requested/verified App123;
+owner repair and actual migrated App-rotation proof remain pending.
