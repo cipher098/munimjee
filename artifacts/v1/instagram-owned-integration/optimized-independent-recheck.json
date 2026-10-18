@@ -1,0 +1,20 @@
+{
+  "source_sha": "d69dadbf337daee0ba03ba38de9424bd609b2619",
+  "source_file": "backend/app/services/import_originals.py",
+  "source_sha256": "ff0ece7810f5be99f1d482ec16e9fd38e86fa873ca2e1453600c61083b1bceb6",
+  "proof_scope": "exact function, injected query rows, no DB/network; Python optimize=1 condition",
+  "results": [
+    {
+      "optimization": 0,
+      "http_status": 409,
+      "returned_corrupted_bytes": false,
+      "byte_validation_calls": 1
+    },
+    {
+      "optimization": 1,
+      "http_status": 409,
+      "returned_corrupted_bytes": false,
+      "byte_validation_calls": 1
+    }
+  ]
+}

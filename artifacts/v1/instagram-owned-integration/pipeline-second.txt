@@ -1,0 +1,115 @@
+.....F.....................F......................................       [100%]
+=================================== FAILURES ===================================
+_____ test_original_bytes_manifest_exact_replay_foreign_access_and_tamper ______
+
+migrated_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10bd8ea40>
+
+    @pytest.mark.asyncio
+    async def test_original_bytes_manifest_exact_replay_foreign_access_and_tamper(migrated_engine):
+        sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+        job=await enqueue(sessions,bid,actor)
+        assert await jobs.run_job(sessions,bid,job.job_id,instagram_provider=FakeProvider(bid))
+        assert not await jobs.run_job(sessions,bid,job.job_id,instagram_provider=FakeProvider(bid))
+        async with sessions() as db:
+            draft=await db.scalar(select(ImportDraft).where(ImportDraft.business_id==bid))
+            manifest=await import_originals.originals(db,actor,bid,draft.id)
+            assert len(manifest['items'])==1
+            m=manifest['items'][0]
+>           metadata,content=await import_originals.originals(db,actor,bid,draft.id,asset_id=m['asset_id'])
+
+backend/tests/test_v1_instagram_import_integration.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x10c0afbd0>
+actor = Actor(user_id=UUID('913a1a37-6f9d-5b3a-9a5d-c741056a0e69'), auth_method='v1_user')
+business_id = UUID('1cbca2a3-f223-4237-a983-8e11137da5d2')
+candidate_id = UUID('9ff72d8d-b403-5175-a137-6d19127a7dbf')
+
+    async def originals(db, actor, business_id, candidate_id, *, asset_id=None):
+        from app.services.imports_v1 import _access, digest
+        await _access(db,actor,business_id)
+        draft=await db.scalar(select(ImportDraft).where(ImportDraft.business_id==business_id,ImportDraft.id==candidate_id))
+        if draft is None: raise HTTPException(404,'Import original not found')
+        rows=(await db.scalars(select(ImportAudit).where(ImportAudit.business_id==business_id,
+            ImportAudit.candidate_id==candidate_id,ImportAudit.job_id==draft.last_job_id,
+            ImportAudit.action=='instagram_assets_retained').order_by(ImportAudit.id).limit(11))).all()
+        if len(rows)>10: raise HTTPException(409,'Import original integrity check failed')
+        result=[]
+        for audit in rows:
+            job=await db.scalar(select(ImportJob).where(ImportJob.business_id==business_id,ImportJob.id==audit.job_id))
+            m=audit.details
+            try:
+                expected_keys={'contract_version','parent_media_id','asset_media_id','asset_id','sha256','size_bytes','content_type','connection_version'}
+                assert set(m)==expected_keys and m['contract_version']=='instagram-owned-manifest.v1'
+                assert job and job.creator_id==audit.actor_id and job.source['kind']=='instagram'
+                assert m['parent_media_id']==m['asset_media_id']==job.source['media_id']
+                assert type(m['connection_version']) is int and m['connection_version']==job.source['_connection']['version']
+                key=uuid5(job.id,'instagram-original:'+m['asset_media_id']+':'+m['sha256'])
+                assert UUID(m['asset_id'])==key
+                assert audit.idempotency_key==uuid5(job.id,'instagram-manifest:'+str(candidate_id)+':'+m['asset_media_id']+':'+m['sha256'])
+                assert audit.request_hash==digest(m)
+                asset=await db.scalar(select(ImportAsset).where(ImportAsset.business_id==business_id,ImportAsset.id==key))
+                assert asset and asset.idempotency_key==key and asset.creator_id==job.creator_id
+                assert (asset.sha256,asset.size_bytes,asset.content_type)==(m['sha256'],m['size_bytes'],m['content_type'])
+                assert validate_upload(bytes(asset.content),asset.content_type)==asset.sha256
+                assert len(asset.content)==asset.size_bytes
+            except (AssertionError,KeyError,ValueError,TypeError,FetchError):
+                raise HTTPException(409,'Import original integrity check failed') from None
+            safe={**m,'job_id':str(job.id),'candidate_id':str(candidate_id)}
+            if asset_id is None: result.append(safe)
+            elif asset.id==asset_id: result.append((safe,bytes(asset.content)))
+        await _access(db,actor,business_id)
+        if asset_id is not None:
+>           if len(result)!=1:raise HTTPException(404,'Import original not found')
+E           fastapi.exceptions.HTTPException: 404: Import original not found
+
+backend/app/services/import_originals.py:86: HTTPException
+_ test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media _
+
+    @pytest.mark.asyncio
+    async def test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media():
+        first = claim()
+        changed = replace(first, job_id=uuid4(), captured_at=first.captured_at + timedelta(seconds=1),
+            source={**first.source, "url": "https://www.instagram.com/reel/new-reference/"})
+        a = (await service.collect_claim(first, fetcher=None, instagram_provider=provider()))[0]
+        b = (await service.collect_claim(changed, fetcher=None, instagram_provider=provider()))[0]
+        assert a.id == b.id and a.provenance.import_job_id != b.provenance.import_job_id
+        other_tenant = replace(first, business_id=uuid4())
+        c = (await service.collect_claim(other_tenant, fetcher=None, instagram_provider=provider()))[0]
+        other_media = replace(first, source={**first.source, "media_id": "180000000000072"})
+        fake = provider()
+        fake.fetch_owned_media.return_value.media_id = other_media.source["media_id"]
+>       d = (await service.collect_claim(other_media, fetcher=None, instagram_provider=fake))[0]
+
+backend/tests/test_v1_instagram_owned_pipeline.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:409: in collect_claim
+    checked_assets(claim, batch)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+claim = JobClaim(job_id=UUID('25f99c86-757f-486b-88bc-a07ebdde16aa'), business_id=UUID('10000000-0000-0000-0000-000000000071')...datetime(2026, 10, 18, 8, 10, 30, 898529, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+batch = CollectedBatch(candidates=(), assets=(namespace(media_id='180000000000071', content=b'\x89PNG\r\n\x1a\nsynthetic-origi...fe5dea6bf165f8'),), account_id='178400000000071', media_id='180000000000072', media_type='IMAGE', connection_version=7)
+
+    def checked_assets(claim, batch):
+        if batch.account_id != claim.source.get('account_id') or batch.media_id != claim.source.get('media_id') or batch.connection_version != claim.source.get('_connection', {}).get('version'):
+            raise FetchError('instagram_binding_changed')
+        # Carousel remains closed: a single original must exactly match its parent.
+        if batch.media_type not in {'IMAGE','VIDEO'} or len(batch.assets) != 1:
+            raise FetchError('instagram_asset_invalid')
+        original, = batch.assets
+        expected_types = {'IMAGE': {'image/jpeg','image/png'}, 'VIDEO': {'video/mp4'}}
+        if original.media_id != batch.media_id or type(original.content) is not bytes or original.content_type not in expected_types[batch.media_type] or validate_upload(original.content, original.content_type) != original.sha256:
+>           raise FetchError('instagram_asset_invalid')
+E           app.v1.imports.fetching.FetchError: instagram_asset_invalid
+
+backend/app/services/import_originals.py:24: FetchError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_import_integration.py::test_original_bytes_manifest_exact_replay_foreign_access_and_tamper
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media
+2 failed, 64 passed, 1 warning in 13.67s

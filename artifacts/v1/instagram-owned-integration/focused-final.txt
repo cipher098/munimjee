@@ -1,0 +1,129 @@
+........................................................F............... [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+..............F.F....................................................... [ 84%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+__ test_actual_adapter_default_capability_gate_survives_service_error_mapping __
+
+api = <module 'app.v1.imports.instagram_owned' from '/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/backend/app/v1/imports/instagram_owned.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10c934e90>
+
+    @pytest.mark.asyncio
+    async def test_actual_adapter_default_capability_gate_survives_service_error_mapping(api, monkeypatch):
+        fake, _, transport = adapter(api, enabled=False)
+        fake.credential_loader = AsyncMock(side_effect=AssertionError("Default gate reached credentials"))
+        monkeypatch.setattr(service, "_access", AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT)))
+        monkeypatch.setattr(service,"_connection_matches",AsyncMock(return_value=True))
+        row = job()
+        dbs = [TenantDB([None, row]), TenantDB([None, row]), TenantDB([None, row])]
+>       assert not await service.run_job(Sessions(dbs), BUSINESS, row.id, instagram_provider=fake)
+
+backend/tests/test_v1_instagram_owned_pipeline_provider.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:556: in run_job
+    return await finish_claim(db, claim, candidates=candidates, error_code=error_code)
+backend/app/services/imports_v1.py:455: in finish_claim
+    await _fresh_access(db, Actor(job.creator_id, "import_job"), claim.business_id, "catalogue.write", lock=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <tests.test_v1_instagram_owned_pipeline.TenantDB object at 0x10c938950>
+actor = Actor(user_id=UUID('20000000-0000-0000-0000-000000000071'), auth_method='import_job')
+business_id = UUID('10000000-0000-0000-0000-000000000071')
+capability = 'catalogue.write'
+
+    async def _fresh_access(db, actor, business_id, capability, *, lock=False):
+        """Read authorization scalars from PostgreSQL, never ORM-cached objects.
+    
+        No autoflush/expire/populate operation may publish or overwrite unrelated
+        dirty identity state while obtaining this committed authorization snapshot.
+        Native-session validity remains the shared request dependency's authority.
+        """
+        query = select(Membership.role, Seller.instagram_page_id).select_from(User).join(
+            Membership, Membership.user_id == User.id).join(
+            Business, Business.id == Membership.business_id).join(
+            Seller, Seller.id == Business.id).where(
+            User.id == actor.user_id, User.is_active.is_(True), User.revoked_at.is_(None),
+            Business.id == business_id, Business.is_active.is_(True), Seller.is_active.is_(True),
+            Membership.is_active.is_(True), Membership.revoked_at.is_(None),
+        ).execution_options(autoflush=False)
+        if lock:
+            query = query.with_for_update(read=True, of=(User, Membership))
+>       row = (await db.execute(query)).one_or_none()
+E       AttributeError: 'TenantDB' object has no attribute 'execute'
+
+backend/app/services/imports_v1.py:80: AttributeError
+_____ test_reimport_persists_override_history_and_invalidates_stale_review _____
+
+access = <AsyncMock id='4505574032'>
+
+    @pytest.mark.asyncio
+    async def test_reimport_persists_override_history_and_invalidates_stale_review(access):
+        row = job(state="running", lease_token=uuid4(), lease_expires_at=service.now() + timedelta(seconds=60))
+        first = candidate(row.id)
+        corrected = apply_overrides(first, (SellerOverride(field="stock", value=2, reviewer_id=ACTOR.user_id),), business_id=BUSINESS)
+        stored = draft(corrected, revision=3)
+        incoming = candidate(row.id, stock=99)
+        db = FakeDB([None, row, stored])
+>       assert await service.finish_claim(db, claim(row), candidates=(incoming,))
+
+backend/tests/test_v1_import_jobs.py:264: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <tests.test_v1_import_jobs.FakeDB object at 0x10c980790>
+claim = JobClaim(job_id=UUID('7dfe9b2e-f6f2-46a8-b0c1-1cb34c844426'), business_id=UUID('10000000-0000-0000-0000-000000000001')...datetime(2026, 10, 18, 8, 13, 37, 330866, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+
+    async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
+        await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
+        job = await _job(db, claim.business_id, claim.job_id, lock=True)
+        if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
+            return False  # Cancellation or a newer attempt fences late results.
+        try:
+            access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
+>           await _fresh_access(db, Actor(job.creator_id, "import_job"), claim.business_id, "catalogue.write", lock=True)
+E           TypeError: access.<locals>.fresh() got an unexpected keyword argument 'lock'
+
+backend/app/services/imports_v1.py:455: TypeError
+__________ test_ig_connection_is_rechecked_and_provider_gate_truthful __________
+
+access = <AsyncMock id='4506326608'>
+
+    @pytest.mark.asyncio
+    async def test_ig_connection_is_rechecked_and_provider_gate_truthful(access):
+        row = job(source={"kind": "instagram", "media_id": "123", "account_id": "old-ig"})
+>       assert await service.claim_job(FakeDB([None, row]), BUSINESS, row.id) is None
+
+backend/tests/test_v1_import_jobs.py:292: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:355: in claim_job
+    if job.source["kind"] == "instagram" and not await _connection_matches(db, business_id, job.source):
+backend/app/services/imports_v1.py:312: in _connection_matches
+    current = await snapshot(db, business_id, lock=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <tests.test_v1_import_jobs.FakeDB object at 0x10caec9d0>
+business_id = UUID('10000000-0000-0000-0000-000000000001')
+
+    async def snapshot(db, business_id, *, lock=False):
+        with db.no_autoflush:
+            if lock:
+>               await db.execute(select(Business.id).where(Business.id == business_id).with_for_update(key_share=True))
+E               AttributeError: 'FakeDB' object has no attribute 'execute'
+
+backend/app/services/instagram_credentials.py:45: AttributeError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/artifacts/v1/instagram-owned-integration/focused-final.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_owned_pipeline_provider.py::test_actual_adapter_default_capability_gate_survives_service_error_mapping
+FAILED backend/tests/test_v1_import_jobs.py::test_reimport_persists_override_history_and_invalidates_stale_review
+FAILED backend/tests/test_v1_import_jobs.py::test_ig_connection_is_rechecked_and_provider_gate_truthful
+3 failed, 338 passed, 2 warnings in 40.10s
