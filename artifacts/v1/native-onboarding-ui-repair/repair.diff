@@ -1,0 +1,68 @@
+diff --git a/backend/static/v1_app.css b/backend/static/v1_app.css
+index 91199d6..b8003ff 100644
+--- a/backend/static/v1_app.css
++++ b/backend/static/v1_app.css
+@@ -1 +1,7 @@
+ :root{--muted:#5e6c62}::selection{background:#d5e5d7;color:#213e2f}input,textarea{caret-color:var(--green)}.skip-link{position:absolute;left:16px;top:-60px;padding:10px;background:white;z-index:5}.skip-link:focus{top:10px}.access-layout{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:start;margin:65px auto;max-width:1050px}.access-layout h1{max-width:15ch;font-size:42px;letter-spacing:-.03em}.intro{font-size:18px;line-height:1.6;max-width:42ch}.access-layout>.panel{padding:32px}.access-layout .muted{max-width:48ch}.checklist-section{margin-bottom:48px}.checklist{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}.checklist li{display:grid;grid-template-columns:1fr auto;gap:12px 24px;padding:20px 0;border-bottom:1px solid var(--line);align-items:center}.checklist h3{margin:0 0 3px}.checklist p{margin:0;max-width:70ch;color:var(--muted)}.checklist .badge{align-self:start;white-space:nowrap}.checklist a{display:inline-block;margin-top:8px}.settings-layout{margin-bottom:44px}.form-actions button{min-height:44px}#team-list{margin-top:20px}#team-list p{padding:12px 0;border-bottom:1px solid var(--line);margin:0;overflow-wrap:anywhere}#invite-result{margin-top:24px}#invite-result input{margin-top:8px}#profile-status{font-size:13px}#setup-progress{color:var(--muted);font-variant-numeric:tabular-nums}#business-picker-label{font-size:12px;min-width:180px}h1{letter-spacing:-.03em}input::placeholder{color:#657168}@media(max-width:800px){.access-layout{grid-template-columns:1fr;gap:28px;margin:20px auto;max-width:560px}.access-layout h1{font-size:34px;max-width:20ch}.access-layout>.panel{padding:24px}.intro{font-size:16px}}@media(max-width:480px){.checklist li{grid-template-columns:1fr;gap:10px}.checklist .badge{justify-self:start}.access-layout>.panel{padding:20px 16px}.topbar{flex-direction:row;align-items:center}.topbar nav{width:auto}.access-layout .form-actions{align-items:stretch;flex-direction:column}input,select{font-size:16px}}
++body.native-onboarding-page :is(button,a,input,select,textarea,[tabindex="-1"]):focus-visible{outline:3px solid var(--green);outline-offset:3px}
++body.native-onboarding-page .page-heading{min-width:0;flex-wrap:wrap}
++body.native-onboarding-page .page-heading>div{min-width:0;max-width:100%}
++body.native-onboarding-page #business-heading{overflow-wrap:anywhere}
++body.native-onboarding-page #business-picker-label{min-width:0;max-width:100%;flex-shrink:1}
++body.native-onboarding-page #business-picker{min-width:0;max-width:100%}
+diff --git a/backend/static/v1_app.js b/backend/static/v1_app.js
+index 750453f..5ff7d9e 100644
+--- a/backend/static/v1_app.js
++++ b/backend/static/v1_app.js
+@@ -1,5 +1,6 @@
+ (() => {
+   'use strict';
++  document.body.classList.add('native-onboarding-page');
+   const $ = id => document.getElementById(id);
+   let mode = location.hash.startsWith('#invite=') ? 'invite' : 'signup';
+   const invitation = mode === 'invite' ? location.hash.slice(8) : null;
+@@ -77,6 +78,15 @@
+     }
+   }
+   const text = (tag, value, className) => {const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n;};
++  function focusCurrentView(viewId, headingId, generation, epoch) {
++    const view = $(viewId);
++    if (generation !== fenceGeneration || epoch !== businessLoad || document.hidden || !document.hasFocus() || view.hidden || view.contains(document.activeElement)) return;
++    const heading = $(headingId); heading.tabIndex = -1; heading.focus();
++  }
++  const startupReload = text('button', 'Reload and try again', 'button secondary');
++  startupReload.id = 'startup-reload'; startupReload.type = 'button'; startupReload.hidden = true;
++  startupReload.addEventListener('click', () => location.reload());
++  $('global-error').after(startupReload);
+   function clearInvite() {
+     $('invite-result').hidden = true; $('invite-link').value = ''; $('invite-form').reset();
+     $('invite-error').textContent = ''; $('team-list').replaceChildren();
+@@ -189,7 +199,9 @@
+     const body = {email: form.elements.email.value, password: form.elements.password.value};
+     if (mode === 'signup') body.business_name = form.elements.business_name.value;
+     if (mode === 'invite') body.token = invitation;
+-    const data = await api('/api/v1/auth/' + (mode === 'invite' ? 'invitations/accept' : mode), {method: 'POST', body}); form.elements.password.value = ''; await workspace(data);
++    const data = await api('/api/v1/auth/' + (mode === 'invite' ? 'invitations/accept' : mode), {method: 'POST', body}); form.elements.password.value = '';
++    const generation = fenceGeneration, opening = workspace(data), epoch = businessLoad;
++    await opening; focusCurrentView('workspace', 'business-heading', generation, epoch);
+   });});
+   $('profile-form').addEventListener('submit', event => {event.preventDefault(); const form = event.currentTarget; busy(form, 'profile-error', async () => {
+     const businessId = business.id, epoch = businessLoad;
+@@ -206,9 +218,15 @@
+     if ($('business-picker').value) history.replaceState(null, '', '/v1?business=' + encodeURIComponent($('business-picker').value) + location.hash);
+     loadBusiness().catch(e => $('global-error').textContent=e.message);
+   });
+-  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {await api('/api/v1/auth/' + id, {method:'POST'});endWorkspace('Signed out. Sign in to continue.');});});
++  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {
++    const generation = fenceGeneration;
++    await api('/api/v1/auth/' + id, {method:'POST'});
++    if (generation !== fenceGeneration) return;
++    endWorkspace('Signed out. Sign in to continue.');
++    focusCurrentView('access', 'access-title', generation + 1, businessLoad);
++  });});
+   async function recheck() {if (!actor || ended) return;if(checking){recheckPending=true;return;}checking = true;$('workspace').hidden = true;try {await checkedSession();} catch (_) {if (!ended) endWorkspace('Your current sign-in could not be checked. Sign in again.');} finally {checking = false;if (actor && !ended && !document.hidden) $('workspace').hidden = false;if(recheckPending && !ended){recheckPending=false;recheck();}}}
+   window.addEventListener('focus', recheck);window.addEventListener('pageshow', recheck);window.addEventListener('pagehide', () => {$('workspace').hidden=true;});
+   document.addEventListener('visibilitychange', () => {if (document.hidden) $('workspace').hidden=true;else recheck();});
+-  (async () => {try {if (invitation) access(); else await workspace(await checkedSession(true));} catch(e) {if(e.stale) return;if(e.status===401) access();else $('global-error').textContent=e.message;} finally {$('loading').hidden=true;}})();
++  (async () => {try {if (invitation) access(); else await workspace(await checkedSession(true));} catch(e) {if(e.stale) return;if(e.status===401) access();else {$('global-error').textContent=e.message;startupReload.hidden = !$('access').hidden || !$('workspace').hidden;}} finally {$('loading').hidden=true;}})();
+ })();
