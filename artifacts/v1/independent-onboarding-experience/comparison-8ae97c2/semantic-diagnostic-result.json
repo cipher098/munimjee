@@ -1,0 +1,516 @@
+{
+  "mode": "actual-native-onboarding-source-and-actual-formatter-with-synthetic-http",
+  "source_head": "e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86",
+  "source_hashes_before": {
+    "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "v1_app.js": "a2e6a63f923c19b1eb5f5a822a8eaf150dea3e3707611e2b1a378fa22ff6d766",
+    "v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_hashes_after": {
+    "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "v1_app.js": "a2e6a63f923c19b1eb5f5a822a8eaf150dea3e3707611e2b1a378fa22ff6d766",
+    "v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged": true,
+  "runner_sha256": "16e7126bc527a98b25685e4aca77a477f50bd60d8decd0d0935952ad981f4083",
+  "fixture_sha256": "8dac591035b7e8980a8f842fe94f6daaf41d8eb4291d2bb94c6bf5d15c6da3b7",
+  "fixture_sources_verified_before_browser": true,
+  "playwright_module": "/Users/user/Documents/ChatGPT/munimjee-wave3-qa/frontend/storefront/node_modules/@playwright/test/index.mjs",
+  "chromium_executable": "/Users/user/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+  "browser_version": "153.0.8010.12",
+  "origin": "http://127.0.0.1:47991",
+  "server_started": false,
+  "requests_intercepted": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "passed": 26,
+  "failed": 6,
+  "results": [
+    {
+      "id": "layout-access-360",
+      "name": "signup layout and associated labels at 360px",
+      "result": "passed",
+      "observed": {
+        "scroll": 360,
+        "viewport": 360
+      }
+    },
+    {
+      "id": "layout-owner-360",
+      "name": "owner checklist/profile/invitation layout at 360px",
+      "result": "passed",
+      "observed": {
+        "scroll": 360,
+        "viewport": 360
+      }
+    },
+    {
+      "id": "layout-access-390",
+      "name": "signup layout and associated labels at 390px",
+      "result": "passed",
+      "observed": {
+        "scroll": 390,
+        "viewport": 390
+      }
+    },
+    {
+      "id": "layout-owner-390",
+      "name": "owner checklist/profile/invitation layout at 390px",
+      "result": "passed",
+      "observed": {
+        "scroll": 390,
+        "viewport": 390
+      }
+    },
+    {
+      "id": "layout-access-768",
+      "name": "signup layout and associated labels at 768px",
+      "result": "passed",
+      "observed": {
+        "scroll": 768,
+        "viewport": 768
+      }
+    },
+    {
+      "id": "layout-owner-768",
+      "name": "owner checklist/profile/invitation layout at 768px",
+      "result": "passed",
+      "observed": {
+        "scroll": 768,
+        "viewport": 768
+      }
+    },
+    {
+      "id": "layout-access-1440",
+      "name": "signup layout and associated labels at 1440px",
+      "result": "passed",
+      "observed": {
+        "scroll": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "id": "layout-owner-1440",
+      "name": "owner checklist/profile/invitation layout at 1440px",
+      "result": "passed",
+      "observed": {
+        "scroll": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "id": "keyboard-access",
+      "name": "keyboard order, skip link and native validation block invalid email",
+      "result": "passed"
+    },
+    {
+      "id": "keyboard-transition",
+      "name": "keyboard submit moves focus into newly opened workspace",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/v1_app.js",
+      "message": "Focus did not enter new workspace: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}",
+      "screenshot": "keyboard-transition.png",
+      "state": {
+        "workspace_visible": true,
+        "business_content_visible": true,
+        "profile_control_visible": true,
+        "profile_value_in_DOM": "Synthetic QA Atelier",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    },
+    {
+      "id": "contrast-control",
+      "name": "primary button meets chosen 4.5:1 text contrast criterion",
+      "result": "passed",
+      "observed": {
+        "colors": {
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(46, 81, 65)"
+        },
+        "ratio": 8.862737535767886
+      }
+    },
+    {
+      "id": "contrast-focus",
+      "name": "keyboard focus outline meets chosen 3:1 adjacent-background criterion",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/commerce.css",
+      "message": "{\"colors\":{\"outline\":\"rgb(149, 174, 149)\",\"width\":\"3px\",\"style\":\"solid\",\"focus_visible\":true,\"background\":\"rgb(255, 255, 255)\"},\"ratio\":2.3955324812741465,\"keyboard_tab\":true}",
+      "screenshot": "contrast-focus.png",
+      "state": {
+        "workspace_visible": false,
+        "business_content_visible": false,
+        "profile_control_visible": false,
+        "profile_value_in_DOM": "",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    },
+    {
+      "id": "loading-session",
+      "name": "initial held session shows announced loading and no private workspace",
+      "result": "passed"
+    },
+    {
+      "id": "startup-error",
+      "name": "startup 503 offers an actionable retry or sign-in path",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/v1_app.js",
+      "message": "Both panels remain hidden and no retry/sign-in control is available",
+      "screenshot": "startup-error.png",
+      "state": {
+        "workspace_visible": false,
+        "business_content_visible": false,
+        "profile_control_visible": false,
+        "profile_value_in_DOM": "",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    },
+    {
+      "id": "long-business-name",
+      "name": "valid 160-character unbroken business name does not overflow 360px",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/v1_app.css",
+      "message": "{\"scroll\":3062,\"viewport\":360}",
+      "screenshot": "long-business-name.png",
+      "state": {
+        "workspace_visible": true,
+        "business_content_visible": true,
+        "profile_control_visible": true,
+        "profile_value_in_DOM": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    },
+    {
+      "id": "role-manager",
+      "name": "manager controls match actual capability output",
+      "result": "passed"
+    },
+    {
+      "id": "role-staff",
+      "name": "staff controls match actual capability output",
+      "result": "passed"
+    },
+    {
+      "id": "role-viewer",
+      "name": "viewer controls match actual capability output",
+      "result": "passed"
+    },
+    {
+      "id": "unavailable-business",
+      "name": "unavailable requested tenant never falls back to another business",
+      "result": "passed"
+    },
+    {
+      "id": "empty-membership",
+      "name": "no memberships yields no cached profile or mutation controls",
+      "result": "passed"
+    },
+    {
+      "id": "profile-busy",
+      "name": "held profile save disables duplicates and exposes busy state",
+      "result": "passed"
+    },
+    {
+      "id": "profile-lost-response",
+      "name": "lost save response is not acknowledged; explicit reload resumes persisted facts",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/v1_app.js",
+      "message": "expect(locator).toContainText(expected) failed\n\nLocator: locator('#profile-error')\nExpected substring: \"changed\"\nReceived string:    \"\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('#profile-error')\n    9 × locator resolved to <p role=\"alert\" class=\"error\" id=\"profile-error\"></p>\n      - unexpected value \"\"\n",
+      "screenshot": "profile-lost-response.png",
+      "state": {
+        "workspace_visible": true,
+        "business_content_visible": true,
+        "profile_control_visible": true,
+        "profile_value_in_DOM": "Confirmed after reload",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      },
+      "observed": {
+        "first_error": "Failed to fetch",
+        "initial_false_success_acknowledgement": false,
+        "ordered_http": [
+          {
+            "phase": "request",
+            "sequence": 1,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "response",
+            "sequence": 1,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          },
+          {
+            "phase": "request",
+            "sequence": 2,
+            "method": "PUT",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/profile",
+            "profile_body": {
+              "expected_version": 3,
+              "name": "Confirmed after reload",
+              "business_type": "boutique",
+              "country": "IN",
+              "support_email": "qa@example.com",
+              "phone": null,
+              "website": null
+            }
+          },
+          {
+            "phase": "requestfailed",
+            "sequence": 2,
+            "method": "PUT",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/profile",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "phase": "request",
+            "sequence": 3,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "response",
+            "sequence": 3,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          },
+          {
+            "phase": "request",
+            "sequence": 4,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "request",
+            "sequence": 5,
+            "method": "PUT",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/profile",
+            "profile_body": {
+              "expected_version": 3,
+              "name": "Confirmed after reload",
+              "business_type": "boutique",
+              "country": "IN",
+              "support_email": "qa@example.com",
+              "phone": null,
+              "website": null
+            }
+          },
+          {
+            "phase": "response",
+            "sequence": 4,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          },
+          {
+            "phase": "response",
+            "sequence": 5,
+            "method": "PUT",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/profile",
+            "status": 409
+          },
+          {
+            "phase": "request",
+            "sequence": 6,
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding"
+          },
+          {
+            "phase": "response",
+            "sequence": 6,
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding",
+            "status": 200,
+            "profile": {
+              "business_id": "10000000-0000-4000-8000-000000000081",
+              "name": "Confirmed after reload",
+              "profile": {
+                "business_type": "boutique",
+                "country": "IN",
+                "support_email": "qa@example.com",
+                "phone": null,
+                "website": null
+              },
+              "version": 4,
+              "confirmed": true
+            }
+          },
+          {
+            "phase": "request",
+            "sequence": 7,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "response",
+            "sequence": 7,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          },
+          {
+            "phase": "request",
+            "sequence": 8,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "response",
+            "sequence": 8,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          },
+          {
+            "phase": "request",
+            "sequence": 9,
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations"
+          },
+          {
+            "phase": "response",
+            "sequence": 9,
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations",
+            "status": 200
+          },
+          {
+            "phase": "request",
+            "sequence": 10,
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "phase": "response",
+            "sequence": 10,
+            "method": "GET",
+            "path": "/api/v1/auth/session",
+            "status": 200
+          }
+        ],
+        "synthetic_commits": 1,
+        "final_authoritative_profile": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "name": "Confirmed after reload",
+          "profile": {
+            "business_type": "boutique",
+            "country": "IN",
+            "support_email": "qa@example.com",
+            "phone": null,
+            "website": null
+          },
+          "version": 4,
+          "confirmed": true
+        },
+        "displayed_profile": {
+          "name": "Confirmed after reload",
+          "business_type": "boutique",
+          "country": "IN",
+          "support_email": "qa@example.com",
+          "phone": "",
+          "website": ""
+        },
+        "final_profile_status": "Saved",
+        "final_profile_error": "",
+        "fresh_read_after_commit": true
+      }
+    },
+    {
+      "id": "profile-switch",
+      "name": "delayed A profile response cannot overwrite B workspace",
+      "result": "passed"
+    },
+    {
+      "id": "session-profile-401",
+      "name": "profile mutation 401 clears workspace and announces sign-in",
+      "result": "passed"
+    },
+    {
+      "id": "session-switch-401",
+      "name": "business-load 401 clears workspace and presents sign-in",
+      "result": "passed"
+    },
+    {
+      "id": "session-revoke-401",
+      "name": "invitation revoke 401 removes prior private profile and bearer link",
+      "result": "passed"
+    },
+    {
+      "id": "role-focus",
+      "name": "returning focus revalidates a downgraded role before further edits",
+      "result": "passed"
+    },
+    {
+      "id": "session-focus",
+      "name": "returning focus revalidates expired identity and clears private DOM",
+      "result": "passed"
+    },
+    {
+      "id": "cross-identity-error",
+      "name": "prior profile error is absent after sign-out and another identity/business signs in",
+      "result": "passed"
+    },
+    {
+      "id": "literal-name",
+      "name": "HTML-looking business facts render as text without executing",
+      "result": "passed"
+    },
+    {
+      "id": "logout-storage",
+      "name": "sign-out removes native recovery commands while preserving public checkout namespace",
+      "result": "passed"
+    },
+    {
+      "id": "logout-focus",
+      "name": "sign-out leaves keyboard focus in the visible sign-in context",
+      "result": "failed",
+      "severity": "P2",
+      "source": "backend/static/v1_app.js",
+      "message": "Focus did not enter sign-in context: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}",
+      "screenshot": "logout-focus.png",
+      "state": {
+        "workspace_visible": false,
+        "business_content_visible": false,
+        "profile_control_visible": false,
+        "profile_value_in_DOM": "",
+        "profile_error_visible": false,
+        "profile_error": "",
+        "invitation_link_visible": false,
+        "invitation_link_has_value": false
+      }
+    }
+  ],
+  "unrun_gates": [
+    "actual mounted migrated DB",
+    "physical iPhone/Android",
+    "screen-reader interaction",
+    "complete contrast/WCAG audit",
+    "production/provider behavior"
+  ]
+}
