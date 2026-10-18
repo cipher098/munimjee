@@ -56,11 +56,20 @@
   function amount(currency,minor){const n=BigInt(minor);return currency==='INR'?`INR ${(n/100n).toLocaleString('en-IN')}.${(n%100n).toString().padStart(2,'0')}`:`${currency} ${n.toLocaleString()} minor units`;}
   for(const row of p.currency_totals){const tr=document.createElement('tr');for(const key of ['currency','placed_order_value_minor','online_paid_minor','cod_collected_minor','captured_review_minor']){const td=document.createElement('td');td.textContent=key==='currency'?row.currency:amount(row.currency,row[key]);tr.append(td);}$('activity-money').append(tr);}
   $('activity-retention').textContent=`Raw activity retention target: 90 days. Cleanup readiness: ${c.retention_ready?'installed/ready':'not ready'}. ${c.cleanup_overdue_rows} overdue cleanup records (contexts include their events)${c.cleanup_lag_seconds===null?'':`; oldest overdue by ${c.cleanup_lag_seconds.toLocaleString()} seconds`}. This is observed cleanup state, not a physical deletion guarantee.`;
-  const h=x.channel_activity,o=h.automation_outcomes;
-  const enquiries=h.enquiry_messages===null?'Unavailable (no production observations)':h.enquiry_messages.toLocaleString()+' observed inbound messages';
+  const h=x.channel_activity,o=h.automation_outcomes,channel=$('activity-channels');
+  const enquiries=h.enquiry_messages===null?'Unavailable (no production observations)':h.enquiry_messages.toLocaleString();
   const automation=o===null?'Unavailable (no production observations)':`${o.queued} queued, ${o.sending} sending, ${o.accepted} provider-accepted, ${o.failed} failed, ${o.unknown} unknown or withheld`;
   const sources={instagram_ingress:'Instagram inbound',wa_inbound:'WhatsApp inbound',wa_outbound:'WhatsApp automated outbox',comment_action:'Instagram comment actions'};
-  $('activity-channels').textContent=`Partial observed channel activity in the selected UTC range. Instagram inbound uses durable receipt time; WhatsApp inbound uses its signed provider timestamp; automated outbound uses local queue creation time. Enquiries: ${enquiries}. Current local automation outcomes: ${automation}. Observed sources: ${h.included_source_kinds.length?h.included_source_kinds.map(k=>sources[k]).join(', '):'none'}. ${h.excluded_test} known test and ${h.excluded_unclassified} unclassified source rows excluded. Missing or failed measurements are not counted; these are not complete traffic totals. Enquiries do not mean people or buying intent. Provider acceptance does not prove delivery. Instagram direct-message sends, resolution and attribution remain unavailable.`;$('activity-report').hidden=false;
+  channel.replaceChildren();
+  for(const [copy,hint] of [
+   [`Inbound messages observed: ${enquiries}.`,false],
+   [`Current automated outbounds: ${automation}.`,false],
+   [`Sources observed: ${h.included_source_kinds.length?h.included_source_kinds.map(k=>sources[k]).join(', '):'none'}. Excluded: ${h.excluded_test} known test and ${h.excluded_unclassified} unclassified source rows.`,true],
+   ['The selected UTC range uses Instagram inbound receipt time, WhatsApp inbound signed provider time and automated outbound queue creation time.',true],
+   ['Partial observations, not complete traffic totals. Missing measurements and empty source families are unavailable. Inbound messages do not mean unique people or buying intent.',true],
+   ['Provider acceptance does not prove delivery. Instagram direct-message sends, resolution and attribution remain unavailable.',true]
+  ]){const p=document.createElement('p');p.textContent=copy;if(hint)p.className='hint';channel.append(p);}
+  $('activity-report').hidden=false;
  }
  function commandValid(x){return exact(x,['expected_revision','idempotency_key','mode','first_party_measurement_acknowledged'])&&count(x.expected_revision)&&UUID.test(x.idempotency_key)&&MODES.includes(x.mode)&&typeof x.first_party_measurement_acknowledged==='boolean'&&(x.mode==='off'||x.first_party_measurement_acknowledged===true);}
  async function recover(){
