@@ -1,0 +1,3 @@
+.....................................................                    [100%]
+- generated xml file: /private/tmp/munimjee-release-w5b-44ui7g2c/acceptance.xml -
+53 passed in 2.00s

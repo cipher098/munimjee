@@ -1,0 +1,24 @@
+{
+  "tested_source_commit": "9c77f9f6caa59260daade3573a8ff22c6a743a29",
+  "source_files": {
+    "scripts/v1_release_rehearsal.py": "0233aeb0c890f8a5df3d37cb9fb9dd04c4274f0c4b9803d11f3b780ce4a52ffe",
+    "scripts/v1_release_exec.py": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+    "scripts/v1_release_synthetic.py": "6fa76ced4ae9251d4bddbe246c9ca497880718a1dcacbd6a9543f2dd1eaebbbf",
+    "tests/release/test_v1_release_rehearsal.py": "005a7bf013c8028f3c8f5c62b8e630c87087b9b980ddcd23cc16696b152e5412"
+  },
+  "actual_head": "0052_v1_customer_links",
+  "server": "PostgreSQL16.15 dedicated disposable container",
+  "archive_tools": "PostgreSQL16.13",
+  "test_result": {
+    "passed": 53,
+    "skipped": 0
+  },
+  "source_lane": "release_src_w5b",
+  "target_lane": "release_dst_w5b",
+  "existing_pair_reset": false,
+  "private_archive_committed": false,
+  "application_switch": "pending_actual_package_journey",
+  "new_domain_tables_fixture": "Support/customer proof tables restored empty; their full DDL protections compared",
+  "independent_review": "Existing social peer reproduced two token collisions then verified fixes with14 pure checks; no fresh agent/reviewer execution implied",
+  "failed_first_pair": "Private retained first pair has matching full data/totals but original schema-formatting refusal; no reset/reuse"
+}
