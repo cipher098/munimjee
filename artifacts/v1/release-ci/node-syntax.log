@@ -1,4 +1,3 @@
 
 > @munimjee/storefront-preview@0.1.0 check
 > node --check src/app.js && node --check src/commerce.js && node --check src/components.js && node --check src/fixtures.js && node --check src/catalogue-adapter.js && node --check server.mjs && node --check src/live-api.js && node --check src/live-app.js && node --check src/live-entry.js && node --check src/checkout-attempt.js
-
