@@ -1,0 +1,47 @@
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213
+        return matcher.call(target, ...args);
+                       ^
+
+A [Error]: expect(locator).toHaveAttribute(expected) failed
+
+Locator:  locator('#csv-fields')
+Expected: ""
+Received: serializes to the same string
+Timeout:  5000ms
+
+Call log:
+  - Expect "to.have.attribute.value" with timeout 5000ms
+  - waiting for locator('#csv-fields')
+    9 × locator resolved to <fieldset id="csv-fields">…</fieldset>
+      - unexpected value "null"
+
+    at Proxy.<anonymous> (/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213:24)
+    at file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-csv-import/backend/tests/browser/csv-import.mjs:58:364 {
+  matcherResult: {
+    name: 'toHaveAttribute',
+    expected: '',
+    message: 'expect(locator).toHaveAttribute(expected) failed\n' +
+      '\n' +
+      "Locator:  locator('#csv-fields')\n" +
+      'Expected: ""\n' +
+      'Received: serializes to the same string\n' +
+      'Timeout:  5000ms\n' +
+      '\n' +
+      'Call log:\n' +
+      '  - Expect "to.have.attribute.value" with timeout 5000ms\n' +
+      "  - waiting for locator('#csv-fields')\n" +
+      '    9 × locator resolved to <fieldset id="csv-fields">…</fieldset>\n' +
+      '      - unexpected value "null"\n',
+    pass: false,
+    actual: null,
+    log: [
+      '  - Expect "to.have.attribute.value" with timeout 5000ms',
+      "  - waiting for locator('#csv-fields')",
+      '    9 × locator resolved to <fieldset id="csv-fields">…</fieldset>',
+      '      - unexpected value "null"'
+    ],
+    timeout: 5000
+  }
+}
+
+Node.js v26.0.0
