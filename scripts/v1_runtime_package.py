@@ -122,6 +122,19 @@ def validate_runtime_lock(root: Path, requirements: list[str]) -> None:
             raise ValueError('Runtime lock differs from direct dependency pins')
 
 
+def runtime_source_dirty(root: Path) -> bool:
+    # Compare both staged and unstaged tracked runtime bytes with recorded HEAD.
+    result = subprocess.run(['git', '-C', str(root), 'diff', '--name-only', '-z',
+                             '--no-ext-diff', 'HEAD', '--', *tracked_sources(root)],
+                            check=True, capture_output=True)
+    return bool(result.stdout)
+
+
+def require_clean_runtime(root: Path) -> None:
+    if runtime_source_dirty(root):
+        raise ValueError('Release archive/build requires clean tracked runtime inputs; use context for a marked development snapshot')
+
+
 def write_archive(context: Path, destination: Path) -> str:
     # Uncompressed POSIX tar avoids gzip timestamp/header differences.
     # Never overwrite an existing output, including symlinks.
@@ -166,6 +179,7 @@ def create_context(root: Path, output: Path) -> dict:
              for path in sorted(output.rglob('*')) if path.is_file()}
     manifest = {'format': 'munimjee.v1.runtime-package.v1', 'files': files,
                 'content_sha256': hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
+                'source_dirty': runtime_source_dirty(root),
                 'source_files': {name: hashlib.sha256(checked_source(root, name).read_bytes()).hexdigest() for name in names},
                 'source_revision': subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'],
                     check=True, capture_output=True, text=True).stdout.strip(),
@@ -189,6 +203,7 @@ def main():
         manifest = create_context(ROOT, args.output)
         print(json.dumps({'files': len(manifest['files']), 'context': str(args.output)}))
         return
+    require_clean_runtime(ROOT)
     if args.action == 'archive':
         with tempfile.TemporaryDirectory(prefix='munimjee-v1-archive-') as temporary:
             context = Path(temporary) / 'context'

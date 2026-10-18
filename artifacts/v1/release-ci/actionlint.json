@@ -1,0 +1,13 @@
+{
+  "version": "1.7.12",
+  "primary_release": "https://github.com/rhysd/actionlint/releases/tag/v1.7.12",
+  "darwin_arm64_sha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+  "linux_amd64_sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+  "command": [
+    "/tmp/munimjee-actionlint",
+    "-shellcheck=",
+    "-pyflakes=",
+    ".github/workflows/tests.yml"
+  ],
+  "result": 0
+}
