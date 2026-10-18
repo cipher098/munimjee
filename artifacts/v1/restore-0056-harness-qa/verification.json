@@ -1,0 +1,176 @@
+{
+  "scope": "release-only source/unit/control-flow; actual PG16 restore blocked and NOT RUN",
+  "base": "4d9f940d25e681fd6a80e168f4ea4c0510131fbd",
+  "owner_commits": [
+    "992c8bf88704545117ca17b3dbc12b8f41412f15",
+    "bd24f74e541147713f0edf160f0faf5af9df03a2"
+  ],
+  "owner_composed_as": [
+    "c655759",
+    "93438ab"
+  ],
+  "qa_preparation_commit": "b57d5ea4999fd4fe3185bd7b524701e56eab7da2",
+  "tested_source_mode": "immutable Git bytes at invocation commit compared with owner and checkout after run",
+  "source_hashes": {
+    "scripts/v1_release_rehearsal.py": {
+      "at_invocation_commit": "1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2",
+      "after": "1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2",
+      "owner": "1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2"
+    },
+    "scripts/v1_release_synthetic.py": {
+      "at_invocation_commit": "551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577",
+      "after": "551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577",
+      "owner": "551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577"
+    },
+    "scripts/v1_release_fixture_0056.json": {
+      "at_invocation_commit": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+      "after": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+      "owner": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3"
+    }
+  },
+  "test_sha256": {
+    "tests/release/test_v1_release_rehearsal.py": "b68c8a08d8ddaeafb82a4965f05e9973e4a08ed8a85ed5c33410b94566321c7d",
+    "tests/release/test_v1_application_compatibility.py": "712f5a79bd779299a68951e89dae202367b19ec047b80e7b65d2ed6cc0bc7cc2",
+    "tests/release/test_v1_release_0056.py": "e0b36022bca3023461b17f7245eadd9df05e9c15843a885d9d1aebfe18e20364"
+  },
+  "source_unchanged_during_final_run": true,
+  "old_assertion_count": 50,
+  "old_assertions_identical_except_reviewed_head_literal": true,
+  "compatibility_tests_byte_identical": true,
+  "unchanged_rehearsal_guard_function_sha256": {
+    "RehearsalError": "50bd30a7870ef3f28e2d59c8f9752ffa701cc87dc5c3e65af8eba8604e2332d4",
+    "require": "0e4ebce8cbdcc108e429c57868bb68073222bfde04f4b4d95f411f12c094b94d",
+    "repo_head": "c617e380414698b188eebce0ac9b947ae586482d81cba4d5afff5b2307e9f7e8",
+    "p01": "93ab8e61494703034e6365c150a3903c92a8dbc2029089343c279ba90dcfe363",
+    "targets": "3dfc58ee7deeae55a14f18c3348f043d0788c5135b699f7b36ca9dc31a596cf6",
+    "no_symlinks": "9c2b7b547a364eb76d3409de50f9c5c210bc5cc9da59a8e21202dd089a6699b2",
+    "ownership": "8d2740a3dddcb77f37206e3139350dffdb867b2a9c2aa170934642668898a85c",
+    "archive_location": "cee6097a1009c8bb8481703ad1e68fbc2f27113ad74bcea8e7697fb5e75cfdf1",
+    "private_file": "149d7a4bf43f654ba0287a69cedd698792566e1101646eb0aa20b06ad31cfbdc",
+    "private_read": "2468032769c5d4be4f050a0210a52ab193ba51aa50ab3977a1c7ae94cb698a0e",
+    "private_sha256": "55c2ff7c498c82403b3fe7c9d583f7ed0ebb50b843a41b2d2af05e9069f4313b",
+    "private_json": "631f2dd1a838902bd7ed2684618417f4808d90434476c980241c4b05598affd4",
+    "child_env": "f12e075c737483a359603bcf3bcf81ed557920ab512ba1d5a1818c241cdd9b3d",
+    "command": "0d507f47867d56a0fc1a5bd3344cbdca34bba350d80b7a38d760b40f6fb5be6e",
+    "owned_call": "44fce6aa0bfee7fa753069275d9a83faf3170184bfa60b11a79dffb9ddd3bd1c",
+    "pg_tools": "89998b82135a0390751114518114c8d29f94a61b70a29fb3304d25ed758486cf",
+    "query": "4253c3fad2d6c7c18655db67a763c7051914ddf4f5a664fb1a68e9852cc5532a",
+    "empty_database": "8151f6ff2c7777564da4838168712a43b973910b67dc6644f0cbb4c6c11b0547",
+    "pg16": "c4313f572dbeee410d7268bd21492c5e0927fc1e92b34da6f6570f8ef27f5154",
+    "canonical_constraint": "60976d860267eac54ce57287a1195d06bbbf043e62e34c41a404283ba00f599d",
+    "RedactedArgumentParser": "bdecc98e9199bbdae9072675900ca20a1ee0da1f30b17ac8992eb6390b09748d",
+    "main": "b7d888ff04897c6f6696c567eed125bd51655ba6b8dc817ab5ed7f50688a1862"
+  },
+  "canonical_constraint_byte_identical": true,
+  "private_exec_sha256": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+  "app_and_migrations_unchanged": true,
+  "fixed_fixture_sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+  "results": {
+    "passed": 107,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 1,
+    "pytest_seconds": 0.34,
+    "module_counts": {
+      "tests.release.test_v1_release_rehearsal": 53,
+      "tests.release.test_v1_application_compatibility": 6,
+      "tests.release.test_v1_release_0056": 49
+    },
+    "new_frozen_case_count": 49,
+    "new_case_ids": [
+      "test_r1_exact_known_fk_and_ordinary_validated_constraint_are_accepted",
+      "test_r1_missing_known_fk_refused",
+      "test_r1_every_known_fk_field_remains_exact[schema-quoted]",
+      "test_r1_every_known_fk_field_remains_exact[table-quoted]",
+      "test_r1_every_known_fk_field_remains_exact[name-case]",
+      "test_r1_every_known_fk_field_remains_exact[type]",
+      "test_r1_every_known_fk_field_remains_exact[reference-schema-quoted]",
+      "test_r1_every_known_fk_field_remains_exact[reference-table-case]",
+      "test_r1_every_known_fk_field_remains_exact[local-column-order]",
+      "test_r1_every_known_fk_field_remains_exact[reference-column-order]",
+      "test_r1_every_known_fk_field_remains_exact[update-action]",
+      "test_r1_every_known_fk_field_remains_exact[delete-action]",
+      "test_r1_every_known_fk_field_remains_exact[match-type]",
+      "test_r1_every_known_fk_field_remains_exact[deferrable]",
+      "test_r1_every_known_fk_field_remains_exact[initially-deferred]",
+      "test_r1_every_known_fk_field_remains_exact[validated]",
+      "test_r1_every_known_fk_field_remains_exact[definition-quoted]",
+      "test_r1_unrelated_not_valid_constraint_refused",
+      "test_r1_duplicate_constraint_inventory_uses_only_narrow_normalization[cast-reparse]",
+      "test_r1_duplicate_constraint_inventory_uses_only_narrow_normalization[quoted-identifier-change]",
+      "test_r2_wrapped_named23503_has_positive_then_negative_and_rollback",
+      "test_r2_wrong_diagnostic_or_no_negative_error_is_not_fk_proof[wrong-state]",
+      "test_r2_wrong_diagnostic_or_no_negative_error_is_not_fk_proof[wrong-constraint]",
+      "test_r2_wrong_diagnostic_or_no_negative_error_is_not_fk_proof[missing-constraint]",
+      "test_r2_wrong_diagnostic_or_no_negative_error_is_not_fk_proof[unexpected-success]",
+      "test_r2_positive_insert_failure_rolls_back_outer",
+      "test_r2_cancelled_negative_probe_drains_savepoint_and_outer",
+      "test_r3_fixed_fixture_has_independent_52_58_contract_links_and_semantic_projection",
+      "test_r3_json_casts_preserve_sql_null_and_exact_json_values",
+      "test_r3_seed_uses_accepted_then_sending_then_final_state_without_direct_attempt_insert",
+      "test_r3_target_append_has_six_new_rows_only_and_conditional_policy_update",
+      "test_r3_fixed_fixture_tampering_refused_before_any_tool_engine_or_archive[hash]",
+      "test_r3_fixed_fixture_tampering_refused_before_any_tool_engine_or_archive[format]",
+      "test_r3_fixed_fixture_tampering_refused_before_any_tool_engine_or_archive[symlink]",
+      "test_r3_fixed_fixture_tampering_refused_before_any_tool_engine_or_archive[size]",
+      "test_r4_independent_source_and_target_validator_inputs_pass[source52]",
+      "test_r4_independent_source_and_target_validator_inputs_pass[target58]",
+      "test_r4_fixed_reconciliation_corruption_refused[count]",
+      "test_r4_fixed_reconciliation_corruption_refused[extra-table]",
+      "test_r4_fixed_reconciliation_corruption_refused[financial-total]",
+      "test_r4_fixed_reconciliation_corruption_refused[semantic-count]",
+      "test_r4_fixed_reconciliation_corruption_refused[semantic-digest]",
+      "test_r5_historical_offender_digest_keeps_full_rows_order_and_multiplicity",
+      "test_r5_full_control_flow_keeps_probes_equality_and_target_only_new_facts",
+      "test_r5_probe_and_reconciliation_failures_hold_leases_until_cleanup[source-probe]",
+      "test_r5_probe_and_reconciliation_failures_hold_leases_until_cleanup[target-probe]",
+      "test_r5_probe_and_reconciliation_failures_hold_leases_until_cleanup[restored-snapshot]",
+      "test_r5_probe_and_reconciliation_failures_hold_leases_until_cleanup[target-reconciliation]",
+      "test_r5_probe_and_reconciliation_failures_hold_leases_until_cleanup[source-drift]"
+    ],
+    "skips": [
+      {
+        "name": "test_actual_pg16_backup_restore_and_newer_order_preservation",
+        "reason": "Actual PG16 restore acceptance requires two explicitly allocated empty lanes"
+      }
+    ],
+    "exit_code": 0
+  },
+  "safe_environment_keys": [
+    "PATH",
+    "TMPDIR",
+    "LANG"
+  ],
+  "rehearsal_acceptance_opt_in": false,
+  "external_target_urls_in_process_environment": false,
+  "command": "env -i PATH=/usr/bin:/bin TMPDIR=/tmp LANG=C /tmp/munimjee-release-ci-py311/bin/python -B -m pytest tests/release/test_v1_release_rehearsal.py tests/release/test_v1_application_compatibility.py tests/release/test_v1_release_0056.py -q -p no:cacheprovider -o junit_family=xunit1 --junitxml=artifacts/v1/restore-0056-harness-qa/results.xml > artifacts/v1/restore-0056-harness-qa/run.txt 2>&1",
+  "first_pass": "107/1 diagnostic before two within-case assertion-fidelity improvements; uncommitted prior harness, not final exact-source proof",
+  "artifact_sha256": {
+    "first-pass/results.xml": "065a46e1f0d739c9a13401cc2a264bb8a32e6c925032ba0ec87e9a6a2da70464",
+    "first-pass/run.txt": "d1be9c796ed4aef39d0d878dfeb9f83a3d213be44e0d09841bb6e27139d0d20a",
+    "results.xml": "2c9b5e9c1ef393e5f5e697646a8f41a55de60b9a90793547e740e9e708929b2e",
+    "run.txt": "4c0f88c8316d372a26451eb0763f012e3106c8bb551d9efd4a69d8cff355ede2"
+  },
+  "docs_sha256": "e6d93af105b8a7759ebdc62b985aebb23fe1b877a8c8bd407242d26bb70139a3",
+  "database_connections": 0,
+  "containers": 0,
+  "real_pg_tool_calls": 0,
+  "provider_model_calls": 0,
+  "capacity_retries": 0,
+  "injections": [
+    "raw catalog rows",
+    "recorded SQL/binds and transaction markers",
+    "injected SQLAlchemy-wrapped driver diagnostics",
+    "raw JSON semantic projections",
+    "independent synthetic snapshot inputs",
+    "orchestration engines/leases/tools/snapshot/seed/append/probe boundaries"
+  ],
+  "not_proven": [
+    "actual FK new-write enforcement/rollback/savepoints",
+    "PostgreSQL catalog SQL and relational/trigger correctness",
+    "actual source52/target58 seed and dump restore hashes/totals",
+    "two allocated PG16 lanes/tool/capacity availability",
+    "old/current mounted package compatibility",
+    "routine rollback/forward preservation and deployment"
+  ]
+}
