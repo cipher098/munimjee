@@ -1,0 +1,51 @@
+/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213
+        return matcher.call(target, ...args);
+                       ^
+
+A [Error]: expect(locator).toContainText(expected) failed
+
+Locator: locator('#notice')
+Expected substring: "Verified account control linked"
+Received string:    ""
+Timeout: 5000ms
+
+Call log:
+  - Expect "to.have.text" with timeout 5000ms
+  - waiting for locator('#notice')
+    9 × locator resolved to <p id="notice" role="status"></p>
+      - unexpected value ""
+
+    at Proxy.<anonymous> (/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/frontend/storefront/node_modules/playwright/lib/matchers/expect.js:213:24)
+    at file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-customer-links/backend/tests/browser/customer-links.mjs:20:421
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:472:9)
+    at async check (file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-customer-links/backend/tests/browser/customer-links.mjs:9:31)
+    at async file:///Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-customer-links/backend/tests/browser/customer-links.mjs:20:2 {
+  matcherResult: {
+    name: 'toContainText',
+    expected: 'Verified account control linked',
+    message: 'expect(locator).toContainText(expected) failed\n' +
+      '\n' +
+      "Locator: locator('#notice')\n" +
+      'Expected substring: "Verified account control linked"\n' +
+      'Received string:    ""\n' +
+      'Timeout: 5000ms\n' +
+      '\n' +
+      'Call log:\n' +
+      '  - Expect "to.have.text" with timeout 5000ms\n' +
+      "  - waiting for locator('#notice')\n" +
+      '    9 × locator resolved to <p id="notice" role="status"></p>\n' +
+      '      - unexpected value ""\n',
+    pass: false,
+    actual: '',
+    log: [
+      '  - Expect "to.have.text" with timeout 5000ms',
+      "  - waiting for locator('#notice')",
+      '    9 × locator resolved to <p id="notice" role="status"></p>',
+      '      - unexpected value ""'
+    ],
+    timeout: 5000
+  }
+}
+
+Node.js v26.0.0
