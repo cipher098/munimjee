@@ -145,6 +145,15 @@ async def replacement_preview(request:Request,business_id:UUID,order_id:UUID,lin
 async def reviewed_command(request,db,actor,business_id,order_id,link_id,payload,*,replacement=False):
     result,replayed=await reviews.command(db,actor,business_id,order_id,link_id,payload,replacement=replacement,authority=request_authority(request,db,actor))
     result_id=result.id
+    # Audit/snapshot queries may await after the domain's row-wait checks. The
+    # current native session and capability must still authorize the staged work.
+    try:
+        await request_authority(request,db,actor)()
+        await service.access_order(db,actor,business_id,order_id,write=True)
+        await request_authority(request,db,actor)()
+    except HTTPException:
+        await db.rollback()
+        raise
     await db.commit()
     if replacement:await service.process_link(db,result_id)
     await request_authority(request,db,actor)()
