@@ -1,7 +1,11 @@
 # Independent native onboarding UI repair review
 
+Final disposition: **no blocking findings within the scoped two-file UI repair**.
+Exact-source synthetic cases and independent visual review are recorded below.
+
 Application base: `8ae97c2d57c0efda5a03a41a469bf9447739ee72` (runtime delta
-`52fdda8`). Review date: 18 October 2026. Runtime ownership transfer is pending.
+`52fdda8`). Review date: 18 October 2026. Root subsequently confirmed runtime ownership
+transfer before the implementation source was written.
 This lane writes only this review and `artifacts/v1/native-onboarding-repair-review/`.
 Application and test source remain read-only. No patch has been applied by this
 reviewer, and no server, DB, provider, credential, user browser or production
@@ -137,3 +141,52 @@ picker shrinking without an overflow-hiding substitute.
 Exact-source browser and visual acceptance remains pending independent QA. Static
 review alone does not establish all 32 cases, contrast, focus timing or shared-page
 computed-style behavior.
+
+
+## Final independent evidence and visual review
+
+QA evidence original `a0350f779658093325e776acb18ef9d9f7dd8b1f` was reviewed read-only, including scripts,
+formatter fixtures, result/verification JSON, hashes and captures. Exact source bytes
+match owner `8e62ea770729d04bc0982aadf64dadae41973cb9` in both runs. All recorded
+script/artifact/fixture hashes match committed blobs. The entire original 32-case
+execution/assertion tail is byte-identical to approved `a7282ed`; ordered IDs match.
+**32/32 original cases and 8/8 bounded supplements pass**, with no skips, unexpected
+network or page errors. This reviewer did not rerun browsers or launch a server.
+
+The five prior UI failures now pass: interactive entry focuses the current business
+heading; explicit logout focuses the visible sign-in heading; keyboard author outline
+contrast is measured at8.862737535767886:1 against the opaque white panel; startup
+failure exposes a named manual recovery action; and the full160-character business
+name fits360px without hidden-overflow substitution. The original privacy/lifecycle
+and strict full-fact lost-response assertions remain unchanged and passing.
+
+The four retry combinations (503/transport × valid/denied) require a fresh frontend
+session GET after keyboard activation, prohibit automatic retry/auth POSTs, and keep
+denied sessions outside the workspace. Two held-response cases require current-view
+focus and cleanup fencing after obsolete sign-in/logout callbacks. QA followup
+`b8d7f77` incorporates this reviewer's completion-observation request: corresponding
+source aria-busy must clear after release before final focus checks. A passive
+same-identity recheck retains the existing focused input. These checks validate the
+synthetic DOM/focus callback scenario; fixture generation deliberately prevents an
+old synthetic logout from mutating a newer synthetic cookie. No real Set-Cookie or
+server-session race proof is inferred.
+
+Independently viewed nine exact committed captures: signup and owner screens at
+360/390/768/1440, plus the focused long-name360 capture. Normal typography, spacing,
+muted-green palette, readable forms/checklist and invitation controls remain intact.
+The long heading wraps fully within the document, with a visible green keyboard
+focus outline. No blocking visual issue was observed in these captures. They are
+Chromium viewport emulation, not physical touch/virtual-keyboard or screen-reader
+acceptance. Exact screenshot hashes are in `final-evidence-review.json`.
+
+Shared-style disposition is based on a static isolation proof: shared parcel and
+customer HTML/JS remain unchanged and do not load the JS that sets the marker; all
+six added CSS rules require that absent body marker. Therefore none of the appended
+rules match those shared documents. This reviewer makes no claim of a separate
+shared-page computed-style/browser run. No global stylesheet was modified.
+
+The two-file patch is suitable for scoped integration review with no outstanding
+blocking finding from this lane. Preserve exact source/QA commits and existing
+server authority. Actual mounted/migrated sessions, server cookie races, physical
+phones, assistive technology, complete accessibility, providers and full V01/V1
+acceptance remain separate gates. Reported local eeb94a1/0056 is not certified here.
