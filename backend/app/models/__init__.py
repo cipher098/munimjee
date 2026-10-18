@@ -88,3 +88,4 @@ __all__ += ['Customer', 'CustomerLinkChallenge', 'CustomerLinkProof', 'CustomerA
 from app.models import activity_v1
 
 from app.models import comment_operator
+from app.models import whatsapp_self_service

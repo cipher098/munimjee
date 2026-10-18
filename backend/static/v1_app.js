@@ -146,6 +146,7 @@
       }
     }
     if (actor.features?.support_grants && business.role === 'owner') { const link = text('a', 'Allow assisted access', 'button secondary'); link.href = `/v1/businesses/${business.id}/support`; $('business-tools').append(link); $('business-tools').hidden = false; }
+    if (business.role === 'owner') { const link = text('a', 'WhatsApp setup and test', 'button secondary'); link.href = `/v1/businesses/${business.id}/channels/whatsapp/setup`; $('business-tools').append(link); $('business-tools').hidden = false; }
     if (actor.features?.customer_links && business.capabilities.includes('inbox.read')) { const link = text('a', 'Customer account links', 'button secondary'); link.href = `/v1/businesses/${business.id}/customers`; $('business-tools').append(link); $('business-tools').hidden = false; }
     profileVersion = data.profile.version;
     const form = $('profile-form');

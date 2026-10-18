@@ -20,13 +20,21 @@ async def deliver_one(message_id, session_factory=worker_session):
         await db.commit()
     async with session_factory() as db:
         try:
-            account = await service.account_for(db,seller_id,enabled=True,lock=True)
+            account = await service.account_for(db,seller_id,lock=True)
             contact = await service.contact_for(db,seller_id,contact_id,lock=True)
             message = await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.id == message_id).with_for_update())
             if message.status != 'sending':
                 return
             if contact.opted_out or message.phone_number_id != account.phone_number_id:
                 raise HTTPException(409,'Contact opted out or WhatsApp account changed')
+            # Only a current immutable exact Message FK can permit this fixed
+            # owner/recipient-authorized reply while general sending is paused.
+            # The helper's final coherent scalar check is the last await for a
+            # valid fixed text before provider.send; ordinary paths stay gated.
+            from app.services.whatsapp_test_authority import exact_test_authority
+            test_authority = await exact_test_authority(db, account, contact, message)
+            if test_authority is None and not account.enabled:
+                raise HTTPException(409,'Connect and enable WhatsApp first')
             if message.idempotency_key.startswith('auto:') and not account.automation_enabled:
                 raise HTTPException(409,'Automation was disabled before delivery')
             if message.idempotency_key.startswith('auto:reel:'):
@@ -73,3 +81,18 @@ async def drain(session_factory=worker_session):
 @celery_app.task(name='app.workers.whatsapp.drain_outbox')
 def drain_outbox():
     asyncio.run(drain())
+
+
+async def cleanup_setup_secrets(session_factory=worker_session):
+    # Cleanup is deliberately independent of rollout/collection flags. It only
+    # clears due provisional ciphertext; claimed/unknown phone effects remain.
+    from app.services.whatsapp_self_service import cleanup_provisional
+    async with session_factory() as db:
+        count = await cleanup_provisional(db, limit=100)
+        await db.commit()
+        return count
+
+
+@celery_app.task(name='app.workers.whatsapp.cleanup_setup_secrets')
+def cleanup_setup_secrets_task():
+    return asyncio.run(cleanup_setup_secrets())
