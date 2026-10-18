@@ -1,0 +1,11 @@
+{
+  "qa_runner_unchanged_from_approved_output_commit": true,
+  "exporter_unchanged": true,
+  "runner_sha256": "6c90c4262f9b5373c29d5dd80e30df5269c8a08d774d2c63db408e95a75769b1",
+  "exporter_sha256": "688efd87f171344b413d2a092cac76383f725ec85792eaf51e1f73e18a0f3c64",
+  "runtime_change_only": [
+    "frontend/storefront/src/styles.css"
+  ],
+  "feature_source": "4eed8af",
+  "browser_not_run_under_integrator_full_hold": true
+}
