@@ -96,7 +96,7 @@ try{
     const {page,model}=await setup({signedIn:false});await expect(page.locator('#access')).toBeVisible();const held=gate();
     model.onboardingHook=async()=>{held.start();await held.held;return false;};await login(page);await bounded(held.seen);
     await page.locator('#logout').focus();await page.keyboard.press('Enter');await expect(page.locator('#access')).toBeVisible();
-    const cutoff=await page.evaluate(()=>performance.now());held.release();await settle(page);await expect(page.locator('#workspace')).toBeHidden();
+    const cutoff=await page.evaluate(()=>performance.now());held.release();await expect(page.locator('#access-form')).not.toHaveAttribute('aria-busy','true');await settle(page);await expect(page.locator('#workspace')).toBeHidden();
     assert.equal(await page.evaluate(()=>document.getElementById('access').contains(document.activeElement)),true);
     assert.deepEqual(await page.evaluate(at=>window.__qaFocus.filter(e=>e.at>at&&e.workspace),cutoff),[],'Late sign-in completion focused obsolete workspace');
     return {focus:await page.evaluate(()=>({id:document.activeElement.id,tag:document.activeElement.tagName})),cutoff};
@@ -106,7 +106,7 @@ try{
     await page.locator('#logout').click();await bounded(held.seen);model.signedIn=false;await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#access')).toBeVisible();
     model.session.user_id='20000000-0000-4000-8000-000000000082';model.session.csrf_token='synthetic-new-identity-never-real';
     await login(page);await ready(page);await page.locator('#profile-form [name=name]').focus();const cutoff=await page.evaluate(()=>performance.now());
-    held.release();await settle(page);await expect(page.locator('#workspace')).toBeVisible();await expect(page.locator('#profile-form [name=name]')).toBeFocused();
+    held.release();await expect(page.locator('#workspace')).not.toHaveAttribute('aria-busy','true');await settle(page);await expect(page.locator('#workspace')).toBeVisible();await expect(page.locator('#profile-form [name=name]')).toBeFocused();
     assert.deepEqual(await page.evaluate(at=>window.__qaFocus.filter(e=>e.at>at&&e.id!=='').map(e=>e.id),cutoff),[],'Late old logout stole current focus');
     return {current_user:model.session.user_id,focus:await page.evaluate(()=>document.activeElement.name),requests:model.requests};
   });
