@@ -3,3 +3,5 @@
 #allocation-panel{border-top:1px solid var(--line);padding-top:24px;margin-top:24px}#allocation-panel form{border-top:0;padding-top:0;margin-top:16px}.allocation-row{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:16px;align-items:center;border-bottom:1px solid var(--line);padding:14px 0}.allocation-row strong{overflow-wrap:anywhere}.allocation-row label{font-size:12px}.allocation-row input{margin-top:6px}#allocation-total{font-weight:600}#allocation-issues p{overflow-wrap:anywhere}#receipt-details{overflow-wrap:anywhere}#allocation-rows{max-height:560px;overflow:auto;padding-right:4px}#allocation-total.invalid{color:#865e2a}@media(max-width:480px){.allocation-row{grid-template-columns:minmax(0,1fr) 110px;gap:10px}}
 
 @media(min-width:721px){.operating-grid>.lists{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto}}
+
+.allocation-row .allocation-eligible{grid-column:1/-1;margin:0;font-size:13px}.allocation-eligible input{margin-top:3px}
