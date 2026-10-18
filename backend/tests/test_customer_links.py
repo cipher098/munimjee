@@ -28,3 +28,15 @@ async def test_reserved_commands_suppressed_when_disabled_without_db_or_automati
         assert await service.capture(NoDB(), uuid4(), 'instagram', 'page', 'sender', 'mid', datetime.now(timezone.utc), content)
     for content in ['link please', 'LINK', 'normal enquiry', None]:
         assert not await service.capture(NoDB(), uuid4(), 'instagram', 'page', 'sender', 'mid', None, content)
+
+
+@pytest.mark.parametrize('model,field',[('Start','scope_confirmed'),('Finish','confirmed'),('Unlink','confirmed')])
+@pytest.mark.parametrize('value',[1,0,'true','1'])
+def test_explicit_consent_uses_strict_boolean(model,field,value):
+    from pydantic import ValidationError
+    from app.schemas import customer_links
+    values={'idempotency_key':uuid4(),field:value}
+    if model=='Start':values.update(conversation_id=uuid4(),contact_id=uuid4())
+    else:values['expected_fingerprint']='a'*64
+    if model=='Unlink':values['reason']='Synthetic explicit separation'
+    with pytest.raises(ValidationError):getattr(customer_links,model)(**values)
