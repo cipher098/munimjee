@@ -1,0 +1,250 @@
+{
+  "mode": "read-only-git-blob-source-attribution-no-browser-or-runtime-execution",
+  "original_application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "original_qa_checkpoint": "faec01614c27578afd38bef750b9dc2205ee7c98",
+  "newer_fetched_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "newer_runtime_source": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+  "upstream_integration_reported_by_coordinator": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "unavailable_unpushed_source": "789db95/0056 reported locally; not inspected or accepted",
+  "compared_blobs": [
+    {
+      "path": "frontend/storefront/src/components.js",
+      "original": {
+        "git_blob_oid": "6bdb27204303d26182f488d8f0efe77c5493ea27",
+        "sha256": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+        "bytes": 3248
+      },
+      "newer": {
+        "git_blob_oid": "6bdb27204303d26182f488d8f0efe77c5493ea27",
+        "sha256": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+        "bytes": 3248
+      },
+      "unchanged": true
+    },
+    {
+      "path": "frontend/storefront/src/styles.css",
+      "original": {
+        "git_blob_oid": "1f77d8ea3b0480440cd3e55bcf96519aa8b47717",
+        "sha256": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+        "bytes": 17137
+      },
+      "newer": {
+        "git_blob_oid": "1f77d8ea3b0480440cd3e55bcf96519aa8b47717",
+        "sha256": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+        "bytes": 17137
+      },
+      "unchanged": true
+    },
+    {
+      "path": "frontend/storefront/src/live.css",
+      "original": {
+        "git_blob_oid": "4dd1a233c43d93c9ccf189a8bd58e73afd4fd1a3",
+        "sha256": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+        "bytes": 2664
+      },
+      "newer": {
+        "git_blob_oid": "4dd1a233c43d93c9ccf189a8bd58e73afd4fd1a3",
+        "sha256": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+        "bytes": 2664
+      },
+      "unchanged": true
+    },
+    {
+      "path": "frontend/storefront/src/live-app.js",
+      "original": {
+        "git_blob_oid": "281909cf0f6e753f404d9e3fd84d81bdaf060956",
+        "sha256": "de7cdf36e921dccdf653e86327dc529b5fa4b25087611665ed1ff68ab22cf319",
+        "bytes": 17995
+      },
+      "newer": {
+        "git_blob_oid": "36c7271a6c4580075d9b1328e12c8f71d925fccc",
+        "sha256": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+        "bytes": 18563
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/live-api.js",
+      "original": {
+        "git_blob_oid": "344235602ab00e9b4fd3bd90a5da2100c243d181",
+        "sha256": "26a1d127047ca190518c365f73c678f098b6cb8d228d288c4cb0d0d11d3ce886",
+        "bytes": 6537
+      },
+      "newer": {
+        "git_blob_oid": "7a44abb81b87ae98b6c149b2139bef5c59e72232",
+        "sha256": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+        "bytes": 6739
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/canonical-contract.js",
+      "original": {
+        "git_blob_oid": "5a5895b767a8d68b4117ffb2b5c60576762d2b72",
+        "sha256": "aa771ebfaa9ea6677be2673ee17643c81960e4f4c9fa52f064a7e53ec885a84b",
+        "bytes": 8416
+      },
+      "newer": {
+        "git_blob_oid": "cc179ea69c6379aef60207f52a2b47d02aeaf63f",
+        "sha256": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+        "bytes": 8803
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/live-entry.js",
+      "original": {
+        "git_blob_oid": "1210be57c0884a8438181399df8d999acc5b5239",
+        "sha256": "c2d46fa21641dbd98a6d2e3830da5a96e7b0e078e2e09a095f82ddaa8863f07e",
+        "bytes": 730
+      },
+      "newer": {
+        "git_blob_oid": "610e44b74a7ac7c000c8e90daae23a64805d6dde",
+        "sha256": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+        "bytes": 926
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/checkout-attempt.js",
+      "original": {
+        "git_blob_oid": "ca9815da8c4402dc4723a44a925e619548d80cf2",
+        "sha256": "9328c46471f992576c19d83221ae41cb851198dacc78070a1dd019701e853859",
+        "bytes": 6153
+      },
+      "newer": {
+        "git_blob_oid": "1e928166dff603d4a5f12b4373cd14b4e077e3d7",
+        "sha256": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+        "bytes": 6360
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/activity-client.js",
+      "original": null,
+      "newer": {
+        "git_blob_oid": "95165c0cdef053fde82e7e7d927cc1b2ea35b24d",
+        "sha256": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+        "bytes": 5682
+      },
+      "unchanged": false
+    },
+    {
+      "path": "frontend/storefront/src/commerce.js",
+      "original": {
+        "git_blob_oid": "5b27c0b00f8316b21321b4310fb0b6fe262a52b1",
+        "sha256": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+        "bytes": 3752
+      },
+      "newer": {
+        "git_blob_oid": "5b27c0b00f8316b21321b4310fb0b6fe262a52b1",
+        "sha256": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+        "bytes": 3752
+      },
+      "unchanged": true
+    },
+    {
+      "path": "frontend/storefront/src/theme-config.js",
+      "original": {
+        "git_blob_oid": "1fd3683d4039f208df140fda13553a3126c0c93a",
+        "sha256": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+        "bytes": 1081
+      },
+      "newer": {
+        "git_blob_oid": "1fd3683d4039f208df140fda13553a3126c0c93a",
+        "sha256": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374",
+        "bytes": 1081
+      },
+      "unchanged": true
+    },
+    {
+      "path": "frontend/storefront/src/published-design.js",
+      "original": {
+        "git_blob_oid": "7ea3743f96f43f87ff33f963678ffb7f5ac21a3d",
+        "sha256": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+        "bytes": 1720
+      },
+      "newer": {
+        "git_blob_oid": "7ea3743f96f43f87ff33f963678ffb7f5ac21a3d",
+        "sha256": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+        "bytes": 1720
+      },
+      "unchanged": true
+    },
+    {
+      "path": "backend/app/v1/storefront/rendering.py",
+      "original": {
+        "git_blob_oid": "11f9f6887c56014aab81b2e4a325b78da4620a3f",
+        "sha256": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+        "bytes": 12299
+      },
+      "newer": {
+        "git_blob_oid": "11f9f6887c56014aab81b2e4a325b78da4620a3f",
+        "sha256": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+        "bytes": 12299
+      },
+      "unchanged": true
+    },
+    {
+      "path": "backend/app/v1/storefront/design.py",
+      "original": {
+        "git_blob_oid": "73947d5c5613289c4a9c0e16eab5456b924d85fe",
+        "sha256": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+        "bytes": 1324
+      },
+      "newer": {
+        "git_blob_oid": "73947d5c5613289c4a9c0e16eab5456b924d85fe",
+        "sha256": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+        "bytes": 1324
+      },
+      "unchanged": true
+    },
+    {
+      "path": "backend/app/schemas/storefront_theme_v1.py",
+      "original": {
+        "git_blob_oid": "db8dfb343f2a196753aedbe7ba7bb41ff905840b",
+        "sha256": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+        "bytes": 1745
+      },
+      "newer": {
+        "git_blob_oid": "db8dfb343f2a196753aedbe7ba7bb41ff905840b",
+        "sha256": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+        "bytes": 1745
+      },
+      "unchanged": true
+    }
+  ],
+  "render_bag_block": {
+    "original_sha256": "9f78735283a9915988c245fcd1aebf56f70bf7fdd9d66d2f6827356e1d3d2ff9",
+    "newer_sha256": "9f78735283a9915988c245fcd1aebf56f70bf7fdd9d66d2f6827356e1d3d2ff9",
+    "original_bytes": 1942,
+    "newer_bytes": 1942,
+    "byte_identical": true
+  },
+  "runtime_to_documentary_commit_storefront_diff_empty": true,
+  "preservation": {
+    "original_files_checked": 31,
+    "all_original_files_match_original_git_blob_oids": true,
+    "original_evidence_tree_oid": "a7d5073063930c066a7223f157e4e010327ea959"
+  },
+  "finding_attribution": {
+    "historical_observation": "69 passed / 6 failed browser checks on abab30a; one P2 missing-photo cart title/price overlap across all3themes at320/390",
+    "newer_source_conclusion": "Original shared renderBag, missing-photo art fallback, all CSS and theme/commerce/rendering inputs remain unchanged; static defect cause remains present. This is source attribution, not a browser observation or latest acceptance.",
+    "new_browser_run": false,
+    "production_edits": false,
+    "original_evidence_modified": false
+  },
+  "remaining_cases": [
+    "Fresh actual-SSR/export and all75 original experience checks on a separately frozen composed newer source; retain six spatial assertions until a real fix is verified.",
+    "Intercept new same-origin POST /api/v1/storefronts/experience/activity/contexts and /activity/events explicitly with synthetic responses; old fail-closed harness would correctly flag these as unhandled and must not continue them to a server.",
+    "Exercise optional activity disabled/excluded/expired/capped, malformed, unavailable, delayed and storage-denied behavior without blocking existing shopping/dialog/stock/checkout outcomes.",
+    "For ready contexts verify product_view/checkout_opened hooks and the nullable frozen activity_context_id plus X-Activity-Context proof header; no proof in URL or durable storage.",
+    "Verify uncertain checkout replay/reload retains its original financial intent/idempotency identity when activity context is renewed, expired or unavailable.",
+    "Verify hidden-page, GPC/DNT and missing/failed activity context paths alongside visible-page startup so optional measurement does not alter layout/focus/error-state behavior.",
+    "Physical devices, touch/virtual keyboard, screen-reader/all-control contrast, media/CDN, migrated DB/native purchase, provider and production gates remain outside this source-only followup."
+  ],
+  "locally_verified_remote_tracking_refs": {
+    "codex/v1-integration": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+    "codex/v1-onboarding-followup": "8ae97c2d57c0efda5a03a41a469bf9447739ee72"
+  }
+}
