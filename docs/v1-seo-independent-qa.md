@@ -18,10 +18,11 @@ local support/customer identity/analytics work is not integrated into this base.
 | Independent checkpoint `b57934a` | 103 passed, 4 failed, 7 skipped | Reproduced existing-resource ownership defect across slash aliases. |
 | Independent final after `387268e` | 113 passed, 7 skipped | Synthetic providers and in-process ASGI transport; all current independent cases pass. |
 | Affected SSR/bootstrap plus producer SEO tests after `387268e` | 177 passed, 7 skipped | Separately executed regression selection, not additional independent test authorship. |
+| Harness environment/spawn proof | 2 passed | Pure fake-process checks; no Node/server/DB execution. |
 | Mounted runner without allocated DB | Expected refusal, exit 1 | P01 guard stops before database connection, reset, subprocess or listener. |
 | Actual migrated database and actual-main mounted HTTP | Pending | No allocated P01 lane/listener port supplied; no execution or success implied. |
 
-The final selections total **290 passed, 14 skipped**. Seven skipped cases belong
+The final selections total **292 passed, 14 skipped**. Seven skipped cases belong
 to this independent suite; seven belong to the producer's actual-DB suite.
 The cached interpreter is Python 3.11.16; Node v24.20.0 performed syntax validation
 only. Deprecation warnings from existing Starlette/Pydantic dependencies remain.
@@ -36,6 +37,18 @@ Raw output and JUnit are retained separately:
   and [JUnit](../artifacts/v1/seo-independent-qa/affected-regression.xml).
 - [No-lane guard refusal](../artifacts/v1/seo-independent-qa/mounted-no-lane-refusal.txt)
   and [machine-readable verification/source hashes](../artifacts/v1/seo-independent-qa/verification.json).
+- [Harness environment/spawn proof](../artifacts/v1/seo-independent-qa/harness-environment-proof.txt)
+  and [JUnit](../artifacts/v1/seo-independent-qa/harness-environment-proof.xml).
+
+The post-review harness proof preserves the credential-free Node allowlist already
+committed in `fd09de0`. An initial concern was based on an earlier in-progress draft;
+no committed credential-propagation defect was found. The small follow-up extracts
+the existing filter into a pure helper and verifies the actual subprocess-call
+boundary with fake processes. Synthetic database/provider secrets, Node injection
+variables and proxy/loader settings stay out of Node's environment; PATH, HOME,
+temporary-directory/locale settings and the explicit QA port remain allowed.
+The server retains the sanitized P01 environment it needs. This adds verification
+without changing application behavior or claiming any actual mounted execution.
 
 ## Independently reviewed risks
 
@@ -89,6 +102,10 @@ disables dotenv/provider settings and blocks outbound networking. Omitting
 env -i PATH="$PATH" HOME="$HOME" \
   /tmp/munimjee-release-ci-py311/bin/python -m pytest -q \
   tests/test_v1_seo_independent.py tests/test_v1_seo_independent_db.py
+
+env -i PATH="$PATH" HOME="$HOME" \
+  /tmp/munimjee-release-ci-py311/bin/python -m pytest -q \
+  tests/test_v1_seo_independent_harness.py
 
 env -i PATH="$PATH" HOME="$HOME" \
   /tmp/munimjee-release-ci-py311/bin/python -m pytest -q \
