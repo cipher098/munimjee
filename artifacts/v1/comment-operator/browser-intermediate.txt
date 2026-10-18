@@ -1,0 +1,15 @@
+PASS real native signup and shared-mounted operator page use Secure loopback cookies
+PASS real signed comment receipt plus sole worker preserves split public acceptance and private uncertainty
+PASS unknown review has explicit confirmation and never offers resend or delivery certification
+PASS activated static-copy withholding is visible and closes without source rebind
+PASS signed inferred WhatsApp follow-up appears once with an honest manual reason and no second outbox
+PASS native disabled rule save is real and preview cannot claim it is eligible
+PASS lost committed rule response survives reload and explicitly replays exact key/body once
+PASS well-shaped old200 acknowledgement remains uncertain until same original command confirms
+PASS unclassified409 after actual commit retains the exact pending command
+PASS stale expected rule fingerprint rejects before mutation and cannot overwrite concurrent facts
+PASS activated product cannot enable static copy or create an accepted command
+PASS failed current list read clears stale rows and prevents fresh writes until a successful refresh
+PASS current role downgrade beats an older successful session guard and removes operator controls
+PASS same-user replacement session scrubs private DOM and preserves only the newer journal
+PASS zero external requests, zero page errors and unchanged synthetic provider attempts
