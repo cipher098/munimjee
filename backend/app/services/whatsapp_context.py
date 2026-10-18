@@ -151,7 +151,7 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
     product = matches[0]
     from app.services.channel_readiness import guard_legacy_product, CatalogueAuthorityHandoff
     try:
-        await guard_legacy_product(db, seller_id, product.id)
+        await guard_legacy_product(db, seller_id, product.id, nowait=True)
     except CatalogueAuthorityHandoff:
         return "Our team will confirm the current options, price and availability for this product."
     price = f'₹{product.listed_price / 100:,.2f}'

@@ -16,7 +16,7 @@ class InstagramSendUncertain(RuntimeError):
     """A customer send failed without a safely persisted outcome."""
 
 
-async def guard_legacy_product(db, seller_id, product_id) -> None:
+async def guard_legacy_product(db, seller_id, product_id, *, nowait=False) -> None:
     if not product_id:
         return
     from sqlalchemy import select
@@ -25,7 +25,21 @@ async def guard_legacy_product(db, seller_id, product_id) -> None:
     # Readers share this lock; activation takes FOR UPDATE on the same Product.
     # Hold until commit so activation cannot race a legacy fact read/send, while
     # chats focused on different products cannot deadlock each other as readers.
-    product = await db.scalar(select(Product.id).where(Product.id == product_id, Product.seller_id == seller_id).with_for_update(read=True))
+    query = select(Product.id).where(Product.id == product_id, Product.seller_id == seller_id).with_for_update(read=True, nowait=nowait)
+    if nowait:
+        from sqlalchemy.exc import DBAPIError
+        try:
+            # WA holds Account before this read, while checkout can hold Product
+            # before Account. Never wait in that inverted order; the savepoint
+            # leaves the caller's claimed outbox transaction usable on contention.
+            async with db.begin_nested():
+                product = await db.scalar(query)
+        except DBAPIError as exc:
+            if getattr(exc.orig, 'sqlstate', None) != '55P03':
+                raise
+            raise CatalogueAuthorityHandoff('Catalogue is changing; current facts need review') from None
+    else:
+        product = await db.scalar(query)
     if product is None:
         raise CatalogueAuthorityHandoff("Product context does not belong to this business")
     if await is_product_activated(db, seller_id, product):

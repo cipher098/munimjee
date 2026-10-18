@@ -541,3 +541,27 @@ async def test_product_authority_readers_share_locks_and_serialize_with_activati
         assert not acquired.is_set()
     await asyncio.wait_for(activation,timeout=5)
     assert acquired.is_set()
+
+
+@pytest.mark.asyncio
+async def test_wa_legacy_fact_guard_never_waits_behind_product_with_account_held(world):
+    import asyncio
+    from app.models.product import Product
+    from app.models.whatsapp import WhatsAppAccount
+    from app.services.channel_readiness import guard_legacy_product, CatalogueAuthorityHandoff
+    bid=world.ids[0]
+    async with world.session() as db:
+        product=Product(seller_id=bid,name='Changing legacy product',listed_price=10000,floor_price=8000)
+        db.add(product)
+        db.add(WhatsAppAccount(seller_id=bid,phone_number_id='synthetic-nowait-number',waba_id='synthetic',access_token='synthetic'))
+        await db.flush();pid=product.id
+    # Existing outbox Account->Product and checkout Product->Account order.
+    async with world.session() as outbox:
+        await outbox.scalar(select(WhatsAppAccount.seller_id).where(WhatsAppAccount.seller_id==bid).with_for_update())
+        async with world.session() as checkout:
+            await checkout.scalar(select(Product.id).where(Product.id==pid).with_for_update())
+            with pytest.raises(CatalogueAuthorityHandoff):
+                await asyncio.wait_for(guard_legacy_product(outbox,bid,pid,nowait=True),1)
+            # Savepoint rollback leaves claimed outbox state usable for handoff.
+            assert await outbox.scalar(select(Seller.id).where(Seller.id==bid))==bid
+        await guard_legacy_product(outbox,bid,pid,nowait=True)
