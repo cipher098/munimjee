@@ -2,7 +2,7 @@
 from uuid import UUID
 from typing import Literal
 import re
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -11,6 +11,8 @@ from app.api.dashboard_auth import current_seller_id
 from app.config import settings
 from app.database import get_db
 from app.models.product import Product
+from app.models.channel_operator import ChannelConnectionState
+from app.services.channel_operator import lock_tenant_rows
 from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
 from app.services.channel_credentials import cipher, encrypt, decrypt
 from app.services import whatsapp as service, whatsapp_provider as provider
@@ -144,9 +146,38 @@ async def get_account(seller_id=Depends(current_seller_id), db:AsyncSession=Depe
     return account_json(await db.get(WhatsAppAccount, seller_id))
 
 
+async def locked_account_mutation(db, seller_id):
+    # Never create/resurrect Business/User/Membership through a legacy request.
+    bid = UUID(str(seller_id))
+    business, _ = await lock_tenant_rows(db, bid, require_business=False)
+    state = None
+    if business is not None:
+        state = await db.scalar(select(ChannelConnectionState).where(
+            ChannelConnectionState.business_id == bid, ChannelConnectionState.channel == 'whatsapp')
+            .with_for_update().execution_options(populate_existing=True))
+        if state is None:
+            state = ChannelConnectionState(business_id=bid, channel='whatsapp', version=0,
+                automation_enabled=False, check_status='not_checked')
+            db.add(state)
+            await db.flush()
+    account = await db.scalar(select(WhatsAppAccount).where(WhatsAppAccount.seller_id == bid)
+        .with_for_update().execution_options(populate_existing=True))
+    return state, account
+
+
+async def finish_account_mutation(request, db, seller_id):
+    await db.flush()
+    if settings.V1_ENFORCE_LEGACY_ACCESS:
+        from app.api.dashboard_auth import verify_dashboard_cookie, current_seller_id as effective_seller
+        ctx = await verify_dashboard_cookie(dashboard_session=request.cookies.get('dashboard_session'),
+            view_seller=request.cookies.get('view_seller'), db=db)
+        if UUID(str(effective_seller(ctx))) != UUID(str(seller_id)):
+            raise HTTPException(401, 'Your account access changed')
+
+
 @router.put('/account')
-async def connect(payload:Connect, seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
-    account = await db.scalar(select(WhatsAppAccount).where(WhatsAppAccount.seller_id == seller_id).with_for_update())
+async def connect(payload:Connect, request:Request, seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
+    state, account = await locked_account_mutation(db, seller_id)
     token = payload.access_token
     if not token:
         if not account or not account.access_token or account.phone_number_id != payload.phone_number_id or account.waba_id != payload.waba_id:
@@ -169,12 +200,21 @@ async def connect(payload:Connect, seller_id=Depends(current_seller_id), db:Asyn
     except IntegrityError:
         await db.rollback()
         raise HTTPException(409, 'This WhatsApp number is already connected to another store')
+    if state is not None:
+        state.version += 1
+        state.provider_account_id = account.phone_number_id
+        state.automation_enabled = False
+        state.checked_at, state.check_status, state.error_code = service.now(), 'verified', None
+    await finish_account_mutation(request, db, seller_id)
     return account_json(account)
 
 
 @router.patch('/account')
-async def patch_account(payload:AccountPatch, seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
-    account = await service.account_for(db,seller_id,lock=True)
+async def patch_account(payload:AccountPatch, request:Request, seller_id=Depends(current_seller_id), db:AsyncSession=Depends(get_db)):
+    state, account = await locked_account_mutation(db, seller_id)
+    if not account:
+        raise HTTPException(409, 'Connect and enable WhatsApp first')
+    changed = any(getattr(account, key) != value for key, value in payload.model_dump(mode='json',exclude_none=True).items())
     if payload.enabled:
         if not account.access_token:
             raise HTTPException(409, 'Reconnect WhatsApp before enabling sends')
@@ -199,14 +239,24 @@ async def patch_account(payload:AccountPatch, seller_id=Depends(current_seller_i
             service.check_template(template, SimpleNamespace(opted_out=False,utility_opt_in=True), ['name','order','detail'])
     for key,value in payload.model_dump(mode='json',exclude_none=True).items():
         setattr(account,key,value)
-    await db.flush()
+    if state is not None and changed:
+        state.version += 1
+        state.provider_account_id = account.phone_number_id
+        state.automation_enabled = bool(account.enabled and account.automation_enabled)
+    await finish_account_mutation(request, db, seller_id)
     return account_json(account)
 
 
 @router.delete('/account')
-async def disconnect(seller_id=Depends(current_seller_id),db:AsyncSession=Depends(get_db)):
-    account = await service.account_for(db,seller_id,lock=True)
+async def disconnect(request:Request,seller_id=Depends(current_seller_id),db:AsyncSession=Depends(get_db)):
+    state, account = await locked_account_mutation(db, seller_id)
+    if not account:
+        raise HTTPException(409, 'Connect and enable WhatsApp first')
     account.enabled, account.automation_enabled, account.access_token = False, False, ''
+    if state is not None:
+        state.version += 1
+        state.automation_enabled, state.check_status, state.error_code = False, 'disconnected', None
+    await finish_account_mutation(request, db, seller_id)
     return {'disconnected':True}
 
 

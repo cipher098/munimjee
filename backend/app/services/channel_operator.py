@@ -38,18 +38,33 @@ def now():
     return datetime.now(timezone.utc)
 
 
+async def lock_tenant_rows(db, business_id, *, require_business=True):
+    """Canonical Business -> Seller order, without creating legacy identities."""
+    with db.no_autoflush:
+        business = await db.scalar(select(Business).where(Business.id == business_id)
+            .with_for_update(key_share=True).execution_options(populate_existing=True))
+        seller = await db.scalar(select(Seller).where(Seller.id == business_id, Seller.is_active.is_(True))
+            .with_for_update(key_share=True).execution_options(populate_existing=True))
+    if seller is None or require_business and (business is None or not business.is_active):
+        raise HTTPException(404, "Business not found")
+    return business, seller
+
+
 async def locked_access(db, actor: Actor, business_id: UUID, capability: str) -> BusinessAccess:
-    # Lock current authorization rows, not JWT role claims or stale ORM state.
+    # Explicit tenant ordering matches credential import/legacy writers; never
+    # rely on a join planner's row-lock order across Business and Seller.
+    await require_business_access(db, actor, business_id, capability)
+    await lock_tenant_rows(db, business_id)
     row = (await db.execute(select(Business, Membership, Seller, User).join(
         Membership, Membership.business_id == Business.id).join(Seller, Seller.id == Business.id).join(
         User, User.id == Membership.user_id).where(
             Business.id == business_id, User.id == actor.user_id, User.is_active.is_(True), User.revoked_at.is_(None),
             Membership.is_active.is_(True), Membership.revoked_at.is_(None),
             Business.is_active.is_(True), Seller.is_active.is_(True),
-        ).with_for_update(key_share=True).execution_options(populate_existing=True))).one_or_none()
+        ).with_for_update(key_share=True, of=(Membership, User)).execution_options(populate_existing=True))).one_or_none()
     if row is None:
         raise HTTPException(404, "Business not found")
-    access = BusinessAccess(*row[:3])
+    access = BusinessAccess(*row[:3], authorized_role=row[1].role)
     if capability not in access.capabilities:
         raise HTTPException(403, "Your role cannot perform this action")
     return access

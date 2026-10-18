@@ -1,0 +1,23 @@
+✔ confirmed401 physically clears facts, dialogs, token input and disables refresh (15.2795ms)
+✔ same-user replaced session on focus closes private access and old responses cannot revive it (1.896917ms)
+✔ older session response cannot restore owner controls after newer viewer authority (1.405334ms)
+✔ visibility loss erases an entered token without a provider or mutation call (0.883ms)
+✔ unknown WA save persists only safe conditional marker and erases password; reload never autoPOSTs (2.091292ms)
+✔ restricted journal storage blocks mutation before POST and erases token (0.770042ms)
+✔ valid-shaped old WA acknowledgement cannot clear a secret-bearing conditional intent (0.834375ms)
+✔ unclassified409 remains uncertain while exact typed pre-mutation generation conflict permits fresh review (2.156708ms)
+✔ unknown nonsecret operation reload explicitly retries exact body/key and never mints a replacement (2.005916ms)
+✔ an ended old page removes only its own session-scoped journal (0.79225ms)
+✔ a bound but invalid OAuth ACK retains original intent and cannot navigate (1.521417ms)
+✔ recovered malformed journal is withheld without an implicit new action (0.893042ms)
+✔ recovered session journal is withheld without an implicit new action (0.709833ms)
+✔ recovered business journal is withheld without an implicit new action (1.275458ms)
+✔ recovered expired journal is withheld without an implicit new action (0.594166ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 110.94225

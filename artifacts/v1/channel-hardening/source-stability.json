@@ -1,0 +1,10 @@
+{
+  "files": 13,
+  "unchanged": true,
+  "actual_migration_head": "0055_v1_comment_binding",
+  "migration_dependencies_local_only": [
+    "0054_v1_activity.py",
+    "0055_v1_comment_binding.py"
+  ],
+  "app_mount": "app.main existing registration; no fixture router include"
+}
