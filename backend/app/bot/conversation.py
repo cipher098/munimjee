@@ -140,10 +140,29 @@ async def _send_and_tag(
     client,
     reply: str,
     db: AsyncSession,
+    *, sku_question: str | None = None,
 ) -> None:
     """Send a text reply, capture the mid, and tag the last bot history entry."""
     from app.services.channel_readiness import guard_legacy_product, InstagramSendUncertain
-    await guard_legacy_product(db, conversation.seller_id, conversation.product_id)
+    if sku_question is None:
+        await guard_legacy_product(db, conversation.seller_id, conversation.product_id)
+    else:
+        from app.services import sku_fact_replies as facts
+        from app.services.channel_readiness import CatalogueAuthorityHandoff
+        # Ignore earlier generated text. Facts and current delivery gates share
+        # one final scalar statement; no new catalogue lock survives the read.
+        observed = await facts.read_facts(db, conversation.seller_id, conversation.product_id,
+            reel=getattr(conversation, "_sku_reel_reference", None),
+            instagram=dict(conversation_id=conversation.id, customer_id=conversation.customer_instagram_id,
+                token=client._token, page_id=client.fb_page_id))
+        if observed is None:
+            raise CatalogueAuthorityHandoff("Current public SKU reply is unavailable")
+        reply = facts.render(observed) if facts.factual_request(sku_question) or sku_question == "[customer sent media]" else facts.HANDOFF
+        _append_message(conversation, "bot", reply)
+        messages = list(conversation.messages)
+        messages[-1] = {**messages[-1], "catalogue_fact_hash":observed.fact_hash,
+            "catalogue_revision":observed.mapping_revision, "catalogue_observed_at":observed.observed_at.isoformat()}
+        conversation.messages = messages
     try:
         result = await client.send_message(conversation.customer_instagram_id, reply)
         mid = result.get("message_id")
@@ -664,6 +683,16 @@ async def _advance_conversation_inner(
     customer_mid: str | None,
 ) -> None:
     from app.services.channel_readiness import guard_legacy_product
+    from app.services import sku_fact_replies as facts
+    if facts.enabled() and await facts.is_activated(db, seller.id, conversation.product_id):
+        if not resume:
+            _append_message(conversation, "customer", customer_message, mid=customer_mid)
+        await db.flush()
+        if send_reply:
+            from app.integrations.instagram import InstagramClient
+            client = InstagramClient(seller.instagram_token, seller.fb_page_id)
+            await _send_and_tag(conversation, client, "", db, sku_question=customer_message)
+        return
     await guard_legacy_product(db, seller.id, conversation.product_id)
     if not resume:
         _append_message(conversation, "customer", customer_message, mid=customer_mid)
@@ -1177,6 +1206,21 @@ async def _handle_reel_inner(
 
     _append_message(conversation, "customer", f"[reel: {reel_url}]")
     await db.flush()
+
+    from app.services import sku_fact_replies as facts
+    if facts.enabled():
+        exact = await facts.exact_reel_products(db, seller.id, reel_url=reel_url, media_id=reel_video_id)
+        if exact is None or len(exact) > 1:
+            from app.services.channel_readiness import CatalogueAuthorityHandoff
+            raise CatalogueAuthorityHandoff("Reel product context is ambiguous")
+        if exact and await facts.is_activated(db, seller.id, exact[0]):
+            conversation.product_id = exact[0]
+            conversation._sku_reel_reference = dict(reel_url=reel_url, media_id=reel_video_id)
+            await db.flush()
+            if send_reply:
+                await _send_and_tag(conversation, InstagramClient(seller.instagram_token, seller.fb_page_id), "", db,
+                    sku_question="[customer sent media]")
+            return
 
     # If we have a reel_video_id (media ID), resolve it to a shortcode via Graph API.
     # This lets us match CDN URLs against stored instagram.com/p/<shortcode>/ URLs.
