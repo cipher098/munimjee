@@ -55,8 +55,12 @@ class FakeProvider:
         self.calls += 1
         if self.before_return:
             await self.before_return()
+        from app.v1.imports.instagram_owned import OriginalMediaAsset
+        import hashlib
+        content=b"\x89PNG\r\n\x1a\nsynthetic-retained-original"
         return SimpleNamespace(account_id=account_id, media_id=media_id,
-            products=(("media-product", DraftFacts()),))
+            products=(("media-product", DraftFacts()),),media_type="IMAGE",connection_version=7,
+            assets=(OriginalMediaAsset(media_id,content,hashlib.sha256(content).hexdigest(),'image/png'),))
 
 
 @pytest.mark.asyncio
@@ -86,7 +90,7 @@ async def test_migrated_owned_import_reimport_preserves_unknowns_corrections_and
         assert candidate.effective_facts().stock == 0 and candidate.effective_facts().price is None
         assert candidate.state == "review_required"
         assert rows[0].catalogue_bridge_status == "not_requested"
-        assert await db.scalar(select(func.count()).select_from(ImportAsset).where(ImportAsset.business_id == business)) == 0
+        assert await db.scalar(select(func.count()).select_from(ImportAsset).where(ImportAsset.business_id == business)) == 2
 
 
 @pytest.mark.asyncio

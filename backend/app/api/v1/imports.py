@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import ValidationError
+from fastapi.responses import Response
 
 from app.api.v1.identity import current_actor
 from app.database import get_db
@@ -59,6 +60,21 @@ def create_router(require_v1_mutation) -> APIRouter:
         raise TypeError("Native mutation dependency is required")
     router = APIRouter(prefix="/api/v1/businesses/{business_id}/imports", tags=["v1-imports"])
 
+    @router.get("/sources/instagram")
+    async def instagram_source(request: Request, business_id: UUID, actor=Depends(current_actor), db=Depends(get_db)):
+        from app.config import settings
+        from app.services.instagram_credentials import snapshot
+        await require_business_access(db, actor, business_id, "catalogue.read")
+        available = False
+        reason = "provider_capability_pending"
+        if settings.V1_INSTAGRAM_OWNED_MEDIA_ENABLED:
+            available = (await snapshot(db,business_id)).usable()
+            reason = "available" if available else "current_connection_required"
+        if await current_actor(request,db) != actor:
+            raise HTTPException(401,'The native session changed')
+        await require_business_access(db,actor,business_id,"catalogue.read")
+        return {"contract_version":"instagram-import-readiness.v1","available":available,"reason":reason,"carousel_available":False}
+
     @router.post("/uploads", status_code=201, response_model=UploadRead)
     async def upload(business_id: UUID, request: Request, idempotency_key: UUID,
                      source_authorized: str = Query(..., pattern="^true$"),
@@ -107,5 +123,23 @@ def create_router(require_v1_mutation) -> APIRouter:
     async def review(business_id: UUID, candidate_id: UUID, payload: CandidateReviewWrite,
                      actor=Depends(require_v1_mutation), db=Depends(get_db)):
         return await _call(service.review_candidate(db, actor, business_id, candidate_id, payload))
+
+    @router.get("/candidates/{candidate_id}/originals")
+    async def original_manifest(request: Request, business_id: UUID, candidate_id: UUID, actor=Depends(current_actor), db=Depends(get_db)):
+        from app.services.import_originals import originals
+        result = await originals(db, actor, business_id, candidate_id)
+        if await current_actor(request, db) != actor:
+            raise HTTPException(401, 'The native session changed')
+        return result
+
+    @router.get("/candidates/{candidate_id}/originals/{asset_id}")
+    async def original_bytes(request: Request, business_id: UUID, candidate_id: UUID, asset_id: UUID, actor=Depends(current_actor), db=Depends(get_db)):
+        from app.services.import_originals import originals
+        metadata, content = await originals(db, actor, business_id, candidate_id, asset_id=asset_id)
+        if await current_actor(request, db) != actor:
+            raise HTTPException(401, 'The native session changed')
+        return Response(content, media_type=metadata['content_type'], headers={
+            "Cache-Control":"no-store, private", "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff",
+            "Content-Disposition":'attachment; filename="original'+('.mp4' if metadata['content_type']=='video/mp4' else '.png' if metadata['content_type']=='image/png' else '.jpg')+'"'})
 
     return router

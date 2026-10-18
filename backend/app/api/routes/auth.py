@@ -213,6 +213,11 @@ async def connect_instagram(body: ConnectInstagramRequest, seller: Seller = Depe
     if body.seller_id is not None and body.seller_id != seller.id:
         raise HTTPException(status_code=403, detail="Cannot link another seller")
 
+    from app.services.instagram_credentials import snapshot, replace
+    from app.services.identity import ensure_legacy_owner_bridge
+    await ensure_legacy_owner_bridge(db, seller)
+    expected = (await snapshot(db, seller.id)).proof()
+    await db.commit()  # No credential lock spans provider exchange.
     try:
         long_lived_token = await exchange_for_long_lived_token(body.short_lived_token)
         ig_user = await fetch_ig_user(long_lived_token)
@@ -224,14 +229,11 @@ async def connect_instagram(body: ConnectInstagramRequest, seller: Seller = Depe
     except Exception as exc:
         raise HTTPException(status_code=400, detail="Could not connect Instagram. Check the account and try again.")
 
-    seller.instagram_id = ig_id
-    seller.instagram_page_id = ig_id
-    seller.fb_page_id = ig_id
-    seller.instagram_token = long_lived_token
-    seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=60)
+    if not await replace(db, seller.id, expected=expected, account_id=ig_id, token=long_lived_token, expires_at=expires_at):
+        raise HTTPException(409, "Instagram connection changed. Start again.")
     await db.commit()
-
-    return {"detail": "Instagram token updated", "expires_at": seller.instagram_token_expires_at}
+    return {"detail": "Instagram token updated", "expires_at": expires_at}
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +337,11 @@ async def instagram_oauth_callback(
     if error:
         return RedirectResponse(url="/onboarding?error=authorization_declined", status_code=302)
 
+    from app.services.instagram_credentials import snapshot, replace
+    from app.services.identity import ensure_legacy_owner_bridge
+    await ensure_legacy_owner_bridge(db, seller)
+    expected = (await snapshot(db, seller.id)).proof()
+    await db.commit()
     redirect_uri = _oauth_redirect_uri(request)
     try:
         code_resp = await exchange_code_for_user_token(code, redirect_uri)
@@ -346,21 +353,21 @@ async def instagram_oauth_callback(
         try:
             long_lived = await exchange_for_long_lived_token(short_token)
         except Exception as long_lived_exc:
-            logger.warning("Long-lived token exchange failed (%s) — falling back to short-lived", long_lived_exc)
+            logger.warning("Long-lived token exchange failed — falling back to short-lived")
             long_lived = short_token
 
         try:
             ig_user = await fetch_ig_user(long_lived)
         except Exception as me_exc:
-            logger.warning("graph.instagram.com/me failed (%s) — using user_id from code exchange", me_exc)
+            logger.warning("graph.instagram.com/me failed — using user_id from code exchange")
             ig_user = {"user_id": prelim_user_id}
     except Exception as exc:
-        logger.exception("Instagram OAuth token exchange failed: %s", exc)
+        logger.warning("Instagram OAuth token exchange failed")
         return RedirectResponse(url="/onboarding?error=token_exchange_failed", status_code=302)
 
     ig_user_id = ig_user.get("user_id") or ig_user.get("id")
     if not ig_user_id:
-        logger.warning("Seller %s OAuth: /me returned no user_id: %s", seller_id, ig_user)
+        logger.warning("Seller %s OAuth: /me returned no user_id", seller_id)
         return RedirectResponse(url="/onboarding?error=no_instagram_account", status_code=302)
 
     account_type = ig_user.get("account_type")
@@ -376,11 +383,9 @@ async def instagram_oauth_callback(
     existing = (await db.execute(select(Seller.id).where(Seller.instagram_id == ig_user_id, Seller.id != seller.id))).first()
     if existing:
         return RedirectResponse(url="/onboarding?error=account_already_linked", status_code=302)
-    seller.instagram_id = ig_user_id
-    seller.instagram_page_id = ig_user_id
-    seller.fb_page_id = ig_user_id
-    seller.instagram_token = long_lived
-    seller.instagram_token_expires_at = datetime.now(timezone.utc) + timedelta(days=60)
+    if not await replace(db, seller.id, expected=expected, account_id=ig_user_id, token=long_lived,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=60)):
+        return RedirectResponse(url="/onboarding?error=connection_changed", status_code=302)
     seller.onboarding_state = "instagram_connected"
     await db.commit()
 
@@ -388,9 +393,9 @@ async def instagram_oauth_callback(
     # Meta won't fire webhook events for this seller's DMs.
     try:
         sub_resp = await subscribe_ig_user_to_messages(ig_user_id, long_lived)
-        logger.info("Subscribed IG %s to messages webhook: %s", ig_user_id, sub_resp)
+        logger.info("Subscribed IG %s to messages webhook", ig_user_id)
     except Exception as sub_exc:
-        logger.warning("Failed to subscribe IG %s to webhook: %s", ig_user_id, sub_exc)
+        logger.warning("Failed to subscribe IG %s to webhook", ig_user_id)
 
     logger.info(
         "Seller %s connected Instagram (direct flow): ig_user=%s username=%s",
