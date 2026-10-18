@@ -1,0 +1,16 @@
+{
+  "source_revision": "79ea6480b0887d9c31a7f7d81b33ced1a649f5dc",
+  "files": 272,
+  "context_bytes": 2853454,
+  "native_assets": [
+    "backend/static/import_workspace.html",
+    "backend/static/import_workspace.css",
+    "backend/static/import_workspace.js",
+    "backend/static/theme_settings.html",
+    "backend/static/theme_settings.css",
+    "backend/static/theme_settings.js"
+  ],
+  "published_design_present": true,
+  "migration0049_present": true,
+  "docker_build_or_smoke_run": false
+}

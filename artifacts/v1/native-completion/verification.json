@@ -1,0 +1,53 @@
+{
+  "source_revision": "48e049c5356fcf6268018b5e931e4a7435c74874",
+  "backend": {
+    "passed": 842,
+    "skipped": 512,
+    "failed": 0,
+    "errors": 0
+  },
+  "skip_categories": {
+    "disposable_database_unallocated": 509,
+    "redis_unallocated": 2,
+    "provider_cassette_missing": 1
+  },
+  "node_passed": 77,
+  "independent_browser_mock_checks": 33,
+  "qa_source_hashes_match_current": true,
+  "migration_static_head": "0049_v1_storefront_settings",
+  "migration_static_parent": "0048_v1_parcel_tracking",
+  "actual_pg16_and_native_database_browser": "pending_local_integrator",
+  "runtime": {
+    "source_revision": "48e049c5356fcf6268018b5e931e4a7435c74874",
+    "files": 272,
+    "context_bytes": 2853454,
+    "identical_runtime_files_to_79ea648": true,
+    "docker_build_or_smoke_run": false
+  },
+  "workers": [
+    {
+      "name": "root",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "actual_turn_metadata_checked": true
+    },
+    {
+      "name": "import_ui",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "actual_turn_metadata_checked": true
+    },
+    {
+      "name": "theme_publication",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "actual_turn_metadata_checked": true
+    },
+    {
+      "name": "independent_qa",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "actual_turn_metadata_checked": true
+    }
+  ]
+}
