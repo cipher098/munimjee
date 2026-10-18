@@ -1,0 +1,18 @@
+F
+=================================== FAILURES ===================================
+_ test_actual_0057_native_owner_attaches_paused_exact_receipts_and_ciphertext __
+backend/tests/test_v1_whatsapp_self_service_db.py:47: in test_actual_0057_native_owner_attaches_paused_exact_receipts_and_ciphertext
+    await post(j, f'/signup/{flow.aid}/select', {**flow.selection,
+backend/tests/whatsapp_self_service_fixture.py:125: in post
+    assert response.headers.get(header) == expected
+E   AssertionError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_whatsapp_self_service_db.py::test_actual_0057_native_owner_attaches_paused_exact_receipts_and_ciphertext
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 1 warning in 3.21s
