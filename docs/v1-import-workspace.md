@@ -1,142 +1,135 @@
 # V1 seller import workspace
 
-18 October 2026. Worker `codex/v1-import-workspace`, based on verified wave-2
-`aa6ac940ef877a8a37baac39afec44268b49f84e`. No migration, provider mutation,
-publication, stock write, application service/model change or production action.
+18 October 2026. Allocation continuation: `codex/v1-import-allocation-ui`, based
+on `a2ea26d` plus preserved workspace checkpoint `8e1aeb9`. The owner changes
+only the import page/router, dedicated tests/runners/artifacts and this document.
+No migration, shared auth/client, domain service, provider or production change.
 
-The private page at `/v1/businesses/{business_id}/imports` requires the native
-feature gate, `v1_user` sign-in and current `catalogue.read` membership. Its static
-shell carries no seller facts and returns `Cache-Control: no-store, private` and
-`Referrer-Policy: no-referrer`. The API remains the authorization authority;
-every write uses existing `catalogue.write`/native CSRF dependencies.
+The page `/v1/businesses/{business_id}/imports` uses native `v1_user` session,
+current `catalogue.read` membership and the shared V1 API/CSRF client. Its shell
+contains no seller facts and sends `Cache-Control: no-store, private` and
+`Referrer-Policy: no-referrer`. APIs remain the authority for every read/write.
 
-The rendered local study is `artifacts/v1/import-workspace/design-study.html`
-and `design-study.png`. It was reviewed before the main UI implementation; the
-integrator also reviewed it. Source cards sit above job activity and candidate
-review. Desktop keeps the lists beside details. Mobile stacks the sections,
-keeps the list scrollable and scrolls to the chosen review panel.
+The previous rendered study remains in `artifacts/v1/import-workspace/`.
+`allocation-design-study.html` and `.png` were rendered and inspected before
+allocation implementation. Desktop keeps activity/candidates beside review,
+with a sticky bounded list while reviewing allocations. Mobile stacks panels,
+scrolls to selected review and uses labelled quantity inputs without overflow.
 
-## Operating behavior
+## Source, progress and review
 
-- Website import requires explicit seller permission and a public HTTPS source.
-  Original JPEG/PNG/MP4 uploads are bounded at 5,000,000 bytes, with explicit media
-  permission. Uploads use a thin raw-byte transport with current shared CSRF,
-  same-origin credentials, no-store, redirect rejection and 401 cleanup. They
-  are never passed through the shared client's JSON body serialization.
-- Job state, attempts, candidate count, revision and safe error code come from
-  durable APIs. Pending means waiting for worker progress; no ETA or successful
-  extraction is inferred. Eligible cancel/retry actions carry expected revision
-  and immutable idempotency keys. Server backoff and its three-attempt limit
-  remain authoritative. Provider-pending retry is withheld because capability
-  must be resolved externally first.
-- Jobs and candidates use bounded 50-record cursor pages. Automatic job checks
-  stop after twelve checks, increase delay to at most fifteen seconds, back off
-  further on errors, pause while hidden and do not replace candidate edits.
-  Refresh explicitly reloads current candidates and replaces unsaved edits.
-  An epoch/cursor check discards polls that finish after refresh/pagination.
-- Review preserves extracted source evidence and seller overrides separately.
-  Text is rendered with `textContent` or form `.value`; source URLs are displayed
-  as text. No imported HTML is executed and no arbitrary source media is loaded.
-  Unknown price/stock/options stay unknown. Zero stock and an explicitly empty
-  options list are distinct reviewed choices. Structured option names/values,
-  decimal price/currency and integer quantity are edited through typed fields.
-- Saving factual changes and approving are separate requests. Approval requires
-  five explicit confirmations and resolved title, price, stock and options.
-  Rejection requires a reason. Stale revisions show a conflict and require
-  refresh; no automatic merge/review decision occurs.
-- Instagram source creation is disabled, with truthful provider capability copy
-  and original-media/website alternatives. Existing failed records decode the
-  actual `provider_capability_pending` code; no scraper, invented success or ETA.
-- Approval alone never creates a catalogue product. The allocation adapter
-  contract is absent at this checkpoint. Approved candidates show an explicit
-  pending handoff and a catalogue link for manual reviewed draft preparation.
-  Do not label that link as automatic transfer. No activation/publication UI is
-  added here.
+- Authorized website sources use public HTTPS URLs. Original JPEG/PNG/MP4 uploads
+  are bounded at 5,000,000 bytes and require explicit permission. Uploads send
+  original raw bytes with current CSRF, same-origin credentials, no-store and
+  redirect rejection. Original bytes are never saved in browser storage.
+- Durable jobs expose state, attempt count, candidate count, revision and safe
+  error codes. Eligible cancel/retry commands use expected revisions and stable
+  keys; server backoff and retry limits remain authoritative. Bounded polling
+  pauses after twelve checks, while hidden, or after increasing error backoff.
+  Refresh/pagination epochs discard late polls and preserve editable candidate
+  facts during ordinary job checks.
+- Candidate evidence, extracted facts and seller overrides remain separate.
+  Imported values render through textContent/form values, never HTML. Unknown
+  price/stock/options stay unknown; explicit zero and no-options remain distinct.
+  Structured options, price/currency and integer stock use typed inputs. Factual
+  edits must be saved before review/draft submission; all five factual fields
+  require explicit confirmation. Standalone approval/rejection remain available.
+- Instagram retrieval honestly remains provider-capability pending, with original
+  media and authorized website alternatives. No scraping, ETA or invented success.
 
-## Recovery and identity fencing
+## Reviewed private draft allocation
 
-Every mutation is preserved in session storage before sending. One preparation
-lock prevents rapid repeated submissions allocating competing command keys.
-The versioned envelope includes actor, business, SHA-256 of the sign-in CSRF
-secret, timestamp, request path/body and integrity digest. Destinations and body
-shapes are allowlisted. Corrupt, expired or inaccessible storage blocks new
-writes and surfaces reconciliation guidance. Network failures and 5xx retain the
-exact request/key across reload; no request is sent automatically on reload.
-Definitive 403/404/409/413/415/422 responses clear that rejected request and let the
-operator review server state before forming another decision.
+The UI consumes the frozen `docs/contracts/import-catalogue` and actual mounted
+`GET /candidates/{id}/catalogue-preview` and `POST .../catalogue-draft` APIs.
 
-Upload recovery persists only original media type, byte count, filename,
-SHA-256 and stable upload/job keys. Original bytes are never stored in the
-browser. After reload the seller must reselect exactly matching bytes; a name
-alone is insufficient. Once an upload result is validated, the upload intent is
-atomically replaced with the stable asset-backed job command before its POST.
-A lost job response then needs no second upload. Recovery is per browser session
-and retained for up to seven days; it is not a cross-device recovery claim.
+A preview must match the selected candidate, current revision and effective saved
+facts. Fact comparisons recursively sort object keys while preserving array order;
+immutable command serialization/digests remain byte-for-byte unchanged. Bounded
+response decoders validate every supported option combination exactly once,
+integer/null proposed quantities, contract versions, state and receipt identity.
+Malformed/stale previews withhold the form; selection/refresh/session epochs
+ignore late responses. Unknown stock, unsupported price/currency/options, more
+than 500 combinations, disabled bridge and missing storefront setup show actual
+server issues and block draft creation. Unknown stock never becomes untracked.
 
-Session checks run before/after data requests and mutations and on window
-focus/visibility return. A changed user, CSRF session or lost business access
-hides private UI, clears forms/results and clears this page's import command
-prefix. Current read-only roles disable all writes, including saved retries.
-The backend independently rechecks current authority on every request.
+Each supported combination has an explicit integer allocation, including zero.
+Multiple SKUs start blank; the single-SKU confirmed total is shown for seller
+review. A running total must match the saved confirmed total. Five separate
+saved-fact confirmations and an explicit Create private catalogue draft action
+send only revision, command key, review confirmation and allocations. Browser
+facts, arbitrary product IDs and inferred source-page/upload photo URLs are never
+sent to the bridge. All created SKUs explicitly use `active:false`; the UI says
+so. Product activation, store publication, checkout and existing inventory remain
+separate decisions.
 
-## Required integrator hooks
+A valid `import-catalogue.v1` receipt must match the candidate and exact current
+business catalogue route, contain valid receipt/product IDs and preserve the
+approved revision. Existing receipts replace creation controls with a catalogue
+link and immutable product/revision details. A draft 409 clears the definitive
+rejected command and refreshes actual candidate/preview state to discover an
+existing receipt; browser product IDs in conflict payloads confer no authority.
 
-These are deliberately not edits to shared files owned by the integrator:
+## Recovery and identity fences
 
-1. Import `app.api.v1.import_workspace.router` and mount it in `app/main.py`.
-2. Add `import_workspace.html`, `import_workspace.css`, `import_workspace.js` to
-   the runtime packager's `STATIC` allowlist in `scripts/v1_runtime_package.py`.
-   The baseline package does not include them. Existing package/image results
-   must not be described as certifying this new page until rebuilt and checked.
-3. Add `munimjee.v1.import-command:` to shared private cleanup alongside
-   `munimjee.v1.catalogue-draft:` for login, signup, invitation acceptance,
-   logout, logout-all and 401 in `backend/static/v1_client.js`. Local page checks
-   already clean up on detected session changes; shared cleanup is needed even
-   when a different native page performs sign-in/logout. Do not touch public
-   customer checkout recovery keys.
-4. Link imports from the native business/catalogue navigation as appropriate.
-5. Freeze the real reviewed allocation adapter contract before adding an
-   automatic handoff button. No guessed endpoint/schema is emitted by this UI.
+All mutations persist the exact body/key before sending. A preparation lock
+prevents rapid submissions creating competing keys. The versioned envelope binds
+actor, tenant and SHA-256 of the sign-in CSRF secret, plus timestamp/path/body and
+integrity digest. The page validates allowlisted paths/body shapes and retains
+network/5xx/malformed-success uncertainty across reload. Reload sends nothing
+automatically; Retry saved action uses the exact stored command. Definitive
+403/404/409/413/415/422 failures release that rejected request for review. Corrupt,
+expired or unavailable storage blocks writes with reconciliation guidance.
 
-## Verification
+Upload recovery stores only type/size/name/SHA-256 and stable upload/job keys.
+After reload, the seller reselects exactly matching original bytes. After a valid
+upload response, the pending intent atomically becomes the asset-backed job
+command; a lost job response needs no second upload. Recovery lasts up to seven
+days within the browser session and makes no cross-device claim.
 
-`backend/tests/browser/import_workspace.mjs` currently passes **56 behavioral
-Chromium checks** using synthetic same-origin HTTP mocks, with zero provider
-calls. Cases cover source permission, typed fields and unknown/zero distinction,
-separate approval, source XSS safety, same-key lost-202 replay after reload,
-raw upload lost-201 recovery and exact-file fencing, upload-to-job transition
-with lost-202 recovery, stale revisions, viewer/current-role downgrade,
-changed session during response, raw-upload 401 cleanup, corrupt/unavailable
-storage, rapid submit fencing, retry limits/provider gate, late-poll discard and
-390px mobile overflow. Desktop/mobile captures and machine-readable results are
-in `artifacts/v1/import-workspace/`. These are UI/transport proofs, not database
-or live provider acceptance.
+Current session checks run before/after API calls and on focus/visibility return.
+Changed actor, CSRF session or lost tenant read access clears all private page
+facts and the `munimjee.v1.import-command:` prefix. Current read-only roles disable
+all writes and saved retries; backend role/session/CSRF checks remain authoritative.
+Shared auth cleanup/nav/main/runtime hooks are coordinator-owned and must be
+verified in the composed checkout.
 
-The new native page/role/CSRF tests in `backend/tests/test_import_workspace.py`
-collect successfully and report **3 skipped** without an explicit P01 lane. No
-DB URL is guessed and no schema is created from ORM metadata. The dedicated
-`--native` browser runner applies actual migrations under a held P01 lease,
-uses native signup and real protected APIs, exercises lost-response replay and
-review, and invokes `run_job` only through a test-only protected synthetic
-fetcher hook. This native script is prepared and syntax checked but has **not
-been run** by this worker; actual migrated DB acceptance remains pending.
+## Evidence and remaining gates
 
-Run from `backend` using this worktree's isolated Python 3.12 environment:
+`backend/tests/browser/import_workspace.mjs` uses synthetic same-origin HTTP
+fixtures and Chromium, blocks external origins, and makes zero provider calls.
+`browser-results.json` records **123 passing checks**. It covers source permission,
+raw byte/hash upload recovery, review/unknown/zero distinctions, stale revisions,
+source XSS safety, current role/session/tenant fences, corrupt/unavailable storage,
+rapid submit/poll races, full allocation totals, inactive payloads, lost draft
+response/reload/same-body-key receipt replay, existing-source 409 reconciliation,
+invalid receipts/previews, unsupported currency/combination limits, keyboard access
+and 390px mobile overflow. Desktop/mobile full and focused captures are present.
+These prove UI/transport behavior; they do not certify database/provider execution.
+
+The dedicated actual native-page/role/CSRF tests collect and explicitly skip
+without P01 configuration. The prepared `--native` journey uses native signup,
+real protected APIs and actual migrations under a held P01 reset/migration lease.
+Only source retrieval uses a protected synthetic worker hook. It now also creates
+a private multi-SKU draft, loses the committed response, reloads/replays the exact
+body/key, checks one canonical product, inactive persisted SKUs/confirmed stock,
+existing receipt, checkout disabled and the store still unpublished. It has not
+been executed in this worker environment: the disposable PostgreSQL lane is
+unavailable, and shared Docker/services were not restarted or reprobed.
+
+Run from `backend` with an isolated Python 3.12 environment:
 
 ```
-../.venv/bin/python -m pytest tests/test_import_workspace.py -q
-../.venv/bin/python -m tests.run_import_workspace_browser
-# With explicit TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1 only:
-../.venv/bin/python -m tests.run_import_workspace_browser --native
+python -m pytest tests/test_import_workspace.py -q
+python -m tests.run_import_workspace_browser
+# Only with the allocated P01 lane's explicit TEST_DATABASE_URL,
+# TEST_LANE and TEST_DB_RESET=1 (no .env/database fallback):
+python -m tests.run_import_workspace_browser --native
 ```
 
-Set `PLAYWRIGHT_MODULE` to the installed Playwright test module when it is not
-available under `frontend/storefront/node_modules/@playwright/test/index.mjs`.
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE` optionally selects the existing local browser.
-Both browser modes exclusively use port **4320** and close only the process they
-started. Do not run modes concurrently. Existing previews/services are preserved.
-
-Python compile checks and Node syntax checks pass for owned files. Shared route
-mount, package inclusion/cleanup changes, native migrated DB/browser results,
-live source/provider consent, approved draft handoff and physical-device
-acceptance remain integrator/release gates.
+Use `PLAYWRIGHT_MODULE` for the available Playwright test module and optionally
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` for an existing local browser. Both modes reserve
+only loopback port 4320, close only their own server, and must not run concurrently.
+Actual mounted PostgreSQL/browser acceptance, final composed runtime packaging,
+independent QA and physical-device/source-provider acceptance remain integration
+or release gates. No production deployment, real provider request, customer
+message or charge was performed.
