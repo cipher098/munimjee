@@ -1,0 +1,30 @@
+{
+  "ci-pure": {
+    "passed": 119,
+    "skipped": 2,
+    "failed": 0,
+    "errors": 0
+  },
+  "rehearsal-pure": {
+    "passed": 38,
+    "skipped": 1,
+    "failed": 0,
+    "errors": 0
+  },
+  "node_contracts": {
+    "passed": 77,
+    "skipped": 0,
+    "failed": 0
+  },
+  "actionlint": {
+    "version": "1.7.12",
+    "exit_code": 0
+  },
+  "actual_database": false,
+  "actual_container": false,
+  "hosted_run_blocker": {
+    "run_id": 39105879610,
+    "jobs_executed": 0,
+    "reason": "The job was not started because your account is locked due to a billing issue."
+  }
+}
