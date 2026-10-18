@@ -1,0 +1,626 @@
+{
+  "base_commit": "d4026b1ebf8e9e11865ccf2172ded41bcdc0ac22",
+  "runtime_reference": "eeb94a119736cae816af782f2af5e04cb877e616",
+  "runtime_and_tests_diff": "",
+  "files": [
+    {
+      "path": "go-live-plan.md",
+      "sha256": "42bfda286288bb4d0241544736d7e512677d1671c175d95ae4b5c62de0552c8a",
+      "git_blob": "3d15a4dba2c562500c9e37fa17cd28e02160a726"
+    },
+    {
+      "path": "docs/v1-release-acceptance-audit.md",
+      "sha256": "ee0b836fb18d61d333dd9fe2a5e4e830cd917c779ab5ea22db3ec408d636b39f",
+      "git_blob": "84fcdfd958870371f7f92977add1e2473e513a69"
+    },
+    {
+      "path": "docs/v1-execution-status.md",
+      "sha256": "44e44f42da388efa6f28648757807930eb9375d32f91728ed32575d9d1aec791",
+      "git_blob": "9cd436e59cca713b3481156d879e6cc70a4cf3ab"
+    },
+    {
+      "path": "backend/app/services/sku_fact_replies.py",
+      "sha256": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+      "git_blob": "b915e4fe5b54db97d0a71030e5fb526b77901c38"
+    },
+    {
+      "path": "backend/app/schemas/sku_fact_replies.py",
+      "sha256": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+      "git_blob": "0a3eac8b5438fc9607973c391367518dcb9cac19"
+    },
+    {
+      "path": "backend/app/services/whatsapp_context.py",
+      "sha256": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+      "git_blob": "6a9bf194efac3c455470b85a5097d1358011140b"
+    },
+    {
+      "path": "backend/app/services/whatsapp_reel_queue.py",
+      "sha256": "a36168b9efcfa2ced9a1a47438f62a35b56670d89a80be31e2f4115b9bb2a091",
+      "git_blob": "c6bc673fcd6853f769adba0278235acb3b307e82"
+    },
+    {
+      "path": "backend/app/services/whatsapp.py",
+      "sha256": "bee87cb96eca056428bf3cb7c614c16bec717a96243317fa325a21e4df90e2c7",
+      "git_blob": "22a59e861aadeb03396d29715540ba7c5ce2eeb3"
+    },
+    {
+      "path": "backend/app/workers/whatsapp.py",
+      "sha256": "0c7fdc5013aaf4406314ff382eef551853eaebfb350f18081f672fd85d837b62",
+      "git_blob": "8c32f59439ca6f14cd62b9b81eacec6bf51af5bb"
+    },
+    {
+      "path": "backend/app/workers/message_batch.py",
+      "sha256": "63722890231444f6ed307a16da3ad2b70f618b76ec3ca01bc20ea9a4f7884c3c",
+      "git_blob": "fef6c82596085a408a5d8bfb716209e7c4d89272"
+    },
+    {
+      "path": "backend/app/bot/conversation.py",
+      "sha256": "e6436301a99822cd604441abfe34024a6ca47bd7856fb07d1a8d7c71d198d88d",
+      "git_blob": "92fe72e7485cae5a6db11a63923b5600634f2a01"
+    },
+    {
+      "path": "backend/app/bot/responder.py",
+      "sha256": "93706c334a5b7c75374cfb4fbe8b4be64fd68f45aa408b984fa3f0de30464f2c",
+      "git_blob": "7b023e14777de8d6c8b03994e5a70fc9802aa056"
+    },
+    {
+      "path": "backend/app/bot/intent_classifier.py",
+      "sha256": "051c03096307d6498d0bf855b139b555cd06979ed0108b86236bc5e156a70ba4",
+      "git_blob": "96f5bff5f45dfe7bd41d438443cfc696e028ca64"
+    },
+    {
+      "path": "backend/app/integrations/_json_utils.py",
+      "sha256": "1178c9ccbf103c4cdb7af61565443737b6b564f4daea680d67899b16bd91de26",
+      "git_blob": "51f2c91eaf0f37b843eea5ec60a46d7be992bc4f"
+    },
+    {
+      "path": "backend/tests/safety.py",
+      "sha256": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+      "git_blob": "a4306030edcbda338023b3ae8c0cab052944c2f9",
+      "test_functions": []
+    },
+    {
+      "path": "backend/tests/conftest.py",
+      "sha256": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84",
+      "git_blob": "5a52763d4ad9309b1baffb5536c033bc532f20e9",
+      "test_functions": []
+    },
+    {
+      "path": "backend/tests/test_sku_fact_replies.py",
+      "sha256": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1",
+      "git_blob": "2925ddeb758c6da7fb1de077e185cba451368fab",
+      "test_functions": [
+        {
+          "name": "test_observation_has_no_legacy_floor_description_or_default_variant",
+          "line": 15
+        },
+        {
+          "name": "test_factual_question",
+          "line": 25
+        },
+        {
+          "name": "test_transactional_variant_selection_or_ambiguous_question_hands_off",
+          "line": 30
+        },
+        {
+          "name": "test_malformed_public_facts_rejected",
+          "line": 35
+        },
+        {
+          "name": "test_other_url_or_transactional_text_does_not_disappear_behind_reel_reference",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_sku_fact_replies_db.py",
+      "sha256": "a19e189279ef8f58e2fe04789baaa3514ee1ba5d42cb0febd841713161f1babd",
+      "git_blob": "4042ee01ce6d3203090a9284aa5448084f7e32f9",
+      "test_functions": [
+        {
+          "name": "test_fresh_scalar_bypasses_retained_orm_without_flushing_dirty_fields",
+          "line": 47
+        },
+        {
+          "name": "test_missing_current_public_authority_fails_closed",
+          "line": 68
+        },
+        {
+          "name": "test_reader_does_not_block_concurrent_stock_writer_or_observe_uncommitted_stock",
+          "line": 83
+        },
+        {
+          "name": "test_exact_reel_resolves_all_matches_never_title_or_substring_guess",
+          "line": 100
+        },
+        {
+          "name": "test_corrupt_numeric_mapping_is_not_coerced_into_reviewed_media_identity",
+          "line": 115
+        },
+        {
+          "name": "test_ig_focused_reply_uses_single_writer_no_llm_cycle_or_commerce_mutation",
+          "line": 139
+        },
+        {
+          "name": "test_ig_delayed_current_gate_change_withholds_before_provider",
+          "line": 165
+        },
+        {
+          "name": "test_wa_delivery_regenerates_actual_current_facts_once_and_keeps_unknown_effect",
+          "line": 216
+        },
+        {
+          "name": "test_wa_pending_intent_cannot_bypass_current_gates",
+          "line": 238
+        },
+        {
+          "name": "test_final_reel_projection_rejects_new_ambiguity_after_initial_resolver",
+          "line": 259
+        },
+        {
+          "name": "test_option_capacity_is_complete_or_handoff_never_partial",
+          "line": 270
+        },
+        {
+          "name": "test_real_durable_ig_thread_context_mid_and_uncertain_send_policy",
+          "line": 280
+        },
+        {
+          "name": "test_invalid_reply_to_never_answers_using_previous_focus",
+          "line": 319
+        },
+        {
+          "name": "test_existing_feature_wait_variant_and_negotiation_values_are_read_only",
+          "line": 341
+        },
+        {
+          "name": "test_rollout_revoked_during_final_read_is_not_authority",
+          "line": 360
+        },
+        {
+          "name": "test_buffered_conflicting_explicit_products_never_choose_first_or_last",
+          "line": 374
+        },
+        {
+          "name": "test_all_frozen_reel_references_revalidated_not_only_last",
+          "line": 407
+        },
+        {
+          "name": "test_final_window_gate_covers_every_processing_source_not_just_one_current_receipt",
+          "line": 422
+        },
+        {
+          "name": "test_new_explicit_sku_does_not_release_previous_legacy_feature_wait",
+          "line": 438
+        },
+        {
+          "name": "test_exact_reel_keeps_sku_store_writers_free_but_documents_incumbent_focus_fk_lock",
+          "line": 460
+        },
+        {
+          "name": "test_batch_cannot_admit_new_fact_authority_after_its_preflight",
+          "line": 487
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_whatsapp.py",
+      "sha256": "cd1240647f241009e77b93193dd7044eeb15646850edb07618c7457388162b38",
+      "git_blob": "e0c75ef18fc98c03ed956eaa39b10bafbd2e2be9",
+      "test_functions": [
+        {
+          "name": "test_signatures_and_dotted_verification_fail_closed",
+          "line": 78
+        },
+        {
+          "name": "test_connection_verified_encrypted_disabled_and_token_retained",
+          "line": 89
+        },
+        {
+          "name": "test_provider_membership_checks_all_pages",
+          "line": 107
+        },
+        {
+          "name": "test_inbound_dedupe_delayed_window_and_exact_keyword",
+          "line": 121
+        },
+        {
+          "name": "test_tenant_boundaries_and_anonymous_access",
+          "line": 136
+        },
+        {
+          "name": "test_manual_replies_idempotent_and_window_enforced",
+          "line": 146
+        },
+        {
+          "name": "test_stop_blocks_queued_and_checkout_cannot_override",
+          "line": 156
+        },
+        {
+          "name": "test_template_consent_approval_and_live_recheck",
+          "line": 175
+        },
+        {
+          "name": "test_unknown_send_never_retried_and_callback_can_resolve",
+          "line": 195
+        },
+        {
+          "name": "test_delivery_claim_concurrency_and_success",
+          "line": 210
+        },
+        {
+          "name": "test_order_notifications_only_explicit_consent_utility_and_idempotent",
+          "line": 222
+        },
+        {
+          "name": "test_stale_keyword_never_uses_another_recent_message_window",
+          "line": 238
+        },
+        {
+          "name": "test_disable_automation_cancels_queued_reply",
+          "line": 247
+        },
+        {
+          "name": "test_unicode_verification_token_rejected",
+          "line": 261
+        },
+        {
+          "name": "test_number_cannot_be_claimed_by_other_seller",
+          "line": 267
+        },
+        {
+          "name": "test_disconnect_prevents_reenable_without_credentials",
+          "line": 276
+        },
+        {
+          "name": "test_expired_window_at_worker_and_crash_recovery",
+          "line": 283
+        },
+        {
+          "name": "test_order_template_recategorized_cannot_send_marketing",
+          "line": 297
+        },
+        {
+          "name": "test_transport_timeout_is_unknown_not_retry",
+          "line": 313
+        },
+        {
+          "name": "test_stop_same_second_as_checkout_consent_is_honored",
+          "line": 327
+        },
+        {
+          "name": "test_create_template_scoped_pending_duplicate_and_send_guard",
+          "line": 336
+        },
+        {
+          "name": "test_template_create_validation_and_disconnected_account",
+          "line": 363
+        },
+        {
+          "name": "test_template_uncertain_creation_does_not_claim_success_or_retry",
+          "line": 381
+        },
+        {
+          "name": "test_template_create_preserves_meta_category_and_requires_auth",
+          "line": 397
+        },
+        {
+          "name": "test_instagram_link_identity",
+          "line": 417
+        },
+        {
+          "name": "test_reel_context_matches_only_active_own_product_without_sending",
+          "line": 440
+        },
+        {
+          "name": "test_unknown_and_ambiguous_reels_do_not_guess",
+          "line": 458
+        },
+        {
+          "name": "test_quoted_reel_uses_same_contact_and_current_catalogue",
+          "line": 469
+        },
+        {
+          "name": "test_referral_and_video_caption_are_retained_without_guessing_ad_identity",
+          "line": 498
+        },
+        {
+          "name": "test_separate_question_inherits_recent_reel_but_new_link_does_not",
+          "line": 521
+        },
+        {
+          "name": "test_recent_context_expires_and_never_crosses_contacts",
+          "line": 534
+        },
+        {
+          "name": "test_opt_in_reel_replies_follow_product_and_recheck_price_at_delivery",
+          "line": 544
+        },
+        {
+          "name": "test_reel_delivery_rechecks_permission_and_mapping",
+          "line": 570
+        },
+        {
+          "name": "test_reel_automation_requires_optin_and_never_replies_to_stop",
+          "line": 594
+        },
+        {
+          "name": "test_unresolvable_new_link_overrides_quoted_reel",
+          "line": 606
+        },
+        {
+          "name": "test_unlinked_queue_groups_messages_and_resumes_once_per_customer",
+          "line": 623
+        },
+        {
+          "name": "test_unlinked_queue_is_tenant_scoped_and_requires_active_own_product",
+          "line": 655
+        },
+        {
+          "name": "test_link_skips_customers_that_should_not_receive_resume",
+          "line": 676
+        },
+        {
+          "name": "test_link_resumes_multiple_customers_and_queue_paginates",
+          "line": 694
+        },
+        {
+          "name": "test_ambiguous_reel_cannot_silently_replace_another_product",
+          "line": 710
+        },
+        {
+          "name": "test_concurrent_reel_link_actions_queue_one_reply",
+          "line": 720
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "sha256": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+      "git_blob": "5c49c8198a952c872b9273eff0c5e609ec84ccc1",
+      "test_functions": [
+        {
+          "name": "test_resolve_is_persisted_audited_idempotent_and_never_sends",
+          "line": 98
+        },
+        {
+          "name": "test_review_refuses_missing_csrf_cross_origin_revoked_session_and_unconfirmed_decision",
+          "line": 117
+        },
+        {
+          "name": "test_read_roles_cannot_review_or_connect_even_with_competing_owner_cookie",
+          "line": 131
+        },
+        {
+          "name": "test_tenant_scoped_pagination_filters_and_private_media",
+          "line": 141
+        },
+        {
+          "name": "test_reviewed_replay_rechecks_current_eligibility",
+          "line": 159
+        },
+        {
+          "name": "test_eligible_replay_is_queued_once_and_worker_rechecks_reviewer_revocation",
+          "line": 187
+        },
+        {
+          "name": "test_connect_whatsapp_uses_synthetic_provider_and_audits_without_credentials",
+          "line": 210
+        },
+        {
+          "name": "test_stale_review_and_reused_key_with_different_decision_are_rejected",
+          "line": 232
+        },
+        {
+          "name": "test_concurrent_same_review_key_has_one_audit_and_no_second_decision",
+          "line": 243
+        },
+        {
+          "name": "test_connection_check_readiness_is_honest_and_provider_errors_do_not_leak",
+          "line": 255
+        },
+        {
+          "name": "test_owner_oauth_uses_actor_browser_and_current_generation_and_no_live_provider",
+          "line": 281
+        },
+        {
+          "name": "test_disconnect_cancels_oauth_before_provider_exchange",
+          "line": 306
+        },
+        {
+          "name": "test_activated_catalogue_handoffs_before_legacy_fact_reply",
+          "line": 334
+        },
+        {
+          "name": "test_whatsapp_activated_context_handoffs_without_frozen_price_or_stock",
+          "line": 353
+        },
+        {
+          "name": "test_customer_send_uncertainty_is_retained_in_receipt_quarantine",
+          "line": 365
+        },
+        {
+          "name": "test_disconnect_retains_inbox_binding_and_rejects_different_instagram_account",
+          "line": 405
+        },
+        {
+          "name": "test_close_without_retry_fences_old_resume_and_nudge_but_allows_new_customer_turn",
+          "line": 427
+        },
+        {
+          "name": "test_reviewed_eligible_retry_uses_existing_writer_once_with_synthetic_send",
+          "line": 455
+        },
+        {
+          "name": "test_ordinary_pending_receipt_without_current_signed_time_cannot_enter_writer",
+          "line": 487
+        },
+        {
+          "name": "test_legacy_product_authority_guard_refuses_foreign_or_missing_product_context",
+          "line": 500
+        },
+        {
+          "name": "test_product_authority_readers_share_locks_and_serialize_with_activation",
+          "line": 512
+        },
+        {
+          "name": "test_wa_legacy_fact_guard_never_waits_behind_product_with_account_held",
+          "line": 547
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_intent_classifier.py",
+      "sha256": "6ffe4af818f90dbd0f1f8f3d7c2bdfd2117bdacf156c1afeb5df28279417bb2c",
+      "git_blob": "cb309c2e93755d6f32564c0bc712cd7262354447",
+      "test_functions": [
+        {
+          "name": "test_classify_empty_input_returns_neutral",
+          "line": 21
+        },
+        {
+          "name": "test_parse_valid_json_with_all_fields",
+          "line": 29
+        },
+        {
+          "name": "test_parse_strips_markdown_fences",
+          "line": 38
+        },
+        {
+          "name": "test_parse_extracts_json_from_prose",
+          "line": 45
+        },
+        {
+          "name": "test_parse_unknown_enum_falls_back_to_default",
+          "line": 51
+        },
+        {
+          "name": "test_parse_clamps_confidence_to_range",
+          "line": 59
+        },
+        {
+          "name": "test_parse_garbage_returns_neutral",
+          "line": 68
+        },
+        {
+          "name": "test_classification_as_dict_round_trips",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_prompt_builders.py",
+      "sha256": "66e40d28c30c40e7be6eda49549fbb23572d4895b3615780dbf69e5adb8b249c",
+      "git_blob": "2a875c17f93ace73f2d4eba0971d5a92fd398874",
+      "test_functions": [
+        {
+          "name": "test_reply_prompt_includes_past_orders_and_previous_price",
+          "line": 52
+        },
+        {
+          "name": "test_reply_prompt_handles_missing_past_orders_and_previous_price",
+          "line": 59
+        },
+        {
+          "name": "test_decide_prompt_includes_past_orders_and_previous_price",
+          "line": 68
+        },
+        {
+          "name": "test_reply_prompt_includes_previously_missing_fields",
+          "line": 89
+        },
+        {
+          "name": "test_reply_prompt_no_price_change_when_no_counter",
+          "line": 105
+        },
+        {
+          "name": "test_decide_prompt_formats_prices_and_state",
+          "line": 113
+        },
+        {
+          "name": "test_render_transcript_maps_roles",
+          "line": 132
+        },
+        {
+          "name": "test_render_transcript_empty",
+          "line": 141
+        },
+        {
+          "name": "test_render_transcript_respects_limit_and_skips_blank",
+          "line": 146
+        },
+        {
+          "name": "test_clean_reply_text",
+          "line": 167
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_llm_provider.py",
+      "sha256": "6a40e7c9efbde12f5306d7d57cc6261e31745ee9b420f17e5d3a3a218bc77ea1",
+      "git_blob": "9c625620fdd70388d1b43198db0b03f984c0b5e3",
+      "test_functions": [
+        {
+          "name": "test_resolve_choice_uses_app_default_when_seller_has_no_prefs",
+          "line": 79
+        },
+        {
+          "name": "test_resolve_choice_uses_app_default_when_seller_pref_is_for_other_key",
+          "line": 87
+        },
+        {
+          "name": "test_resolve_choice_honours_seller_override_for_decide",
+          "line": 95
+        },
+        {
+          "name": "test_resolve_choice_honours_seller_override_for_reply",
+          "line": 102
+        },
+        {
+          "name": "test_resolve_choice_ignores_seller_override_for_subagent_methods",
+          "line": 109
+        },
+        {
+          "name": "test_resolve_choice_works_with_seller_none",
+          "line": 119
+        },
+        {
+          "name": "test_dispatches_to_resolved_provider_for_decide",
+          "line": 129
+        },
+        {
+          "name": "test_dispatches_to_resolved_provider_for_reply",
+          "line": 140
+        },
+        {
+          "name": "test_falls_back_on_parse_failure",
+          "line": 149
+        },
+        {
+          "name": "test_falls_back_on_generic_exception",
+          "line": 164
+        },
+        {
+          "name": "test_reraises_when_primary_and_fallback_are_the_same",
+          "line": 175
+        },
+        {
+          "name": "test_resolve_and_call_rejects_non_customer_facing_methods",
+          "line": 191
+        }
+      ]
+    },
+    {
+      "path": "backend/tests/test_scenarios.py",
+      "sha256": "c35806d532f75c7307ba9bad7a031a666152907dafadac5330d4d6f7a985657a",
+      "git_blob": "1e3ffd4ca308a27dec04819d5ed73a63d1ece1ca",
+      "test_functions": [
+        {
+          "name": "test_scenario",
+          "line": 168
+        }
+      ]
+    }
+  ],
+  "execution": "Static inventory only. No application imports, tests, DB, model, provider or server executed."
+}
