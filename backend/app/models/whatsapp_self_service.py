@@ -26,6 +26,7 @@ class WhatsAppSignupAttempt(Base):
     request_hash = Column(String(64), nullable=False)
     connection_version = Column(Integer, nullable=False)
     nonce_digest = Column(String(64), nullable=False)
+    requested_app_id = Column(String(40), nullable=False)
     evidence_kind = Column(String(30), nullable=False, default="provider", server_default="provider")
     state = Column(String(30), nullable=False, default="pending", server_default="pending")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -56,6 +57,8 @@ class WhatsAppSignupAttempt(Base):
         CheckConstraint("state IN ('pending','exchanging','exchange_unknown','awaiting_assets','awaiting_selection','setting_up','setup_unknown','attached','failed','cancelled','expired','stale')", name="wa_signup_state"),
         CheckConstraint("subscription_state IN ('not_started','requesting','unknown','confirmed','failed') AND registration_state IN ('not_started','requesting','unknown','confirmed','failed')", name="wa_signup_steps"),
         CheckConstraint("token_expiry_kind IN ('unknown','at','permanent') AND ((token_expiry_kind = 'at' AND token_expires_at IS NOT NULL) OR (token_expiry_kind <> 'at' AND token_expires_at IS NULL))", name="wa_signup_token_expiry"),
+        CheckConstraint("requested_app_id ~ '^[0-9]{1,40}$'", name="wa_signup_requested_app"),
+        CheckConstraint("verified_app_id IS NULL OR verified_app_id=requested_app_id", name="wa_signup_verified_app_binding"),
         CheckConstraint("verified_app_id IS NULL OR verified_app_id ~ '^[0-9]{1,40}$'", name="wa_signup_app_id"),
         CheckConstraint("(selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL AND selected_phone_number_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL AND selected_phone_number_id IS NOT NULL AND selected_phone_number_id ~ '^[0-9]{1,40}$')", name="wa_signup_selection"),
         Index("ix_wa_signup_cleanup", "token_delete_after"),
