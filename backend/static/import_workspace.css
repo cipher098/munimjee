@@ -5,3 +5,7 @@
 @media(min-width:721px){.operating-grid>.lists{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto}}
 
 .allocation-row .allocation-eligible{grid-column:1/-1;margin:0;font-size:13px}.allocation-eligible input{margin-top:3px}
+
+/* CSV shares the incumbent source controls and stays readable in two columns. */
+@media(min-width:1001px){.sources{grid-template-columns:1fr 1fr}}
+.sources select{margin-top:6px}.csv-source .hint{display:block;margin-top:8px;font-size:13px}

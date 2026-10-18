@@ -17,16 +17,16 @@ from app.v1.imports import ImportReviewError
 from app.v1.imports.fetching import FetchError
 
 
-async def bounded_upload(request: Request) -> bytes:
+async def bounded_upload(request: Request, *, limit: int = 5_000_000) -> bytes:
     length = request.headers.get("content-length")
-    if length is not None and (not length.isascii() or not length.isdecimal() or len(length) > 10 or int(length) > 5_000_000):
-        raise HTTPException(413, "Upload exceeds 5 MB")
+    if length is not None and (not length.isascii() or not length.isdecimal() or len(length) > 10 or int(length) > limit):
+        raise HTTPException(413, "Upload exceeds the supported byte limit")
     body = bytearray()
     try:
         async with asyncio.timeout(30):
             async for chunk in request.stream():
-                if len(body) + len(chunk) > 5_000_000:
-                    raise HTTPException(413, "Upload exceeds 5 MB")
+                if len(body) + len(chunk) > limit:
+                    raise HTTPException(413, "Upload exceeds the supported byte limit")
                 body.extend(chunk)
     except TimeoutError:
         raise HTTPException(408, "Upload timed out")
@@ -67,9 +67,9 @@ def create_router(require_v1_mutation) -> APIRouter:
         # spend bounded storage or trigger full-body buffering by FastAPI.
         await require_business_access(db, actor, business_id, "catalogue.write")
         content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
-        if content_type not in ("image/jpeg", "image/png", "video/mp4"):
+        if content_type not in ("image/jpeg", "image/png", "video/mp4", "text/csv"):
             raise HTTPException(415, "Supported media content type required")
-        content = await bounded_upload(request)
+        content = await bounded_upload(request, limit=256_000 if content_type == "text/csv" else 5_000_000)
         payload = UploadCreate(idempotency_key=idempotency_key, content_type=content_type, source_authorized=True)
         return await _call(service.put_upload(db, actor, business_id, payload, content=content))
 
