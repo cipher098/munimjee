@@ -1,0 +1,11 @@
+{
+  "format": "munimjee.release-rehearsal-validation.v1",
+  "application_base": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "date": "2026-10-18",
+  "pure_fake_transport": {"passed": 27, "skipped": 1, "failed": 0},
+  "actual_pg16_dump_restore": "pending: no allocated empty source/target pair supplied",
+  "actual_application_switch": "pending: immutable prior/current packages and mounted journey required",
+  "production_actions": false,
+  "docker_probes_or_restarts": false,
+  "command": "python -m pytest -q tests/release/test_v1_release_rehearsal.py"
+}
