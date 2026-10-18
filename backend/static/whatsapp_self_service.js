@@ -8,6 +8,10 @@
   const ID=/^[0-9]{1,40}$/, HEX=/^[0-9a-f]{64}$/;
   const STATES=['pending','exchanging','exchange_unknown','awaiting_assets','awaiting_selection','setting_up','setup_unknown','attached','failed','cancelled','expired','stale'];
   const TEST_STATES=['awaiting_recipient','recipient_verified','queued','sending','accepted','sent','delivered','read','failed','unknown','expired','stale_connection'];
+  const SIGNUP_LABELS={pending:'Ready to open Meta signup',exchanging:'Checking the authorization result',exchange_unknown:'Authorization result needs review',
+    awaiting_assets:'Review the authorized account',awaiting_selection:'Choose a verified account',setting_up:'Registration result needs review',
+    setup_unknown:'Registration result needs review',attached:'Account saved with automation paused',failed:'Setup could not be confirmed',
+    cancelled:'Unclaimed setup cancelled',expired:'Setup expired',stale:'The connection changed; review current setup'};
   const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
   const exact=(v,keys)=>object(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
   const uuid=v=>typeof v==='string'&&UUID.test(v);
@@ -38,7 +42,7 @@
     $('consent-form').reset();$('selection-form').reset();$('challenge-form').reset();$('send-form').reset();
     $('account-choice').replaceChildren(new Option('Choose an account',''));
     for(const id of ['connection-status','configuration-note','signup-status','test-status','choice-description','recovery-message'])$(id).textContent='';
-    for(const id of ['sdk-ready','selection-section','challenge-area','recipient-review','recovery','check-test','owner-tools'])$(id).hidden=true;
+    for(const id of ['sdk-ready','selection-section','challenge-area','recipient-review','recovery','check-test','prepare-new-test','owner-tools'])$(id).hidden=true;
     for(const id of ['consent-fields','selection-fields','challenge-fields','send-fields'])$(id).disabled=true;
     $('workspace').hidden=true;readiness=null;
   }
@@ -154,8 +158,11 @@
       exact(v.setup,['subscription','registration','billing'])&&['not_started','requesting','unknown','confirmed','failed'].includes(v.setup.subscription)&&['not_started','requesting','unknown','confirmed','failed'].includes(v.setup.registration)&&['unknown','external_action_required'].includes(v.setup.billing)&&v.provider_approval==='not_evaluated';
   }
   function validTest(v) {
-    return exact(v,['contract_version','business_id','test_id','connection_version','status','recipient_hint','inbound_observed_at','message_id','provider_delivery_observed_at','delivery_confirmed','is_current_generation','proof_source','message'])&&v.contract_version==='whatsapp-test.v1'&&v.business_id===businessId&&uuid(v.test_id)&&version(v.connection_version)&&TEST_STATES.includes(v.status)&&
+    return exact(v,['contract_version','business_id','test_id','connection_version','status','recipient_hint','inbound_observed_at','message_id','provider_delivery_observed_at','delivery_confirmed','recorded_effect_status','can_prepare_new_test','is_current_generation','proof_source','message'])&&v.contract_version==='whatsapp-test.v1'&&v.business_id===businessId&&uuid(v.test_id)&&version(v.connection_version)&&TEST_STATES.includes(v.status)&&
       (v.recipient_hint===null||typeof v.recipient_hint==='string'&&v.recipient_hint.length<=50)&&typeof v.message==='string'&&v.message.length<=500&&typeof v.delivery_confirmed==='boolean'&&typeof v.is_current_generation==='boolean'&&['not_recorded','signed_provider_webhook','synthetic_fixture'].includes(v.proof_source)&&
+      (v.recorded_effect_status===null||['queued','sending','unknown','accepted','sent','delivered','read','failed'].includes(v.recorded_effect_status))&&typeof v.can_prepare_new_test==='boolean'&&
+      !(v.can_prepare_new_test&&['queued','sending','unknown'].includes(v.recorded_effect_status))&&
+      !(v.can_prepare_new_test&&v.recorded_effect_status===null&&!['expired','stale_connection'].includes(v.status))&&
       (v.message_id===null||uuid(v.message_id))&&(v.inbound_observed_at===null||date(v.inbound_observed_at))&&
       (v.provider_delivery_observed_at===null||date(v.provider_delivery_observed_at))&&
       (!v.delivery_confirmed||['delivered','read'].includes(v.status)&&v.is_current_generation&&v.proof_source==='signed_provider_webhook'&&v.message_id&&v.inbound_observed_at&&v.provider_delivery_observed_at);
@@ -177,7 +184,7 @@
       signupJournal?.stage==='consent_open'?'Meta signup was opened. Check the current attempt before explicitly continuing; no popup is reopened automatically.':
       'An earlier local signup request is saved. Check its state or explicitly recover that same request.';
     $('retry-action').hidden=journalInvalid||!(signupJournal&&['start_unknown','prepared','consent_open'].includes(signupJournal.stage)||signup?.status==='awaiting_assets'&&signupJournal?.assets||testJournal&&(['start_unknown','send_unknown'].includes(testJournal.stage)||testJournal.stage==='challenge'&&!$('private-command').value&&test?.status==='awaiting_recipient'));
-    $('cancel-action').hidden=journalInvalid||!(testJournal?.test_id&&!test?.message_id||signupJournal?.attempt_id&&signup&&['pending','awaiting_assets','awaiting_selection','expired','cancelled'].includes(signup.status));
+    $('cancel-action').hidden=journalInvalid||['exchange_unknown','selection_unknown'].includes(signupJournal?.stage)||!(testJournal?.test_id&&!test?.message_id||signupJournal?.attempt_id&&signup&&['pending','awaiting_assets','awaiting_selection','expired','cancelled'].includes(signup.status));
     $('cancel-action').disabled=busy||checking||ended;
     $('retry-action').textContent=signup?.status==='awaiting_assets'&&signupJournal?.assets?'Continue saved account review':testJournal?.stage==='challenge'?'Recover same recipient command':'Retry the same local request';
     $('check-action').disabled=busy||checking||ended;
@@ -190,12 +197,14 @@
     $('refresh').disabled=ended||busy||checking;
     $('consent-fields').disabled=locked||!readiness?.onboarding_available||Boolean(signupJournal);
     $('selection-fields').disabled=locked||signup?.status!=='awaiting_selection'||signupJournal?.stage==='selection_unknown';
-    $('challenge-fields').disabled=locked||Boolean(testJournal)||!['paused','local_access_verified'].includes(readiness?.local_status)||readiness?.blockers.includes('test_disabled');
+    $('challenge-fields').disabled=locked||Boolean(signupJournal)||Boolean(testJournal)||!['paused','local_access_verified'].includes(readiness?.local_status)||readiness?.blockers.includes('test_disabled');
     $('send-fields').disabled=locked||!recipient?.reply_allowed||Boolean(testJournal?.send_body);
     $('open-meta').disabled=locked||!sdkLoaded||consentOpen||!startResult||signup?.status!=='pending';
     $('review-recipient').disabled=locked||!testJournal?.test_id;
     $('copy-command').disabled=locked||!$('private-command').value;
     $('check-test').disabled=locked||!testJournal?.test_id;
+    $('prepare-new-test').disabled=locked||!test?.can_prepare_new_test;
+    if(['exchange_unknown','selection_unknown'].includes(signupJournal?.stage))$('connection-status').textContent='Current connection needs a fresh check';
     $('loading').textContent=ended?'':checking?'Checking current sign-in and connection…':busy?'Waiting for the reviewed action…':'';
     recovery();
   }
@@ -215,8 +224,11 @@
       sent:'The provider reports sent. Delivery is not confirmed.',delivered:'The provider reports delivered.',read:'The provider reports read.',
       failed:'The reply failed. It will not be resent automatically.',unknown:'The send result is uncertain. Review before any other action.',expired:'The recipient challenge expired or was cancelled.',stale_connection:'This evidence belongs to an earlier connection generation.'};
     $('test-status').textContent=labels[test.status]+(test.proof_source==='synthetic_fixture'?' This is synthetic test evidence; it cannot confirm live delivery.':'')+
+      (test.status==='stale_connection'&&test.recorded_effect_status==='unknown'?' The earlier reply outcome is uncertain. Review it before another test.':
+        test.status==='stale_connection'&&['queued','sending'].includes(test.recorded_effect_status)?' The earlier reply is still queued or sending. Review its recorded result before another test.':'')+
       (test.delivery_confirmed?' Bound signed delivery is confirmed for this generation.':'');
     $('check-test').hidden=!testJournal?.test_id;
+    $('prepare-new-test').hidden=!testJournal?.test_id||!test.can_prepare_new_test;
     if(testJournal?.test_id&&!test.message_id&&test.is_current_generation)$('challenge-area').hidden=false;
     $('private-command').hidden=!$('private-command').value;
     $('copy-command').hidden=!$('private-command').value;
@@ -224,7 +236,7 @@
   function fail(error) {
     if(ended)return;
     if(error?.status===401||error?.status===403){end('Your sign-in or owner access changed. Open setup again from your business.');return;}
-    $('page-error').textContent=error?.userMessage||error?.message||'The result could not be confirmed. Check saved state before another action.';
+    $('page-error').textContent=error?.userMessage||(Number.isInteger(error?.status)?error.message:null)||'The result could not be confirmed. Check saved state before another action.';
   }
   async function refresh() {
     if(ended||checking||busy)return;checking=true;const requestEpoch=++epoch;eraseSecrets();sync();
@@ -317,7 +329,7 @@
       await guard(true);
       if(!validSignup(result)||result.attempt_id!==signupJournal.attempt_id)throw localError('Authorization result is uncertain. Its code will not be repeated.');
       signup=result;startResult=null;$('sdk-ready').hidden=true;
-      $('signup-status').textContent='Authorization status: '+result.status.replaceAll('_',' ')+'.';
+      $('signup-status').textContent=SIGNUP_LABELS[result.status]+'.';
       if(signup.status==='awaiting_assets'&&assetsHint)await saveAssets();
     }catch(error){startResult=null;fail(error);}
     finally {busy=false;consentOpen=Boolean(!ended&&signup?.status==='awaiting_assets'&&!signupJournal?.assets);if(!ended)sync();}
@@ -380,7 +392,7 @@
       if(result.status==='attached') {
         signupJournal=null;store();choices=[];$('selection-section').hidden=true;
         $('signup-status').textContent='Account saved with automation paused. Billing and a real delivery test remain separate.';
-      } else $('signup-status').textContent='Setup status: '+result.status.replaceAll('_',' ')+'. Check it before any further action.';
+      } else $('signup-status').textContent=SIGNUP_LABELS[result.status]+'. Check it before any further action.';
     }catch(error){fail(error);}
     finally {if(body)body.registration_pin='';$('registration-pin').value='';busy=false;if(!ended){sync();if(signup?.status==='attached')await refresh();}}
   }
@@ -388,7 +400,7 @@
     if(!signupJournal?.attempt_id)return;
     const value=await privateRead(base+'/signup/'+signupJournal.attempt_id);
     if(!validSignup(value)||value.attempt_id!==signupJournal.attempt_id)throw localError('Saved signup state could not be verified.');
-    signup=value;$('signup-status').textContent='Saved signup status: '+value.status.replaceAll('_',' ')+'. Provider effects are never repeated from this check.';
+    signup=value;$('signup-status').textContent=SIGNUP_LABELS[value.status]+'. Checking does not repeat registration or send a reply.';
     if(['attached','cancelled','expired','failed','stale'].includes(value.status)){signupJournal=null;store();$('selection-section').hidden=true;}
     else if(value.status==='awaiting_selection')await loadChoices();
     else if(value.status==='awaiting_assets'&&signupJournal.assets)$('signup-status').textContent+=' The original verified-account discovery request is available for explicit recovery.';
@@ -408,6 +420,7 @@
       await guard(true);
       if(!exact(value,['contract_version','test','receipt','command'])||value.contract_version!=='whatsapp-test-challenge.v1'||!validTest(value.test)||typeof value.command!=='string'||!/^MUNIMJEE-WA-TEST:[A-Za-z0-9_-]{22}$/.test(value.command)||!validReceipt(value.receipt,testJournal.body,'test_start',value.test.test_id)||testJournal.test_id!==null&&testJournal.test_id!==value.test.test_id)throw localError('The challenge result could not be verified. Retry only its original local request.');
       if(responseSequence!==testSequence)return;
+      $('page-error').textContent='';
       test=value.test;testJournal.test_id=test.test_id;testJournal.stage='challenge';store();
       $('private-command').value=value.command;value.command='';$('challenge-area').hidden=false;renderTest();
     }catch(error){fail(error);}
@@ -443,6 +456,7 @@
       await guard(true);
       if(!validTest(value)||value.test_id!==testJournal.test_id||!value.message_id)throw localError('The fixed reply may already be queued. Its exact command remains saved.');
       if(responseSequence!==testSequence)return;
+      $('page-error').textContent='';
       test=value;testJournal.stage='queued';store();renderTest();$('challenge-area').hidden=true;
     }catch(error){fail(error);}
     finally {busy=false;if(!ended)sync();}
@@ -456,6 +470,25 @@
     test=value;
     if(value.message_id&&testJournal.send_body){testJournal.stage='queued';store();}
     renderTest();sync();
+  }
+  async function prepareNewTest() {
+    if(busy||checking||ended||!testJournal?.test_id)return;
+    busy=true;const responseSequence=++testSequence,oldId=testJournal.test_id;sync();
+    try {
+      const previous=await privateRead(base+'/tests/'+oldId);
+      const current=await privateRead(base+'/self-service');
+      await guard(true);
+      if(responseSequence!==testSequence||!testJournal||testJournal.test_id!==oldId||!validTest(previous)||previous.test_id!==oldId||
+        !previous.can_prepare_new_test||!validReadiness(current))throw localError('The earlier test still needs review. No new recipient command was prepared.');
+      // This button performs GETs only. The recorded test/outbox is untouched;
+      // a new command requires a newly checked recipient authorization below.
+      testJournal=null;store();eraseSecrets();$('recipient-authorized').checked=false;
+      $('page-error').textContent='';
+      test=null;readiness=current;renderReadiness();$('challenge-area').hidden=true;
+      $('check-test').hidden=true;$('prepare-new-test').hidden=true;
+      $('test-status').textContent='The earlier test remains recorded. Review recipient permission again before creating a new command. No reply was repeated.';
+    }catch(error){fail(error);}
+    finally {busy=false;if(!ended)sync();}
   }
   async function checkAction() {
     if(busy||checking||ended||journalInvalid)return;busy=true;eraseSecrets();sync();
@@ -503,6 +536,7 @@
   $('retry-action').addEventListener('click',retryAction);
   $('review-recipient').addEventListener('click',reviewRecipient);
   $('check-test').addEventListener('click',()=>{if(!busy&&!checking){checkTest().catch(fail);}});
+  $('prepare-new-test').addEventListener('click',prepareNewTest);
   $('account-choice').addEventListener('change',()=>{const choice=choices.find(v=>v.choice_id===$('account-choice').value);$('choice-description').textContent=choice?'Selected business number: '+choice.display_phone_number:'';});
   $('copy-command').addEventListener('click',async()=>{
     if(!owner()||!cookieMatches()||!$('private-command').value)return;

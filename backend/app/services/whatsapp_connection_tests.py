@@ -28,6 +28,21 @@ def enabled():
         problem('channel_test_disabled','Authorized WhatsApp tests are not enabled',404)
 
 
+async def pending_test_effect(db,business_id):
+    """Read canonical outcomes only; callers never lock Message after Test.
+
+    start_test invokes this afresh while holding the canonical Account lock,
+    which serializes final worker outcomes. Unknown associations fail closed.
+    """
+    known=(WhatsAppMessage.status=='failed')|(
+        WhatsAppMessage.status.in_(('accepted','sent','delivered','read'))&
+        func.nullif(WhatsAppMessage.provider_message_id,'').is_not(None))
+    return await db.scalar(select(WhatsAppTestAuthorization.test_id).join(WhatsAppMessage,
+        (WhatsAppMessage.id==WhatsAppTestAuthorization.outbound_message_id)&
+        (WhatsAppMessage.seller_id==WhatsAppTestAuthorization.business_id)).where(
+        WhatsAppTestAuthorization.business_id==business_id,~known).limit(1)) is not None
+
+
 async def own_test(db,authority,test_id,*,lock=False):
     query=select(WhatsAppConnectionTest).where(WhatsAppConnectionTest.id==test_id,
         WhatsAppConnectionTest.business_id==authority.binding.business_id)
@@ -53,10 +68,18 @@ async def test_view(db,row):
     if not current: state='stale_connection'
     confirmed=bool(current and row.evidence_kind=='provider' and row.inbound_message_id and message and
         message.status in ('delivered','read') and message.provider_message_id)
+    effect=None
+    if auth:
+        effect=message.status if message and message.status in ('queued','sending','unknown','accepted','sent','delivered','read','failed') else 'unknown'
+        if effect in ('accepted','sent','delivered','read') and not message.provider_message_id: effect='unknown'
+    retired_challenge=not auth and (not current or row.cancelled_at is not None or row.expires_at<=now())
+    safe_effect=effect in ('accepted','sent','delivered','read','failed')
+    can_prepare=bool((retired_challenge or safe_effect) and not await pending_test_effect(db,row.business_id))
     return TestView(contract_version='whatsapp-test.v1',business_id=row.business_id,test_id=row.id,
         connection_version=row.connection_version,status=state,recipient_hint='••'+contact[-4:] if contact else None,
         inbound_observed_at=row.received_at,message_id=message.id if message else None,
         provider_delivery_observed_at=message.updated_at if confirmed else None,delivery_confirmed=confirmed,
+        recorded_effect_status=effect,can_prepare_new_test=can_prepare,
         is_current_generation=current,proof_source=('synthetic_fixture' if row.evidence_kind=='synthetic_fixture'
             else 'signed_provider_webhook' if row.inbound_message_id else 'not_recorded'),
         message=('Provider acceptance is not delivery. A failed or unknown test is never automatically resent.'
@@ -75,6 +98,8 @@ async def start_test(db,authority,payload):
     else:
         if account is None or control.version!=payload.expected_connection_version:
             problem('channel_generation_stale','Review the current WhatsApp connection first')
+        if await pending_test_effect(db,authority.binding.business_id):
+            problem('channel_test_effect_pending','An earlier fixed reply is queued, sending or uncertain. Review its recorded result before preparing another test.')
         provenance=await current_provenance(db,account,control.version)
         timestamp=now().replace(microsecond=0)
         midnight=timestamp.replace(hour=0,minute=0,second=0)

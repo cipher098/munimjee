@@ -193,12 +193,18 @@ class TestView(Contract):
     message_id: UUID | None
     provider_delivery_observed_at: AwareDatetime | None
     delivery_confirmed: StrictBool
+    recorded_effect_status: Literal["queued", "sending", "unknown", "accepted", "sent", "delivered", "read", "failed"] | None
+    can_prepare_new_test: StrictBool
     is_current_generation: StrictBool
     proof_source: Literal["not_recorded", "signed_provider_webhook", "synthetic_fixture"]
     message: Annotated[StrictStr, Field(max_length=500)]
 
     @model_validator(mode="after")
     def delivery_requires_bound_observations(self):
+        if self.can_prepare_new_test and self.recorded_effect_status in {'queued','sending','unknown'}:
+            raise ValueError("Unfinished reply effects cannot authorize a fresh test")
+        if self.can_prepare_new_test and self.recorded_effect_status is None and self.status not in {'expired','stale_connection'}:
+            raise ValueError("An active recipient challenge must first be retired")
         if self.delivery_confirmed and (
             self.status not in {"delivered", "read"} or not self.is_current_generation
             or self.inbound_observed_at is None or self.message_id is None

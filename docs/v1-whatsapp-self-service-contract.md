@@ -1,14 +1,15 @@
 # V07 WhatsApp self-service proposal
 
-Status: core policy accepted in principle; exact schema/shared hooks pending
-integrator approval. Reserved migration `0057_v1_whatsapp_self_service` follows real
-`0056` (exact revision dependency still to consume). **No runtime,
-schema, provider request or recipient message is implemented/executed by this
-packet**. Source inventory is composed `dddd81d`; independent onboarding follow-up
-review covered frozen `52fdda8` (now composed separately as `bb261b8`). Existing
-manual token configuration is not Embedded Signup or V07 self-onboarding proof.
+Status: frozen policy, schema and helper contract approved for isolated implementation.
+Actual migration `0057_v1_whatsapp_self_service` follows real `0056_v1_comment_operator`.
+Implementation and synthetic-provider database/browser evidence are recorded in
+`v1-whatsapp-self-service-verification.md`; neither production flag is enabled and
+no live provider consent or recipient delivery is established. The original gap
+inventory below was taken at composed `dddd81d`; independent onboarding follow-up
+review covered frozen `52fdda8` (composed separately as `bb261b8`). Existing manual
+token configuration is not Embedded Signup or V07 self-onboarding proof.
 
-## Current facts and missing paths
+## Original facts and missing paths
 
 | Existing source | Reusable behavior | Remaining work |
 | --- | --- | --- |
@@ -392,3 +393,11 @@ The exact message helper similarly ends with one scalar auth/test/provenance/cur
 Attempt also stores immutable `requested_app_id`, set from the server's original prepared SDK configuration, included in signed local state and bound to later verified App evidence. Exchange cannot infer its original App from verified_app_id before verification. NEW exchange/setup dispatch and attachment require original requested App = verified App where applicable = current configured App. A valid App-ID rotation during claim commit therefore withholds dispatch; rotation during provider I/O retains an unknown claim without attaching credentials. It does not turn same-App SDK ConfigID rotation into grant revocation.
 
 Mutating HTTP responses add a safe `OperationReceipt`: business_id, idempotency_key, action, expected_connection_version, resource_id and selected_choice_id (null unless selecting). Start/challenge wrappers retain their existing safe result with this receipt; other signup/test commands return `whatsapp-signup-command.v1` / `whatsapp-test-command.v1` containing receipt and safe result. These are server-derived after exact command matching. Clients must match their original business/key/action/generation/resource and selected choice before recording returned IDs or clearing an uncertain intent. A valid-shaped wrong-command200 leaves recovery unchanged. Safe GET DTOs do not gain a receipt or claim to acknowledge a mutation.
+
+### Explicit review before another test
+
+TestView adds `recorded_effect_status` (null for an unqueued challenge, otherwise a bounded canonical outbox outcome) and `can_prepare_new_test`. A stale generation does not hide a queued/sending/unknown reply's blocker. A known failed result, or accepted/sent/delivered/read result with a nonempty canonical provider association, may permit a separately reviewed test; an unqueued expired/cancelled/stale challenge may also be retired. Missing associations and malformed outcomes remain unknown. These fields are hints, never message authority or delivery promotion.
+
+Every new challenge recomputes pending effects for the business while holding the existing canonical Account lock. Any prior bound queued/sending/unknown or unclassified outcome denies creation, even after generation changes. Exact original-key replay is checked first. The existing60-second cooldown, three-per-day limit and one active current-generation challenge remain unchanged.
+
+The owner explicitly chooses “Review a new connection test.” The page re-GETs its exact prior test and current readiness under fresh native owner/session checks, then clears only that known local pointer and private inputs. This button sends no POST. Old tests, message effects and immutable evidence remain intact. The owner must freshly check recipient permission and submit a new challenge/key; nothing reuses or automatically retries an old reply. A rate-limited new intent retains its original key/body for explicit retry after the real cooldown. Unknown signup stages withhold cancellation and mark connection state as needing a fresh check rather than presenting a stale pre-save status as current.

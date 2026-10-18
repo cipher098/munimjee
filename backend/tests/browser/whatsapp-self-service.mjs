@@ -96,9 +96,9 @@ try{
 
   await page.locator('#recipient-authorized').check();await page.getByRole('button',{name:'Create private recipient command',exact:true}).click();
   await expect(page.locator('#private-command')).not.toHaveValue('');
-  const privateCommand=await page.locator('#private-command').inputValue();
+  const privateCommand=await page.locator('#private-command').inputValue(),firstChallengeAt=Date.now();
   const storedChallenge=await storage();assert.equal(storedChallenge.includes(privateCommand),false);assert.equal(storedChallenge.includes('MUNIMJEE-WA-TEST:'),false);checks++;
-  const journal=JSON.parse(storedChallenge),testId=journal.test.test_id;
+  const journal=JSON.parse(storedChallenge),testId=journal.test.test_id;let statusTestId=testId;
   await signedWebhook({metadata:{phone_number_id:'12345'},messages:[{id:'synthetic-signed-inbound',from:'910000000001',timestamp:String(Math.floor(Date.now()/1000)),type:'text',text:{body:privateCommand}}]});
   await page.getByRole('button',{name:'Review received recipient',exact:true}).click();
   await expect(page.locator('#recipient-phone')).toHaveText('+910000000001');await expect(page.locator('#queue-test')).toBeEnabled();checks++;
@@ -128,6 +128,39 @@ try{
   assert.equal((await api(endpoint+`/tests/${testId}`)).data.delivery_confirmed,false);checks++;
   const storedFinal=await storage();assert.equal(storedFinal.includes(privateCommand),false);assert.equal(storedFinal.includes('910000000001'),false);checks++;
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await screenshot('mobile-synthetic-result');checks++;
+
+  // Ordinary native enable advances generation; it never promotes the earlier
+  // test to current delivery proof. The new-test review button itself only GETs.
+  assert.equal((await api(`/api/v1/businesses/${bid}/channels/whatsapp/automation`,'POST',
+    {idempotency_key:crypto.randomUUID(),enabled:true})).status,200);
+  await page.getByRole('button',{name:'Check test result',exact:true}).click();
+  await expect(page.locator('#test-status')).toContainText('earlier connection generation');
+  await expect(page.locator('#prepare-new-test')).toBeVisible();checks++;
+  const postsBeforeReview=privatePosts;
+  await page.getByRole('button',{name:'Review a new connection test',exact:true}).click();
+  await expect(page.locator('#recipient-authorized')).not.toBeChecked();
+  await expect(page.locator('#test-status')).toContainText('Review recipient permission again');
+  assert.equal(privatePosts,postsBeforeReview);checks++;
+  let newFirstBody=null,newReplayBody=null;
+  await page.route('**'+endpoint+'/tests',async route=>{
+    const body=route.request().postData();if(newFirstBody===null)newFirstBody=body;else newReplayBody=body;
+    const response=await route.fetch();await route.fulfill({response});
+  });
+  await page.locator('#recipient-authorized').check();
+  await page.getByRole('button',{name:'Create private recipient command',exact:true}).click();
+  await expect(page.locator('#page-error')).toContainText('Wait at least one minute');
+  await expect(page.locator('#retry-action')).toBeVisible();checks++;
+  const cooldownRemaining=Math.max(0,61000-(Date.now()-firstChallengeAt));
+  console.log('Respecting real60-second test cooldown before explicit same-key retry');
+  await page.waitForTimeout(cooldownRemaining);
+  await page.locator('#retry-action').click();await expect(page.locator('#private-command')).not.toHaveValue('');
+  await expect(page.locator('#recovery')).toBeHidden();
+  assert.equal(newReplayBody,newFirstBody);const refreshedJournal=JSON.parse(await storage());
+  assert.notEqual(refreshedJournal.test.test_id,testId);assert.equal(refreshedJournal.test.body.expected_connection_version,2);
+  statusTestId=refreshedJournal.test.test_id;await page.unroute('**'+endpoint+'/tests');checks++;
+  await screenshot('mobile-new-current-test');
+  const afterNew=await api(`/__wa_setup/${bid}/snapshot`,'POST',{},true);
+  assert.equal(afterNew.data.tests,2);assert.equal(afterNew.data.authorizations,1);assert.equal(afterNew.data.provider_sends,1);checks++;
   await page.route('**'+endpoint+'/self-service',route=>route.fulfill({status:503,contentType:'application/json',body:'{"detail":"Synthetic read unavailable"}'}));
   await page.getByRole('button',{name:'Refresh status',exact:true}).click();await expect(page.locator('#page-error')).not.toBeEmpty();await expect(page.locator('#workspace')).toBeHidden();
   assert.equal(await page.locator('#recipient-phone').textContent(),'');await screenshot('mobile-read-error');checks++;
@@ -136,7 +169,7 @@ try{
   // Hold an old valid private GET, then replace this same user's actual native
   // session. Controlled input canaries test physical erasure, not screenshot masks.
   let releaseOld,oldEntered,oldFinished;const oldWait=new Promise(resolve=>{releaseOld=resolve;}),oldStarted=new Promise(resolve=>{oldEntered=resolve;}),oldDone=new Promise(resolve=>{oldFinished=resolve;});
-  await page.route('**'+endpoint+`/tests/${testId}`,async route=>{
+  await page.route('**'+endpoint+`/tests/${statusTestId}`,async route=>{
     const response=await route.fetch();oldEntered();await oldWait;
     try{await route.fulfill({response});heldOldDelivered=true;}catch(_){heldOldDelivered=false;}
     finally{oldFinished();} // Ended AbortController may cancel, rather than deliver, this GET.
@@ -149,7 +182,7 @@ try{
   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#access-needed')).toBeVisible();
   const replacementSecretsEmpty=await page.evaluate(()=>document.querySelector('#private-command').value===''&&document.querySelector('#registration-pin').value==='');
   assert.equal(replacementSecretsEmpty,true);await expect(page.locator('#logout')).toBeHidden();checks++;
-  releaseOld();await oldDone;await page.unroute('**'+endpoint+`/tests/${testId}`);
+  releaseOld();await oldDone;await page.unroute('**'+endpoint+`/tests/${statusTestId}`);
   await page.evaluate(()=>{for(const id of ['consent-form','send-form'])document.getElementById(id).dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
   await page.waitForTimeout(100);assert.equal(privatePosts,postsBeforeReplacement);
   assert.equal(await page.locator('#test-status').textContent(),'');await expect(page.locator('#workspace')).toBeHidden();checks++;
