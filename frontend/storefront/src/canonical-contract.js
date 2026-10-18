@@ -33,11 +33,13 @@ function decodeStore(x){
  return {slug:x.slug,name:x.name,currency:'INR',shippingMinor:x.shipping_fee,checkoutEnabled:x.checkout_enabled,paymentMethods:[...(x.payment_options.cod_enabled?['cod']:[]),...(x.payment_options.razorpay_enabled?['razorpay']:[])],categories:x.categories.map(c=>({category_id:c.id,name:c.name}))};
 }
 function encodeCheckout(payload,key){
- check(UUID.test(key)&&keys(payload,['customer','address','items','note','payment_method','whatsapp_updates_opt_in']));
+ const financial=['customer','address','items','note','payment_method','whatsapp_updates_opt_in'];
+ check(UUID.test(key)&&keys(payload,[...financial,...(Object.hasOwn(payload,'activity_context_id')?['activity_context_id']:[])]));
+ check(payload.activity_context_id===undefined||payload.activity_context_id===null||(typeof payload.activity_context_id==='string'&&UUID.test(payload.activity_context_id)));
  const c=payload.customer,a=payload.address;
  check(keys(c,['name','phone','email'])&&text(c.name,2,100)&&text(c.phone,10,20)&&(c.email===null||text(c.email,0,254))&&keys(a,['line1','line2','city','state','postal_code','country'])&&text(a.line1,3,200)&&text(a.line2,0,200)&&text(a.city,2,100)&&text(a.state,2,100)&&/^[1-9][0-9]{5}$/.test(a.postal_code)&&a.country==='IN'&&text(payload.note,0,2000)&&['cod','razorpay'].includes(payload.payment_method)&&typeof payload.whatsapp_updates_opt_in==='boolean');
  check(Array.isArray(payload.items)&&payload.items.length>=1&&payload.items.length<=50&&payload.items.every(i=>keys(i,['sku_id','quantity'])&&UUID.test(i.sku_id)&&Number.isSafeInteger(i.quantity)&&i.quantity>=1&&i.quantity<=20)&&new Set(payload.items.map(i=>i.sku_id)).size===payload.items.length);
- return {idempotency_key:key,customer:{name:c.name,phone:c.phone,email:c.email},address:{line1:a.line1,line2:a.line2,city:a.city,state:a.state,postal_code:a.postal_code,country:'IN'},items:payload.items.map(i=>({sku_id:i.sku_id,quantity:i.quantity})),note:payload.note,payment_method:payload.payment_method,whatsapp_updates_opt_in:payload.whatsapp_updates_opt_in};
+ return {idempotency_key:key,...(Object.hasOwn(payload,'activity_context_id')?{activity_context_id:payload.activity_context_id}:{}),customer:{name:c.name,phone:c.phone,email:c.email},address:{line1:a.line1,line2:a.line2,city:a.city,state:a.state,postal_code:a.postal_code,country:'IN'},items:payload.items.map(i=>({sku_id:i.sku_id,quantity:i.quantity})),note:payload.note,payment_method:payload.payment_method,whatsapp_updates_opt_in:payload.whatsapp_updates_opt_in};
 }
 function decodeOrder(x,{payload,slug,accessToken,orderId,created=true}={}){
  check(keys(x,['contract_version','id','number','access_token','customer','address','note','subtotal','shipping_fee','total','currency','payment_method','payment_status','fulfillment_status','carrier','tracking_number','tracking_url','created_at','updated_at','expires_at','items']));

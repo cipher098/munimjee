@@ -18,7 +18,8 @@ def test_all_foundation_models_are_registered():
             "storefront_theme_settings_v1", "storefront_theme_commands_v1",
             "v1_onboarding_assignments", "v1_assistance_commands",
             "v1_support_grants", "v1_support_commands", "v1_customers", "v1_customer_link_challenges",
-            "v1_customer_link_proofs", "v1_customer_associations", "v1_customer_link_audits"} <= set(Base.metadata.tables)
+            "v1_customer_link_proofs", "v1_customer_associations", "v1_customer_link_audits",
+            "v1_activity_policies", "v1_activity_contexts", "v1_activity_events", "v1_order_activity"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -38,6 +39,8 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/v1/support", "/api/v1/support/grants",
             "/api/v1/businesses/{business_id}/support/grants",
             "/v1/businesses/{business_id}/analytics", "/api/v1/businesses/{business_id}/analytics",
+            "/api/v1/businesses/{business_id}/analytics/activity",
+            "/api/v1/businesses/{business_id}/analytics/measurement-policy",
             "/v1/businesses/{business_id}/customers", "/api/v1/businesses/{business_id}/customer-links",
             "/api/v1/businesses/{business_id}/imports/candidates/{candidate_id}/catalogue-preview"} <= paths
 
@@ -56,7 +59,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0053_v1_csv_import"]
+    assert scripts.get_heads() == ["0054_v1_activity"]
+    assert scripts.get_revision("0054_v1_activity").down_revision == "0053_v1_csv_import"
     assert scripts.get_revision("0053_v1_csv_import").down_revision == "0052_v1_customer_links"
     assert scripts.get_revision("0052_v1_customer_links").down_revision == "0051_v1_support_grants"
     assert scripts.get_revision("0051_v1_support_grants").down_revision == "0050_v1_assistance"
@@ -82,3 +86,14 @@ def test_parcel_recovery_is_registered_and_default_off():
     assert 'app.workers.v1_parcels' in celery_app.conf.include
     assert any(item['task'] == 'app.workers.v1_parcels.recover_parcels'
                and item['schedule'] == 30 for item in celery_app.conf.beat_schedule.values())
+
+
+def test_raw_activity_cleanup_remains_scheduled_with_collection_off():
+    from app.workers.celery_app import celery_app
+    from app.config import settings
+    assert not settings.V1_ACTIVITY_ENABLED and not settings.V1_ACTIVITY_RETENTION_READY
+    assert 'app.workers.v1_activity' in celery_app.conf.include
+    celery_app.loader.import_default_modules()
+    assert 'app.workers.v1_activity.cleanup_activity' in celery_app.tasks
+    assert any(item['task']=='app.workers.v1_activity.cleanup_activity' and item['schedule']==300
+               for item in celery_app.conf.beat_schedule.values())

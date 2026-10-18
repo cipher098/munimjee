@@ -2,7 +2,26 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave6 in progress
+## Wave7 next composition
+
+Verified/pushed prior checkpoint `abab30a` is clean at actual0053:1950 passed,
+8 documented skips, plus native-import47/CSV74/SKU5 mounted and SEO28 mounted HTTP.
+Its locked315-file arm64 image passes3 offline modes; restore53 is separate.
+Current local0054 activity composition is in progress; no later-head full-suite
+acceptance is claimed. Owner final74 Python/19 mounted/28 Node is reviewed; the
+shared writer's6 new actual API checks pass, with mounted customer-shell and
+retention integration checks underway. Initial fixture/schema/package failures
+are retained rather than erased. Channel producers remain null/uninstalled.
+
+Isolated owned-Instagram final467 checks and33 mounted checks pass on newdiskPG16
+at5be22d8/runtimec4794bb after independent integrity/authority findings were fixed.
+Central composition and documentary principal/type/unavailable-original questions
+remain separate; both provider capabilities stay false. Social0055 source/pure
+repair is active. Independent V01/V07 audit already reproduces channel privacy
+and provider-wait session races; exact fixes and wider readiness work remain open.
+Ownership and DB serialization are in `docs/v1-wave7-contracts.md`.
+
+## Wave6 verified bounded checkpoint
 
 Test-infrastructure interruption,18 October08:16UTC: the old dedicated PG16
 container's1GiB memory cgroup held RAM-backed PGDATA (observed1.7GiB retained

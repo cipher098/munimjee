@@ -40,9 +40,11 @@ def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_p
         path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('SYNTHETIC-DO-NOT-PACKAGE-SENTINEL')
     stage(source)
     output=tmp_path/'context';manifest=package.create_context(source,output)
-    assert len(list((output/'storefront-src').iterdir()))==13
+    assert {p.name for p in (output/'storefront-src').iterdir()}==set(package.STOREFRONT)
     assert (output/'storefront-src/published-design.js').is_file()
     assert (output/'storefront-src/payment-handoff.js').is_file()
+    assert (output/'storefront-src/activity-client.js').is_file()
+    assert (output/'backend/static/analytics_activity.js').is_file()
     for prefix in ('import_workspace','theme_settings','assistance','payment_settings','support_grants','analytics_v1','customer_links'):
         for suffix in ('html','css','js'):
             assert (output/f'backend/static/{prefix}.{suffix}').is_file()

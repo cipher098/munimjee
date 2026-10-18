@@ -27,3 +27,22 @@ test('verified online confirmation retains payment method across durable reload 
  assert.equal(new CheckoutAttempt(context).current.confirmation.paymentMethod,'razorpay');
  assert.equal(contract.decodeOrderStatus({...ack,payment_status:'paid'},{slug:'synthetic',orderId:ack.id,accessToken:ack.access_token}).paymentMethod,'razorpay');
 });
+
+test('optional context stays frozen through lost financial response and proof is header-only',async()=>{
+ const contextId='77777777-7777-4777-8777-777777777701',details={...payload(),activity_context_id:contextId};
+ const map=new Map(),storage={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+ const sent=[];let first=true,proof='ephemeral-activity-proof';
+ const service=createStorefrontApi({slug:'synthetic',origin:'https://store.test',contract,activityProof:id=>id===contextId?proof:null,fetchImpl:async(path,options)=>{sent.push({path,options});if(first){first=false;throw Error('lost response');}return {status:200,ok:true,json:async()=>order()};}});
+ let attempt=new CheckoutAttempt({slug:'synthetic',storage,keyFactory:()=>key,origin:'https://store.test'});
+ await assert.rejects(attempt.submit(service,details));assert.equal(map.get('munimjee.checkout.v1:synthetic').includes('ephemeral-activity-proof'),false);
+ attempt=new CheckoutAttempt({slug:'synthetic',storage,keyFactory:()=>{throw Error('fresh key forbidden');},origin:'https://store.test'});proof=null;
+ await attempt.submit(service,attempt.current.payload);
+ assert.equal(sent[0].options.body,sent[1].options.body);assert.equal(JSON.parse(sent[1].options.body).activity_context_id,contextId);
+ assert.equal(sent[0].options.headers['X-Activity-Context'],'Bearer ephemeral-activity-proof');assert.equal(sent[1].options.headers['X-Activity-Context'],undefined);
+});
+
+test('absent and null context are optional; unknown authority fields and malformed context stay rejected',()=>{
+ assert.equal(Object.hasOwn(contract.encodeCheckout(payload(),key),'activity_context_id'),false);
+ assert.equal(contract.encodeCheckout({...payload(),activity_context_id:null},key).activity_context_id,null);
+ for(const value of ['not-a-uuid',{},1,true,['77777777-7777-4777-8777-777777777701']])assert.throws(()=>contract.encodeCheckout({...payload(),activity_context_id:value},key));
+});

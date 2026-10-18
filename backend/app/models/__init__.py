@@ -84,3 +84,5 @@ __all__ += ['SupportGrant', 'SupportCommand']
 
 from app.models.customer_links import Customer, CustomerLinkChallenge, CustomerLinkProof, CustomerAssociation, CustomerLinkAudit
 __all__ += ['Customer', 'CustomerLinkChallenge', 'CustomerLinkProof', 'CustomerAssociation', 'CustomerLinkAudit']
+
+from app.models import activity_v1

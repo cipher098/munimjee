@@ -1,6 +1,6 @@
 """Authorized catalogue management and published operational SKU storefront API."""
 from uuid import UUID
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -222,10 +222,18 @@ async def public_product(slug: str, product_id: UUID, db: AsyncSession = Depends
 
 
 @router.post("/storefronts/{slug}/checkout", status_code=201)
-async def checkout(slug: str, payload: CheckoutWrite, response: Response, db: AsyncSession = Depends(get_db)):
+async def checkout(slug: str, payload: CheckoutWrite, response: Response, request: Request, db: AsyncSession = Depends(get_db)):
     store = await published_store(db, slug, lock=True)
     await expire_pending_orders(db, store.seller_id)
     order, replay = await sku.create_sku_order(db, store, payload)
+    if not replay:
+        from app.services.activity_v1 import record_order
+        # Cookie/bearer presence can only demote measurement to test; it never
+        # authorizes a financial operation or promotes activity to production.
+        native_hint = any(request.cookies.get(key) for key in
+            ("v1_session", "dashboard_session", "seller_session", "view_seller")) or bool(request.headers.get("authorization"))
+        await record_order(db, order, context_id=payload.activity_context_id,
+            authorization=request.headers.get("x-activity-context"), native=native_hint)
     if not replay and order.whatsapp_updates_opt_in:
         from app.services.whatsapp import record_checkout_opt_in, queue_order_update
         await record_checkout_opt_in(db, order.seller_id, order.customer["phone"], True)

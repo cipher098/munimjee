@@ -8,7 +8,7 @@ window.V1 = (() => {
       const storage = window.sessionStorage;
       for (let index = storage.length - 1; index >= 0; index--) {
         const key = storage.key(index);
-        if (['munimjee.v1.catalogue-draft:', 'munimjee.v1.parcel-link:', 'munimjee.v1.gateway-intent:', 'munimjee.v1.assistance-command:', 'munimjee.v1.import-command:', 'munimjee.v1.theme-command:', 'munimjee.v1.support-command:', 'munimjee.v1.customer-link-command:'].some(prefix => key?.startsWith(prefix))) storage.removeItem(key);
+        if (['munimjee.v1.catalogue-draft:', 'munimjee.v1.parcel-link:', 'munimjee.v1.gateway-intent:', 'munimjee.v1.assistance-command:', 'munimjee.v1.import-command:', 'munimjee.v1.theme-command:', 'munimjee.v1.support-command:', 'munimjee.v1.customer-link-command:', 'munimjee.activity-policy:'].some(prefix => key?.startsWith(prefix))) storage.removeItem(key);
       }
     } catch (_) { /* Restricted browser storage must never prevent logout. */ }
   }

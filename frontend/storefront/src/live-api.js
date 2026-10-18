@@ -15,7 +15,7 @@ export function validateConfirmation(order,origin,slug){
   const base=`/api/v1/storefronts/${encodeURIComponent(slug)}/orders/${order.orderId}`;
   return {orderId:order.orderId,currency:'INR',subtotalMinor:order.subtotalMinor,shippingMinor:order.shippingMinor,totalMinor:order.totalMinor,paymentStatus:order.paymentStatus,fulfillmentStatus:order.fulfillmentStatus,paymentUrl:sameOriginPath(order.paymentUrl,origin,{prefix:base+'/'}),statusUrl:sameOriginPath(order.statusUrl,origin,{prefix:base}),...(order.accessToken!==undefined?{accessToken:order.accessToken}:{}),...(order.paymentMethod!==undefined?{paymentMethod:order.paymentMethod}:{})};
 }
-export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,origin=globalThis.location?.origin,timeoutMs=15000}){
+export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,origin=globalThis.location?.origin,timeoutMs=15000,activityProof=()=>null}){
   if(!/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug)) throw new Error('Invalid storefront slug.');
   if(!contract||typeof contract.decodeStore!=='function'||typeof contract.decodeProducts!=='function'||typeof contract.decodeCreatedOrder!=='function'||typeof contract.encodeCheckout!=='function') return null;
   const base=`/api/v1/storefronts/${encodeURIComponent(slug)}`;
@@ -53,8 +53,9 @@ export function createStorefrontApi({slug,contract,fetchImpl=globalThis.fetch,or
     },
     async checkout(payload,key){
       let body;try{body=contract.encodeCheckout(payload,key);}catch{throw new CheckoutError('Checkout details could not be validated.',{definitive:true,code:'invalid_details'});}
-      let response,data;
-      try{({response,data}=await request(base+'/checkout',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)}));}
+      let response,data,proof=null;
+      try{proof=activityProof(body.activity_context_id);}catch{/* Measurement is optional. */}
+      try{({response,data}=await request(base+'/checkout',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json',...(typeof proof==='string'?{'X-Activity-Context':`Bearer ${proof}`}:{})},body:JSON.stringify(body)}));}
       catch{throw new CheckoutError('We could not confirm the result. Check the same attempt again.');}
       if(response.status!==201&&!(response.status===200&&contract.acceptsReplay===true)){
         const known=contract.decodeCheckoutError?.(response.status,data);

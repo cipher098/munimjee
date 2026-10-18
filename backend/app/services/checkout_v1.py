@@ -27,7 +27,11 @@ def conflict(message):
 
 
 def request_hash(payload):
-    return hashlib.sha256(json.dumps(payload.model_dump(mode="json", exclude={"idempotency_key"}),
+    data = payload.model_dump(mode="json", exclude={"idempotency_key"})
+    # Preserve every historical financial hash; only the new nullable field is omitted.
+    if data.get("activity_context_id") is None:
+        data.pop("activity_context_id", None)
+    return hashlib.sha256(json.dumps(data,
         sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 

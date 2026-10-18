@@ -70,6 +70,7 @@ class CheckoutItem(Contract):
 
 class CheckoutWrite(Contract):
     idempotency_key: UUID
+    activity_context_id: UUID | None = None
     customer: CustomerInput
     address: AddressInput
     items: list[CheckoutItem] = Field(min_length=1, max_length=50)

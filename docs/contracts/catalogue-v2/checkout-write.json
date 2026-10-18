@@ -21,5 +21,6 @@
   ],
   "note": "",
   "payment_method": "cod",
-  "whatsapp_updates_opt_in": false
+  "whatsapp_updates_opt_in": false,
+  "activity_context_id": null
 }

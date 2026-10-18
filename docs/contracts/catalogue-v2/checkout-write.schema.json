@@ -117,6 +117,19 @@
       "title": "Idempotency Key",
       "type": "string"
     },
+    "activity_context_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Activity Context Id"
+    },
     "customer": {
       "$ref": "#/$defs/CustomerInput"
     },

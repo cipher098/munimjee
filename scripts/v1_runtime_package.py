@@ -15,14 +15,14 @@ import tarfile
 ROOT = Path(__file__).resolve().parents[1]
 STOREFRONT = (
     'styles.css', 'live.css', 'live-entry.js', 'live-app.js', 'live-api.js',
-    'canonical-contract.js', 'checkout-attempt.js', 'order-status.js',
+    'canonical-contract.js', 'checkout-attempt.js', 'order-status.js', 'activity-client.js',
     'components.js', 'commerce.js', 'theme-config.js', 'payment-handoff.js', 'published-design.js',
 )
 STATIC = frozenset((
     'assistance.html', 'assistance.js', 'assistance.css',
     'payment_settings.html', 'payment_settings.js', 'payment_settings.css',
     'support_grants.html', 'support_grants.js', 'support_grants.css',
-    'analytics_v1.html', 'analytics_v1.js', 'analytics_v1.css',
+    'analytics_v1.html', 'analytics_v1.js', 'analytics_v1.css', 'analytics_activity.js',
     'customer_links.html', 'customer_links.js', 'customer_links.css',
     'import_workspace.html', 'import_workspace.css', 'import_workspace.js',
     'theme_settings.html', 'theme_settings.css', 'theme_settings.js',

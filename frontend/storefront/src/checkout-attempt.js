@@ -6,9 +6,10 @@ function validItems(items){return Array.isArray(items)&&items.length>0&&items.le
 function validPayload(payload,details){
   if(!payload||!validItems(payload.items))return false;
   if(!details)return Object.keys(payload).every(key=>key==='items');
+  if(payload.activity_context_id!==undefined&&payload.activity_context_id!==null&&(typeof payload.activity_context_id!=='string'||!uuid.test(payload.activity_context_id)))return false;
   const customer=payload.customer,address=payload.address;
   const bounded=(value,min,max)=>typeof value==='string'&&value.length>=min&&value.length<=max;
-  return Object.keys(payload).every(key=>['customer','address','items','note','payment_method','whatsapp_updates_opt_in'].includes(key))&&customer&&Object.keys(customer).every(key=>['name','phone','email'].includes(key))&&bounded(customer.name,2,100)&&bounded(customer.phone,10,20)&&(customer.email===null||bounded(customer.email,0,254))&&address&&Object.keys(address).every(key=>['line1','line2','city','state','postal_code','country'].includes(key))&&bounded(address.line1,3,200)&&bounded(address.line2,0,200)&&bounded(address.city,2,100)&&bounded(address.state,2,100)&&/^[1-9][0-9]{5}$/.test(address.postal_code)&&address.country==='IN'&&bounded(payload.note,0,2000)&&['cod','razorpay'].includes(payload.payment_method)&&typeof payload.whatsapp_updates_opt_in==='boolean';
+  return Object.keys(payload).every(key=>['customer','address','items','note','payment_method','whatsapp_updates_opt_in','activity_context_id'].includes(key))&&customer&&Object.keys(customer).every(key=>['name','phone','email'].includes(key))&&bounded(customer.name,2,100)&&bounded(customer.phone,10,20)&&(customer.email===null||bounded(customer.email,0,254))&&address&&Object.keys(address).every(key=>['line1','line2','city','state','postal_code','country'].includes(key))&&bounded(address.line1,3,200)&&bounded(address.line2,0,200)&&bounded(address.city,2,100)&&bounded(address.state,2,100)&&/^[1-9][0-9]{5}$/.test(address.postal_code)&&address.country==='IN'&&bounded(payload.note,0,2000)&&['cod','razorpay'].includes(payload.payment_method)&&typeof payload.whatsapp_updates_opt_in==='boolean';
 }
 export class CheckoutAttempt {
   constructor({slug,storage,keyFactory=()=>crypto.randomUUID(),now=()=>Date.now(),origin=globalThis.location?.origin||'https://store.invalid'}){
