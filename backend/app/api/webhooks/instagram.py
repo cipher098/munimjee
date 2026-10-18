@@ -126,6 +126,12 @@ async def _handle_messaging_event(event: dict, db: AsyncSession) -> None:
     if not message:
         return
 
+    # Reserved proof commands must never enter echo/transcript/automation paths.
+    from app.services.customer_links import ingest_instagram_command
+    if await ingest_instagram_command(db, event):
+        await db.commit()
+        return
+
     # Echo events fire for every outbound message from the seller's IG account —
     # both the bot's own sends AND the seller replying manually from IG's inbox.
     # We classify by mid: if the echo's mid matches one we already stored on a

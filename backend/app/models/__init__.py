@@ -81,3 +81,6 @@ __all__ += ["OnboardingAssignment", "AssistanceCommand"]
 
 from app.models.support_grants import SupportGrant, SupportCommand
 __all__ += ['SupportGrant', 'SupportCommand']
+
+from app.models.customer_links import Customer, CustomerLinkChallenge, CustomerLinkProof, CustomerAssociation, CustomerLinkAudit
+__all__ += ['Customer', 'CustomerLinkChallenge', 'CustomerLinkProof', 'CustomerAssociation', 'CustomerLinkAudit']
