@@ -1,0 +1,46 @@
+{
+  "tested_ancestry_head": "01b0ce4841ba36d9adb1f06fadc122a31bea8185",
+  "tested_source_files_sha256": {
+    ".github/workflows/tests.yml": "5d7dfa5c5e4f60437643f024c4b3fee12e3074eb5143ecf5e76fdd149776d5e5",
+    "scripts/v1_runtime_package.py": "185f22d8d23238a4372453ffdcd13138b0de718286bee3505fe759b06e088133",
+    "scripts/smoke_v1_runtime.py": "80aca6af6acb2e0e723a1df1563eeec0376b6b541b0b50f122e8ecfd369c96b4",
+    "deploy/v1/Dockerfile": "c2f73ed4f746e3a0e2a0b5731af8311e164b90254e9de19ada3de1d1bfb0be20",
+    "deploy/v1/runtime.in": "aadd2e23c2bcd1396a392bfea5c40191fea7c38afeae620630d63a3b8837f3cf",
+    "deploy/v1/runtime.lock": "88aaacf6306260168661758ebb0857f0ca580ca03641b05c7decdf9dfb3f5e93",
+    "deploy/v1/test.lock": "fb54cc733d82609ac7208180541df70fc3144498f8e240aa109a3b4e48ee48da",
+    "backend/tests/test_v1_runtime_package.py": "a53cdd9567f10a699c787fbf278088c907f3a448a619dd05699a4fc57d4cccbe",
+    "backend/tests/test_v1_release_ci.py": "1a9d61b08ec84d2c08797de5803d7ec3e81e2242ab041ac990b49164388cf7be"
+  },
+  "python": "3.11.16",
+  "interpreter": "/tmp/munimjee-release-ci-py311/bin/python",
+  "pure_selection": {
+    "passed": 119,
+    "skipped": 2,
+    "skip_reason": "actual P01 database lane not allocated"
+  },
+  "source_startup_selection": {
+    "passed": 5,
+    "skipped": 0,
+    "scope": "actual app import/routes/models and Alembic source chain; no DB"
+  },
+  "node_contracts": {
+    "passed": 77,
+    "skipped": 0
+  },
+  "actionlint": {
+    "version": "1.7.12",
+    "exit_code": 0
+  },
+  "linux_hash_checked_wheels": {
+    "amd64": 90,
+    "arm64": 90
+  },
+  "docker_probe": "single six-second read-only info timeout; no subsequent Docker calls",
+  "actual_new_image_smoke": "pending",
+  "actual_pg16_new_workflow": "pending",
+  "hosted_initial": "39105746311 failed workflow validation, no jobs",
+  "hosted_fixed": "39105879610 four jobs blocked before steps by account billing lock",
+  "oci_byte_reproducibility": "pending",
+  "no_live_provider_calls": true,
+  "no_deployment": true
+}

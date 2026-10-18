@@ -1,0 +1,18 @@
+{
+  "source_head": "01b0ce4841ba36d9adb1f06fadc122a31bea8185",
+  "command": "python scripts/v1_runtime_package.py archive --output <new temporary tar> (twice)",
+  "archives_identical": true,
+  "archive_size_bytes": 3399680,
+  "runs": [
+    {
+      "archive_sha256": "49a4c17a0c63c929ff10c428bcf9f42ff08939374a02adc181470ab362c11a57",
+      "content_sha256": "ae4eaadeb905bca50bdf03b58be966858d3dc8de45d59ac5fdbc9b7b2362272b"
+    },
+    {
+      "archive_sha256": "49a4c17a0c63c929ff10c428bcf9f42ff08939374a02adc181470ab362c11a57",
+      "content_sha256": "ae4eaadeb905bca50bdf03b58be966858d3dc8de45d59ac5fdbc9b7b2362272b"
+    }
+  ],
+  "oci_image_reproducibility": "not tested",
+  "product_baseline": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4"
+}

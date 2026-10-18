@@ -1,0 +1,2 @@
+actionlint 1.7.12 (verified upstream release SHA256)
+Final workflow syntax/context validation: exit 0

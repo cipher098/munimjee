@@ -124,10 +124,12 @@ def validate_runtime_lock(root: Path, requirements: list[str]) -> None:
 
 def runtime_source_dirty(root: Path) -> bool:
     # Compare both staged and unstaged tracked runtime bytes with recorded HEAD.
+    # Diff all HEAD names first: staged deletions vanish from git ls-files.
+    # Disable rename detection so both removed and added paths are inspected.
     result = subprocess.run(['git', '-C', str(root), 'diff', '--name-only', '-z',
-                             '--no-ext-diff', 'HEAD', '--', *tracked_sources(root)],
+                             '--no-ext-diff', '--no-renames', 'HEAD', '--'],
                             check=True, capture_output=True)
-    return bool(result.stdout)
+    return any(allowed_source(name) for name in result.stdout.decode().split('\0') if name)
 
 
 def require_clean_runtime(root: Path) -> None:
