@@ -23,8 +23,8 @@
     },
     {
       "path": "backend/app/services/whatsapp_reel_operator.py",
-      "sha256": "9534a28fcee143548e813fe7aceadd42b58dab4ed48827b0f738e5c681451777",
-      "git_blob": "03b06a558666e6559cc6f915c1bddf11154e7dff",
+      "sha256": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+      "git_blob": "4659432925b191b5e83ccfbcec77588798687ed1",
       "syntax": "stdlib ast.parse only; no imports/execution",
       "top_level_functions": [
         "canonical",
@@ -46,15 +46,15 @@
     },
     {
       "path": "backend/app/models/whatsapp_reel_operator.py",
-      "sha256": "3393fd496991d76af4ad55b42dd9c2357ffa076ee90a4fb040f0b402dd147360",
-      "git_blob": "354854792ee3227517d8f66d8376fd929c10a25e",
+      "sha256": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+      "git_blob": "520c9330ea917a649b810c54f5e8a17a08496ac5",
       "syntax": "stdlib ast.parse only; no imports/execution",
       "top_level_functions": []
     },
     {
       "path": "backend/alembic/versions/0058_v1_reel_operator.py",
-      "sha256": "aa871711f9b370bee42dbc5569e6bf23855268b74aae31faedcb444ba99dba5c",
-      "git_blob": "079168d6208e21496bda29cb936e3fe74ccd1cba",
+      "sha256": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f",
+      "git_blob": "8d67357d9d5f08dd6a5eb93865c4985090e05c40",
       "syntax": "stdlib ast.parse only; no imports/execution",
       "top_level_functions": [
         "upgrade",
@@ -88,6 +88,11 @@
       "id": "R04",
       "issue": "unconditional final reel lookup could occur after0057exact-test final scalar",
       "status": "resolved helper adaptation9f7a2e: native-unbound incumbent exact-test helper is final inner await; actual unconditional sender install remains pending"
+    },
+    {
+      "id": "R05",
+      "issue": "bounded reply_context lacked exact insertion binding to original source and selected product snapshot",
+      "status": "resolved00f4e93 exact reconstruction; final accepted-label equality86ba2ef; DB enforcement unrun"
     }
   ],
   "limits": [
@@ -95,5 +100,10 @@
     "source-only DDL/SQL review cannot establish PostgreSQL parsing, xmin or deferred-trigger behavior",
     "actual sender integration, current session+CSRF, concurrency and unknown-effect behavior await local allocation"
   ],
-  "final_reviewed_source": "9f7a2e85de41f01065e6e5ef9d79c355f110d72c"
+  "final_reviewed_source": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+  "recipient_product_followup": {
+    "commit": "aba5c14f4d371a300818847794b3a6dc8229112d",
+    "recipient": "private SHA256 of actual Contact.phone bound in state/command/hashCHECK/insert guard/final scalar; no wire phone copy",
+    "product": "reviewed candidate id/name projection in state hash; selected locked product must exist and name must equal reviewed name before effects"
+  }
 }

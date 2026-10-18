@@ -1,0 +1,166 @@
+{
+  "format": "reel-operator-independent-final-review.v1",
+  "reviewed_canonical_source": "cba1fc48c4d23e2f20346a2b8aa3f90ef31f703b",
+  "backend_owner_final": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+  "backend_preflight_evidence": "3fead531ea649e711db0be18b047960a23b50755",
+  "ui_owner_final": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+  "qa_tests_final": "6412d989536df3c0ac70b81b9c99533064e5eb2f",
+  "qa_evidence_final": "76ed5181dad9b17d92429c4175eea522630287d4",
+  "production_files": [
+    {
+      "path": "backend/app/api/v1/whatsapp_reel_operator.py",
+      "sha256": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+      "owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/app/schemas/whatsapp_reel_operator.py",
+      "sha256": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+      "owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/app/services/whatsapp_reel_operator.py",
+      "sha256": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+      "owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/app/models/whatsapp_reel_operator.py",
+      "sha256": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+      "owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/alembic/versions/0058_v1_reel_operator.py",
+      "sha256": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f",
+      "owner": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/static/comment_operator.html",
+      "sha256": "7ce75f1fe01444aa84d0c09e64fbe33027988301b7bdcb66a20c4a979624bc11",
+      "owner": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/static/comment_operator.js",
+      "sha256": "b55e946b4eafbac0a70ca6140c632bdefd1373494acbc1efca1721e3543348c6",
+      "owner": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/static/comment_operator_contract.js",
+      "sha256": "8c0229f6103cb82d6081607bfb29538d5a2b38223572fa20efb4bf54fe1bd5b8",
+      "owner": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "owner_blob_matches": true
+    },
+    {
+      "path": "backend/static/comment_operator.css",
+      "sha256": "3996078c92d7228ad4ffa28c82bc2f9db61649866bc6c65e70773bde122f85fb",
+      "owner": "4e0f90516f4c3c0a32895ec9293d3804db646e0a",
+      "owner_blob_matches": true
+    }
+  ],
+  "test_manifest_sha256": {
+    "backend/tests/comment_operator_contract.test.mjs": "62e500bfb42728bb65e4c5239bb383732a13462cc04d125786dcb3b850b4fac8",
+    "backend/tests/comment_operator_lifecycle.test.mjs": "f0def4d9267ff0d8a5009569ff2bdb131bd8fbb4f135f97a96abba6893b57666",
+    "backend/tests/test_whatsapp_reel_operator_db.py": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55",
+    "backend/tests/test_whatsapp_reel_operator_pure.py": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+    "backend/tests/whatsapp_reel_operator_contract.test.mjs": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+    "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b"
+  },
+  "existing_tests_byte_identical_to_base": 243,
+  "canonical_raw_artifacts": [
+    {
+      "path": "artifacts/v1/reel-operator-coordination/canonical-invocation.json",
+      "sha256": "ecb9295adad405312a82dafb57d3294072f533447bba8161d29693e9421db17c",
+      "immutable_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-coordination/canonical-python.txt",
+      "sha256": "0d7371bb1943b9b206ea72111561146676919f67cef4b3c7c9fc8577cc86d6b9",
+      "immutable_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-coordination/canonical-python.xml",
+      "sha256": "a2b67f7b090bdc66bdefdecf23fb6eb15035df8dd3bfc557913a779ba7359303",
+      "immutable_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-coordination/canonical-node.tap",
+      "sha256": "4379a48368d645d879911d8a3bcbf9216d0b297e523241f387016b815ff2d5e6",
+      "immutable_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1"
+    }
+  ],
+  "python_xunit": {
+    "tests": 47,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "node_tap": {
+    "tests": 20,
+    "pass": 20,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "authored_database_cases": 20,
+  "database_collected_or_run": false,
+  "reviewer_execution": "No test/application/DB/browser/provider/server execution; Git blobs/std lib AST/hash/XML/TAP only",
+  "remaining_acceptance": [
+    "actual0058 DDL and migration/FK/trigger/xmin/deferred-complete semantics",
+    "native actualmain session/CSRF and concurrent one-source writer/NOWAIT",
+    "unconditional final helper install immediately before existing sender/no later await",
+    "global journal cleanup/router/models/package/navigation install",
+    "signed synthetic ingress/native review/canonical worker/synthetic provider journey",
+    "physical UI focus/mobile/accessibility/storage reload and real delivery/device separately pending"
+  ],
+  "disposition": "No unresolved source or finite assertion blocker identified; source/pure/Node packet only, not release acceptance",
+  "canonical_evidence_commit": "08d5e635ef4d0e75ed4b1720e77ecb882df7bac1",
+  "shared_files_unchanged_independently_verified": [
+    {
+      "path": "backend/app/main.py",
+      "sha256": "b433051d156b9347124e9559a8c2facd88bb85dcfa658725fdd9e2545b438a6a",
+      "matches_base": true
+    },
+    {
+      "path": "backend/app/models/__init__.py",
+      "sha256": "d28549ae3ca7d18c88b503f22cf632a94cb7fd8607d847dd35c440a54f043f56",
+      "matches_base": true
+    },
+    {
+      "path": "backend/app/workers/whatsapp.py",
+      "sha256": "9c5dcdfe18f0febc6040b431645ec84aabc830bf4591d4617451d94aa7f5a02a",
+      "matches_base": true
+    },
+    {
+      "path": "backend/app/services/whatsapp.py",
+      "sha256": "0c1d041c721da43095403369942a119d412d52f46e885018915686e3ce6a17f7",
+      "matches_base": true
+    },
+    {
+      "path": "backend/app/services/whatsapp_reel_queue.py",
+      "sha256": "da8986305d7c2f2cae94e1097470acf51074c37e92259d49ce8aba522b678bed",
+      "matches_base": true
+    },
+    {
+      "path": "backend/app/services/whatsapp_test_authority.py",
+      "sha256": "e840a2dfea57731fd1f2982a5b87d1594a963e7c188f3dd3807a182b892e7aef",
+      "matches_base": true
+    },
+    {
+      "path": "backend/static/v1_client.js",
+      "sha256": "048395b07eed350f8fceaf31cb960e4dd78bb514b61bcb7655c353c90b94e543",
+      "matches_base": true
+    },
+    {
+      "path": "backend/alembic/versions/0057_v1_whatsapp_self_service.py",
+      "sha256": "cd47c7c62c4904a47bfd4ebdcc6f4398dd790c36baf869b10562cff4bb8edb10",
+      "matches_base": true
+    }
+  ],
+  "reviewer_tests_run": 0,
+  "source_contract_initial_and_clarification_sha_verified": true
+}
