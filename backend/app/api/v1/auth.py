@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.api.v1.identity import business_view, current_actor
-from app.api.v1.session import check_login_origin, require_v1_mutation
+from app.api.v1.session import check_login_origin, require_v1_mutation, business_mutation
 from app.models.identity import Membership
 from app.models.identity_auth import BusinessInvitation
 from app.schemas.identity_auth import (SignupInput, LoginInput, ProfileInput,
@@ -118,7 +118,7 @@ async def profile(business_id: UUID, actor: Actor = Depends(current_actor), db: 
 
 
 @router.put("/businesses/{business_id}/profile")
-async def update_profile(business_id: UUID, body: ProfileInput, actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+async def update_profile(business_id: UUID, body: ProfileInput, actor: Actor = Depends(business_mutation("business.write")), db: AsyncSession = Depends(get_db)):
     return profile_view(await domain.save_profile(db, actor, business_id, body))
 
 
@@ -134,7 +134,7 @@ def invitation_view(row):
 
 
 @router.post("/businesses/{business_id}/invitations", status_code=201)
-async def invite(business_id: UUID, body: InvitationInput, actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+async def invite(business_id: UUID, body: InvitationInput, actor: Actor = Depends(business_mutation("members.manage")), db: AsyncSession = Depends(get_db)):
     row, token = await domain.create_invitation(db, actor, business_id, body.email, body.role)
     return {**invitation_view(row), "invitation_url": "/v1#invite=" + token}
 
@@ -148,7 +148,7 @@ async def invitations(business_id: UUID, actor: Actor = Depends(current_actor), 
 
 
 @router.delete("/businesses/{business_id}/invitations/{invitation_id}")
-async def revoke_invitation(business_id: UUID, invitation_id: UUID, actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+async def revoke_invitation(business_id: UUID, invitation_id: UUID, actor: Actor = Depends(business_mutation("members.manage")), db: AsyncSession = Depends(get_db)):
     await require_business_access(db, actor, business_id, "members.manage")
     row = await db.scalar(select(BusinessInvitation).where(BusinessInvitation.id == invitation_id,
         BusinessInvitation.business_id == business_id).with_for_update())
@@ -169,6 +169,6 @@ async def members(business_id: UUID, actor: Actor = Depends(current_actor), db: 
 
 @router.patch("/businesses/{business_id}/members/{membership_id}")
 async def change_member(business_id: UUID, membership_id: UUID, body: MembershipChangeInput,
-    actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+    actor: Actor = Depends(business_mutation("members.manage")), db: AsyncSession = Depends(get_db)):
     row = await domain.revoke_membership(db, actor, business_id, membership_id)
     return {"id": row.id, "active": False}

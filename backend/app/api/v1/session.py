@@ -59,6 +59,9 @@ def business_mutation(capability: str):
         actor = await require_v1_mutation(request, db)
         await require_business_access(db, actor, business_id, capability)
         yield actor
+        # Flush every staged audit/outbox/domain row before the final guard;
+        # a revoke during a constraint/row wait must precede this decision.
+        await db.flush()
         current = await require_v1_mutation(request, db)
         if current != actor:
             raise HTTPException(401, 'The native session changed')
