@@ -163,7 +163,7 @@ async def test_fixed_reply_authorization_never_outlives_its_verified_token(monke
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('operation', ['subscription', 'registration', 'exchange'])
-@pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation'])
+@pytest.mark.parametrize('transition', ['revoked', 'current-positive-control', 'app-rotation', 'app-rotation-at-final-scalar'])
 async def test_native_revocation_at_claim_commit_starts_no_new_provider_operation(monkeypatch, operation, transition):
     """Ordering proof only: a committed claim must not bypass later authority."""
     from datetime import timedelta
@@ -192,7 +192,16 @@ async def test_native_revocation_at_claim_commit_starts_no_new_provider_operatio
         state['revoked'] = transition == 'revoked'
         if transition == 'app-rotation':
             monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
-    async def current_projection(*args, **kwargs):
+    async def current_projection(statement, **kwargs):
+        # Simulate only the exact DB App predicates; do not deny merely because
+        # settings changed. Their absence must still reproduce the old defect.
+        params = statement.compile().params
+        for field in ('requested_app_id', 'verified_app_id'):
+            if any(value != getattr(row, field) for name, value in params.items()
+                   if name.startswith(field + '_')):
+                return None
+        if transition == 'app-rotation-at-final-scalar':
+            monkeypatch.setattr(settings, 'WHATSAPP_EMBEDDED_APP_ID', '456')
         return None if state['revoked'] else auth.binding.session_id
     db = SimpleNamespace(commit=AsyncMock(side_effect=claim_commit),
         scalar=AsyncMock(side_effect=current_projection))
