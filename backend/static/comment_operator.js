@@ -67,7 +67,8 @@ async function session(write=false){
 }
 async function api(path,options={}){
   const g=generation,write=Boolean(options.method&&options.method!=='GET');await session(write);current(g);
-  let value;try{value=await window.V1.api(path,options);}catch(error){if(error.status===401)fence('Your sign-in ended. Private facts were cleared.');else if(error.status===403)await session();throw error;}
+  const frozenBody=write&&path.startsWith(reelEnquiries+'/')&&path.endsWith('/link')?stable(options.body):null;
+  let value;try{value=await window.V1.api(path,options);}catch(error){if(error.status===401)fence('Your sign-in ended. Private facts were cleared.');else if(error.status===403)await session();if(frozenBody!==null&&error.status===409&&error.code==='reel_operator_pre_mutation_rejection'){current(g);error.reel_request_path=path;error.reel_request_body=frozenBody;}throw error;}
   current(g);await session(write);current(g);return value;
 }
 function renderIntent(){$('recovery').hidden=!intent;$('recovery-summary').textContent=intent?.summary||'';controls();}
