@@ -51,11 +51,11 @@ try{
   const identity=await session(),bid=identity.businesses[0].id,path=`/v1/businesses/${bid}/channels/whatsapp/setup`,endpoint=`/api/v1/businesses/${bid}/channels/whatsapp`;
   page.on('request',request=>{if(request.url().startsWith(base+endpoint)&&request.method()==='POST')privatePosts++;});
   await page.goto(base+path);await expect(page.locator('#business-name')).toHaveText('Synthetic Indigo WhatsApp');
-  await expect(page.locator('#operator-gate')).toBeVisible();await expect(page.locator('#consent-fields')).toBeDisabled();
+  await expect(page.locator('#operator-gate')).toBeVisible();await expect(page.locator('#consent-fields')).toHaveJSProperty('disabled',true);
   assert.equal(sdkLoads,0);assert.equal((await page.request.get(base+path)).headers()['cache-control'],'no-store');checks++;
   await screenshot('desktop-default-off');
   assert.equal((await api(`/__wa_setup/${bid}/enable-synthetic`,'POST',{},true)).status,200);
-  await page.getByRole('button',{name:'Refresh status',exact:true}).click();await expect(page.locator('#consent-fields')).toBeEnabled();checks++;
+  await page.getByRole('button',{name:'Refresh status',exact:true}).click();await expect(page.locator('#consent-fields')).toHaveJSProperty('disabled',false);checks++;
 
   // The first prepare commits, then its response is lost. Reload never invents a new key.
   let firstBody=null,replayBody=null,prepareWrites=0;
