@@ -79,5 +79,54 @@ size rejection; new evidence is finite response counts/slots, not process memory
 
 DB, Redis, real process restart/persistence, provider, physical device and long-running
 soak gates remain unrun. Expected real commercial pilot traffic remains **MISSING**.
-Browser peer review remains pending their committed checkpoints. No release,
+Browser peer original checkpoints are reviewed below; narrow onboarding harness followup remains pending. No release,
 production throughput or latency SLA claim.
+
+
+## Independent peer harness review
+
+Read-only review of original committed scripts, docs, result/verification JSON and
+Git blob hashes; this reviewer did not rerun the browser scripts or modify peers.
+
+| Lane / exact original | Peer-reported result | Independent conclusion |
+| --- | --- | --- |
+| Storefront `faec01614c27578afd38bef750b9dc2205ee7c98` | 69 pass / 6 red, exit 1 | No safety or assertion blocker found. All six painted-text overlap assertions support one shared P2 missing-photo bag defect across three themes and two phone widths. |
+| Onboarding `d92406e2f2d62c7db859cd4d0bf0e91544c24376` | 22 pass / 10 red, exit 1 | No safety/effect-boundary blocker found. Visibility snapshots and independently viewed screenshots support the two scoped P1 frontend privacy/context failures; switch401 hidden-DOM retention is separately scoped. Two nonblocking repeatability/assertion followups are recorded below. |
+
+Both Python exporters load unchanged test safety before application imports; all
+exported identities, tokens/links, facts and counts are synthetic. Both browser
+runners create fresh Chromium contexts with service workers blocked, fulfill or
+abort every HTTP request, deny unexpected origins/paths and never use route
+continue/fetch or browser APIRequest to reach an ambient service. Onboarding also
+denies WebSockets. No fixture server, actual DB/provider call or user browser is
+used. Unexpected traffic and page errors are empty in both peer reports.
+
+All reported native/renderer/module hashes were compared independently to frozen
+`abab30a` Git blobs. Runner/exporter hashes, every storefront HTML fixture hash,
+onboarding fixture hash and formatter/capability source hashes matched their exact
+committed records. Before/after application hashes agree. Full comparisons and
+reviewed runner/exporter SHA256 values are in `peer-review.json`.
+
+Independently viewed `catalogue-320-missing-photo-overlap.png` confirms superimposed
+bag title/price text; `session-revoke-401.png` confirms the still-visible synthetic
+profile and invitation link after denial; `cross-identity-error.png` confirms B's
+profile with A's prior supplied error marker visibly retained. These do not prove
+real backend-sensitive error content, an authorization bypass, actual provider
+revocation, persistence, physical-device acceptance or complete accessibility.
+The suites keep all product failures red and carefully scope contrast/focus claims.
+
+Two narrow onboarding harness improvements were sent to the owner/coordinator:
+
+- Its runner records fixture SHA256 but does not automatically compare the exported
+  formatter/capability source hashes to current source before execution. Current
+  committed hashes independently match `abab30a`; future reruns should fail fast
+  if stale DTO fixtures are used with changed formatter sources.
+- The coordinator noticed `logout-storage` preserves `public-checkout-fixture`,
+  an arbitrary unrelated key. The current test proves unrelated-key preservation;
+  using the actual `munimjee.checkout.v1:<slug>` prefix from
+  `frontend/storefront/src/checkout-attempt.js:15` will make the public namespace
+  compatibility assertion precise.
+
+These are test repeatability/fidelity improvements, not reasons to hide the real
+privacy/layout failures. A tiny committed owner followup will be inspected without
+changing production or enlarging the original browser workload.
