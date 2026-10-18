@@ -457,6 +457,10 @@ async def _consume_events(db, seller, customer_ig_id: str, events: list[dict], *
         active_cp = cp_result.scalars().first()
         from app.services import sku_fact_replies as facts
         preserve_sku_cycle = facts.enabled() and await facts.is_activated(db, seller.id, conversation.product_id)
+        if active_cp and active_cp.state == "waiting_for_tag" and facts.enabled() and not preserve_sku_cycle:
+            # A new explicit SKU reel/reply may supersede a legacy focus. Its
+            # read-only reply must not release the old product's feature wait.
+            preserve_sku_cycle = bool(await facts.instagram_batch_context(db, seller.id, conversation, events))
         if active_cp and active_cp.state == "waiting_for_tag" and not preserve_sku_cycle:
             logger.info("message_batch: %s releasing waiting_for_tag to process new message", conversation.id)
             active_cp.state = "product_inquiry"
@@ -478,6 +482,12 @@ async def _process_events(events: list, conversation, seller, db) -> set[int]:
     """
     from app.bot.conversation import advance_conversation, handle_product_image, handle_payment_screenshot, handle_reel
     from app.api.webhooks.instagram import _IG_URL_RE
+
+    from app.services import sku_fact_replies as facts
+    selected = await facts.instagram_batch_context(db, seller.id, conversation, events)
+    conversation._sku_batch_product = selected['product_id'] if selected else None
+    conversation._sku_reel_references = selected['references'] if selected else None
+    conversation._sku_reel_reference = None
 
     # Phase 1 — media events: identify products / match reels (context only, no reply).
     # For images in awaiting_payment state, classify first — customer might be sending

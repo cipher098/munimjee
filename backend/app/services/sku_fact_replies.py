@@ -3,6 +3,7 @@ import hashlib
 import json
 import re
 from datetime import timedelta
+from uuid import UUID
 
 from pydantic import ValidationError
 from sqlalchemy import Text, and_, case, column, exists, func, literal, or_, select
@@ -36,7 +37,7 @@ async def is_activated(db, business_id, product_id):
             CatalogueActivation.product_id == product_id)))
 
 
-async def read_facts(db, business_id, product_id, *, instagram=None, reel=None):
+async def read_facts(db, business_id, product_id, *, instagram=None, reel=None, reels=None):
     """One READ COMMITTED statement observes all gates and SKUs coherently.
 
     Scalar projections bypass retained ORM instances and never autoflush unrelated
@@ -62,8 +63,11 @@ async def read_facts(db, business_id, product_id, *, instagram=None, reel=None):
     ).order_by(CatalogueSKU.id).limit(MAX_SKUS + 1)
     if instagram is not None:
         statement = statement.where(*instagram_filters(business_id, product_id, **instagram))
-    if reel is not None:
-        exact = reel_candidates(business_id, **reel).cte("exact_reel_products")
+    references = reels if reels is not None else [reel] if reel is not None else []
+    if len(references) > 20:
+        return None
+    for index, reference in enumerate(references):
+        exact = reel_candidates(business_id, **reference).cte(f"exact_reel_products_{index}")
         statement = statement.where(Product.id.in_(select(exact.c.id)),
             select(func.count()).select_from(exact).scalar_subquery() == 1)
     with db.no_autoflush:
@@ -157,6 +161,64 @@ async def exact_reel_products(db, business_id, *, reel_url="", media_id=None):
     return tuple(rows)
 
 
+async def instagram_batch_context(db, business_id, conversation, events):
+    """Agree on explicit product identity before any batch media/state effects.
+
+    Focus is a fallback only when this turn supplies no stronger reference. A
+    mixed/unknown source never silently inherits a first or last SKU product.
+    Each frozen reel is checked again in the final observation statement.
+    """
+    from app.services.channel_readiness import CatalogueAuthorityHandoff
+    from app.services.whatsapp_context import URL_RE, instagram_references
+    if not enabled():
+        return None
+    ids, references, unknown = set(), [], False
+    history = {message.get("mid"):message for message in conversation.messages or [] if message.get("mid")}
+    for event in events:
+        kind = event.get("type")
+        if kind == "image":
+            unknown = True  # Vision is not explicit SKU authority.
+        if kind == "text" and event.get("reply_to_mid"):
+            ref = history.get(event["reply_to_mid"])
+            try:
+                ids.add(UUID(str(ref.get("product_id"))))
+            except (AttributeError, TypeError, ValueError):
+                unknown = True
+        if kind == "reel":
+            references.append(dict(reel_url=event.get("reel_url", ""), media_id=event.get("reel_video_id")))
+        elif kind == "text":
+            urls = URL_RE.findall(event.get("text", ""))
+            if len(urls) > 20:
+                raise CatalogueAuthorityHandoff("Too many explicit product references")
+            for url in urls:
+                parsed = instagram_references(url)
+                if not parsed:
+                    unknown = True
+                references.extend(dict(reel_url=ref["url"]) for ref in parsed)
+    if len(references) > 20:
+        raise CatalogueAuthorityHandoff("Too many explicit product references")
+    for reference in references:
+        matched = await exact_reel_products(db, business_id, **reference)
+        if matched is None or len(matched) != 1:
+            unknown = True
+            ids.update(matched or ())
+        else:
+            ids.add(matched[0])
+    candidates = ids or ({UUID(str(conversation.product_id))} if conversation.product_id else set())
+    if not candidates:
+        return None
+    with db.no_autoflush:
+        activated = set((await db.scalars(select(CatalogueActivation.product_id).where(
+            CatalogueActivation.business_id == business_id, CatalogueActivation.product_id.in_(candidates)))).all())
+        if not activated:
+            return None
+        active = set((await db.scalars(select(Product.id).where(Product.seller_id == business_id,
+            Product.id.in_(candidates), Product.active.is_(True)))).all())
+    if unknown or len(candidates) != 1 or active != candidates:
+        raise CatalogueAuthorityHandoff("Buffered product context needs explicit clarification")
+    return dict(product_id=next(iter(candidates)), references=references)
+
+
 def instagram_filters(business_id, product_id, *, conversation_id, customer_id, token, page_id):
     """Fresh sender gates in the SAME statement as catalogue facts.
 
@@ -188,6 +250,10 @@ def instagram_filters(business_id, product_id, *, conversation_id, customer_id, 
             InstagramIngress.account_id == Seller.instagram_page_id,
             InstagramIngress.occurred_at >= current - timedelta(hours=24),
             InstagramIngress.occurred_at <= current + timedelta(minutes=5))),
+        ~exists(select(InstagramIngress.id).where(*thread, InstagramIngress.status == "processing",
+            or_(InstagramIngress.account_id != Seller.instagram_page_id, InstagramIngress.occurred_at.is_(None),
+                InstagramIngress.occurred_at < current - timedelta(hours=24),
+                InstagramIngress.occurred_at > current + timedelta(minutes=5)))),
         ~exists(select(InstagramIngress.id).where(*thread, InstagramIngress.status == "error",
             InstagramIngress.error_code.in_(UNKNOWN_EFFECT_ERRORS))),
         ~exists(select(ManualAction.id).where(ManualAction.conversation_id == conversation_id,

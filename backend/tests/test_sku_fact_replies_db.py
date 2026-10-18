@@ -367,3 +367,116 @@ async def test_rollout_revoked_during_final_read_is_not_authority(sku_lane,monke
             return result
         monkeypatch.setattr(db,'execute',changed)
         assert await service.read_facts(db,j.bid,j.pid) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('kind',['two_reels','two_reply_to','reel_reply_to','two_text_urls'])
+async def test_buffered_conflicting_explicit_products_never_choose_first_or_last(sku_lane,monkeypatch,kind):
+    from app.workers import instagram_ingress as worker
+    j=sku_lane;cid,rid=await instagram_turn(j,status='pending');second=uuid4();sent=[]
+    monkeypatch.setattr(worker,'worker_session',session_factory(j))
+    async with j.sessions.begin() as db:
+        db.add(Product(id=second,seller_id=j.bid,name='Second activated product',listed_price=100,floor_price=50,
+            active=True,reel_urls=['https://instagram.com/reel/Second_code/']))
+        await db.flush()
+        db.add(CatalogueProductMapping(business_id=j.bid,product_id=second,state='reviewed',revision=1,
+            legacy_fingerprint='b'*64,issues=[],legacy_variants=[]));await db.flush()
+        db.add_all([CatalogueActivation(business_id=j.bid,product_id=second,reviewed_revision=1,
+            legacy_fingerprint='b'*64,actor_id=j.uid),CatalogueSKU(business_id=j.bid,product_id=second,
+            options={},price_minor=22222,currency='INR',stock_available=2,active=True)])
+        conversation=await db.get(Conversation,cid)
+        conversation.messages=[{'role':'bot','content':'first','mid':'first-product','product_id':str(j.pid)},
+            {'role':'bot','content':'second','mid':'second-product','product_id':str(second)}]
+        one={'type':'reel','reel_url':'https://instagram.com/reel/Exact_code/','mid':'first-source'}
+        two={'type':'reel','reel_url':'https://instagram.com/reel/Second_code/','mid':'second-source'}
+        reply_one={'type':'text','text':'price?','mid':'first-source','reply_to_mid':'first-product'}
+        reply_two={'type':'text','text':'price?','mid':'second-source','reply_to_mid':'second-product'}
+        (await db.get(InstagramIngress,rid)).events=([one,two] if kind=='two_reels' else
+            [reply_one,reply_two] if kind=='two_reply_to' else [one,reply_two] if kind=='reel_reply_to' else
+            [{'type':'text','text':one['reel_url']+' '+two['reel_url'],'mid':'both-source'}])
+    async def send(client,recipient,text):sent.append(text);return {'message_id':'unexpected-first-last'}
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',send)
+    await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
+    assert sent==[], 'Conflicting explicit contexts must withhold, never choose first/last product'
+    async with j.sessions() as db:
+        assert (await db.get(InstagramIngress,rid)).error_code=='authoritative_catalogue_handoff'
+        assert await db.scalar(select(func.count()).select_from(ConversationProduct))==0
+
+
+@pytest.mark.asyncio
+async def test_all_frozen_reel_references_revalidated_not_only_last(sku_lane):
+    j=sku_lane
+    refs=[dict(reel_url='https://instagram.com/reel/Exact_code/'),dict(reel_url='https://instagram.com/reel/Other_code/')]
+    async with j.sessions.begin() as db:
+        (await db.get(Product,j.pid)).reel_urls=[ref['reel_url'] for ref in refs]
+    async with j.sessions() as reader:
+        assert await service.read_facts(reader,j.bid,j.pid,reels=refs) is not None
+        async with j.sessions.begin() as writer:
+            (await writer.get(Product,j.pid)).reel_urls=[refs[1]['reel_url']]
+            writer.add(Product(seller_id=j.bid,name='Remapped first source',listed_price=1,floor_price=1,
+                active=True,reel_urls=[refs[0]['reel_url']]))
+        assert await service.read_facts(reader,j.bid,j.pid,reels=refs) is None
+
+
+@pytest.mark.asyncio
+async def test_final_window_gate_covers_every_processing_source_not_just_one_current_receipt(sku_lane,monkeypatch):
+    from app.bot.conversation import advance_conversation
+    from app.services.channel_readiness import CatalogueAuthorityHandoff
+    j=sku_lane;cid,_=await instagram_turn(j)
+    async with j.sessions.begin() as db:
+        db.add(InstagramIngress(seller_id=j.bid,account_id='synthetic-ig-account',customer_id='synthetic-customer',
+            event_key=uuid4().hex,events=[],status='processing',occurred_at=datetime.now(timezone.utc)-timedelta(days=2),
+            available_at=datetime.now(timezone.utc)))
+    async def forbidden(*args,**kwargs):pytest.fail('One current receipt cannot authorize another expired source')
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',forbidden)
+    with pytest.raises(CatalogueAuthorityHandoff):
+        async with j.sessions.begin() as db:
+            await advance_conversation(await db.get(Conversation,cid),await db.get(Seller,j.bid),'price?',db)
+
+
+@pytest.mark.asyncio
+async def test_new_explicit_sku_does_not_release_previous_legacy_feature_wait(sku_lane,monkeypatch):
+    from app.workers import instagram_ingress as worker
+    j=sku_lane;cid,rid=await instagram_turn(j,status='pending');legacy,cycle=uuid4(),uuid4();sent=[]
+    monkeypatch.setattr(worker,'worker_session',session_factory(j))
+    async with j.sessions.begin() as db:
+        db.add(Product(id=legacy,seller_id=j.bid,name='Previous legacy focus',listed_price=100,floor_price=50,active=True))
+        await db.flush()
+        (await db.get(Conversation,cid)).product_id=legacy
+        db.add(ConversationProduct(id=cycle,conversation_id=cid,product_id=legacy,state='waiting_for_tag',
+            active_variant_label='Previous variant',last_counter_price=99))
+        (await db.get(InstagramIngress,rid)).events=[{'type':'reel','reel_url':'https://instagram.com/reel/Exact_code/','mid':'explicit-sku'}]
+    async def send(client,recipient,text):sent.append(text);return {'message_id':'synthetic-sku'}
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',send)
+    await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
+    async with j.sessions() as db:
+        row=await db.get(ConversationProduct,cycle)
+        assert (row.state,row.active_variant_label,row.last_counter_price)==('waiting_for_tag','Previous variant',99)
+        assert len(sent)==1 and '₹123.45' in sent[0]
+        assert await db.scalar(select(func.count()).select_from(ConversationProduct))==1
+
+
+@pytest.mark.asyncio
+async def test_exact_reel_keeps_sku_store_writers_free_but_documents_incumbent_focus_fk_lock(sku_lane,monkeypatch):
+    from app.workers import instagram_ingress as worker
+    from sqlalchemy.exc import DBAPIError
+    j=sku_lane;cid,rid=await instagram_turn(j,status='pending');observed=[]
+    monkeypatch.setattr(worker,'worker_session',session_factory(j))
+    async with j.sessions.begin() as db:
+        (await db.get(Conversation,cid)).product_id=None
+        (await db.get(InstagramIngress,rid)).events=[{'type':'reel','reel_url':'https://instagram.com/reel/Exact_code/','mid':'explicit-source'}]
+    async def send(client,recipient,text):
+        async with j.sessions.begin() as writer:
+            await writer.execute(select(Storefront.seller_id).where(Storefront.seller_id==j.bid).with_for_update(nowait=True))
+            await writer.execute(select(CatalogueSKU.id).where(CatalogueSKU.id==j.sku).with_for_update(nowait=True))
+            try:
+                async with writer.begin_nested():
+                    await writer.execute(select(Product.id).where(Product.id==j.pid).with_for_update(nowait=True))
+            except DBAPIError as exc:
+                assert exc.orig.sqlstate=='55P03'
+                observed.append('incumbent Product focus FK blocks FOR UPDATE')
+        return {'message_id':'synthetic-output'}
+    monkeypatch.setattr('app.integrations.instagram.InstagramClient.send_message',send)
+    await worker._process_thread(j.bid,'synthetic-ig-account','synthetic-customer')
+    assert observed==['incumbent Product focus FK blocks FOR UPDATE']
+    async with j.sessions() as db:assert (await db.get(InstagramIngress,rid)).status=='completed'

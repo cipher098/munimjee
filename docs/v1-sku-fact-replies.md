@@ -50,6 +50,19 @@ unknown send effects retain the current quarantine behavior. Exact reel context
 must branch before legacy photo/price/state actions; activated vision/title guesses
 remain a handoff.
 
+All explicit product references in one buffered turn must agree before media or
+state processing. Conflicting reels, reply-to products or unknown media with SKU
+context withhold; neither the first nor the last reference selects a product.
+Every frozen exact reel is revalidated in the final observation statement, and
+all processing receipt timestamps/account bindings must still be current.
+
+The adapter takes no explicit SKU/Storefront/catalogue sweep locks. Incumbent
+focus persistence is retained: changing `Conversation.product_id` can hold an
+incidental single-Product foreign-key KEY SHARE lock through the send, so a
+Product FOR UPDATE writer can wait. This slice does not claim every catalogue
+writer is unblocked. SKU and Storefront writer progress during an exact-reel send
+is tested; changing sender/history transaction semantics is outside this slice.
+
 WhatsApp continues through `auto:reel:<provider-mid>` and the existing durable
 outbox. Its stored payload records the request/reference context. In
 `workers.whatsapp.deliver_one`, the current `auto:reel:` regeneration call to
