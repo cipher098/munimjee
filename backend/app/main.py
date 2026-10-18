@@ -35,6 +35,7 @@ from app.api.v1.catalogue import router as v1_catalogue_router
 from app.api.v1.catalogue_workspace import router as v1_catalogue_workspace_router
 from app.api.v1.channel_operator import router as v1_channel_router
 from app.api.v1.comment_operator import router as v1_comment_operator_router
+from app.api.v1.whatsapp_self_service import router as v1_whatsapp_self_service_router
 from app.api.v1.imports import create_router as create_v1_import_router
 from app.api.v1.import_catalogue import router as v1_import_catalogue_router
 from app.api.v1.import_workspace import router as v1_import_workspace_router
@@ -97,6 +98,7 @@ app.include_router(v1_catalogue_router)
 app.include_router(v1_catalogue_workspace_router)
 app.include_router(v1_channel_router)
 app.include_router(v1_comment_operator_router)
+app.include_router(v1_whatsapp_self_service_router)
 app.include_router(create_v1_import_router(business_mutation("catalogue.write")))
 app.include_router(v1_import_catalogue_router)
 app.include_router(v1_import_workspace_router)

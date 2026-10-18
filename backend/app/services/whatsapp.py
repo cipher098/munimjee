@@ -167,6 +167,12 @@ async def ingest(db, payload):
 
 
 async def ingest_message(db, account, value, event):
+    # Run before ordinary identifiers, duplicate lookup, transcript, identity-link
+    # and activity processing: reserved secrets must never enter those paths,
+    # including malformed/default-off packets. Account is trusted signed ingress.
+    from app.services.whatsapp_test_authority import intercept_reserved
+    if await intercept_reserved(db, account, event):
+        return
     mid, phone = event.get('id'), event.get('from')
     if not isinstance(mid, str) or len(mid) > 255 or not isinstance(phone, str) or not re.fullmatch(r'[1-9]\d{7,14}', phone):
         return
