@@ -1,0 +1,27 @@
+{
+  "dependency_head": "5a0e5af",
+  "schema_predecessor": "0054_v1_activity",
+  "new_schema": "0055_v1_comment_binding",
+  "proof_scope": "source/pure only; no DB/browser",
+  "passed": 56,
+  "deselected_db_scenarios": 20,
+  "actual_migration_and_db_races": "pending NEW parcel_w6 allocation/release",
+  "sha256": {
+    "artifacts/v1/comment-binding/initial-producer-row-key-harness.txt": "050ed720a2ec55a5f113a7b4768b9323ce3f97a0a63a95ec26208c042fac060e",
+    "artifacts/v1/comment-binding/pure.txt": "0c06738acdb56593861a26dd9eb214d14c2253d7cf622f92285babdef6a8af04",
+    "artifacts/v1/comment-binding/pure.xml": "97396b54b020a112e31a421c51d521fcc1978fcc36d713d758af96897c6aa9b3",
+    "artifacts/v1/comment-binding/verification.md": "0e261ca73f3a66c4ba705793a90c58784e19a5de2d18ec451692a2dd64399b6b",
+    "backend/alembic/versions/0055_v1_comment_binding.py": "abd075dccae72eba9f23a002555e2534c91066ee12b0eefe011e48fb3c204e9d",
+    "backend/app/api/webhooks/instagram.py": "d50bb4f263b59f001387279149a6d53ddf643b1b9b68e2c9f7a65b3de400613c",
+    "backend/app/models/comment_automation.py": "dc90634bda204121653356726c74f61033e015addbad92d11d791425334d0917",
+    "backend/app/schemas/comment_binding.py": "a9137a720d0f9af06df048f61f1918351a95df7df6f86f36a1ee534df952dff6",
+    "backend/app/services/comment_automation.py": "8caab0a581407aa37d4d24d87015ad4797c6b095fa6f0590a6d29f8a5ea90563",
+    "backend/app/services/comment_binding.py": "e5e1209e1deb05146bf0afeff39e5990b5d93c134d4070397742b01950288bff",
+    "backend/app/workers/comment_automation.py": "412777c4d4a4957c4b3f2b73dc5787c2ec15bfc04a0d76c64847a0d207b7481a",
+    "backend/app/workers/sqs_consumer.py": "0dfb500803e907cf24e94fdca1bca75034258309a5b506e1cf87fa34350970dc",
+    "backend/tests/test_comment_automation.py": "91566b034701702ca988140048acd21e58424881eea215b67f356efbb0749d98",
+    "backend/tests/test_comment_binding_db.py": "83e033a513ad819f9ee79ed203a84fbe515cf741468fc1833d9dc27cdf302fc2",
+    "backend/tests/test_comment_binding_pure.py": "ef094b891a80b09de2a464864a74bef37fb8a955342b32dd8f80ccf534de3309",
+    "docs/v1-comment-binding.md": "5058b0beeefb653660ec4ee587adeda13b982e6520c20f59aa0caebbf40bb31b"
+  }
+}

@@ -1,0 +1,47 @@
+..................................FFFF.                                  [100%]
+=================================== FAILURES ===================================
+_ test_metadata_wait_cannot_accept_changed_source_or_static_authority[generation] _
+backend/tests/test_comment_binding_pure.py:238: in test_metadata_wait_cannot_accept_changed_source_or_static_authority
+    eid=await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':'price?'}},verified_source=True)
+backend/app/services/comment_automation.py:132: in ingest_comment
+    inserted=await db.scalar(insert(CommentEvent).values(**values).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
+backend/tests/test_comment_binding_pure.py:214: in scalar
+    return self.inserted['id']
+E   KeyError: 'id'
+__ test_metadata_wait_cannot_accept_changed_source_or_static_authority[pause] __
+backend/tests/test_comment_binding_pure.py:238: in test_metadata_wait_cannot_accept_changed_source_or_static_authority
+    eid=await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':'price?'}},verified_source=True)
+backend/app/services/comment_automation.py:132: in ingest_comment
+    inserted=await db.scalar(insert(CommentEvent).values(**values).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
+backend/tests/test_comment_binding_pure.py:214: in scalar
+    return self.inserted['id']
+E   KeyError: 'id'
+_ test_metadata_wait_cannot_accept_changed_source_or_static_authority[activated] _
+backend/tests/test_comment_binding_pure.py:238: in test_metadata_wait_cannot_accept_changed_source_or_static_authority
+    eid=await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':'price?'}},verified_source=True)
+backend/app/services/comment_automation.py:132: in ingest_comment
+    inserted=await db.scalar(insert(CommentEvent).values(**values).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
+backend/tests/test_comment_binding_pure.py:214: in scalar
+    return self.inserted['id']
+E   KeyError: 'id'
+_ test_account_change_between_tenant_lookup_and_snapshot_never_reads_with_replacement_credential _
+backend/tests/test_comment_binding_pure.py:252: in test_account_change_between_tenant_lookup_and_snapshot_never_reads_with_replacement_credential
+    assert await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':'price?'}},verified_source=True)
+backend/app/services/comment_automation.py:132: in ingest_comment
+    inserted=await db.scalar(insert(CommentEvent).values(**values).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
+backend/tests/test_comment_binding_pure.py:214: in scalar
+    return self.inserted['id']
+E   KeyError: 'id'
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-comment-binding/artifacts/v1/comment-binding/pure.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_comment_binding_pure.py::test_metadata_wait_cannot_accept_changed_source_or_static_authority[generation]
+FAILED backend/tests/test_comment_binding_pure.py::test_metadata_wait_cannot_accept_changed_source_or_static_authority[pause]
+FAILED backend/tests/test_comment_binding_pure.py::test_metadata_wait_cannot_accept_changed_source_or_static_authority[activated]
+FAILED backend/tests/test_comment_binding_pure.py::test_account_change_between_tenant_lookup_and_snapshot_never_reads_with_replacement_credential
+4 failed, 35 passed, 1 warning in 0.47s

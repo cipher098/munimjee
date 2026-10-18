@@ -3,7 +3,7 @@ import re
 import httpx
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
-from uuid import uuid4
+from uuid import uuid4, UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -44,7 +44,7 @@ async def product_link(db, seller_id, product_id):
 def comment_time(value, entry_time):
     raw = value.get('timestamp')  # Entry time is delivery time, never comment age.
     try:
-        if isinstance(raw, (int, float)) or str(raw).isdigit():
+        if type(raw) in (int, float) or (isinstance(raw,str) and raw.isdigit()):
             seconds = float(raw)
             return datetime.fromtimestamp(seconds / 1000 if seconds > 1e12 else seconds, timezone.utc)
         parsed = datetime.fromisoformat(str(raw).replace('Z', '+00:00'))
@@ -53,73 +53,98 @@ def comment_time(value, entry_time):
         return None
 
 
-async def ingest_comment(db, account_id, change, entry_time=None):
-    seller = await db.scalar(select(Seller).where(Seller.instagram_page_id == str(account_id), Seller.is_active.is_(True)))
-    if not seller or change.get('field') not in ('comments', 'live_comments'):
+async def ingest_comment(db, account_id, change, entry_time=None, *, verified_source=False):
+    """Accept only the signature-verified hook's account; never a body seller ID.
+
+    The explicit trusted-source marker is internal, not a request field. Metadata
+    reads can retry on transient failure; no provider mutation occurs here.
+    """
+    if verified_source is not True or type(change) is not dict or change.get('field') not in ('comments','live_comments'):
         return None
-    value = change.get('value') or {}
-    cid = str(value.get('id') or '')
-    if not cid or len(cid) > 100:
-        return None
-    if await db.scalar(select(CommentEvent.id).where(CommentEvent.seller_id == seller.id, CommentEvent.comment_id == cid)):
-        return None
-    media = value.get('media') or {}
-    actor = str((value.get('from') or {}).get('id') or '')
-    media_id = str(media.get('id') or '')
-    text = str(value.get('text') or '')[:10000]
-    # Webhooks need not carry creation time/parent_id. Verify actual comment
-    # metadata before deciding eligibility, never invent a fresh window on replay.
-    known_ineligible = change.get('field') == 'live_comments' or str(media.get('media_product_type', '')).upper() == 'LIVE' or value.get('parent_id') or actor in {str(seller.instagram_page_id), str(seller.instagram_id)}
-    if not known_ineligible and (not value.get('timestamp') or 'parent_id' not in value):
+    value=change.get('value')
+    if type(value) is not dict:return None
+    def identifier(value):
+        return str(value) if type(value) in (str,int) and re.fullmatch(r'[A-Za-z0-9_-]{1,100}',str(value)) else ''
+    cid=identifier(value.get('id'));account_id=identifier(account_id)
+    if not cid or not account_id:return None
+    owners=(await db.scalars(select(Seller.id).where(Seller.instagram_page_id==account_id))).all()
+    if len(owners)!=1:return None
+    seller_id=owners[0]
+    if await db.scalar(select(CommentEvent.id).where(CommentEvent.seller_id==seller_id,CommentEvent.comment_id==cid)):
+        return None # Never rebind accepted or historical work on replay.
+    from app.services import comment_binding as policy
+    from app.schemas.comment_binding import accepted_claim,digest,source_age_reason
+    first=await policy.context(db,seller_id)
+    if first is None:return None
+    proof=first.connection.proof() if first.connection.usable() and first.connection.account_id==account_id else None
+    media=value.get('media') or {};actor=value.get('from') or {}
+    if type(media) is not dict or type(actor) is not dict:return None
+    media_id=identifier(media.get('id'));actor_id=identifier(actor.get('id'))
+    text=value.get('text','')
+    if not isinstance(text,str):return None
+    text=text[:10000]
+    verification='signed_webhook'
+    known_ineligible=change['field']=='live_comments' or str(media.get('media_product_type','')).upper()=='LIVE' or value.get('parent_id') or actor_id in {account_id,first.config['owner_account']}
+    reason=first.source_reason()
+    if reason is None and proof is None:reason='source_generation_changed'
+    if not reason and not known_ineligible and (not value.get('timestamp') or 'parent_id' not in value):
         from app.integrations.instagram import InstagramClient
         try:
-            details = await InstagramClient(seller.instagram_token, seller.instagram_page_id).get_comment_details(cid)
-            value = {**value, 'timestamp': details.get('timestamp'), 'parent_id': details.get('parent_id')}
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code >= 500 or exc.response.status_code == 429:
-                raise  # Read-only verification can be safely retried by ingress.
-            value = {**value, 'timestamp': None}
-        except httpx.TransportError:
-            raise  # Do not acknowledge/drop a comment on a transient read failure.
-        except (ValueError, TypeError):
-            value = {**value, 'timestamp': None}
-    timestamp = comment_time(value, entry_time)
-    now = datetime.now(timezone.utc)
-    reason = None
-    if change.get('field') == 'live_comments' or str(media.get('media_product_type', '')).upper() == 'LIVE':
-        reason = 'live_comment_not_supported'
-    elif value.get('parent_id'):
-        reason = 'nested_comment'
-    elif actor in {str(seller.instagram_page_id), str(seller.instagram_id)}:
-        reason = 'own_comment'
-    elif not actor or not media_id or len(actor) > 100 or len(media_id) > 100:
-        reason = 'incomplete_event'
-    elif not timestamp or timestamp > now + timedelta(minutes=5):
-        reason = 'unverified_timestamp'
-    elif now - timestamp >= timedelta(days=7):
-        reason = 'private_reply_window_expired'
-    eid = uuid4()
-    inserted = await db.scalar(insert(CommentEvent).values(
-        id=eid, seller_id=seller.id, comment_id=cid, media_id=media_id[:100], actor_id=actor[:100], text=text,
-        commented_at=timestamp, status='skipped' if reason else 'received', reason=reason,
-    ).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
-    if not inserted or reason:
-        return inserted
-    event = await db.get(CommentEvent, eid)
-    rules = (await db.scalars(select(CommentRule).where(CommentRule.seller_id == seller.id, CommentRule.enabled.is_(True)).order_by(CommentRule.created_at, CommentRule.id))).all()
-    for rule in rules:
-        if not matches(rule, text, media_id):
-            continue
+            details=await InstagramClient(first.connection.token,account_id).get_comment_details(cid)
+            if type(details) is not dict:raise ValueError()
+            value={**value,'timestamp':details.get('timestamp'),'parent_id':details.get('parent_id')}
+            verification='provider_metadata'
+        except (httpx.TransportError,httpx.HTTPStatusError):
+            # Do not propagate token-bearing provider URLs through server logs.
+            raise HTTPException(503,'Comment metadata could not be verified. Retry the event.') from None
+        except (ValueError,TypeError,RecursionError):
+            value={**value,'timestamp':None}
+    current=await policy.context(db,seller_id)
+    if current is None:return None
+    if reason is None:reason=current.source_reason()
+    if reason is None and (not proof or not current.connection.matches(proof)):
+        reason='source_generation_changed'
+    if reason is None and policy.source_config(first)!=policy.source_config(current):reason='source_configuration_changed'
+    timestamp=comment_time(value,entry_time)
+    if change['field']=='live_comments' or str(media.get('media_product_type','')).upper()=='LIVE':reason='live_comment_not_supported'
+    elif 'parent_id' in value and value['parent_id'] is not None and not identifier(value['parent_id']):reason='incomplete_event'
+    elif value.get('parent_id'):reason='nested_comment'
+    elif actor_id in {account_id,current.config['owner_account']}:reason='own_comment'
+    elif not actor_id or not media_id:reason='incomplete_event'
+    elif reason is None:reason=source_age_reason(timestamp)
+    rule_id=None;selected=None
+    if reason is None:
         try:
-            link = await product_link(db, seller.id, rule.product_id)
-        except HTTPException:
-            event.status, event.reason = 'skipped', 'product_or_store_unavailable'
-            return eid
-        event.rule_id, event.status = rule.id, 'queued'
-        db.add(CommentAction(seller_id=seller.id, event_id=eid, kind='private', body=f'{rule.private_reply}\n{link}'))
-        if rule.public_reply:
-            db.add(CommentAction(seller_id=seller.id, event_id=eid, kind='public', body=rule.public_reply))
+            matches_=policy.matched_rules(current.rules,text,media_id)
+            if len({r['product_id'] for r in matches_})>1:reason='product_context_ambiguous'
+            elif matches_:rule_id=UUID(matches_[0]['id'])
+            else:reason='no_matching_rule'
+        except (ValueError,TypeError,AttributeError):reason='rule_scope_unavailable'
+    eid=uuid4();event=CommentEvent(id=eid,seller_id=seller_id,comment_id=cid,media_id=media_id,
+        actor_id=actor_id,text=text,commented_at=timestamp,rule_id=rule_id,
+        source_account_id=account_id if proof else None,source_binding=proof,
+        source_verified_at=datetime.now(timezone.utc) if proof else None,source_verification=verification if proof else None)
+    if rule_id is not None:
+        selected=await policy.context(db,seller_id,rule_id)
+        reason=policy.eligibility(selected,event)
+        if reason is None and policy.source_config(first)!=policy.source_config(selected):reason='source_configuration_changed'
+    event.status='queued' if reason is None else 'review_required'
+    event.reason=reason
+    values={key:getattr(event,key) for key in ('id','seller_id','comment_id','media_id','actor_id','text','commented_at','rule_id',
+        'source_account_id','source_binding','source_verified_at','source_verification','status','reason')}
+    inserted=await db.scalar(insert(CommentEvent).values(**values).on_conflict_do_nothing(constraint='comment_event_once').returning(CommentEvent.id))
+    if not inserted or reason:return inserted
+    link=f"{settings.PUBLIC_BASE_URL.rstrip('/')}/shop/{selected.config['store']['slug']}?product={selected.rule['product_id']}"
+    from app.models.comment_automation import CommentActionAudit
+    from uuid import uuid5
+    bodies=[('private',selected.rule['private_reply']+'\n'+link)]
+    if selected.rule['public_reply']:bodies.append(('public',selected.rule['public_reply']))
+    for kind,body in bodies:
+        aid=uuid4();claim=accepted_claim(event,kind,body,selected.config)
+        db.add(CommentAction(id=aid,seller_id=seller_id,event_id=eid,kind=kind,body=body,
+            accepted_claim=claim,claim_hash=digest(claim),status='pending'))
         await db.flush()
-        return eid
-    event.status, event.reason = 'skipped', 'no_matching_rule'
+        db.add(CommentActionAudit(id=uuid5(aid,'accepted'),seller_id=seller_id,event_id=eid,action_id=aid,
+            stage='accepted',after_status='pending'))
+    await db.flush()
     return eid
