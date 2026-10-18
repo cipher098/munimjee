@@ -90,7 +90,15 @@
   function showRecovery() {
     if(stopped)return;
     $('recovery-message').textContent=command?'This action may already have completed. Its exact request and idempotency key are preserved for this sign-in. Retry to confirm the result. Reload never sends it automatically.':'Recovery state needs reconciliation. Review activity with your owner; no new action will be sent.';
-    $('recovery-facts').textContent=command?JSON.stringify({action:command.path,details:command.body},null,2):'';
+    const b=command?.body, labels={title:'Title',description:'Description',price:'Price',stock:'Stock',options:'Options'};
+    const fact=(field,value)=>value===null?'Unknown':field==='price'?value.amount+' '+value.currency:field==='options'?(value.length?value.map(option=>option.name+': '+option.values.join(', ')).join('; '):'No options'):String(value);
+    let summary='';
+    if(command?.kind==='upload')summary='Upload original media\nFile: '+b.name+'\nType: '+({'image/jpeg':'JPEG image','image/png':'PNG image','video/mp4':'MP4 video'}[b.content_type])+'\nSize: '+b.size.toLocaleString()+' bytes';
+    else if(command?.path==='/jobs')summary=b.source_kind==='website'?'Start website import\nWebsite: '+b.source_url+'\nSource permission confirmed.':'Start import from the original uploaded media.\nSource permission confirmed.';
+    else if(command?.path.startsWith('/jobs/'))summary=(command.path.endsWith('/cancel')?'Cancel':'Retry')+' the selected import job.\nSaved revision: '+b.expected_revision;
+    else if(command?.path.endsWith('/catalogue-draft'))summary='Create the reviewed private catalogue draft.\nSaved revision: '+b.expected_revision+'\n'+b.allocations.map(row=>(Object.entries(row.options).map(([name,value])=>name+': '+value).join(' / ')||'No options')+' — '+row.stock_available+' units · '+(row.active?'Include when this product is activated':'Do not include when this product is activated')).join('\n');
+    else if(command)summary=(b.action==='edit'?'Save factual changes':b.action==='approve'?'Approve the reviewed candidate':'Reject the selected candidate')+'.\nSaved revision: '+b.expected_revision+'\n'+(b.action==='edit'?b.overrides.map(value=>labels[value.field]+': '+fact(value.field,value.value)).join('\n'):b.action==='approve'?'Confirmed facts: '+b.confirmed_fields.map(field=>labels[field]).join(', '):'Reason: '+b.reason);
+    $('recovery-facts').textContent=summary;
     $('recovery-file-label').hidden=command?.kind!=='upload';sync();
   }
   async function makeCommand(kind,path,body) {
