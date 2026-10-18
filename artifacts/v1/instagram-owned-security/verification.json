@@ -1,0 +1,49 @@
+{
+  "review_date": "2026-10-18",
+  "base_commit": "3f01ae1b8f0296df8c761d9ce52b534aa6b74b9a",
+  "provider_original_commit": "d5ab4588b651f917fd92f38c5ffc7f1fd8a7f8a6",
+  "provider_composed_commit": "89b65869e126c7da12e01ee6fa614f8a7be9bf3b",
+  "python": "/tmp/munimjee-release-ci-py311/bin/python",
+  "source_sha256": {
+    "backend/app/v1/imports/instagram_owned.py": "8301bdbfe97d781a6dd8a10a8e569c1978e608557a4c92bfbef894142085b7ba",
+    "backend/app/v1/imports/instagram_owned_transport.py": "02db3ce8e8b90e5fa5edaea385a2ae6bbe35f28cee18fee6fe9de1808351f4a1",
+    "backend/tests/test_v1_instagram_owned_security.py": "0d14ccc0226750ede35b622b0b76abebff3edd74a1b36aaa25fd45f694df32f4",
+    "backend/tests/test_v1_instagram_owned_security_transport.py": "10711aa8b357f8252574d2f245b8cf6dec05c5dedbdf562968a439b2bf818cfd"
+  },
+  "commands": [
+    {
+      "command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_v1_instagram_owned_security.py backend/tests/test_v1_instagram_owned_security_transport.py -q",
+      "passed": 103,
+      "skipped": 0,
+      "seconds": 0.24
+    },
+    {
+      "command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_v1_instagram_owned_security.py backend/tests/test_v1_instagram_owned_security_transport.py backend/tests/test_v1_instagram_owned_provider.py backend/tests/test_v1_import_jobs_fetch.py -q",
+      "passed": 193,
+      "skipped": 0,
+      "seconds": 0.4
+    }
+  ],
+  "network": "No real socket/DNS/Graph/CDN request; all resolvers, transports or connections are synthetic. Existing safety harness blocks outbound networking and dotenv before app imports.",
+  "scope": "Independent adapter/security tests only. No database, Docker, provider credentials, production, worker configuration, billing, social-current-SKU, catalogue analytics or CSV edits.",
+  "findings": [
+    {
+      "issue": "Active bearer echoed into a CDN URL could leak the token to an allowed CDN authority.",
+      "status": "Owner fixed before original source commit; raw and percent-encoded regression tests pass."
+    }
+  ],
+  "unrun_gates": [
+    "Exact Instagram Login media endpoint/fields/scope primary verification",
+    "Exact carousel children applicability and provider limits",
+    "Current API version support/sunset verification",
+    "Real connected professional-account authorization/App Review/Graph retrieval",
+    "Actual database/job fencing and cancellation in allocated DB lane",
+    "Durable original attachment hook and persistence",
+    "Full V03 and V1 acceptance"
+  ],
+  "release_claim": false,
+  "capability_defaults": {
+    "ig_login_media": false,
+    "carousel": false
+  }
+}
