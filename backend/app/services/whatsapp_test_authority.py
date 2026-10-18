@@ -22,7 +22,7 @@ from app.models.whatsapp_self_service import (
     WhatsAppAuthorizationProvenance, WhatsAppConnectionTest, WhatsAppTestAuthorization,
 )
 from app.services.whatsapp_test_protocol import (
-    FIXED_REPLY, REDACTED_COMMAND, SessionBinding, command_digest, reserved_command,
+    FIXED_REPLY, REDACTED_COMMAND, ProtocolError, SessionBinding, command_digest, reserved_command, embedded_configuration,
 )
 
 
@@ -30,9 +30,9 @@ def now():
     return datetime.now(timezone.utc)
 
 
-async def current_owner_session(db, binding: SessionBinding, *, generation=None, phone_id=None):
+def owner_session_statement(binding: SessionBinding):
     clock=func.clock_timestamp()
-    query=select(UserSession.id).join(User,User.id==UserSession.user_id).join(
+    return select(UserSession.id).join(User,User.id==UserSession.user_id).join(
         Membership,(Membership.user_id==User.id)&(Membership.business_id==binding.business_id)).join(
         Business,Business.id==Membership.business_id).join(Seller,Seller.id==Business.id).where(
         UserSession.id==binding.session_id,UserSession.user_id==binding.user_id,
@@ -40,6 +40,10 @@ async def current_owner_session(db, binding: SessionBinding, *, generation=None,
         UserSession.revoked_at.is_(None),UserSession.expires_at>clock,
         User.is_active.is_(True),User.revoked_at.is_(None),Membership.is_active.is_(True),
         Membership.revoked_at.is_(None),Membership.role=='owner',Business.is_active.is_(True),Seller.is_active.is_(True))
+
+
+async def current_owner_session(db, binding: SessionBinding, *, generation=None, phone_id=None):
+    query=owner_session_statement(binding)
     if generation is not None:
         query=query.join(ChannelConnectionState,(ChannelConnectionState.business_id==Business.id)
             &(ChannelConnectionState.channel=='whatsapp')).where(ChannelConnectionState.version==generation)
@@ -62,17 +66,37 @@ async def current_owner_session(db, binding: SessionBinding, *, generation=None,
     raise HTTPException(403,'Current business owner authorization required')
 
 
+def credential_fingerprint_sql():
+    # SHA256 of randomized Fernet ciphertext, never a raw token hash. Private
+    # comparison only; no extension, credentials materialization or API output.
+    return func.encode(func.sha256(func.convert_to(WhatsAppAccount.access_token,'UTF8')),'hex')
+
+
+def matching_provenance_count():
+    candidate=aliased(WhatsAppAuthorizationProvenance)
+    return select(func.count()).select_from(candidate).where(
+        candidate.business_id==WhatsAppAccount.seller_id,candidate.phone_number_id==WhatsAppAccount.phone_number_id,
+        candidate.waba_id==WhatsAppAccount.waba_id,candidate.verified_app_id==settings.WHATSAPP_EMBEDDED_APP_ID,
+        candidate.credential_fingerprint==credential_fingerprint_sql()).correlate(WhatsAppAccount).scalar_subquery()
+
+
 async def current_provenance(db, account, version, *, at=None):
     at=at or now()
-    row=(await db.execute(select(WhatsAppAuthorizationProvenance.phone_number_id,
-        WhatsAppAuthorizationProvenance.waba_id,WhatsAppAuthorizationProvenance.token_expiry_kind,
-        WhatsAppAuthorizationProvenance.token_expires_at,WhatsAppAuthorizationProvenance.evidence_kind
-    ).join(ChannelConnectionState,(ChannelConnectionState.business_id==WhatsAppAuthorizationProvenance.business_id)
-        &(ChannelConnectionState.version==WhatsAppAuthorizationProvenance.connection_version)
-        &(ChannelConnectionState.channel=='whatsapp')).where(
-        WhatsAppAuthorizationProvenance.business_id==account.seller_id,
-        WhatsAppAuthorizationProvenance.connection_version==version).execution_options(autoflush=False))).one_or_none()
-    if row is None or row.phone_number_id!=account.phone_number_id or row.waba_id!=account.waba_id or not account.access_token:
+    try: embedded_configuration(settings,require_onboarding=False)
+    except ProtocolError:
+        raise HTTPException(409,'Current WhatsApp app configuration is unverified') from None
+    provenance=WhatsAppAuthorizationProvenance
+    rows=(await db.execute(select(provenance.phone_number_id,provenance.waba_id,provenance.token_expiry_kind,
+        provenance.token_expires_at,provenance.evidence_kind).join(WhatsAppAccount,
+        (WhatsAppAccount.seller_id==provenance.business_id)&(provenance.credential_fingerprint==credential_fingerprint_sql())
+        &(provenance.phone_number_id==WhatsAppAccount.phone_number_id)&(provenance.waba_id==WhatsAppAccount.waba_id)).join(
+        ChannelConnectionState,(ChannelConnectionState.business_id==provenance.business_id)&(ChannelConnectionState.channel=='whatsapp')).where(
+        provenance.business_id==account.seller_id,provenance.verified_app_id==settings.WHATSAPP_EMBEDDED_APP_ID,
+        ChannelConnectionState.version==version,WhatsAppAccount.access_token!='').limit(2).execution_options(autoflush=False))).all()
+    if len(rows)!=1:
+        raise HTTPException(409,'One exact current WhatsApp credential authorization is required')
+    row=rows[0]
+    if row.phone_number_id!=account.phone_number_id or row.waba_id!=account.waba_id:
         raise HTTPException(409,'Current verified WhatsApp authorization is required')
     if row.token_expiry_kind!='permanent' and (row.token_expiry_kind!='at' or not row.token_expires_at or row.token_expires_at<=at):
         raise HTTPException(409,'WhatsApp authorization has expired or is unknown')
@@ -179,8 +203,13 @@ async def exact_test_authority(db, account, contact, message, *, at=None):
         raise HTTPException(409,'The exact recipient, reply window or account changed')
     await current_provenance(db,account,auth.connection_version,at=at)
     await current_owner_session(db,SessionBinding(auth.business_id,auth.actor_user_id,auth.actor_session_id,auth.actor_auth_version))
-    if not await final_test_projection(db,message.id,account.seller_id,contact.id,at=projection_at):
+    configured_app=settings.WHATSAPP_EMBEDDED_APP_ID
+    allowed=await final_test_projection(db,message.id,account.seller_id,contact.id,at=projection_at)
+    if not allowed or not settings.V1_CHANNEL_TESTS_ENABLED or configured_app!=settings.WHATSAPP_EMBEDDED_APP_ID:
         raise HTTPException(409,'Current exact connection-test authority could not be established')
+    try: embedded_configuration(settings,require_onboarding=False)
+    except ProtocolError:
+        raise HTTPException(409,'Current WhatsApp app configuration is unverified') from None
     return auth
 
 
@@ -199,7 +228,7 @@ async def final_test_projection(db,message_id,business_id,contact_id,*,at=None):
         inbound,(inbound.id==auth.inbound_message_id)&(inbound.seller_id==auth.business_id)).join(
         WhatsAppAccount,WhatsAppAccount.seller_id==auth.business_id).join(
         ChannelConnectionState,(ChannelConnectionState.business_id==auth.business_id)&(ChannelConnectionState.channel=='whatsapp')).join(
-        provenance,(provenance.business_id==auth.business_id)&(provenance.connection_version==auth.connection_version)).join(
+        provenance,(provenance.business_id==auth.business_id)&(provenance.credential_fingerprint==credential_fingerprint_sql())).join(
         WhatsAppContact,(WhatsAppContact.id==auth.recipient_contact_id)&(WhatsAppContact.seller_id==auth.business_id)).join(
         UserSession,UserSession.id==auth.actor_session_id).join(User,User.id==auth.actor_user_id).join(
         Membership,(Membership.user_id==auth.actor_user_id)&(Membership.business_id==auth.business_id)).join(
@@ -212,7 +241,8 @@ async def final_test_projection(db,message_id,business_id,contact_id,*,at=None):
         Membership.is_active.is_(True),Membership.revoked_at.is_(None),Business.is_active.is_(True),Seller.is_active.is_(True),
         ChannelConnectionState.version==auth.connection_version,WhatsAppAccount.phone_number_id==auth.phone_number_id,
         WhatsAppAccount.access_token!='',provenance.phone_number_id==WhatsAppAccount.phone_number_id,
-        provenance.waba_id==WhatsAppAccount.waba_id,
+        provenance.waba_id==WhatsAppAccount.waba_id,provenance.verified_app_id==settings.WHATSAPP_EMBEDDED_APP_ID,
+        matching_provenance_count()==1,
         ((provenance.token_expiry_kind=='permanent')|((provenance.token_expiry_kind=='at')&(provenance.token_expires_at>clock))),
         WhatsAppContact.opted_out.is_(False),WhatsAppContact.last_inbound_at<=clock,
         WhatsAppContact.last_inbound_at>clock-timedelta(hours=24),
