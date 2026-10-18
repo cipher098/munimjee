@@ -24,13 +24,33 @@ central app.main CSV browser passes74 checks; mounted SEO passes28 actual HTTP
 checks (not a device/browser claim). Complete regression/image gates remain
 pending. Current trusted flags stay off by default.
 
-SKU fact replies are held in peer review: a real buffered batch with conflicting
-reels/reply-to contexts picked the last/first product. The worker reproduced the
-finding and fixed whole-batch context agreement plus activation/rollout crossover;
-final reviewed-source execution remains pending before integration. V10 owner-
-consented observed-activity contract reserves0054 after0053; remote owned Instagram
-adapter is module-only and still needs local generation/retained-original/reader
-hooks. Integrator owns shared service/config/main/package/legacy-writer seams.
+SKU fact replies are reviewed and composed through8712dcc (owner runtime741a45b:
+227 passed/3 existing Redis skips and5 mounted journeys). The reproduced first/last
+product selection in conflicting buffered reels/reply-to turns is fixed by frozen
+whole-batch agreement, including activation/rollout/vision crossover withholding.
+The real failed-before-fix evidence is retained. The existing WA legacy guard now
+uses a nonblocking savepoint/handoff under Account locks;2 migrated regressions
+pass. Central complete/mounted acceptance remains pending; the rollout stays off.
+
+V10 owner-consented observed activity reserves0054 after0053. Peer source/API/UI
+is independently reviewed within its bounded contract, with final new-lane checks
+queued; public shell/order/producer/retention registrations are integrator-owned
+and not yet installed. Uninstalled channel metrics remain null, not zero.
+Owned Instagram integration is isolated atb5a3bb7 plusd69dadb/c4794bb fixes:
+generation/CAS fences, atomic exact originals and private readers. The initial
+new-disk lane404 checks and33 mounted checks pass atb5a; independent source review
+then found optimized-assert integrity and late-authority gaps, fixed in source
+with optimized checks. Final race/mounted reruns remain pending. Both retrieval
+and carousel capability gates stay closed; official primary API compatibility is
+still being checked. Integrator owns the shared service/config/main/package and
+legacy-writer seams.
+
+V08 independent actual tests reproduce5 queued-comment safety failures
+(pause/inactive/reconnect/post-claim pause/stale activated-product copy), with18
+other safety episodes passing. This blocks broader V08 acceptance. Social owns
+the reserved0055→0054 source repair under frozen tenant/generation/claim/audit
+constraints. Native comment management and durable visibility for withheld
+inferred WA followups remain separate code work, not provider-only gates.
 
 Release-only actual0052 restore and current-create→old-read→current-read package
 proofs are integrated as historical evidence, not relabelled0053 acceptance. The
