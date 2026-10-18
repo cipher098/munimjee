@@ -1,0 +1,21 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_global_test_gate_revoked_during_final_projection_withholds_dispatch ___
+backend/tests/test_v1_whatsapp_independent.py:126: in test_global_test_gate_revoked_during_final_projection_withholds_dispatch
+    with pytest.raises(HTTPException):
+E   Failed: DID NOT RAISE <class 'fastapi.exceptions.HTTPException'>
+_______ test_fixed_reply_authorization_never_outlives_its_verified_token _______
+backend/tests/test_v1_whatsapp_independent.py:161: in test_fixed_reply_authorization_never_outlives_its_verified_token
+    assert authorization.expires_at <= token_expiry
+E   assert datetime.datetime(2026, 10, 18, 0, 2, tzinfo=datetime.timezone.utc) <= datetime.datetime(2026, 10, 18, 0, 0, 10, tzinfo=datetime.timezone.utc)
+E    +  where datetime.datetime(2026, 10, 18, 0, 2, tzinfo=datetime.timezone.utc) = <app.models.whatsapp_self_service.WhatsAppTestAuthorization object at 0x10ec09710>.expires_at
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_global_test_gate_revoked_during_final_projection_withholds_dispatch
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_fixed_reply_authorization_never_outlives_its_verified_token
+2 failed, 4 deselected, 1 warning in 0.38s

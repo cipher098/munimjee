@@ -9,13 +9,14 @@
     "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "c90a10dd061788d02ec86f774c476f2a2901823be8584a853ad038431e5b2dc6"
   },
   "owned_sha256": {
-    "backend/tests/test_v1_whatsapp_independent.py": "2a4f63678c53d9dfd01f8f2edbaa989a8984bc1f600b3f6bf9395ca390d5b4c8",
-    "docs/v1-whatsapp-independent-security-review.md": "6f179cd69d73c6cdc7cad89d1240e9cc38144bcae3ba7ca6979c4c48d59ab4fa",
+    "backend/tests/test_v1_whatsapp_independent.py": "d953698c32984bc0755949b75c9bae582503489f988e59077de54390cef1f8d3",
+    "docs/v1-whatsapp-independent-security-review.md": "02df0f4091e6f4f98ffdfdc06e473b45ffe60874f26182827fa56279171b7cce",
     "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
     "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8",
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-extra-negatives.txt": "210cce537f2dc9dcd3013d14ba47f741248941e3bf7cb5b30fdb5efbdc104a80",
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-independent.txt": "b913c308e8a659606bf2d9c5bc26fd18105938b624dde40c963941a9051e758e",
-    "artifacts/v1/whatsapp-independent-review/coherent-6a8-claim-revocation.txt": "6a0200d6f724a9bd59df0fbcc1369f55e28a2bb887e56b6f2b3e6b9221dfc415"
+    "artifacts/v1/whatsapp-independent-review/coherent-6a8-claim-revocation.txt": "6a0200d6f724a9bd59df0fbcc1369f55e28a2bb887e56b6f2b3e6b9221dfc415",
+    "artifacts/v1/whatsapp-independent-review/coherent-6a8-fixture-correction-still-red.txt": "010d1f75541058ac2ac6ea9b58109a33199a710467210e4619a2e50b76b673af"
   },
   "coherent_snapshot": "6a8d6be95e202f30e4838ffadcaf6039e6128b60",
   "coherent_dependency_alias": "461006e",
