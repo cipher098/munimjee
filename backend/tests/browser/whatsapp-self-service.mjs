@@ -111,7 +111,8 @@ try{
   await page.unroute('**'+endpoint+`/tests/${testId}/send`);await page.reload();await expect(page.locator('#retry-action')).toBeVisible();
   assert.equal(queueWrites,1);checks++;
   await page.route('**'+endpoint+`/tests/${testId}/send`,async route=>{replayedQueue=route.request().postData();await route.continue();});
-  await page.locator('#retry-action').click();await expect(page.locator('#test-status')).toContainText('One fixed reply is queued');
+  await page.locator('#retry-action').click();await expect(page.locator('#recovery')).toBeHidden();
+  await expect(page.locator('#test-status')).toContainText('One fixed reply is queued');
   assert.equal(replayedQueue,originalQueue);assert.equal(queueWrites,2);
   assert.equal((await api(`/__wa_setup/${bid}/snapshot`,'POST',{},true)).data.authorizations,1);checks++;
   assert.equal((await api(`/__wa_setup/${bid}/deliver/${testId}`,'POST',{},true)).status,200);
@@ -121,7 +122,9 @@ try{
   assert.equal((await api(`/__wa_setup/${bid}/snapshot`,'POST',{},true)).data.provider_sends,1);checks++;
   const observed=await api(endpoint+`/tests/${testId}`),mid='synthetic-outbound-'+observed.data.message_id;
   await signedWebhook({metadata:{phone_number_id:'12345'},statuses:[{id:mid,status:'delivered',recipient_id:'910000000001',timestamp:String(Math.floor(Date.now()/1000))}]});
-  await page.getByRole('button',{name:'Check test result',exact:true}).click();await expect(page.locator('#test-status')).toContainText('synthetic test evidence');
+  await page.getByRole('button',{name:'Check test result',exact:true}).click();
+  await expect(page.locator('#test-status')).toContainText('provider reports delivered');
+  await expect(page.locator('#test-status')).toContainText('synthetic test evidence');
   assert.equal((await api(endpoint+`/tests/${testId}`)).data.delivery_confirmed,false);checks++;
   const storedFinal=await storage();assert.equal(storedFinal.includes(privateCommand),false);assert.equal(storedFinal.includes('910000000001'),false);checks++;
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await screenshot('mobile-synthetic-result');checks++;
