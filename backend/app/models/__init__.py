@@ -75,3 +75,6 @@ __all__ += ["ParcelConnector", "OrderParcelLink", "ParcelObservation", "ParcelNo
 
 from app.models.storefront_theme_v1 import StorefrontThemeSettings, StorefrontThemeCommand
 __all__ += ["StorefrontThemeSettings", "StorefrontThemeCommand"]
+
+from app.models.assistance import OnboardingAssignment, AssistanceCommand
+__all__ += ["OnboardingAssignment", "AssistanceCommand"]

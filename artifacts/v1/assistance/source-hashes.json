@@ -1,0 +1,12 @@
+{
+  "backend/app/main.py": "1bf721d50ac15add94c3dd650e713d8b1395b21928e54ea3a32491c0a64c9fd9",
+  "backend/app/models/__init__.py": "13a32c6edd77c91cc06c8065adb0ffc956172ff2c80445ebab9b6ff501e26c5a",
+  "backend/app/api/v1/assistance.py": "f8c04db9c77cb811c47a855d1353045a62e34167cf76f055dd5686785b3456e3",
+  "backend/app/models/assistance.py": "546fb8da900e44dc5eed3ad7acca66f956419b6e091d6b87027632a8cd76e617",
+  "backend/app/services/assistance.py": "986e0f27a64c9661719871c6f70044f52509025abdad6ab09057032e2e594d36",
+  "backend/app/schemas/assistance.py": "67c8a22c2387900793c46b5e1e957a654b9ac15f498c1401d405a2460a1a7fb6",
+  "backend/alembic/versions/0050_v1_assistance.py": "d1bedfed3e29210f895e668e307e4739d97e9fc8ce5f4208948ee809ef6f2dbe",
+  "backend/static/assistance.html": "60a1a03575d756b8de96c04748aa3714d5f2c333e6f801016b64c1dda0ce0360",
+  "backend/static/assistance.js": "124c4bb77f398a5c406d436ac0e475e1b84ca45f55efcdac827470ba18a94167",
+  "backend/static/assistance.css": "73f499846dd0e4cc5e9e31eb284f75fefe9b16caac34a44402bf152105d800d0"
+}

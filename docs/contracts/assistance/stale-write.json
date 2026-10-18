@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "code": "assistance_assignment_stale",
+    "message": "The onboarding lead changed. Reload and review the current assignment."
+  }
+}

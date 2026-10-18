@@ -1,0 +1,6 @@
+{
+  "checks": 24,
+  "provider_calls": 0,
+  "source": "actual app.main, native sessions, migrated PostgreSQL0050",
+  "external_requests": []
+}

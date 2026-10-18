@@ -1,0 +1,12 @@
+[
+  {
+    "antipattern": "tiny-text",
+    "name": "Tiny body text",
+    "description": "Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-sales-console/backend/static/assistance.html",
+    "line": 0,
+    "snippet": "11px body text"
+  }
+]
