@@ -98,7 +98,7 @@ failures stay closed. No new permission/type storage or database schema is inven
 Default deadline is 14 seconds, hard maximum 15, inclusive of loaders/checkpoints,
 DNS and transport; check before later I/O even if a callback suppresses cancellation.
 Limits cap five 25-item pages, eight Graph requests, ten assets, 5 MB per original,
-10 MB total originals and 256 KB per JSON response. Fresh credentials/checkpoint
+10 MB across all response bodies including JSON and 256 KB per JSON response. Fresh credentials/checkpoint
 must be rechecked after DNS, before each request and before return. Ignore provider
 `paging.next` URLs and rebuild requests using only bounded cursor data.
 
