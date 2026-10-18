@@ -31,6 +31,7 @@ test('N02 exact detail and frozen intent reject caller scope or source promotion
   assert.equal(contract.validReelDetail({...detail,business_id:other},business),false);
   assert.equal(contract.validReelDetail({...detail,source:{...detail.source,classification:'recent_message'}},business),false);
   assert.equal(contract.validReelDetail({...detail,source:{...detail.source,classification:'recent_message'},eligibility:{can_link:true,can_resume:false,reason:'inferred_context'}},business),true);
+  assert.equal(contract.validReelDetail({...detail,source:{...detail.source,classification:'unknown'},eligibility:{can_link:true,can_resume:false,reason:'unsupported_source'}},business),false);
   assert.equal(contract.validReelIntent(intent,business),true);
   for(const changed of [{...intent,business:other},{...intent,resource:other},{...intent,path:intent.path.replace(business,other)},
     {...intent,method:'DELETE'},{...intent,body:{...body,confirmed:1}},{...intent,body:{...body,source:'message_link'}},
@@ -44,6 +45,10 @@ test('N03 receipt and typed rejection bind the exact command without delivery or
     {...receipt,action:'link_only'},{...receipt,product_id:other},{...receipt,request_hash:'d'.repeat(64)},
     {...receipt,result:{...receipt.result,delivered:true}},{...receipt,result:{...receipt.result,outbound_id:null}},
     {...receipt,result:{...receipt.result,reason:'accepted_by_provider'}},{...receipt,source:'message_link'}])assert.equal(contract.validReelReceipt(changed,intent),false);
+  const linkIntent={...intent,body:{...body,action:'link_only'}};
+  const linkReceipt={...receipt,action:'link_only',result:{...receipt.result,resume:'not_requested',outbound_id:null,reason:'resume_not_requested'}};
+  assert.equal(contract.validReelReceipt(linkReceipt,linkIntent),true);
+  assert.equal(contract.validReelReceipt({...linkReceipt,result:{...linkReceipt.result,reason:'unknown'}},linkIntent),false);
   const rejection={status:409,code:'reel_operator_pre_mutation_rejection',reel_request_path:intent.path,reel_request_body:contract.stable(body)};
   assert.equal(contract.validReelRejection(rejection,intent),true);
   for(const changed of [{...rejection,status:422},{...rejection,code:'unclassified'},

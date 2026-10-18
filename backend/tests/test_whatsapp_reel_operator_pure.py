@@ -292,7 +292,7 @@ def test_p15_model_and_migration_keep_mandatory_exact_tenant_outbound_binding_an
                 "wa_reel_auth_outbound": ("business_id", "outbound_message_id", "contact_id", "phone_number_id")}
     assert {fk.name: tuple(fk.column_keys) for fk in auth.constraints if isinstance(fk, ForeignKeyConstraint)} == expected
     assert {tuple(c.columns.keys()) for c in auth.constraints if isinstance(c, UniqueConstraint)} == {("business_id", "outbound_message_id"), ("business_id", "inbound_message_id")}
-    assert all(not command.c[name].nullable for name in ("actor_user_id", "actor_session_id", "actor_auth_version", "source_fingerprint", "accepted_mapping_fingerprint"))
+    assert all(not command.c[name].nullable for name in ("actor_user_id", "actor_session_id", "actor_auth_version", "source_fingerprint", "recipient_fingerprint", "accepted_mapping_fingerprint"))
     source = (Path(__file__).parents[1] / "alembic/versions/0058_v1_reel_operator.py").read_text()
     assert "down_revision = '0057_v1_whatsapp_self_service'" in source
     for literal in ("BEFORE UPDATE OR DELETE ON ", "wa_reel_immutable", "wa_reel_auth_outbound", "wa_reel_command_source"):
