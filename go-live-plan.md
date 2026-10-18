@@ -72,8 +72,12 @@ contract approval; its runtime/DB/browser acceptance is pending and no live
 provider action is authorized. Its reviewed source now includes explicit original-App
 binding, current native authority after provider claims, exact credential provenance
 and bounded test authorization; actual0057 proof is still pending. Remote reviewed
-material-question handoff and local queued-reconnect cases are next integration
-checks, not completed provider acceptance. Only reviewed delivered remote results count. Provider approvals,
+material-question handoff and local queued-reconnect cases pass105 focused checks
+(57 actual-PG/48 pure) plus five actual-main mounted SKU journeys at85d9390.
+They prove conservative handoff, effective paused withholding and separately
+explicit owner re-enable with current facts; they do not prove a provider canary
+or full semantic quality. Exact bounded evidence and the retained fixture failure
+are in `docs/v1-wave7-v08-validation.md`. Only reviewed delivered remote results count. Provider approvals,
 physical devices, international migration requirements and operational release
 remain separate gates. Exact current evidence and ownership are in
 `docs/v1-execution-status.md` and `docs/v1-wave7-contracts.md`.

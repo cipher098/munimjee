@@ -1,0 +1,9 @@
+{
+  "runner_completed_screenshot_steps": true,
+  "fresh_png_bytes_equal_historical": true,
+  "copy_note": "The unchanged runner regenerated both screenshots. Their hashes were unchanged, so the wrapper changed-file filter copied only JSON; the equal PNG bytes were copied after restoring originals.",
+  "captures": {
+    "desktop-current-inventory.png": "594feacbeda17779359ca128bfbaf8896f9005f14d8e72f1b8574b1554b1ff69",
+    "mobile-untracked-inventory.png": "c11dc546b2dbe253c4abe1a74dcca0cb9cd2419d75ec7c7e972cd0f8a2424610"
+  }
+}

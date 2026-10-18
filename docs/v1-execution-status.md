@@ -74,19 +74,35 @@ Its repaired75 synthetic and six mounted cases pass. The final remote packet
 2681e91 is reviewed/composed, with32+8 controlled cases and the central native6
 actual-session rerun passing.
 
-Next source review is complete for the remote conservative material-question
-handoff (`a0d46df`, runtime `d3aacd9`); its synthetic-row48 checks are not yet
-integrated actual-PG proof. Social has prepared three signed-ingress/queued-WA
-acceptance cases for reconnect-paused withholding, explicit owner re-enable with
-fresh facts, and material-plus-price handoff.0057 backend `e897ee6` resolves the
+Subsequent bounded V08 composition `85d93906bc0b61b2ffbd21eb55c4b33266f0035a`
+passes105 checks (57 actual-PG,48 pure/synthetic-row) and the existing five
+actual-main mounted SKU journeys on independently queried0056. The512 focused
+source/harness hashes and1823 mounted tracked files match before/after.
+Material-plus-price now takes the conservative team handoff once. Native
+same-phone credential replacement effectively pauses both Account flags; an
+attempted queued reply is withheld and never resurrected. Separate explicit
+owner re-enable before first dispatch uses current facts and one send under the
+existing contract; no blanket generation-cancellation policy is invented.
+The first58-pass/two-fixture-error run is retained: its extra Control flag
+assertion was corrected while mandatory Account pause assertions stayed.
+The stale mounted runner PG0052 label is qualified by a fresh0056 query; its
+historical artifacts were restored byte-for-byte. Exact boundaries are in
+`docs/v1-wave7-v08-validation.md`. This is a focused runtime delta after the
+complete2441 source, not another complete-run claim or full V08 acceptance.
+
+0057 backend `e897ee6` resolves the
 reviewed App/config/claim/expiry source findings with independent16 no-network
 checks; page `93e6856` has18 controlled-DOM checks. Actual0057 migration, lock
-races, shared hooks and mounted browser acceptance remain pending. Both flags
+races and mounted browser acceptance remain pending. Isolated shared-hook
+installation `d541311` is independently source-cleared by both peers; its first
+actual0057 owner gate found missing private error headers after successful
+paused attach/replay. The owned wrapper fix `b853f4a` passes26 focused actual
+checks; the final mapped/legacy selection is still running, not acceptance. Both flags
 stay false; no provider wire or delivery claim follows from these source tests.
 
-DB/browser work stays serialized on disk-backed55443. The complete producer gate
-has exited cleanly; the next lane requires an explicit coordinator grant after
-checkpoint publication. New image/restore/rollback copies remain deferred under host
+DB/browser work stays serialized on disk-backed55443. The V08 parcel slot is
+released; catalogue now exclusively owns payment_w6 for focused0057 proof.
+No parallel DB/browser executor is authorized. New image/restore/rollback copies remain deferred under host
 disk headroom; no prune or evidence deletion is authorized. Provider approvals,
 physical devices, private ParcelDesk provisioning and operational deployment stay
 open. Exact boundaries are in `docs/v1-wave7-contracts.md`.

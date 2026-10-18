@@ -1,0 +1,16 @@
+{
+  "source_commit": "85d93906bc0b61b2ffbd21eb55c4b33266f0035a",
+  "selected": [
+    "backend/tests/test_v08_wa_reconnect_queue.py",
+    "backend/tests/test_v08_semantics_acceptance.py",
+    "backend/tests/test_v08_context_acceptance.py",
+    "backend/tests/test_v08_material_reply_regression.py",
+    "backend/tests/test_sku_fact_replies.py",
+    "backend/tests/test_sku_fact_replies_db.py"
+  ],
+  "runner_exit_code": 0,
+  "elapsed_seconds": 63.65,
+  "source_files": 512,
+  "source_hash_mismatches": [],
+  "mode": "actual migrated P01 PostgreSQL16; synthetic provider adapters; no browser/live provider"
+}

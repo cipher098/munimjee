@@ -1,0 +1,45 @@
+{
+  "source_commit": "85d93906bc0b61b2ffbd21eb55c4b33266f0035a",
+  "hashes": {
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/app/services/sku_fact_replies.py": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/app/bot/conversation.py": "e6436301a99822cd604441abfe34024a6ca47bd7856fb07d1a8d7c71d198d88d",
+    "backend/app/workers/message_batch.py": "63722890231444f6ed307a16da3ad2b70f618b76ec3ca01bc20ea9a4f7884c3c",
+    "backend/app/config.py": "548de1d2396247416ce6439321bed4c251bed122cdce288f2c0ad6b9c3aba7b5",
+    "backend/app/main.py": "16124b3f7d6ed9166bd88494cea6ccdf060a473c63e2953cfda0c8a122cf27fc"
+  },
+  "checks": 5,
+  "results": [
+    "desktop native reviewed draft and explicit activation; pending signed channels regenerate after UI price/stock update",
+    "mobile untracked stock stays unknown and both existing writers remain once-only across duplicate MID/drain",
+    "unpublished storefront blocks already queued IG/WA fact sends",
+    "invalid signed channel sources create no automated send",
+    "two signed buffered product references withhold before any first/last product reply"
+  ],
+  "observed": [
+    {
+      "business_id": "a1635a89-57a2-4014-8fc4-ff372eb37573",
+      "channel": "instagram",
+      "text": "Current catalogue: Synthetic SKU dress.\n• Size: M — ₹456.78; recorded out of stock.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team."
+    },
+    {
+      "business_id": "a1635a89-57a2-4014-8fc4-ff372eb37573",
+      "channel": "whatsapp",
+      "text": "Current catalogue: Synthetic SKU dress.\n• Size: M — ₹456.78; recorded out of stock.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team."
+    },
+    {
+      "business_id": "21b07069-a9f6-4c55-828c-38ba2f0aa6c1",
+      "channel": "instagram",
+      "text": "Current catalogue: Synthetic SKU dress.\n• Size: M — ₹234.56; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team."
+    },
+    {
+      "business_id": "21b07069-a9f6-4c55-828c-38ba2f0aa6c1",
+      "channel": "whatsapp",
+      "text": "Current catalogue: Synthetic SKU dress.\n• Size: M — ₹234.56; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team."
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "proof_scope": "Actual app.main/PG0052/native sessions/catalogue UI + synthetic configured account bindings, signed synthetic provider ingress and in-process fake provider transports. No live Meta/customer delivery or provider acceptance."
+}
