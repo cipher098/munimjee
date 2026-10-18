@@ -1,0 +1,8 @@
+{
+  "source_commit": "646bb952838737edbffe7f644008a12198b59740",
+  "runner_exit_code": 0,
+  "elapsed_seconds": 12.43,
+  "tracked_files": 1826,
+  "tracked_hash_mismatches": [],
+  "scope": "Only six independent actual-P01/main/native/signup/claim SQL cases, synthetic provider transport. No fallback main mount/fake scalar, browser or live provider."
+}

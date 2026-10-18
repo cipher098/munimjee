@@ -1,0 +1,46 @@
+{
+  "executed_source_commit": "646bb952838737edbffe7f644008a12198b59740",
+  "independent_test_source_sha256": "496534d6d57b9f88c872715fa35a9b7d3968efec66832fe41abf5b135cedc9b7",
+  "actual_migrated_cases": 6,
+  "failed": 0,
+  "skipped": 0,
+  "runtime_seconds": 11.3,
+  "all_tracked_files_stable": 1826,
+  "actual_database": {
+    "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "database": "munimjee_test_parcel_w6",
+    "alembic_head": "0057_v1_whatsapp_self_service",
+    "active_other_sessions": 0
+  },
+  "mode": "Real main/native/SQL and committed-claim/final-scalar callbacks; synthetic provider. No fallback router/fake scalar/authority/DB.",
+  "coverage": [
+    "Session revoke after real committed exchange claim",
+    "Session revoke after real committed subscription claim",
+    "Session revoke after real committed registration claim",
+    "Valid App change after real final SQL for exchange",
+    "Valid App change after real final SQL for subscription",
+    "Valid App change after real final SQL for registration"
+  ],
+  "outcome": "NEW targeted operation0; prior confirmed subscription retained for registration-stage rejection; unknown disposition/no attached Account; exact replay no repeated targeted method.",
+  "not_proven": [
+    "Live Meta SDK/provider/permissions/recipient delivery",
+    "Mounted UI/CSP",
+    "Signed reserved-ingress through exact canonical fixed-message worker (separate owner mounted gate)"
+  ],
+  "released": {
+    "database_lane": "parcel_w6",
+    "port": 8156,
+    "other_db_sessions": 0,
+    "pytest_or_migration_processes": 0,
+    "port_listener": 0
+  },
+  "sha256": {
+    "source-before.json": "52bcfb041c143dfa46320878a95cbaeab3ff4bbe723d670194068179d2c50e46",
+    "source-after.json": "52bcfb041c143dfa46320878a95cbaeab3ff4bbe723d670194068179d2c50e46",
+    "pytest.txt": "a3ffe48f7f62e5ce923b02f2e9f71b2fea27befcff7c66e3c086de70fca964e3",
+    "database.json": "9376c9acdb38691ac9b3982bc4a75c01545efe4de56ac5a833e355531189bfb9",
+    "pytest.xml": "9c29e0121a4de19fa735b9cbb0be10b18e1c68c8c711cc983a041b9fd7cea634",
+    "run.json": "eca6b609717d4ce97cd79164780dcba934bee34a64cb9ed9c0e8a7251c6adc18"
+  },
+  "raw_jwt_matches": 0
+}
