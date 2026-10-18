@@ -1,0 +1,95 @@
+{
+  "qa_base": "3f01ae1b8f0296df8c761d9ce52b534aa6b74b9a",
+  "qa_branch": "codex/v1-instagram-owned-qa",
+  "provider_worktree": "/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-provider",
+  "provider_head_at_capture": "3f01ae1b8f0296df8c761d9ce52b534aa6b74b9a",
+  "provider_source_uncommitted_read_only": true,
+  "provider_sha256": {
+    "backend/app/v1/imports/instagram_owned.py": "8301bdbfe97d781a6dd8a10a8e569c1978e608557a4c92bfbef894142085b7ba",
+    "backend/app/v1/imports/instagram_owned_transport.py": "02db3ce8e8b90e5fa5edaea385a2ae6bbe35f28cee18fee6fe9de1808351f4a1"
+  },
+  "qa_and_shared_sha256": {
+    "backend/app/services/imports_v1.py": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+    "backend/app/v1/imports/runner.py": "9d89b74f980f3b01ec00a607ef6ef5c8d5b87b2100299de0085eafd029a2b80f",
+    "backend/app/workers/v1_imports.py": "f212be6a865069363487b0e0dc6163e569f3f1783f7ff41c78887be6ca7f581d",
+    "backend/app/v1/imports/domain.py": "53a45977c6e4b7259d8309e0e5a3ff05d43cec039818be3e9b234900e82b61fe",
+    "backend/app/schemas/imports_v1.py": "4499d5e70753741381a6a7a8b49809837336ac032a3b4ad87ef5fe035426ca0b",
+    "backend/app/models/imports_v1.py": "222f1d856c0eaeb2f645f50e4e7537b971ecb06d9954a1462ad32830a4b1d2cd",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/tests/conftest_db.py": "89ed254cbd6bdb76d0fa6f0e6e2b8fec4d1b932b8ee603c98f37becd9fcb8472",
+    "go-live-plan.md": "b6ee5dd338a21ea20f89c70a8d618b3be7d0f6212fa0a66edb7d0e55ce053a89",
+    "backend/tests/test_v1_instagram_owned_pipeline.py": "05637d40c4e0b91d968592e6530d4418382486bd6898e1cb5b271adabb63c92e",
+    "backend/tests/test_v1_instagram_owned_pipeline_db.py": "edd07ff5277a7a04f3dc89c76a3bfdfb193cd9007cba617d3044af13c6f08986",
+    "backend/tests/test_v1_instagram_owned_pipeline_provider.py": "707ac4c5dc0364c2f9d90b8a505e26819ea7d2095d24e2311e0a12c0313a5924",
+    "docs/v1-instagram-owned-qa.md": "208b4af504388a526ca789ec1f8b0f08cf2f81d1290472f5dcf4f7f5985b0ec8"
+  },
+  "csv_reviewed_commit": "32a2d11fb51293402dd814eb3c4216327e5eec5a",
+  "csv_source_sha256": {
+    "docs/v1-csv-import-contract.md": "8c6f40274ea98d1af63dbccf91ea4069c9f67542f39ff145624533ad22dce98b",
+    "backend/app/services/imports_v1.py": "d21416a55658fdd1a8b8928f80546ba40e2c8cd2761267def63bb72e8b45db35"
+  },
+  "commands": [
+    {
+      "name": "standalone",
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -m pytest -q tests/test_v1_instagram_owned_pipeline.py tests/test_v1_instagram_owned_pipeline_db.py tests/test_v1_instagram_owned_pipeline_provider.py -rs",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-qa/backend",
+      "exit_code": 0,
+      "output": "standalone.txt"
+    },
+    {
+      "name": "source-assembly",
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -c 'from tests.safety import install_test_safety; install_test_safety(); import app.v1.imports; app.v1.imports.__path__.append(\"/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-provider/backend/app/v1/imports\"); import pytest; raise SystemExit(pytest.main(['\"'\"'-q'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline.py'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline_db.py'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline_provider.py'\"'\"', '\"'\"'-rs'\"'\"']))'",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-qa/backend",
+      "exit_code": 0,
+      "output": "source-assembly.txt"
+    },
+    {
+      "name": "relevant-regression",
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -c 'from tests.safety import install_test_safety; install_test_safety(); import app.v1.imports; app.v1.imports.__path__.append(\"/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-provider/backend/app/v1/imports\"); import pytest; raise SystemExit(pytest.main(['\"'\"'-q'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline.py'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline_db.py'\"'\"', '\"'\"'tests/test_v1_instagram_owned_pipeline_provider.py'\"'\"', '\"'\"'tests/test_v1_import_jobs.py'\"'\"', '\"'\"'tests/test_v1_wave2_jobs.py'\"'\"', '\"'\"'tests/test_v1_import_drafts.py'\"'\"', '\"'\"'tests/test_v1_import_jobs_db.py'\"'\"', '\"'\"'-rs'\"'\"']))'",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-qa/backend",
+      "exit_code": 0,
+      "output": "relevant-regression.txt"
+    }
+  ],
+  "standalone": {
+    "passed": 40,
+    "skipped": 17,
+    "skip_reasons": {
+      "unallocated_P01_database": 6,
+      "uncomposed_provider_source": 11
+    }
+  },
+  "source_assembly": {
+    "passed": 51,
+    "skipped": 6,
+    "skip_reasons": {
+      "unallocated_P01_database": 6
+    }
+  },
+  "relevant_regression": {
+    "passed": 200,
+    "skipped": 15,
+    "skip_reasons": {
+      "unallocated_P01_database": 15
+    }
+  },
+  "open_gates": [
+    "Official Instagram Login media contract/permissions/version verification",
+    "Authorized live seller/media provider acceptance",
+    "Trusted fresh DB credential loader and worker factory",
+    "Final DB connection generation/token expiry guard",
+    "Atomic original asset persistence/attachment",
+    "Allocated P01 actual-migrated database checks",
+    "Native and physical-device acceptance",
+    "Full V03/V04 and V1 acceptance"
+  ],
+  "effects": {
+    "real_provider_calls": 0,
+    "database_connections": 0,
+    "new_database_allocations": 0,
+    "shared_runtime_edits": 0,
+    "production_actions": 0
+  },
+  "provider_reviewed_commit": "d5ab4588b651f917fd92f38c5ffc7f1fd8a7f8a6",
+  "provider_commit_source_matches_tested_hashes": true
+}
