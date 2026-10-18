@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     V1_SUPPORT_OPERATOR_IDS: List[UUID] = []  # Explicit trusted subjects; no browser provisioning.
     V1_CUSTOMER_LINKS_ENABLED: bool = False
     V1_SKU_FACT_REPLIES_ENABLED: bool = False
+    V1_ACTIVITY_ENABLED: bool = False
     V1_PARCEL_CONNECTORS_JSON: str = ""  # Private, explicitly provisioned per-Business machine bindings.
     V1_PARCEL_ALLOWED_ORIGINS: List[str] = []
     V1_STOREFRONT_ASSETS_DIR: str = ""  # Packaged runtime JS/CSS directory; empty uses the source checkout.
