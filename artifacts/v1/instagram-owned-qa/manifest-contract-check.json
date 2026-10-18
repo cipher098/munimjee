@@ -1,0 +1,156 @@
+{
+  "qa_commit_before_followup": "5d986084750bb441d7a312a554c8e63e7b50aea8",
+  "csv_commit": "32a2d11fb51293402dd814eb3c4216327e5eec5a",
+  "assertion_count": 18,
+  "checks": [
+    {
+      "name": "asset insertion supplies every required field",
+      "passed": true
+    },
+    {
+      "name": "audit insertion supplies every required field",
+      "passed": true
+    },
+    {
+      "name": "asset unique key is tenant plus idempotency",
+      "passed": true
+    },
+    {
+      "name": "audit unique key is tenant plus idempotency",
+      "passed": true
+    },
+    {
+      "name": "audit job and candidate have actual composite tenant FKs",
+      "passed": true
+    },
+    {
+      "name": "JSON asset reference has no asset FK",
+      "passed": true
+    },
+    {
+      "name": "asset hash CHECK validates shape rather than content hash",
+      "passed": true
+    },
+    {
+      "name": "asset byte size CHECK remains five MB",
+      "passed": true
+    },
+    {
+      "name": "new action fits existing column",
+      "passed": true
+    },
+    {
+      "name": "canonical details are JSON primitives with reproducible digest",
+      "passed": true
+    },
+    {
+      "name": "same job media hash deterministically replays asset and manifest keys",
+      "passed": true
+    },
+    {
+      "name": "new job preserves a separate original version",
+      "passed": true
+    },
+    {
+      "name": "0046 has no append-only trigger or manifest JSON FK",
+      "passed": true
+    },
+    {
+      "name": "current API has no asset or manifest GET",
+      "passed": true
+    },
+    {
+      "name": "CSV only widens asset MIME CHECK in the existing model",
+      "passed": true
+    },
+    {
+      "name": "CSV0053 does not add FK trigger or schema relationship",
+      "passed": true
+    },
+    {
+      "name": "manifest readers and credential writer contracts unchanged by CSV32",
+      "passed": true
+    },
+    {
+      "name": "CSV immutable capture and stale guard remain required",
+      "passed": true
+    }
+  ],
+  "asset_required_without_defaults": [
+    "business_id",
+    "content",
+    "content_type",
+    "creator_id",
+    "idempotency_key",
+    "sha256",
+    "size_bytes"
+  ],
+  "audit_required_without_defaults": [
+    "action",
+    "actor_id",
+    "business_id",
+    "details",
+    "idempotency_key",
+    "request_hash"
+  ],
+  "audit_fk_column_sets": [
+    [
+      "business_id",
+      "candidate_id"
+    ],
+    [
+      "business_id",
+      "job_id"
+    ],
+    [
+      "business_id"
+    ],
+    [
+      "actor_id"
+    ]
+  ],
+  "import_GET_paths": [
+    "/jobs",
+    "/jobs/{job_id}",
+    "/candidates"
+  ],
+  "source_sha256": {
+    "backend/app/models/imports_v1.py": "222f1d856c0eaeb2f645f50e4e7537b971ecb06d9954a1462ad32830a4b1d2cd",
+    "backend/app/services/imports_v1.py": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+    "backend/app/api/v1/imports.py": "cfb72956e04e19ffd47b3aea9a66447ff0182aaa3bed0e1d775b57d79b8d0c56",
+    "backend/alembic/versions/0046_v1_import_jobs.py": "508870e08063a46b55532d4aef94ece47791d84318acc89e0fcd162482828f49",
+    "backend/app/services/import_catalogue.py": "7930b6a279ccf4eb17fdbe80dfd1e3482670ebe8f5c6c7d6c483aa8c6df9da5d",
+    "backend/app/models/import_catalogue.py": "8871668fad3f7a2f63b35e0c68aa70cf687af143a0dfdf772152beda126b68a0",
+    "backend/app/api/v1/import_catalogue.py": "0961d7048148063ed347e6cec68cd9ad7c4d8dcf66e62cd349470bc0b2eeb29a",
+    "backend/app/services/channel_connections.py": "ed4ff275efcbbc94896f8577f4ea164b736760a585761761b227cf8dd47e5819",
+    "backend/app/services/channel_operator.py": "5cfa09c001573ed7bf90d35039cc29b4c5fe6646d4eb5252bb248f8d555cd492",
+    "backend/app/workers/refresh_tokens.py": "a377901d00b038e17c12556fd040085b78ce52752affce366787dabd5890fa96",
+    "backend/app/api/routes/auth.py": "6748ca39a72f641e557ad962257e97a1d2f67183223a63cb8ef69c0c818665b4"
+  },
+  "csv_sha256": {
+    "backend/app/models/imports_v1.py": "fa2765dbfa37fe90931aa23e86f37c21ffa9d483ecbf6e4fe4544e2d50ed279d",
+    "backend/app/services/imports_v1.py": "d21416a55658fdd1a8b8928f80546ba40e2c8cd2761267def63bb72e8b45db35",
+    "backend/alembic/versions/0053_v1_csv_import.py": "4796cbc05550cfc0a83b1e8c29fb59356594aca6e49f3d47358f7dc44dd027fa"
+  },
+  "synthetic_manifest_details": {
+    "contract_version": "instagram-owned-manifest.v1",
+    "parent_media_id": "180000000000071",
+    "asset_media_id": "180000000000071",
+    "asset_id": "50000000-0000-0000-0000-000000000071",
+    "sha256": "7568a945b8ea5093f2aaa64cb1c09bd5deb58edefa5ac4b99efe5dea6bf165f8",
+    "size_bytes": 26,
+    "content_type": "image/png",
+    "connection_version": 7
+  },
+  "synthetic_asset_key": "4147d20d-58fa-5e82-afa7-3bcd3597ccd8",
+  "synthetic_manifest_key": "2a8348eb-c5c5-57f2-98b3-e656de30091d",
+  "limitations": [
+    "Static source and ORM metadata only; no database constraint execution",
+    "No shared hook or reader implemented",
+    "Manifest JSON asset_id has no database FK",
+    "Append-only behavior is an application proposal, not enforced DDL",
+    "All credential writers still require coordinated lock/version fencing"
+  ],
+  "database_connections": 0,
+  "provider_calls": 0
+}
