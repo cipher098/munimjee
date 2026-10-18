@@ -1,0 +1,55 @@
+sssssssssssssssss.sssssssssss...................s....................sss [ 47%]
+ssssssss.ssssssssssssssssssssssssssssssss.sss.sssssssssss............... [ 94%]
+.........                                                                [100%]
+=============================== warnings summary ===============================
+../../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+../../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/testclient.py:41
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee-wave4-qa/artifacts/v1/qa-product/wave4-native-completion/source-and-db-gates.xml -
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:108: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [7] tests/test_v1_native_completion_import_http.py:139: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] tests/test_v1_native_completion_import_http.py:160: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:172: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:189: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] tests/test_v1_native_completion_import_http.py:217: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] tests/test_v1_native_completion_theme_http.py:39: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [8] tests/test_v1_native_completion_theme_http.py:86: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_publication.py:89: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_settings.py:87: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_settings.py:112: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] tests/test_v1_theme_settings.py:123: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_settings.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_settings.py:153: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] tests/test_v1_theme_settings.py:166: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_theme_settings.py:181: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [8] tests/test_v1_theme_settings.py:220: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] tests/test_v1_theme_settings.py:264: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:58: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:86: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:99: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:114: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [9] tests/test_import_catalogue.py:131: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [7] tests/test_import_catalogue.py:160: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:192: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:226: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:246: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:334: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:351: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue.py:362: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue_schema.py:48: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] tests/test_import_catalogue_schema.py:60: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_catalogue_schema.py:70: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_import_workspace.py:48: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] tests/test_import_workspace.py:67: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+67 passed, 86 skipped, 3 warnings in 3.15s

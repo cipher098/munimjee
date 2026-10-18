@@ -1,0 +1,21 @@
+sssssssssssssssss.sssssssssss.                                           [100%]
+=============================== warnings summary ===============================
+../../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:108: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [7] tests/test_v1_native_completion_import_http.py:139: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] tests/test_v1_native_completion_import_http.py:160: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:172: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_native_completion_import_http.py:189: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] tests/test_v1_native_completion_import_http.py:217: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] tests/test_v1_native_completion_theme_http.py:39: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [8] tests/test_v1_native_completion_theme_http.py:86: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+2 passed, 28 skipped, 2 warnings in 0.61s

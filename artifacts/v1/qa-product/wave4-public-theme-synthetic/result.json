@@ -1,0 +1,108 @@
+{
+  "mode": "actual-ssr-and-live-dom-with-synthetic-public-provider-http-sdk-no-database-or-real-payments",
+  "source_head": "af71097c3d25903c527136e4a8d366f570751dc7",
+  "source_worktree_frontend_status": "",
+  "frontend_source_hashes": {
+    "app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+    "canonical-contract.js": "aa771ebfaa9ea6677be2673ee17643c81960e4f4c9fa52f064a7e53ec885a84b",
+    "catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+    "checkout-attempt.js": "9328c46471f992576c19d83221ae41cb851198dacc78070a1dd019701e853859",
+    "commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+    "components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+    "fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+    "live-api.js": "26a1d127047ca190518c365f73c678f098b6cb8d228d288c4cb0d0d11d3ce886",
+    "live-app.js": "de7cdf36e921dccdf653e86327dc529b5fa4b25087611665ed1ff68ab22cf319",
+    "live-entry.js": "c2d46fa21641dbd98a6d2e3830da5a96e7b0e078e2e09a095f82ddaa8863f07e",
+    "live.css": "56dfed3e64ccbb9a6c538f6ffff6a449302b77a4e48b839e75f714ede5897019",
+    "order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+    "payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+    "published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+    "styles.css": "3b3d44107e53dc66a26154c96060852282db80d565ba4b0b32ce995217829e10",
+    "theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374"
+  },
+  "source_unchanged_during_run": true,
+  "fixture_export": {
+    "mode": "actual-renderer-and-order-shell-with-synthetic-public-provider-dto-no-database",
+    "source_head": "af71097c3d25903c527136e4a8d366f570751dc7",
+    "source_hashes": {
+      "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+      "backend/app/schemas/storefront_theme_v1.py": "bbbb697dd54dddd98b89a7c5334a5bcd2a792d3c0e44374159db65a0affe156d",
+      "backend/app/api/v1/storefront.py": "5b15e389bb777213e2df7d6770e4f83146f5257a1dae2685b50dff785473214b",
+      "backend/tests/export_wave4_public_theme_fixtures.py": "4f4a2792becb1057056cc856ca5ac2fb1a2541fc809668c6e9a791d050ef8bcf"
+    },
+    "fixture_hashes": {
+      "video-defaults.html": "db7d55563790ae759a57f3e9e5fb64fe1f7c06b5cc7364eba697159ce4391e4c",
+      "editorial.html": "f1cec44c3acc89a1c9c947814705b218015b3d9dcdf43dd046ac7d64f7060541",
+      "video.html": "f3dff270a94f5f4a119d39d31f1d5e7fcfa2419f2aa8b48996343b470c0da18e",
+      "editorial-defaults.html": "555e0eba8894da80c4a3726b4ddd96186cc903c25b0616d47d50213fd4396832",
+      "catalogue.html": "683553c0878648ee8b8328a8f17424ae5c55049c36997657d06958dada7c293a",
+      "private-order-shell.html": "202331d17a72382f693734d9cb8eb303fb8a5d23f75129c403e3d8a5f7bc6c58",
+      "catalogue-defaults.html": "053528e68090d68f948ea9627b762eb88d567cb74201c9cde46ebbf0f8715f23"
+    },
+    "product_id": "22222222-2222-4222-8222-222222222201",
+    "sku_id": "33333333-3333-4333-8333-333333333301",
+    "order_id": "55555555-5555-4555-8555-555555555501"
+  },
+  "browser_version": "153.0.8010.12",
+  "physical_device": false,
+  "checks_passed": 13,
+  "checks_failed": 0,
+  "results": [
+    {
+      "name": "editorial: actual SSR preserves published text and no private fields without JavaScript",
+      "result": "passed"
+    },
+    {
+      "name": "editorial: actual live DOM published config and COD/private status flow with synthetic HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "editorial: actual payment handoff reaches paid via synthetic SDK and signed-response HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "editorial: blank published fields use theme defaults in actual hydrated DOM",
+      "result": "passed"
+    },
+    {
+      "name": "catalogue: actual SSR preserves published text and no private fields without JavaScript",
+      "result": "passed"
+    },
+    {
+      "name": "catalogue: actual live DOM published config and COD/private status flow with synthetic HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "catalogue: actual payment handoff reaches paid via synthetic SDK and signed-response HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "catalogue: blank published fields use theme defaults in actual hydrated DOM",
+      "result": "passed"
+    },
+    {
+      "name": "video: actual SSR preserves published text and no private fields without JavaScript",
+      "result": "passed"
+    },
+    {
+      "name": "video: actual live DOM published config and COD/private status flow with synthetic HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "video: actual payment handoff reaches paid via synthetic SDK and signed-response HTTP",
+      "result": "passed"
+    },
+    {
+      "name": "video: blank published fields use theme defaults in actual hydrated DOM",
+      "result": "passed"
+    },
+    {
+      "name": "actual private status shell without session-held capability exposes no order content",
+      "result": "passed"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": [],
+  "runner_sha256": "71e2c0715acf8dfb6ae1b9339f9fdc6c1273b828508303011a3869c3d0846350"
+}
