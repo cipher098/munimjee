@@ -101,7 +101,7 @@ async def detail(request: Request, business_id: UUID, challenge_id: UUID, actor:
     if row.customer_id:
         fingerprint, associations = await service.association_fingerprint(db, business_id, row.customer_id)
         result['association_fingerprint'] = fingerprint
-        result['linked'] = any(item.revoked_at is None for item in associations)
+        result['linked'] = len(associations) == 2 and all(item.revoked_at is None for item in associations)
     else:
         result.update(association_fingerprint=None, linked=False)
     audits = (await db.scalars(select(Audit).where(Audit.business_id == business_id).order_by(Audit.created_at.desc()).limit(100))).all()
