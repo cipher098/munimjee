@@ -31,17 +31,18 @@ DDL = (
  CONSTRAINT wa_reel_command_hashes CHECK(request_hash ~ '^[a-f0-9]{64}$' AND source_fingerprint ~ '^[a-f0-9]{64}$'
  AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$'
  AND expected_mapping_fingerprint ~ '^[a-f0-9]{64}$' AND accepted_mapping_fingerprint ~ '^[a-f0-9]{64}$'),
- CONSTRAINT wa_reel_command_quote CHECK((quoted_message_id IS NULL AND quoted_fingerprint IS NULL)
- OR (quoted_message_id IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$')),
+ CONSTRAINT wa_reel_command_quote CHECK((source_classification='quoted_message')=(quoted_message_id IS NOT NULL) AND ((quoted_message_id IS NULL AND quoted_fingerprint IS NULL)
+ OR (quoted_message_id IS NOT NULL AND quoted_fingerprint IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$'))),
  CONSTRAINT wa_reel_command_context CHECK(jsonb_typeof(reply_context)='object' AND octet_length(reply_context::text)<=4096),
  CONSTRAINT wa_reel_command_result CHECK(coalesce(jsonb_typeof(result)='object' AND octet_length(result::text)<=2048
  AND result ?& ARRAY['mapping','resume','reason','outbound_id','mapping_fingerprint']
  AND result-ARRAY['mapping','resume','reason','outbound_id','mapping_fingerprint']='{}'::jsonb
  AND result->>'mapping'='saved' AND result->>'resume' IN ('queued','held','not_requested')
+ AND ((action='link_only' AND result->>'resume'='not_requested' AND result->>'reason'='resume_not_requested') OR (action='link_and_resume' AND result->>'resume' IN ('queued','held')))
  AND ((result->>'resume'='queued' AND result->'reason'='null'::jsonb)
  OR (result->>'resume'<>'queued' AND result->>'reason' ~ '^[a-z_]{1,80}$'))
  AND result->>'mapping_fingerprint'=accepted_mapping_fingerprint
- AND ((result->>'resume'='queued' AND result->>'outbound_id' ~ '^[a-f0-9-]{36}$')
+ AND ((result->>'resume'='queued' AND result->>'outbound_id' ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
  OR (result->>'resume'<>'queued' AND result->'outbound_id'='null'::jsonb)),false))
 )""",
 """CREATE TABLE whatsapp_reel_authorizations (
@@ -62,6 +63,8 @@ DDL = (
 """CREATE FUNCTION wa_reel_immutable() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
  RAISE EXCEPTION 'Native reel review history is immutable' USING ERRCODE='23514'; END; $$""",
 """CREATE FUNCTION wa_reel_command_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF NEW.result->>'resume'='queued' AND NEW.source_classification NOT IN ('message_link','referral_link','quoted_message') THEN
+ RAISE EXCEPTION 'Inferred source cannot authorize a reply' USING ERRCODE='23514'; END IF;
  IF NOT EXISTS (SELECT 1 FROM user_sessions s JOIN users u ON u.id=s.user_id
  JOIN memberships m ON m.user_id=u.id AND m.business_id=NEW.business_id
  JOIN businesses b ON b.id=m.business_id JOIN sellers seller ON seller.id=b.id
@@ -83,6 +86,10 @@ DDL = (
  AND wa_reel_source_fingerprint(src.payload,src.text,src.kind,src.created_at,src.provider_message_id,src.contact_id,src.phone_number_id)=NEW.source_fingerprint
  AND a.phone_number_id=NEW.phone_number_id AND a.waba_id=NEW.waba_id AND control.version=NEW.connection_version
  AND encode(sha256(convert_to(a.access_token,'UTF8')),'hex')=NEW.credential_fingerprint
+ AND (NEW.quoted_message_id IS NULL OR EXISTS(SELECT 1 FROM whatsapp_messages quote WHERE quote.id=NEW.quoted_message_id
+ AND quote.seller_id=src.seller_id AND quote.contact_id=src.contact_id AND quote.phone_number_id=src.phone_number_id
+ AND quote.provider_message_id=src.payload->>'reply_to_message_id'
+ AND wa_reel_source_fingerprint(quote.payload,quote.text,quote.kind,quote.created_at,quote.provider_message_id,quote.contact_id,quote.phone_number_id)=NEW.quoted_fingerprint))
  AND p.active AND encode(sha256(convert_to(coalesce(p.reel_urls,'[]'::jsonb)::text,'UTF8')),'hex')=NEW.accepted_mapping_fingerprint
  AND NEW.created_at BETWEEN transaction_timestamp() AND clock_timestamp()) THEN
  RAISE EXCEPTION 'Exact reviewed source/account/product required' USING ERRCODE='23514'; END IF;
@@ -103,6 +110,11 @@ DDL = (
  AND NOT EXISTS (SELECT 1 FROM whatsapp_messages previous WHERE previous.seller_id=c.business_id
  AND previous.contact_id=c.contact_id AND previous.direction='outbound' AND previous.id<>dst.id AND previous.created_at>=src.created_at)) THEN
  RAISE EXCEPTION 'Exact new canonical reviewed outbound required' USING ERRCODE='23514'; END IF;
+ RETURN NEW; END; $$""",
+"""CREATE FUNCTION wa_reel_complete_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF (NEW.result->>'resume'='queued') IS DISTINCT FROM EXISTS(SELECT 1 FROM whatsapp_reel_authorizations a
+ WHERE a.business_id=NEW.business_id AND a.command_id=NEW.id AND a.outbound_message_id::text=NEW.result->>'outbound_id') THEN
+ RAISE EXCEPTION 'Complete native review receipt requires exact authorization' USING ERRCODE='23514'; END IF;
  RETURN NEW; END; $$""",
 """CREATE FUNCTION wa_reel_message_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
  IF EXISTS(SELECT 1 FROM whatsapp_reel_commands WHERE inbound_message_id=OLD.id OR quoted_message_id=OLD.id) THEN
@@ -126,6 +138,7 @@ def upgrade():
         op.execute('CREATE TRIGGER wa_reel_immutable BEFORE UPDATE OR DELETE ON '+table+' FOR EACH ROW EXECUTE FUNCTION wa_reel_immutable()')
     op.execute('CREATE TRIGGER wa_reel_command_guard BEFORE INSERT ON whatsapp_reel_commands FOR EACH ROW EXECUTE FUNCTION wa_reel_command_guard()')
     op.execute('CREATE TRIGGER wa_reel_authorization_guard BEFORE INSERT ON whatsapp_reel_authorizations FOR EACH ROW EXECUTE FUNCTION wa_reel_authorization_guard()')
+    op.execute('CREATE CONSTRAINT TRIGGER wa_reel_complete_guard AFTER INSERT ON whatsapp_reel_commands DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION wa_reel_complete_guard()')
     op.execute('CREATE TRIGGER wa_reel_message_guard BEFORE UPDATE OR DELETE ON whatsapp_messages FOR EACH ROW EXECUTE FUNCTION wa_reel_message_guard()')
 
 
@@ -135,6 +148,6 @@ def downgrade():
     op.execute('DROP TRIGGER wa_reel_message_guard ON whatsapp_messages')
     op.drop_table('whatsapp_reel_authorizations')
     op.drop_table('whatsapp_reel_commands')
-    for function in ('wa_reel_command_guard()','wa_reel_authorization_guard()','wa_reel_message_guard()','wa_reel_immutable()',
+    for function in ('wa_reel_complete_guard()','wa_reel_command_guard()','wa_reel_authorization_guard()','wa_reel_message_guard()','wa_reel_immutable()',
                      'wa_reel_source_fingerprint(jsonb,text,text,timestamptz,text,uuid,text)'):
         op.execute('DROP FUNCTION '+function)

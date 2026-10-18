@@ -10,10 +10,11 @@ RESULT_CHECK = """coalesce(jsonb_typeof(result)='object' AND octet_length(result
  AND result ?& ARRAY['mapping','resume','reason','outbound_id','mapping_fingerprint']
  AND result-ARRAY['mapping','resume','reason','outbound_id','mapping_fingerprint']='{}'::jsonb
  AND result->>'mapping'='saved' AND result->>'resume' IN ('queued','held','not_requested')
+ AND ((action='link_only' AND result->>'resume'='not_requested' AND result->>'reason'='resume_not_requested') OR (action='link_and_resume' AND result->>'resume' IN ('queued','held')))
  AND ((result->>'resume'='queued' AND result->'reason'='null'::jsonb)
  OR (result->>'resume'<>'queued' AND result->>'reason' ~ '^[a-z_]{1,80}$'))
  AND result->>'mapping_fingerprint'=accepted_mapping_fingerprint
- AND ((result->>'resume'='queued' AND result->>'outbound_id' ~ '^[a-f0-9-]{36}$')
+ AND ((result->>'resume'='queued' AND result->>'outbound_id' ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
  OR (result->>'resume'<>'queued' AND result->'outbound_id'='null'::jsonb)),false)"""
 
 
@@ -59,7 +60,7 @@ class WhatsAppReelCommand(Base):
         CheckConstraint('actor_auth_version>=0 AND connection_version>=0',name='wa_reel_command_versions'),
         CheckConstraint("shortcode ~ '^[A-Za-z0-9_-]{1,100}$' AND length(provider_mid) BETWEEN 1 AND 255",name='wa_reel_command_reference'),
         CheckConstraint("request_hash ~ '^[a-f0-9]{64}$' AND source_fingerprint ~ '^[a-f0-9]{64}$' AND credential_fingerprint ~ '^[a-f0-9]{64}$' AND expected_fingerprint ~ '^[a-f0-9]{64}$' AND expected_mapping_fingerprint ~ '^[a-f0-9]{64}$' AND accepted_mapping_fingerprint ~ '^[a-f0-9]{64}$'",name='wa_reel_command_hashes'),
-        CheckConstraint("(quoted_message_id IS NULL AND quoted_fingerprint IS NULL) OR (quoted_message_id IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$')",name='wa_reel_command_quote'),
+        CheckConstraint("(source_classification='quoted_message')=(quoted_message_id IS NOT NULL) AND ((quoted_message_id IS NULL AND quoted_fingerprint IS NULL) OR (quoted_message_id IS NOT NULL AND quoted_fingerprint IS NOT NULL AND quoted_fingerprint ~ '^[a-f0-9]{64}$'))",name='wa_reel_command_quote'),
         CheckConstraint("jsonb_typeof(reply_context)='object' AND octet_length(reply_context::text)<=4096",name='wa_reel_command_context'),
         CheckConstraint(RESULT_CHECK,name='wa_reel_command_result'),
     )
