@@ -15,7 +15,6 @@ import json
 import os
 from pathlib import Path
 import re
-import resource
 import stat
 import subprocess
 import sys
@@ -66,7 +65,7 @@ def plan():
                    "migrate source using P01 and seed fixed synthetic fixture", "export read-only consistent snapshot",
                    "private bounded pg_dump", "recheck empty target and pg_restore single transaction",
                    "reconcile all table row/identity hashes, schema and monetary/reservation/pending totals",
-                   "append newer target-only order; read-only compatibility probes preserve all facts"],
+                   "append newer target-only order; generic read-only persisted-data probe preserves all facts"],
         "application_switch": "pending: requires actual reviewed old/current application packages and mounted journey",
         "routine_rollback": "preserve post-cutover writes; compatibility preflight/forward fix; no snapshot overwrite or downgrade",
     }
@@ -108,8 +107,9 @@ def ownership(path, source, target):
         require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and stat.S_IMODE(info.st_mode) == 0o600,
                 "Ownership attestation must be an owned 0600 regular file")
         require(info.st_size <= 4096, "Ownership attestation is too large")
-        with os.fdopen(fd, "r", closefd=False) as stream:
-            value = json.load(stream)
+        payload = os.read(fd, 4097)
+        require(len(payload) <= 4096, "Ownership attestation grew beyond its bound")
+        value = json.loads(payload)
     finally:
         os.close(fd)
     expected = {"format", "source_lane", "target_lane", "synthetic_only", "allocated", "owner"}
@@ -122,7 +122,8 @@ def ownership(path, source, target):
 
 def archive_location(path):
     no_symlinks(path)
-    require(path != ROOT and ROOT not in path.parents, "Private archives must remain outside the repository")
+    require(not any((parent / ".git").exists() for parent in (path, *path.parents)),
+            "Private archives must remain outside every Git repository")
     require(not path.exists() and path.parent.is_dir(), "Archive directory must be new with an existing parent")
     require(path.parent.stat().st_uid == os.getuid() or bool(path.parent.stat().st_mode & stat.S_ISVTX),
             "Archive parent must be owned or sticky")
@@ -132,6 +133,31 @@ def private_file(directory, name):
     # Names are constants owned by this tool, never supplied by an archive.
     require(re.fullmatch(r"[a-z][a-z0-9_.-]{0,60}", name), "Invalid private output name")
     return os.fdopen(os.open(directory / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), "wb")
+
+
+def private_read(path):
+    no_symlinks(path)
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        info = os.fstat(fd)
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+                and stat.S_IMODE(info.st_mode) == 0o600 and 0 < info.st_size <= MAX_ARCHIVE_BYTES,
+                "Private archive must remain an owned bounded 0600 regular file")
+        return os.fdopen(fd, "rb")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def private_sha256(path):
+    digest = hashlib.sha256()
+    with private_read(path) as stream:
+        total = 0
+        while chunk := stream.read(1024 * 1024):
+            total += len(chunk)
+            require(total <= MAX_ARCHIVE_BYTES, "Private archive grew beyond its bound")
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def private_json(directory, name, value):
@@ -151,18 +177,40 @@ def child_env(target, original):
             "PGOPTIONS": "-c statement_timeout=120000 -c lock_timeout=5000"}
 
 
-def file_limit():
-    resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_ARCHIVE_BYTES, MAX_ARCHIVE_BYTES))
-
-
 def command(argv, env, *, stdout=subprocess.PIPE, stdin=None):
     try:
-        result = subprocess.run(argv, env=env, stdin=stdin, stdout=stdout, stderr=subprocess.PIPE,
-                                timeout=TIMEOUT, check=False, preexec_fn=file_limit)
+        result = subprocess.run([sys.executable, str(ROOT / "scripts/v1_release_exec.py"), str(MAX_ARCHIVE_BYTES), *argv],
+                                env=env, stdin=stdin, stdout=stdout, stderr=subprocess.PIPE,
+                                timeout=TIMEOUT, check=False)
     except (OSError, subprocess.TimeoutExpired):
         raise RehearsalError("Bounded rehearsal subprocess failed or timed out; output withheld") from None
     require(result.returncode == 0, "Rehearsal subprocess failed; output withheld")
     return result.stdout
+
+
+
+async def owned_call(function, *args, **kwargs):
+    """Do not release either DB lease while a cancelled worker child still runs.
+
+    subprocess.run itself kills/waits on timeout. Shielding plus draining the
+    worker ensures cooperative cancellation cannot outlive the held DB leases.
+    """
+    worker = asyncio.create_task(asyncio.to_thread(function, *args, **kwargs))
+    cancellation = None
+    while not worker.done():
+        try:
+            await asyncio.shield(worker)
+        except asyncio.CancelledError as error:
+            cancellation = error
+        except Exception:
+            break
+    if cancellation is not None:
+        # Retrieve a possible worker error to avoid an unhandled-task warning;
+        # cancellation retains precedence while leases are still held.
+        if not worker.cancelled():
+            worker.exception()
+        raise cancellation
+    return worker.result()
 
 
 def pg_tools(directory, env):
@@ -174,7 +222,7 @@ def pg_tools(directory, env):
         # Tool symlinks within an explicit trusted PG16 installation are allowed;
         # private archive/attestation paths remain strictly no-follow.
         output = command([str(executable), "--version"], env)
-        require(re.fullmatch(rb"pg_(?:dump|restore) \(PostgreSQL\) 16\.[0-9]+[^\n]*\n?", output or b""),
+        require(re.fullmatch(name.encode() + rb" \(PostgreSQL\) 16\.[0-9]+[^\n]*\n?", output or b""),
                 "Both archive tools must be PostgreSQL 16")
         tools[name] = str(executable)
     return tools
@@ -204,6 +252,51 @@ async def pg16(connection):
     require(160000 <= version < 170000, "Both allocated database servers must be PostgreSQL 16")
 
 
+async def schema_fingerprint(connection):
+    """Fingerprint restored public writer protections as well as columns/FKs.
+
+    Definitions are private inputs to a digest. Internal FK triggers are covered
+    by validated FK definitions rather than unstable generated object OIDs/names.
+    """
+    catalog = {
+        "columns": """SELECT table_name,column_name,data_type,udt_name,is_nullable,column_default
+          FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position""",
+        "constraints": """SELECT c.relname,k.conname,pg_get_constraintdef(k.oid),k.convalidated
+          FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' ORDER BY c.relname,k.conname""",
+        "functions": """SELECT p.proname,pg_get_function_identity_arguments(p.oid),pg_get_functiondef(p.oid)
+          FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+          WHERE n.nspname='public' AND p.prokind IN ('f','p') ORDER BY 1,2""",
+        "triggers": """SELECT c.relname,t.tgname,pg_get_triggerdef(t.oid),t.tgenabled
+          FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND NOT t.tgisinternal ORDER BY 1,2""",
+        "indexes": """SELECT tablename,indexname,indexdef FROM pg_indexes
+          WHERE schemaname='public' ORDER BY tablename,indexname""",
+        "table_security": """SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relreplident,c.relpersistence
+          FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND c.relkind IN ('r','p') ORDER BY 1""",
+        "policies": """SELECT tablename,policyname,permissive,roles,cmd,qual,with_check
+          FROM pg_policies WHERE schemaname='public' ORDER BY tablename,policyname""",
+        "views": """SELECT c.relname,c.relkind,pg_get_viewdef(c.oid)
+          FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND c.relkind IN ('v','m') ORDER BY 1""",
+        "enums": """SELECT t.typname,e.enumlabel,e.enumsortorder FROM pg_type t
+          JOIN pg_namespace n ON n.oid=t.typnamespace JOIN pg_enum e ON e.enumtypid=t.oid
+          WHERE n.nspname='public' ORDER BY t.typname,e.enumsortorder""",
+        "sequence_definitions": """SELECT sequencename,data_type,start_value,min_value,max_value,increment_by,cycle,cache_size
+          FROM pg_sequences WHERE schemaname='public' ORDER BY sequencename""",
+    }
+    inventory = {name: list(map(list, (await query(connection, sql)).all())) for name, sql in catalog.items()}
+    require(all(row[3] for row in inventory["constraints"]), "Unvalidated restored constraints are forbidden")
+    inventory["sequence_state"] = []
+    for row in inventory["sequence_definitions"]:
+        name = row[0]
+        require(re.fullmatch(r"[a-z][a-z0-9_]{0,62}", name), "Unexpected sequence identifier")
+        state = (await query(connection, f'SELECT last_value,is_called FROM public."{name}"')).one()
+        inventory["sequence_state"].append([name, *state])
+    return hashlib.sha256(json.dumps(inventory, sort_keys=True, default=str).encode()).hexdigest()
+
+
 async def snapshot(connection):
     await query(connection, "SET LOCAL TIME ZONE 'UTC'")
     versions = list((await query(connection, "SELECT version_num FROM public.alembic_version")).scalars())
@@ -221,20 +314,15 @@ async def snapshot(connection):
         require(len(rows) <= MAX_ROWS, "Synthetic row bound exceeded")
         digest = hashlib.sha256(json.dumps(sorted(rows), separators=(",", ":")).encode()).hexdigest()
         result[name] = {"count": len(rows), "row_sha256": digest}
-    schema_rows = list((await query(connection, """SELECT table_name,column_name,data_type,udt_name,is_nullable,column_default
-      FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position""")).all())
-    constraints = list((await query(connection, """SELECT c.relname,k.conname,pg_get_constraintdef(k.oid),k.convalidated
-      FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace
-      WHERE n.nspname='public' ORDER BY c.relname,k.conname""")).all())
-    require(all(row[3] for row in constraints), "Unvalidated restored constraints are forbidden")
-    schema_digest = hashlib.sha256(json.dumps([list(map(list, schema_rows)), list(map(list, constraints))], default=str).encode()).hexdigest()
+    schema_digest = await schema_fingerprint(connection)
     totals = (await query(connection, """SELECT count(*),coalesce(sum(total),0),
       coalesce(sum(total) FILTER (WHERE payment_status='paid'),0),
       coalesce(sum(total) FILTER (WHERE payment_status='collected'),0),
       (SELECT count(*) FROM sku_reservations),
       (SELECT coalesce(sum(quantity),0) FROM sku_reservations WHERE NOT released),
       (SELECT count(*) FROM sku_payment_attempts WHERE state='unknown'),
-      (SELECT count(*) FROM manual_actions WHERE status='open') FROM commerce_orders""")).one()
+      (SELECT count(*) FROM manual_actions WHERE status='open'),
+      (SELECT coalesce(sum(stock_available),0) FROM catalogue_skus) FROM commerce_orders""")).one()
     integrity = (await query(connection, """SELECT
       (SELECT count(*) FROM commerce_orders WHERE total<>subtotal+shipping_fee OR total<0) +
       (SELECT count(*) FROM sku_reservations r LEFT JOIN commerce_orders o ON o.id=r.order_id AND o.seller_id=r.business_id
@@ -244,14 +332,14 @@ async def snapshot(connection):
     require(integrity == 0, "Monetary/reservation integrity reconciliation failed")
     return {"head": versions[0], "tables": result, "schema_sha256": schema_digest,
             "totals": dict(zip(("orders", "placed_total_minor", "paid_total_minor", "cod_collected_minor",
-                                "reservations", "reserved_quantity", "unknown_payments", "open_actions"), map(int, totals)))}
+                                "reservations", "reserved_quantity", "unknown_payments", "open_actions", "available_stock"), map(int, totals)))}
 
 
 async def run(args, env):
     source, target = targets(args.source_lane, args.target_lane, env)
     ownership(args.attestation, source, target)
     archive_location(args.archive_dir)
-    tools = await asyncio.to_thread(pg_tools, args.pg_bin, {"PATH": env.get("PATH", os.defpath), "LANG": "C"})
+    tools = await owned_call(pg_tools, args.pg_bin, {"PATH": env.get("PATH", os.defpath), "LANG": "C"})
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy.pool import NullPool
     from v1_release_synthetic import seed, newer_order, validate_fixture
@@ -273,7 +361,7 @@ async def run(args, env):
             migration_env = {key: env[key] for key in ("PATH", "HOME", "TMPDIR") if key in env}
             migration_env.update(TEST_DATABASE_URL=source.url, TEST_LANE=source.lane, TEST_DB_RESET="1",
                                  PYTHONPATH=str(ROOT / "backend"))
-            await asyncio.to_thread(command, [sys.executable, "-m", "tests.migrate_test_database"], migration_env)
+            await owned_call(command, [sys.executable, "-m", "tests.migrate_test_database"], migration_env)
             await seed(src)
             await src.commit()
             async with src.begin():
@@ -286,7 +374,7 @@ async def run(args, env):
                 archive_location(args.archive_dir)  # revalidate immediately before filesystem mutation
                 os.mkdir(args.archive_dir, 0o700)
                 with private_file(args.archive_dir, "synthetic.dump") as archive:
-                    await asyncio.to_thread(command,
+                    await owned_call(command,
                         [tools["pg_dump"], "--format=custom", "--no-owner", "--no-privileges", "--no-comments",
                          "--no-security-labels", "--snapshot", export], child_env(source, env), stdout=archive)
                     archive.flush()
@@ -295,8 +383,8 @@ async def run(args, env):
                 require(0 < archive_path.stat().st_size <= MAX_ARCHIVE_BYTES, "Archive size bound failed")
                 await empty_database(dst)  # both leases still held; refuse any preexisting target objects
                 await dst.commit()
-                with archive_path.open("rb") as archive:
-                    await asyncio.to_thread(command,
+                with private_read(archive_path) as archive:
+                    await owned_call(command,
                         [tools["pg_restore"], "--no-owner", "--no-privileges", "--single-transaction", "--exit-on-error",
                          "--dbname", target.database], child_env(target, env), stdin=archive)
                 await query(dst, "SET LOCAL TIME ZONE 'UTC'")
@@ -310,17 +398,16 @@ async def run(args, env):
                 await dst.commit()
                 async with dst.begin():
                     await query(dst, "SET TRANSACTION READ ONLY")
-                    for profile in ("previous_schema_reader", "current_forward_fix_reader"):
-                        result = (await query(dst, "SELECT id,total,payment_status FROM commerce_orders ORDER BY id")).all()
-                        require(len(result) == 3, "Compatibility reader lost a post-cutover synthetic order")
-                    require(await snapshot(dst) == before, "Read compatibility probes changed persisted facts")
+                    result = (await query(dst, "SELECT id,total,payment_status FROM commerce_orders ORDER BY id")).all()
+                    require(len(result) == 3, "Persisted-data reader lost a post-cutover synthetic order")
+                    require(await snapshot(dst) == before, "Persisted read-contract probe changed facts")
                 require(await snapshot(src) == baseline, "Source changed during read-only backup")
                 evidence = {"format": "munimjee.release-rehearsal.v1", "mode": "execute", "synthetic_only": True,
                             "head": repo_head(), "restore": "passed", "reconciliation": restored,
                             "post_cutover_reconciliation": before,
-                            "compatibility_read_contract": "passed; both profiles retain newer target-only order",
+                            "persisted_read_contract": "passed; generic SQL probe retains newer target-only order",
                             "application_switch": "pending_actual_old_current_application_journey",
-                            "schema_downgrade": "not_executed", "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest()}
+                            "schema_downgrade": "not_executed", "archive_sha256": private_sha256(archive_path)}
                 private_json(args.archive_dir, "evidence.json", evidence)
                 return evidence
     finally:
@@ -328,16 +415,21 @@ async def run(args, env):
             await engine.dispose()
 
 
+class RedactedArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise RehearsalError("Invalid invocation; arguments withheld")
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = RedactedArgumentParser(description=__doc__)
     parser.add_argument("action", nargs="?", choices=("plan", "execute"), default="plan")
     parser.add_argument("--source-lane")
     parser.add_argument("--target-lane")
     parser.add_argument("--attestation", type=Path)
     parser.add_argument("--archive-dir", type=Path)
     parser.add_argument("--pg-bin", type=Path)
-    args = parser.parse_args(argv)
     try:
+        args = parser.parse_args(argv)
         if args.action == "plan":
             result = plan()
         else:

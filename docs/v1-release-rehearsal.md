@@ -65,8 +65,13 @@ Do not paste connection strings into arguments or public logs. The private archi
 directory must not already exist; its parent must exist and be owned or sticky.
 Private paths cannot contain symlinks or parent traversal. The tool creates the
 directory 0700 and archive/evidence files 0600 with exclusive no-follow opens.
+Archive reads also recheck no-follow, ownership, permissions and size; archive
+locations inside any Git checkout are refused.
 It never overwrites a backup. Dumps are limited to 64 MiB using the child process
-file-size limit, and subprocesses have a 180-second timeout. SQL statement and
+file-size limit through a fresh Python helper that sets the limit and execs the
+actual command with the same PID; no threaded `preexec_fn` is used. Subprocesses
+have a 180-second timeout. Cooperative cancellation drains each bounded command
+before either DB lease can be released. SQL statement and
 lock timeouts are 120 seconds and 5 seconds. No subprocess stderr/row data is
 published, even on failure. Child libpq credentials are passed through a minimal
 private environment, never argv; inherited provider credentials, PG service and
@@ -90,13 +95,15 @@ passfile configuration are excluded. Do not commit the dump or private evidence.
    one transaction and exits on error, with no owner/privilege restoration.
 6. Compare every public table's count and hash of sorted full JSON rows, covering
    every ID/value and duplicate multiplicity. Compare column/constraint schema
-   fingerprints and require validated constraints. Reconcile order counts,
+   fingerprints, public function bodies, non-internal trigger definitions/enabled
+   states, indexes, RLS flags/policies, views, enum definitions and sequence
+   definitions/current states. Require validated constraints. Reconcile order counts,
    placed/paid/COD-collected totals separately, reservations/quantity, unknown
-   payment attempts and open manual actions. Check order arithmetic and tenant
+   payment attempts, open manual actions and remaining available inventory. Check order arithmetic and tenant
    reservation links. Public output includes only counts/totals/digests, never
    row content. Table/row/data bounds fail closed.
 7. Insert a third, newer **target-only** synthetic paid order and reservation.
-   Exercise read-only compatibility reader contracts and require the complete
+   Exercise a generic read-only persisted-data SQL probe and require the complete
    target snapshot to stay unchanged, including that newer order. Recheck the
    source snapshot unchanged. Write private evidence and release both leases.
 
@@ -107,12 +114,12 @@ cleanup command that might mistake an external resource for an owned one.
 
 ## Application rollback and forward fix boundary
 
-The compatibility probes are SQL read contracts over a current schema, **not an
-actual prior application binary switch**. Both profile names are explicit probe
-labels; they do not establish that any earlier application commit is compatible.
+The persisted-data probe is a generic SQL read over the current schema, **not an
+actual prior application binary switch**. It does not establish compatibility
+with an earlier application commit or an actual forward-fix package.
 Evidence therefore keeps `application_switch` pending even when real restore
-and compatibility checks pass. The target-only newer order test demonstrates
-that these read probes preserve post-cutover facts; it cannot prove old writers,
+and persisted read checks pass. The target-only newer order test demonstrates
+that this read probe preserves post-cutover facts; it cannot prove old writers,
 background jobs, routing, cache or frontend behavior.
 
 To close that separate gate, the release owner must supply immutable prior/current
@@ -149,9 +156,9 @@ or unsafe input fails rather than skipping once acceptance is explicitly enabled
 Do not combine this acceptance with backend conftest's single-lane socket guard:
 run this dedicated test file as its own process.
 
-Local status on 18 October 2026: **27 pure/fake-transport checks passed, one actual
+Local status on 18 October 2026: **38 local safety/exec-helper checks passed, one actual
 PG16 acceptance skipped**. No allocated pair or explicit PG16 installation was
 provided. The known remote Docker hang was not probed or restarted. Actual
-`pg_dump`/`pg_restore`, hosted CI, actual prior/current application rollback and
+`pg_dump`/`pg_restore`, hosted CI, prior/current application compatibility, rollback and
 forward-fix mounted journeys remain pending. Earlier wave-4 local PG16 acceptance
 is historical evidence and is not a run of this new rehearsal.

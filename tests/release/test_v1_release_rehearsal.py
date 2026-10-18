@@ -119,6 +119,7 @@ def test_pg16_tools_fail_closed(tmp_path, monkeypatch, version):
 def test_subprocess_is_bounded_and_failure_text_withheld(monkeypatch):
     calls = []
     def failed(argv, **kwargs):
+        assert argv[:3] == [sys.executable, str(rehearsal.ROOT / "scripts/v1_release_exec.py"), str(rehearsal.MAX_ARCHIVE_BYTES)]
         calls.append(kwargs)
         return SimpleNamespace(returncode=1, stdout=b"secret rows", stderr=b"postgresql://secret")
     monkeypatch.setattr(rehearsal.subprocess, "run", failed)
@@ -126,7 +127,7 @@ def test_subprocess_is_bounded_and_failure_text_withheld(monkeypatch):
         rehearsal.command(["pg_dump"], {})
     assert "secret" not in str(error.value)
     assert calls[0]["timeout"] == rehearsal.TIMEOUT
-    assert calls[0]["preexec_fn"] is rehearsal.file_limit
+    assert "preexec_fn" not in calls[0]
 
 
 def test_cli_refusal_redacts_driver_and_environment_exceptions(monkeypatch, capsys):
@@ -221,3 +222,91 @@ def test_actual_pg16_backup_restore_and_newer_order_preservation():
     assert result["reconciliation"]["totals"]["orders"] == 2
     assert result["post_cutover_reconciliation"]["totals"]["orders"] == 3
     assert result["application_switch"].startswith("pending")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("changed", ["trigger", "function", "index", "policy", "security", "sequence"])
+async def test_writer_protection_or_sequence_change_changes_schema_digest(monkeypatch, changed):
+    async def query(connection, sql, params=None):
+        original = connection == "original"
+        rows = []
+        if "FROM pg_trigger" in sql:
+            rows = [["commerce_orders", "catalogue_order_snapshot_guard", "CREATE TRIGGER immutable", "O"]]
+            if changed == "trigger" and not original: rows = []
+        elif "FROM pg_proc" in sql:
+            rows = [["catalogue_protect_order_snapshot", "", "immutable body"]]
+            if changed == "function" and not original: rows[0][2] = "unprotected body"
+        elif "FROM pg_indexes" in sql:
+            rows = [["commerce_orders", "unique_order", "CREATE UNIQUE INDEX immutable"]]
+            if changed == "index" and not original: rows = []
+        elif "FROM pg_policies" in sql:
+            rows = [["commerce_orders", "tenant", "PERMISSIVE", ["public"], "ALL", "tenant predicate", None]]
+            if changed == "policy" and not original: rows[0][5] = "true"
+        elif "relrowsecurity" in sql:
+            rows = [["commerce_orders", True, True, "d", "p"]]
+            if changed == "security" and not original: rows[0][1] = False
+        elif "FROM pg_sequences" in sql:
+            rows = [["synthetic_seq", "bigint", 1, 1, 100, 1, False, 1]]
+        elif "SELECT last_value" in sql:
+            return SimpleNamespace(one=lambda: (4 if changed == "sequence" and not original else 3, True))
+        return SimpleNamespace(all=lambda: rows)
+    monkeypatch.setattr(rehearsal, "query", query)
+    assert await rehearsal.schema_fingerprint("original") != await rehearsal.schema_fingerprint("changed")
+
+
+@pytest.mark.asyncio
+async def test_cooperative_cancellation_drains_child_before_lease_scope_can_exit():
+    import asyncio
+    import threading
+    started, finish = threading.Event(), threading.Event()
+    events = []
+    def worker():
+        started.set()
+        assert finish.wait(timeout=3)
+        events.append("child_finished")
+    async def lease_scope():
+        try:
+            await rehearsal.owned_call(worker)
+        finally:
+            events.append("lease_released")
+    task = asyncio.create_task(lease_scope())
+    assert await asyncio.to_thread(started.wait, 1)
+    task.cancel()
+    await asyncio.sleep(0)
+    assert not task.done()
+    assert "lease_released" not in events
+    finish.set()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert events == ["child_finished", "lease_released"]
+
+
+def test_archive_refuses_another_git_repository(tmp_path):
+    (tmp_path / ".git").mkdir()
+    with pytest.raises(rehearsal.RehearsalError, match="every Git"):
+        rehearsal.archive_location(tmp_path / "archive")
+
+
+def test_actual_private_exec_helper_sets_file_limit_without_preexec_or_db():
+    output = rehearsal.command([sys.executable, "-c", "import resource; print(resource.getrlimit(resource.RLIMIT_FSIZE)[0])"],
+                               {"PATH": os.defpath})
+    assert output.strip() == str(rehearsal.MAX_ARCHIVE_BYTES).encode()
+
+
+def test_invalid_cli_never_echoes_secret_arguments(capsys):
+    assert rehearsal.main(["--unknown", "postgresql://secret:password@private/db"]) == 1
+    assert "password" not in capsys.readouterr().err
+
+
+def test_private_archive_read_refuses_symlink_or_wrong_permissions(tmp_path):
+    path = tmp_path / "synthetic.dump"
+    path.write_bytes(b"private synthetic fixture")
+    path.chmod(0o600)
+    assert rehearsal.private_sha256(path)
+    link = tmp_path / "link.dump"
+    link.symlink_to(path)
+    with pytest.raises(rehearsal.RehearsalError):
+        rehearsal.private_read(link)
+    path.chmod(0o644)
+    with pytest.raises(rehearsal.RehearsalError):
+        rehearsal.private_read(path)
