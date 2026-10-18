@@ -125,13 +125,13 @@ async def readiness(request:Request,business_id:UUID,db:AsyncSession=Depends(get
     if not settings.V1_CHANNEL_TESTS_ENABLED: blockers.append('test_disabled')
     status='not_connected'
     if account and account.access_token:
-        provenance=await db.scalar(select(WhatsAppAuthorizationProvenance).where(
-            WhatsAppAuthorizationProvenance.business_id==business_id,WhatsAppAuthorizationProvenance.connection_version==version))
-        if provenance is None:
-            status='setup_required'; blockers.append('verification_unknown')
-        elif provenance.token_expiry_kind!='permanent' and (not provenance.token_expires_at or provenance.token_expires_at<=service.now()):
-            status='needs_reconnect'; blockers.append('expired_authorization')
-        else: status='local_access_verified' if account.enabled and account.automation_enabled else 'paused'
+        try:
+            await current_provenance(db,account,version)
+            status='local_access_verified' if account.enabled and account.automation_enabled else 'paused'
+        except HTTPException as error:
+            expired=error.detail=='WhatsApp authorization has expired or is unknown'
+            status='needs_reconnect' if expired else 'setup_required'
+            blockers.append('expired_authorization' if expired else 'verification_unknown')
         blockers.append('billing_external')
     else: blockers.append('account_not_selected')
     access=await read_final(request,db,business_id,actor)
@@ -274,4 +274,12 @@ async def recipient(request:Request,business_id:UUID,test_id:UUID,db:AsyncSessio
     # Last authority statement joins native sid/current owner/active tenant and
     # current generation/account after every awaited private lookup.
     await current_owner_session(db,auth.binding,generation=row.connection_version,phone_id=row.phone_number_id)
+    return result
+
+
+@router.post(BASE+'/signup/{attempt_id}/cancel')
+async def cancel_signup(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db)):
+    auth=await authority(request,db,business_id)
+    result=await service.cancel_signup(db,auth,attempt_id,await command(request,Command))
+    await auth.finalize(db)
     return result

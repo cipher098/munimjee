@@ -81,6 +81,7 @@ DDL = (
 	phone_number_id VARCHAR(40) NOT NULL, 
 	waba_id VARCHAR(40) NOT NULL, 
 	verified_app_id VARCHAR(40) NOT NULL, 
+	credential_fingerprint VARCHAR(64) NOT NULL, 
 	grants JSONB NOT NULL, 
 	token_expiry_kind VARCHAR(12) NOT NULL, 
 	token_expires_at TIMESTAMP WITH TIME ZONE, 
@@ -90,6 +91,7 @@ DDL = (
 	CONSTRAINT wa_provenance_attempt FOREIGN KEY(attempt_id, business_id) REFERENCES whatsapp_signup_attempts (id, business_id), 
 	CONSTRAINT wa_provenance_versions CHECK (actor_auth_version >= 0 AND connection_version >= 0), 
 	CONSTRAINT wa_provenance_ids CHECK (phone_number_id ~ '^[0-9]{1,40}$' AND waba_id ~ '^[0-9]{1,40}$' AND verified_app_id ~ '^[0-9]{1,40}$'), 
+	CONSTRAINT wa_provenance_credential CHECK (credential_fingerprint ~ '^[0-9a-f]{64}$'), 
 	CONSTRAINT wa_provenance_grants CHECK (jsonb_typeof(grants) = 'array' AND jsonb_array_length(grants) = 2 AND grants @> '["whatsapp_business_management","whatsapp_business_messaging"]'::jsonb), 
 	CONSTRAINT wa_provenance_expiry CHECK ((token_expiry_kind = 'at' AND token_expires_at IS NOT NULL AND token_expires_at > verified_at) OR (token_expiry_kind = 'permanent' AND token_expires_at IS NULL)), 
 	CONSTRAINT wa_provenance_evidence CHECK (evidence_kind IN ('provider','synthetic_fixture')), 
@@ -166,6 +168,7 @@ DDL = (
     """ALTER TABLE whatsapp_signup_attempts ADD CONSTRAINT wa_signup_selected_choice FOREIGN KEY(selected_choice_id, id, business_id, selected_phone_number_id) REFERENCES whatsapp_signup_choices (id, attempt_id, business_id, phone_number_id)""",
     """CREATE UNIQUE INDEX wa_signup_phone_claim ON whatsapp_signup_attempts (selected_phone_number_id) WHERE state IN ('setting_up','setup_unknown')""",
     """CREATE INDEX ix_wa_signup_cleanup ON whatsapp_signup_attempts (token_delete_after)""",
+    """CREATE INDEX ix_wa_provenance_credential ON whatsapp_authorization_provenance (business_id, credential_fingerprint)""",
     """CREATE INDEX ix_wa_test_created ON whatsapp_connection_tests (business_id, issued_at)""",
 )
 
@@ -280,16 +283,22 @@ DECLARE test whatsapp_connection_tests%ROWTYPE; message whatsapp_messages%ROWTYP
 BEGIN
  SELECT * INTO test FROM whatsapp_connection_tests WHERE id=NEW.test_id AND business_id=NEW.business_id;
  IF NOT FOUND OR test.cancelled_at IS NOT NULL OR NEW.authorized_at<test.received_at OR NEW.authorized_at>test.expires_at
+ OR NEW.expires_at>test.inbound_provider_at+interval '24 hours'
  OR ROW(NEW.actor_user_id,NEW.actor_session_id,NEW.actor_auth_version,NEW.connection_version,NEW.phone_number_id,NEW.recipient_contact_id,NEW.inbound_message_id)
  IS DISTINCT FROM ROW(test.actor_user_id,test.actor_session_id,test.actor_auth_version,test.connection_version,test.phone_number_id,test.recipient_contact_id,test.inbound_message_id)
  OR test.inbound_message_id IS NULL THEN
  RAISE EXCEPTION 'Exact owner and recipient proof required' USING ERRCODE='23514'; END IF;
  IF NOT EXISTS (SELECT 1 FROM channel_connection_states c JOIN whatsapp_accounts a ON a.seller_id=c.business_id
- JOIN whatsapp_authorization_provenance p ON p.business_id=c.business_id AND p.connection_version=c.version
+ JOIN whatsapp_authorization_provenance p ON p.business_id=c.business_id
+ AND p.credential_fingerprint=encode(sha256(convert_to(a.access_token,'UTF8')),'hex')
  WHERE c.business_id=NEW.business_id AND c.channel='whatsapp' AND c.version=NEW.connection_version
  AND a.phone_number_id=NEW.phone_number_id AND p.phone_number_id=a.phone_number_id AND p.waba_id=a.waba_id
- AND (p.token_expiry_kind='permanent' OR p.token_expiry_kind='at' AND p.token_expires_at>NEW.authorized_at)) THEN
+ AND (p.token_expiry_kind='permanent' OR p.token_expiry_kind='at' AND p.token_expires_at>=NEW.expires_at)) THEN
  RAISE EXCEPTION 'Current verified account authorization required' USING ERRCODE='23514'; END IF;
+ IF (SELECT count(*) FROM whatsapp_authorization_provenance p JOIN whatsapp_accounts a ON a.seller_id=p.business_id
+ WHERE p.business_id=NEW.business_id AND p.phone_number_id=a.phone_number_id AND p.waba_id=a.waba_id
+ AND p.credential_fingerprint=encode(sha256(convert_to(a.access_token,'UTF8')),'hex'))<>1 THEN
+ RAISE EXCEPTION 'Ambiguous current credential authorization' USING ERRCODE='23514'; END IF;
  SELECT * INTO message FROM whatsapp_messages WHERE id=NEW.outbound_message_id AND seller_id=NEW.business_id;
  IF NOT FOUND OR message.direction<>'outbound' OR message.kind<>'text' OR message.status<>'queued'
  OR message.contact_id<>NEW.recipient_contact_id OR message.phone_number_id<>NEW.phone_number_id
@@ -329,6 +338,7 @@ BEGIN
  AND NEW.connection_version=a.connection_version+1 AND control.version=NEW.connection_version
  AND NEW.phone_number_id=choice.phone_number_id AND NEW.waba_id=choice.waba_id
  AND account.phone_number_id=choice.phone_number_id AND account.waba_id=choice.waba_id
+ AND NEW.credential_fingerprint=encode(sha256(convert_to(account.access_token,'UTF8')),'hex')
  AND NOT account.enabled AND NOT account.automation_enabled AND NEW.verified_at BETWEEN choice.verified_at AND a.expires_at) THEN
  RAISE EXCEPTION 'Exact paused signup attachment required' USING ERRCODE='23514'; END IF;
  RETURN NEW;

@@ -136,7 +136,10 @@ async def queue_fixed_reply(db,authority,test_id,payload):
         problem('channel_test_intent_conflict','Review the exact verified recipient and current connection')
     if contact.opted_out or contact.last_inbound_at is None or not 0<=(timestamp-contact.last_inbound_at).total_seconds()<86400:
         problem('test_window_closed','The intended recipient must have an open reply window and must not be opted out')
-    await current_provenance(db,account,row.connection_version,at=timestamp)
+    provenance=await current_provenance(db,account,row.connection_version,at=timestamp)
+    expiry=min(timestamp+timedelta(seconds=120),row.inbound_provider_at+timedelta(hours=24))
+    if provenance.token_expiry_kind=='at': expiry=min(expiry,provenance.token_expires_at)
+    if expiry<=timestamp: problem('expired_authorization','The fixed reply authorization has expired')
     await authority.check(db)
     message=WhatsAppMessage(id=uuid4(),seller_id=row.business_id,contact_id=contact.id,
         phone_number_id=row.phone_number_id,idempotency_key='connection-test:'+str(row.id),direction='outbound',kind='text',
@@ -146,7 +149,7 @@ async def queue_fixed_reply(db,authority,test_id,payload):
         actor_user_id=authority.binding.user_id,actor_session_id=authority.binding.session_id,actor_auth_version=authority.binding.auth_version,
         connection_version=row.connection_version,phone_number_id=row.phone_number_id,recipient_contact_id=contact.id,
         inbound_message_id=row.inbound_message_id,outbound_message_id=message.id,idempotency_key=payload.idempotency_key,
-        request_hash=digest,fixed_text_version=FIXED_TEXT_VERSION,authorized_at=timestamp,expires_at=timestamp+timedelta(seconds=120)))
+        request_hash=digest,fixed_text_version=FIXED_TEXT_VERSION,authorized_at=timestamp,expires_at=expiry))
     # No activity producer, new consent flags, provider send or alternate engine.
     await authority.finalize(db)
     result=await test_view(db,row)
