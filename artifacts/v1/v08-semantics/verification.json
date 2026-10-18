@@ -1,0 +1,117 @@
+{
+  "base": "d4026b1ebf8e9e11865ccf2172ded41bcdc0ac22",
+  "tested_runtime_context": "integration eeb94a1/0056, separate semantics task has no DB allocation",
+  "frozen_scenarios": 15,
+  "passed": 14,
+  "failed": 1,
+  "skipped": 0,
+  "pytest_exit": 1,
+  "command": "PYTHONPATH=backend /tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_v08_semantics_acceptance.py -q -o junit_family=xunit1 --junitxml=artifacts/v1/v08-semantics/first-run.xml > artifacts/v1/v08-semantics/first-run.txt 2>&1",
+  "elapsed_seconds": 0.19,
+  "warnings": "One preexisting Pydantic class-based-config deprecation",
+  "test_sha256": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+  "source_hashes_match_frozen_base": true,
+  "source_sha256": {
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/app/services/sku_fact_replies.py": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/tests/conftest.py": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1"
+  },
+  "actual_functions_exercised": [
+    {
+      "function": "app.services.whatsapp_context.instagram_references",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 21,
+      "end_line": 36,
+      "function_sha256": "1d56dcb4b6943cb4d3a33c6fcd962e47ea90891221f9576aa6067c49b586606a"
+    },
+    {
+      "function": "app.services.whatsapp_context.inbound_context",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 39,
+      "end_line": 118,
+      "function_sha256": "ac894fe9dea3c51777b927110703ceecb96ee4e55f7208f6c2cef8562cedbab0"
+    },
+    {
+      "function": "app.services.whatsapp_context.reel_reply_decision",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 132,
+      "end_line": 182,
+      "function_sha256": "58be12f9aedf4013c79feac0fa14e998340cf42620ca2c2c2177ef4396dd7065"
+    },
+    {
+      "function": "app.services.sku_fact_replies.exact_reel_products",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 152,
+      "end_line": 161,
+      "function_sha256": "04689fa85a741f47b6dbdd1ca3e534bebdf61a00777822716c64b2e79afa604d"
+    },
+    {
+      "function": "app.services.sku_fact_replies.is_activated",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 31,
+      "end_line": 37,
+      "function_sha256": "afa0faefb31ace32f8ba319dbf784d4c888a16847e667394cfc2df0ed3080fbb"
+    },
+    {
+      "function": "app.services.sku_fact_replies.read_facts",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 40,
+      "end_line": 89,
+      "function_sha256": "7fcc09f47c33345ca0f76d7efa620be4be210760d865c8608b3543810aeddb6f"
+    },
+    {
+      "function": "app.services.sku_fact_replies.reel_question",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 117,
+      "end_line": 122,
+      "function_sha256": "540fe0fec0c988ad52f382a74aa987afb76359d6c551cd25ce175b00a6873266"
+    },
+    {
+      "function": "app.services.sku_fact_replies.factual_request",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 108,
+      "end_line": 114,
+      "function_sha256": "60b86710060c9353285d8ca65de3df1774eafa1d70245f22d3afa879d368e520"
+    },
+    {
+      "function": "app.services.sku_fact_replies.render",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 92,
+      "end_line": 101,
+      "function_sha256": "bc3c387f6b939cea319ec588319ab5eb071bd0684890ace9b02eae6cdeb6578c"
+    }
+  ],
+  "injected_boundary": {
+    "type": "read-only synthetic scalar/name/activation/public-SKU projections",
+    "url_registry": {
+      "https://www.instagram.com/reel/SemanticsOnly/": "00000000-0000-0000-0000-0000000007d1"
+    },
+    "approved_SKU_rows": "M INR12345minor stock2; L INR14567minor stock0; XL INR16789minor stockNone; exact options Size/Color Indigo",
+    "missing_facts": "empty SKU rows; None price in first SKU",
+    "LLM_outputs": null,
+    "provider_outputs": null,
+    "persistence_or_SQL_execution": false,
+    "assertions": "Unexpected projection/tenant/product/link requests rejected; exact expected reply literals independent from render"
+  },
+  "red": {
+    "scenario_id": "missing-approved-material",
+    "question": "What material is this?",
+    "expected": "exact human HANDOFF or explicit material-specific unknown/confirmation language",
+    "actual": "Current public SKU price/size/stock dump with no material-specific uncertainty",
+    "classification": "P2 semantic/actionability gap; not evidence of invented fabric, price, stock or unauthorized financial action"
+  },
+  "source_edits": false,
+  "effects": "No actual DB/server/provider/credential/send/LLM/Docker/ambient service operation",
+  "limits": [
+    "Synthetic projections do not test PostgreSQL filters, current authorization or persistence",
+    "Unsupported Devanagari questions safely HANDOFF, not multilingual answer-quality proof",
+    "No live model/quality score/provider delivery or full V08/X01 acceptance",
+    "Switch/ambiguity/stale pause-reconnect context belongs to separate lane"
+  ],
+  "artifact_sha256": {
+    "first-run.txt": "06b1e8b0107e086dcbbfe58145641afe06c8437a22fdce0bae7ed3e3269318ec",
+    "first-run.xml": "fc42ba9f1f67f5ed2c2e261788aa1b1ea78414cb693cab7ed2e9d99261f39f91"
+  }
+}
