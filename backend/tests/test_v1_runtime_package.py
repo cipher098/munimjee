@@ -14,19 +14,14 @@ def source(tmp_path):
     root=tmp_path/'source';root.mkdir();subprocess.run(['git','init','-q',str(root)],check=True)
     names=['backend/requirements.txt','backend/alembic.ini','backend/app/main.py',
            'backend/alembic/env.py','backend/alembic/versions/0046.py',
-           'backend/static/v1_client.js','deploy/v1/Dockerfile']
-    names += ['backend/static/'+name for name in (
-        'import_workspace.html','import_workspace.css','import_workspace.js',
-        'theme_settings.html','theme_settings.css','theme_settings.js',
-        'assistance.html','assistance.css','assistance.js',
-        'payment_settings.html','payment_settings.css','payment_settings.js',
-        'support_grants.html','support_grants.css','support_grants.js',
-        'analytics_v1.html','analytics_v1.css','analytics_v1.js',
-        'customer_links.html','customer_links.css','customer_links.js')]
+           'backend/static/v1_client.js','deploy/v1/Dockerfile','deploy/v1/runtime.in','deploy/v1/runtime.lock']
+    names += ['backend/static/'+name for name in package.STATIC]
     names += ['frontend/storefront/src/'+name for name in package.STOREFRONT]
     for name in names:
         path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('# synthetic runtime\n')
     (root/'backend/requirements.txt').write_text('fastapi==0.111.0\npytest==8.2.0\npytest-asyncio==0.23.6\nvcrpy==6.0.1\n')
+    (root/'deploy/v1/runtime.in').write_text('fastapi==0.111.0\n')
+    (root/'deploy/v1/runtime.lock').write_text('fastapi==0.111.0 --hash=sha256:'+'a'*64+'\n')
     subprocess.run(['git','-C',str(root),'add','.'],check=True)
     subprocess.run(['git','-C',str(root),'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','Synthetic fixture'],check=True)
     return root
@@ -118,3 +113,59 @@ def test_smoke_never_claims_verified_cleanup_when_docker_fails_or_container_rema
     monkeypatch.setattr(smoke.subprocess,'run',command)
     with pytest.raises((RuntimeError,subprocess.CalledProcessError)):
         smoke.cleanup_created_container(cidfile)
+
+
+def test_context_and_archive_are_deterministic_across_mtime_umask(source,tmp_path):
+    import os
+    import tarfile
+    first=tmp_path/'first';second=tmp_path/'second'
+    one=package.create_context(source,first)
+    for path in source.rglob('*'):
+        if path.is_file() and '.git' not in path.parts:os.utime(path,(1700000000,1700000000))
+    prior=os.umask(0o077)
+    try:two=package.create_context(source,second)
+    finally:os.umask(prior)
+    assert one==two
+    left=tmp_path/'first.tar';right=tmp_path/'second.tar'
+    assert package.write_archive(first,left)==package.write_archive(second,right)
+    assert left.read_bytes()==right.read_bytes()
+    with tarfile.open(left) as archive:
+        for info in archive.getmembers():
+            assert (info.uid,info.gid,info.mtime,info.uname,info.gname)==(0,0,0,'','')
+            assert info.mode==(0o755 if info.isdir() else 0o644)
+    with pytest.raises(FileExistsError):package.write_archive(first,left)
+
+
+def test_source_revision_alone_does_not_hide_dirty_bytes(source,tmp_path):
+    one=package.create_context(source,tmp_path/'first')
+    (source/'backend/app/main.py').write_text('# changed tracked source\n')
+    two=package.create_context(source,tmp_path/'second')
+    assert one['source_revision']==two['source_revision']
+    assert one['content_sha256']!=two['content_sha256']
+    assert one['source_files']!=two['source_files']
+
+
+@pytest.mark.parametrize('bad',[
+    'fastapi==0.111.0',
+    'fastapi==0.112.0 --hash=sha256:'+'a'*64,
+    'fastapi @ https://example.test/pkg.whl --hash=sha256:'+'a'*64,
+    '--extra-index-url https://example.test/simple',
+    'pytest==8.2.0 --hash=sha256:'+'a'*64,
+    'fastapi==0.111.0 --hash=sha256:short',
+    'fastapi==0.111.0 --hash=sha256:'+'a'*64+' \\',
+])
+def test_runtime_lock_refuses_unhashed_unpinned_or_development_input(source,tmp_path,bad):
+    (source/'deploy/v1/runtime.lock').write_text(bad+'\n')
+    with pytest.raises(ValueError,match='lock'):package.create_context(source,tmp_path/'context')
+    assert not (tmp_path/'context').exists()
+
+
+def test_direct_runtime_manifest_must_match_incumbent_backend_pins(source,tmp_path):
+    (source/'deploy/v1/runtime.in').write_text('fastapi==0.112.0\n')
+    with pytest.raises(ValueError,match='direct dependencies'):package.create_context(source,tmp_path/'context')
+
+
+@pytest.mark.parametrize('missing',['parcel_zxing_reader.wasm','parcel_scanner_LICENSE.txt','onboarding.html'])
+def test_all_allowlisted_native_assets_are_required(source,tmp_path,missing):
+    (source/'backend/static'/missing).unlink();stage(source)
+    with pytest.raises(ValueError,match='Required tracked runtime'):package.create_context(source,tmp_path/'context')

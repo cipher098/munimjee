@@ -10,7 +10,9 @@ from pathlib import Path
 from v1_runtime_package import create_context, ROOT
 
 CHILD = r'''
-import os, socket
+import os, socket, sys
+assert os.getuid() == 10001 and os.getgid() == 10001
+assert sys.version_info[:2] == (3, 11)
 mode = os.environ['SMOKE_MODE']
 original_connect = socket.socket.connect
 attempts = []
@@ -106,9 +108,9 @@ def cleanup_created_container(cidfile):
     cid=cidfile.read_text().strip()
     if not re.fullmatch(r'[a-f0-9]{64}',cid):
         raise RuntimeError('Invalid smoke container identity; cleanup withheld')
-    subprocess.run(['docker','rm','--force',cid],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    subprocess.run(['docker','rm','--force',cid],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10)
     remaining=subprocess.run(['docker','ps','-a','--no-trunc','--filter','id='+cid,'--format','{{.ID}}'],
-                             capture_output=True,text=True,check=True)
+                             capture_output=True,text=True,check=True,timeout=10)
     if remaining.stdout.strip():
         raise RuntimeError('Smoke container cleanup could not be verified')
 
@@ -130,15 +132,15 @@ def main():
              '--env','APP_ENV=test','--env','PUBLIC_BASE_URL=https://configured.example',
              '--entrypoint','python','-i',args.image,'-']
     with tempfile.TemporaryDirectory(prefix='munimjee-v1-smoke-context-') as temporary:
-        expected=create_context(ROOT,Path(temporary)/'context')['files']
+        expected=create_context(ROOT,Path(temporary)/'context')
         cidfile=Path(temporary)/'container.cid'
         command[2:2]=['--cidfile',str(cidfile)]
-        manifest_check="import json; assert json.load(open('/opt/munimjee/runtime-manifest.json'))['files']=="+repr(expected)+"\n"
+        manifest_check="import json; assert json.load(open('/opt/munimjee/runtime-manifest.json'))=="+repr(expected)+"\n"
         try:
             subprocess.run(command,input=manifest_check+RUNNER,text=True,check=True,timeout=90)
         finally:
             cleanup_created_container(cidfile)
-    info=json.loads(subprocess.run(['docker','image','inspect',args.image],capture_output=True,text=True,check=True).stdout)[0]
+    info=json.loads(subprocess.run(['docker','image','inspect',args.image],capture_output=True,text=True,check=True,timeout=10).stdout)[0]
     print(json.dumps({'image_id':info['Id'],'size_bytes':info['Size'],'checks':'off/enabled/missing; no network or DB',
                       'container_removed':True}))
 if __name__=='__main__':main()
