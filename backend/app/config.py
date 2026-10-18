@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     V1_PARCEL_CONNECTORS_JSON: str = ""  # Private, explicitly provisioned per-Business machine bindings.
     V1_PARCEL_ALLOWED_ORIGINS: List[str] = []
     V1_STOREFRONT_ASSETS_DIR: str = ""  # Packaged runtime JS/CSS directory; empty uses the source checkout.
+    V1_STOREFRONT_LEGACY_REDIRECTS: str = "[]"  # Explicit reviewed SEO inventory; empty enables no legacy mappings.
     SECRET_KEY: str
     CHANNEL_ENCRYPTION_KEY: str = ""  # Fernet key for per-seller messaging secrets
     WHATSAPP_WEBHOOK_VERIFY_TOKEN: str = ""

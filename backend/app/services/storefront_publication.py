@@ -19,6 +19,18 @@ class PublishedStorefrontProvider:
     def __init__(self, db):
         self.db = db
 
+    async def public_store_slugs(self) -> tuple[str, ...]:
+        # Scalar identities avoid an ORM identity-map publication snapshot. There
+        # is deliberately no legacy, draft, inactive or tenant-ID projection.
+        slugs = tuple((await self.db.scalars(select(Storefront.slug).join(
+            Seller, Seller.id == Storefront.seller_id).join(
+            Business, Business.id == Storefront.seller_id).where(
+            Storefront.published.is_(True), Seller.is_active.is_(True),
+            Business.is_active.is_(True)).order_by(Storefront.slug).limit(1001))).all())
+        if len(slugs) > 1000:
+            raise HTTPException(503, "This installation needs paged sitemap discovery")
+        return slugs
+
     async def public_store(self, slug):
         db = self.db
         store = await db.scalar(select(Storefront).join(Seller, Seller.id == Storefront.seller_id).join(

@@ -11,6 +11,10 @@ from app.v1.storefront.rendering import PublicStorefront, render_storefront, can
 
 
 class StorefrontProvider(Protocol):
+    async def public_store_slugs(self) -> tuple[str, ...]:
+        """Bounded current published stores with active Seller and Business."""
+        ...
+
     async def public_store(self, slug: str) -> PublicStorefront:
         """404 unpublished/foreign/inactive state; verify canonical activation first."""
         ...
