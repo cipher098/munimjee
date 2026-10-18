@@ -1,0 +1,82 @@
+{
+  "base": "4d9f940d25e681fd6a80e168f4ea4c0510131fbd",
+  "owner_corrected_source": "bd24f74e541147713f0edf160f0faf5af9df03a2",
+  "qa_test_commit": "b57d5ea4999fd4fe3185bd7b524701e56eab7da2",
+  "qa_evidence_commit": "6d78f4467736094f0098652bd6f0a1c60d8c4408",
+  "canonical_source": "049019b2105a855f88a33149f7a2e4db49d7ceae",
+  "source_test_hashes": [
+    {
+      "path": "scripts/v1_release_rehearsal.py",
+      "sha256": "1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2",
+      "owner_QA_root_immutable_blobs_equal": true
+    },
+    {
+      "path": "scripts/v1_release_synthetic.py",
+      "sha256": "551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577",
+      "owner_QA_root_immutable_blobs_equal": true
+    },
+    {
+      "path": "scripts/v1_release_fixture_0056.json",
+      "sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+      "owner_QA_root_immutable_blobs_equal": true
+    },
+    {
+      "path": "tests/release/test_v1_release_rehearsal.py",
+      "sha256": "b68c8a08d8ddaeafb82a4965f05e9973e4a08ed8a85ed5c33410b94566321c7d",
+      "QA_root_immutable_blobs_equal": true
+    },
+    {
+      "path": "tests/release/test_v1_application_compatibility.py",
+      "sha256": "712f5a79bd779299a68951e89dae202367b19ec047b80e7b65d2ed6cc0bc7cc2",
+      "QA_root_immutable_blobs_equal": true
+    },
+    {
+      "path": "tests/release/test_v1_release_0056.py",
+      "sha256": "e0b36022bca3023461b17f7245eadd9df05e9c15843a885d9d1aebfe18e20364",
+      "QA_root_immutable_blobs_equal": true
+    }
+  ],
+  "fixture_version": 1,
+  "fixture_sha256": "1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3",
+  "verified": {
+    "owner_QA_root_source_bytes_match": true,
+    "old_assert_AST_count_preserved": 50,
+    "only_old_assert_literal_change": "0053 head\u21920056",
+    "compatibility_tests_byte_unchanged": true,
+    "guard_function_class_hashes_unchanged": 22,
+    "exec_helper_byte_unchanged": true,
+    "backend_app_migrations_tests_unchanged_by_owner_and_QA": true,
+    "all_QA_raw_artifact_and_doc_hashes_match": true,
+    "QA_final": {
+      "passed": 107,
+      "skipped": 1,
+      "failed": 0,
+      "errors": 0,
+      "new_cases": 49
+    },
+    "root_canonical": {
+      "passed": 107,
+      "skipped": 1,
+      "failed": 0,
+      "errors": 0
+    },
+    "single_skip": "Actual PG16 restore requires two explicitly allocated empty lanes",
+    "canonical_plan": "exact0056/version1/lockedfixture/source52/target58/noDBcontainer effects"
+  },
+  "canonical_artifact_sha256": {
+    "canonical-invocation.json": "358760d3dc858f2a9fee83fb9f912538a5c9cc9593dac41b06a7c580e9f1c8e0",
+    "canonical-unit.txt": "0bc26f28a2f2eb5a8ab735531ed9d27a4a7ef1d1291c01195234fce2903b985f",
+    "canonical-unit.xml": "8fa525a0d92440099af0bfa3db5d26f4c85a0f98769cba94c5bb3dd8aea2e3af",
+    "canonical-plan.json": "5469290ad77e385fd9a1bb81d84425e3ddb91e477f3fee3f50111ca0a4427963"
+  },
+  "finding_R01": "Resolved bybd24 and two whole-schema unit assertions; no separately executed red run or real PG16 restore inferred.",
+  "execution_by_this_review": "No imports of candidate scripts, tests, DB/tool/server/capacity/restore runs. Static Git/AST/JSON/XML/hash review only.",
+  "disposition": "No remaining scoped blocker for source/unit preflight. Actual FK enforcement, trigger-compatible seed, dump/restore parity, capacity/tools and old/current package acceptance remain blocked/unverified.",
+  "owner_preflight_evidence_commit": "5270afe687d716160ce167a99087957df8326d3a",
+  "owner_preflight_source_guard_hashes_verified": true,
+  "owner_evidence_hashes": {
+    "artifacts/v1/restore-0056-harness/source-preflight.json": "4f394b6d0632cd05287ae17c0c40ae05ffcaa7dbda10001c15562a46693896cc",
+    "artifacts/v1/restore-0056-harness/plan.json": "5469290ad77e385fd9a1bb81d84425e3ddb91e477f3fee3f50111ca0a4427963",
+    "docs/v1-restore-0056-harness.md": "c0fabf2221cdc54f18ac59d51dbcd6a6ddc6f1c971e900f6c6149dd49c9f5a50"
+  }
+}
