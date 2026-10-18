@@ -47,6 +47,7 @@ export function validReelDetail(value, business) {
   if (!keys(source, 'classification,shortcode,url') || !reelSources.has(source.classification) || !keys(eligibility, 'can_link,can_resume,reason') || typeof eligibility.can_link !== 'boolean' || typeof eligibility.can_resume !== 'boolean' || !reasonCode(eligibility.reason)) return false;
   if (source.shortcode === null || source.url === null) return source.shortcode === null && source.url === null && !eligibility.can_link && !eligibility.can_resume;
   if (!reelCode(source.shortcode) || typeof source.url !== 'string' || !new RegExp('^https://www\\.instagram\\.com/(reel|p|tv)/' + source.shortcode + '/$').test(source.url)) return false;
+  if (source.classification === 'unknown' && (eligibility.can_link || eligibility.can_resume)) return false;
   return !eligibility.can_resume || eligibility.can_link && ['message_link', 'referral_link', 'quoted_message'].includes(source.classification);
 }
 export function validReelIntent(value, business) {
@@ -58,7 +59,7 @@ export function validReelReceipt(value, intent) {
   const result = value.result;
   if (!keys(result, 'mapping,resume,reason,outbound_id,mapping_fingerprint') || result.mapping !== 'saved' || !HASH.test(result.mapping_fingerprint) || !reasonCode(result.reason)) return false;
   if (result.resume === 'queued') return value.action === 'link_and_resume' && UUID.test(result.outbound_id) && result.reason === null;
-  if (result.resume === 'not_requested') return value.action === 'link_only' && result.outbound_id === null;
+  if (result.resume === 'not_requested') return value.action === 'link_only' && result.outbound_id === null && result.reason === 'resume_not_requested';
   return result.resume === 'held' && value.action === 'link_and_resume' && result.outbound_id === null && result.reason !== null;
 }
 export function validReelRejection(error, intent) {
