@@ -15,6 +15,7 @@
   let jobs = [], candidates = [], selected = null, baseline = null, jobsCursor = null, candidateCursor = null;
   let preview = null, previewEpoch = 0, fenceGeneration = 0;
   const csvDocuments = new Map();
+  let instagramAvailable=false, originalEpoch=0;
   let sessionRequest=0, sessionApplied=0, latestSession=null;
   let jobHistory = [], candidateHistory = [], candidateNext = null, timer = null, pollCount = 0, loadEpoch = 0;
   const canWrite = () => !stopped && Boolean(access?.capabilities.includes('catalogue.write'));
@@ -23,7 +24,7 @@
   function clearCommands() {try {for(let i=sessionStorage.length-1;i>=0;i--){const key=sessionStorage.key(i);if(key?.startsWith(PREFIX))sessionStorage.removeItem(key);}}catch(_) {}}
   function fence(message) {
     stopped = true;latestSession=null;fenceGeneration++;loadEpoch++;previewEpoch++;preview=null;clearTimeout(timer);clearCommands();command=null;selected=null;jobs=[];candidates=[];baseline=null;
-    $('workspace').hidden=true;$('access-needed').hidden=false;$('loading').hidden=true;$('business-name').textContent='PRIVATE CATALOGUE';
+    originalEpoch++;$('candidate-originals').replaceChildren();$('instagram-form').reset();$('instagram-form').hidden=true;$('instagram-status').textContent='Sign in again to check source availability.';$('workspace').hidden=true;$('access-needed').hidden=false;$('loading').hidden=true;$('business-name').textContent='PRIVATE CATALOGUE';
     $('candidate-list').replaceChildren();$('job-list').replaceChildren();$('candidate-evidence').textContent='';$('candidate-source').textContent='';$('candidate-state').textContent='';$('review-heading').textContent='Choose a candidate';$('confirmations').replaceChildren();$('recovery-facts').textContent='';$('recovery-message').textContent='';$('recovery-file').value='';$('notice').textContent='';
     $('allocation-form').reset();$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('receipt-details').textContent='';$('bridge-note').hidden=true;$('allocation-form').hidden=true;$('allocation-status').textContent='';$('facts-form').reset();$('reject-form').reset();$('website-form').reset();$('upload-form').reset();$('csv-form').reset();csvDocuments.clear();$('csv-document').replaceChildren(new Option('Create a new named source','new'));csvMode();$('option-rows').replaceChildren();$('global-error').textContent=message;
   }
@@ -52,8 +53,8 @@
   function message(error, target='global-error') {if(!stopped)$(target).textContent=error.status===409 ? (['import_revision_stale','candidate_already_created'].includes(error.code)?'This record changed before the saved action was accepted. Refresh and review its current facts.':'The action result is unconfirmed. Its exact request is saved. Retry that same action; ask your business owner to review repeated conflicts.') : error.message || 'The request could not be confirmed. Refresh or retry the saved action.';}
   function sync() {
     const disabled=!canWrite()||busy||preparing||Boolean(command)||blocked;
-    for(const id of ['website-fields','upload-fields','csv-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
-    $('role-note').hidden=canWrite();$('retry-command').disabled=!canWrite()||busy||!command||blocked;
+    for(const id of ['website-fields','upload-fields','csv-fields','instagram-fields','facts-fields','approve-fields','reject-fields','allocation-fields'])$(id).disabled=disabled;
+    $('instagram-fields').disabled=disabled||!instagramAvailable;$('role-note').hidden=canWrite();$('retry-command').disabled=!canWrite()||busy||!command||blocked;
     $('recovery').hidden=!command&&!blocked;
     $('jobs-previous').disabled=busy||!jobHistory.length;$('jobs-next').disabled=busy||jobs.length<50;
     $('candidates-previous').disabled=busy||!candidateHistory.length;$('candidates-next').disabled=busy||!candidateNext;
@@ -79,7 +80,7 @@
     const b=value.body;
     if(value.kind==='upload') {const csv=b?.content_type==='text/csv';return value.path==='/uploads'&&exact(b,['idempotency_key','job_key','content_type','size','sha256','name',...(csv?['document_id','document_label']:[])])&&uuid(b.idempotency_key)&&uuid(b.job_key)&&(csv?uuid(b.document_id)&&validDocumentLabel(b.document_label):['image/jpeg','image/png','video/mp4'].includes(b.content_type))&&Number.isInteger(b.size)&&b.size>0&&b.size<=(csv?256000:5000000)&&typeof b.name==='string'&&b.name.length<=255&&/^[a-f0-9]{64}$/.test(b.sha256);}
     if(value.kind!=='json'||!object(b)||!uuid(b.idempotency_key))return false;
-    if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id','document_id','document_label'])&&b.source_kind==='csv'&&uuid(b.asset_id)&&uuid(b.document_id)&&validDocumentLabel(b.document_label)));
+    if(value.path==='/jobs')return b.source_authorized===true&&((exact(b,['idempotency_key','source_authorized','source_kind','source_url'])&&b.source_kind==='website'&&typeof b.source_url==='string'&&b.source_url.length<=2048&&b.source_url.startsWith('https://'))||(exact(b,['idempotency_key','source_authorized','source_kind','media_id'])&&b.source_kind==='instagram'&&typeof b.media_id==='string'&&/^[0-9]{1,64}$/.test(b.media_id))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id'])&&b.source_kind==='uploaded_media'&&uuid(b.asset_id))||(exact(b,['idempotency_key','source_authorized','source_kind','asset_id','document_id','document_label'])&&b.source_kind==='csv'&&uuid(b.asset_id)&&uuid(b.document_id)&&validDocumentLabel(b.document_label)));
     if(!Number.isInteger(b.expected_revision)||b.expected_revision<1)return false;
     if(/^\/jobs\/[0-9a-f-]{36}\/(cancel|retry)$/i.test(value.path))return exact(b,['expected_revision','idempotency_key']);
     if(/^\/candidates\/[0-9a-f-]{36}\/catalogue-draft$/i.test(value.path))return exact(b,['expected_revision','idempotency_key','seller_reviewed','confirmed_fields','allocations'])&&b.seller_reviewed===true&&Array.isArray(b.confirmed_fields)&&b.confirmed_fields.length===5&&fields.every(f=>b.confirmed_fields.includes(f))&&Array.isArray(b.allocations)&&b.allocations.length>0&&b.allocations.length<=500&&b.allocations.every(a=>exact(a,['options','stock_available','active'])&&validOptions(a.options)&&Number.isInteger(a.stock_available)&&a.stock_available>=0&&a.stock_available<=1000000&&typeof a.active==='boolean')&&new Set(b.allocations.map(a=>optionIdentity(a.options))).size===b.allocations.length;
@@ -100,7 +101,7 @@
     const fact=(field,value)=>value===null?'Unknown':field==='price'?value.amount+' '+value.currency:field==='options'?(value.length?value.map(option=>option.name+': '+option.values.join(', ')).join('; '):'No options'):String(value);
     let summary='';
     if(command?.kind==='upload')summary=(b.content_type==='text/csv'?'Upload product CSV\nSource: '+b.document_label:'Upload original media')+'\nFile: '+b.name+'\nType: '+({'image/jpeg':'JPEG image','image/png':'PNG image','video/mp4':'MP4 video','text/csv':'CSV product file'}[b.content_type])+'\nSize: '+b.size.toLocaleString()+' bytes';
-    else if(command?.path==='/jobs')summary=b.source_kind==='website'?'Start website import\nWebsite: '+b.source_url+'\nSource permission confirmed.':b.source_kind==='csv'?'Start CSV import\nSource: '+b.document_label+'\nSource permission confirmed.':'Start import from the original uploaded media.\nSource permission confirmed.';
+    else if(command?.path==='/jobs')summary=b.source_kind==='instagram'?'Retrieve owned Instagram original\nMedia reference: '+b.media_id+'\nPrivate factual review required.':b.source_kind==='website'?'Start website import\nWebsite: '+b.source_url+'\nSource permission confirmed.':b.source_kind==='csv'?'Start CSV import\nSource: '+b.document_label+'\nSource permission confirmed.':'Start import from the original uploaded media.\nSource permission confirmed.';
     else if(command?.path.startsWith('/jobs/'))summary=(command.path.endsWith('/cancel')?'Cancel':'Retry')+' the selected import job.\nSaved revision: '+b.expected_revision;
     else if(command?.path.endsWith('/catalogue-draft'))summary='Create the reviewed private catalogue draft.\nSaved revision: '+b.expected_revision+'\n'+b.allocations.map(row=>(Object.entries(row.options).map(([name,value])=>name+': '+value).join(' / ')||'No options')+' — '+row.stock_available+' units · '+(row.active?'Include when this product is activated':'Do not include when this product is activated')).join('\n');
     else if(command)summary=(b.action==='edit'?'Save factual changes':b.action==='approve'?'Approve the reviewed candidate':'Reject the selected candidate')+'.\nSaved revision: '+b.expected_revision+'\n'+(b.action==='edit'?b.overrides.map(value=>labels[value.field]+': '+fact(value.field,value.value)).join('\n'):b.action==='approve'?'Confirmed facts: '+b.confirmed_fields.map(field=>labels[field]).join(', '):'Reason: '+b.reason);
@@ -132,10 +133,10 @@
       await session(true);const saved=await decode(readStorage());if(JSON.stringify(saved)!==JSON.stringify(command))throw Error('Saved action changed. Reload and reconcile it before continuing.');
       if(command.kind==='upload')await rawUpload(file);
       const sent=command,viewEpoch=loadEpoch,result=await api(root+sent.path,{method:'POST',body:sent.body});
-      if(sent.path==='/jobs'||sent.path.startsWith('/jobs/')) {if(!validJob(result)||(sent.path!=='/jobs'&&sent.path.split('/')[2]!==result.job_id)||(sent.path==='/jobs'&&sent.body.source_kind==='csv'&&(result.source.kind!=='csv'||result.source.document_id!==sent.body.document_id||result.source.document_label!==sent.body.document_label||result.source.media_id!=='csv-document:'+sent.body.document_id||!/^[a-f0-9]{64}$/.test(result.source.upload_sha256))))throw Error('The response did not confirm an import job in this business. Retry the saved action.');}
+      if(sent.path==='/jobs'||sent.path.startsWith('/jobs/')) {if(!validJob(result)||(sent.path!=='/jobs'&&sent.path.split('/')[2]!==result.job_id)||(sent.path==='/jobs'&&sent.body.source_kind==='instagram'&&(result.source.kind!=='instagram'||result.source.media_id!==sent.body.media_id))||(sent.path==='/jobs'&&sent.body.source_kind==='csv'&&(result.source.kind!=='csv'||result.source.document_id!==sent.body.document_id||result.source.document_label!==sent.body.document_label||result.source.media_id!=='csv-document:'+sent.body.document_id||!/^[a-f0-9]{64}$/.test(result.source.upload_sha256))))throw Error('The response did not confirm an import job in this business. Retry the saved action.');}
       else if(sent.path.endsWith('/catalogue-draft')) {if(!validReceipt(result,sent.path.split('/')[2])||![sent.body.expected_revision,sent.body.expected_revision+1].includes(result.candidate_revision))throw Error('The response did not confirm a private draft receipt for this candidate. Retry the saved action.');}
       else if(!validCandidate(result)||result.candidate_id!==sent.path.split('/')[2]||result.revision!==sent.body.expected_revision+1)throw Error('The response did not confirm the reviewed candidate. Retry the saved action.');
-      remove();command=null;$('recovery-facts').textContent='';$('recovery-file').value='';$('website-form').reset();$('upload-form').reset();$('csv-form').reset();csvMode();
+      remove();command=null;$('recovery-facts').textContent='';$('recovery-file').value='';$('website-form').reset();$('upload-form').reset();$('csv-form').reset();$('instagram-form').reset();csvMode();
       if(viewEpoch===loadEpoch&&selected?.candidate_id===result.candidate_id&&sent.path.startsWith('/candidates/')&&!sent.path.endsWith('/catalogue-draft')) {selected=result;renderCandidate();}
       $('notice').textContent=sent.path.endsWith('/catalogue-draft')?'Private catalogue draft confirmed. Review it in Catalogue; activation and publication remain separate.':sent.path==='/jobs'?'Import request confirmed. Waiting for worker progress; no completion time is promised.':sent.path.startsWith('/candidates/')?'Review action confirmed. This candidate remains private.':'Job action confirmed. Refresh to check durable progress.';
       pollCount=0;await load(false);
@@ -203,7 +204,7 @@
     if(!validFacts(result))throw Error('Check factual values: a positive decimal price, whole stock from 0 to 1,000,000, and distinct bounded options. Blank values remain unknown.');return result;
   }
   function renderCandidate() {
-    previewEpoch++;preview=null;$('allocation-form').hidden=true;$('bridge-note').hidden=true;$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('allocation-error').textContent='';$('receipt-details').textContent='';$('review-empty').hidden=Boolean(selected);$('review-content').hidden=!selected;if(!selected)return;
+    originalEpoch++;$('candidate-originals').replaceChildren();previewEpoch++;preview=null;$('allocation-form').hidden=true;$('bridge-note').hidden=true;$('allocation-rows').replaceChildren();$('allocation-confirmations').replaceChildren();$('allocation-issues').replaceChildren();$('allocation-error').textContent='';$('receipt-details').textContent='';$('review-empty').hidden=Boolean(selected);$('review-content').hidden=!selected;if(!selected)return;
     const c=selected.candidate;baseline=effective(selected);$('review-heading').textContent=baseline.title||'Untitled candidate';$('candidate-state').textContent=c.state.replaceAll('_',' ')+' · revision '+selected.revision;
     $('candidate-source').textContent=sourceLabel(c.provenance.source)+' · captured '+String(c.provenance.captured_at)+' · job '+c.provenance.import_job_id;
     $('candidate-evidence').textContent=JSON.stringify({evidence:c.provenance.evidence,source_product_id:c.provenance.source_product_id,extracted:c.extracted,seller_overrides:c.overrides},null,2);
@@ -211,7 +212,32 @@
     $('option-rows').replaceChildren();$('options-mode').value=baseline.options===null?'unknown':baseline.options.length?'specified':'none';for(const option of baseline.options||[])optionRow(option);optionsMode();
     $('confirmations').replaceChildren();for(const field of fields){const label=el('label',undefined,'check'),box=el('input');box.type='checkbox';box.required=true;box.name='confirm-'+field;label.append(box,el('span','I checked '+field+(baseline[field]===null?' (currently unknown)':'')));$('confirmations').append(label);}
     const unknown=['title','price','stock','options'].filter(f=>baseline[f]===null);$('approval-blockers').textContent=unknown.length?'Resolve before approval: '+unknown.join(', ')+'. Unknown is not zero, untracked stock or no options.':'Check every factual field, then approve in a separate decision.';$('approve').disabled=Boolean(unknown.length);
-    void loadPreview();$('facts-error').textContent='';$('review-error').textContent='';$('reject-form').reset();sync();
+    void loadOriginals();void loadPreview();$('facts-error').textContent='';$('review-error').textContent='';$('reject-form').reset();sync();
+  }
+  async function loadOriginals() {
+    const epoch=originalEpoch, id=selected?.candidate_id, box=$('candidate-originals');
+    if(!id)return;
+    box.textContent='Checking retained originals…';
+    try {
+      const result=await api(root+'/candidates/'+id+'/originals');
+      if(stopped||epoch!==originalEpoch||selected?.candidate_id!==id)return;
+      if(result?.contract_version!=='instagram-originals.v1'||!Array.isArray(result.items)||result.items.length>10)throw Error('Original media could not be verified.');
+      box.replaceChildren();
+      if(!result.items.length){box.append(el('p','No retrieved Instagram original is attached to this accepted source version.','muted'));return;}
+      for(const item of result.items){
+        if(!uuid(item.asset_id)||item.candidate_id!==id||!['image/jpeg','image/png','video/mp4'].includes(item.content_type)||!Number.isInteger(item.size_bytes)||item.size_bytes<1||item.size_bytes>5000000)throw Error('Original media could not be verified.');
+        const link=el('a','Download original '+({'image/jpeg':'JPEG','image/png':'PNG','video/mp4':'MP4'}[item.content_type])+' · '+Math.ceil(item.size_bytes/1000)+' KB','button secondary');
+        link.href=root+'/candidates/'+id+'/originals/'+item.asset_id;link.download='';box.append(link);
+      }
+      box.append(el('p','Exact retained source bytes. Check the media independently; it does not confirm product facts or authorize publication.','hint'));
+    }catch(error){if(!stopped&&epoch===originalEpoch){box.replaceChildren(el('p','Original media is unavailable or could not be verified. Refresh before relying on it.','error'));}}
+  }
+  async function loadInstagram() {
+    try {const result=await api(root+'/sources/instagram');if(stopped)return;
+      instagramAvailable=result?.contract_version==='instagram-import-readiness.v1'&&result.available===true&&result.carousel_available===false;
+      $('instagram-form').hidden=!instagramAvailable;
+      $('instagram-status').textContent=instagramAvailable?'Retrieve one original image or video from your connected professional account for private review.':result?.reason==='current_connection_required'?'Connect a current Instagram account in Channels before retrieval.':'Connected media retrieval awaits provider capability. No retrieval date is confirmed.';sync();
+    }catch(error){if(!stopped){instagramAvailable=false;$('instagram-form').hidden=true;$('instagram-status').textContent='Retrieval availability could not be checked. Other source imports remain available.';}}
   }
   function validOptions(options) {return object(options)&&Object.keys(options).length<=8&&Object.entries(options).every(([k,v])=>k.length>0&&k.length<=64&&typeof v==='string'&&v.length>0&&v.length<=80);}
   function optionIdentity(options) {return JSON.stringify(Object.entries(options).sort(([a],[b])=>a.localeCompare(b)));}
@@ -269,6 +295,7 @@
   }
   async function run(action,target='global-error') {$(target).textContent='';try{await action();}catch(error){message(error,target);}finally{sync();}}
   $('catalogue-link').href=$('bridge-catalogue').href=`/v1/businesses/${businessId}/catalogue`;
+  $('instagram-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!instagramAvailable||!$('instagram-consent').checked)throw Error('Current retrieval access and explicit source permission are required.');await makeCommand('json','/jobs',{idempotency_key:crypto.randomUUID(),source_authorized:true,source_kind:'instagram',media_id:$('instagram-media').value.trim()});await sendCommand();});});
   $('website-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{if(!$('website-consent').checked)throw Error('Explicit source permission is required.');await makeCommand('json','/jobs',{idempotency_key:crypto.randomUUID(),source_authorized:true,source_kind:'website',source_url:$('website-url').value.trim()});await sendCommand();});});
   $('upload-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{const file=$('upload-file').files[0];if(!$('upload-consent').checked)throw Error('Explicit media permission is required.');if(!file||!['image/jpeg','image/png','video/mp4'].includes(file.type)||!file.size||file.size>5000000)throw Error('Choose a nonempty original JPEG, PNG or MP4 no larger than 5 MB.');await makeCommand('upload','/uploads',{idempotency_key:crypto.randomUUID(),job_key:crypto.randomUUID(),content_type:file.type,size:file.size,sha256:await hash(await file.arrayBuffer()),name:file.name.slice(0,255)});await sendCommand(file);});});
   $('csv-document').addEventListener('change',csvMode);
@@ -290,5 +317,5 @@
   $('refresh').addEventListener('click',()=>run(()=>load()));
   for(const type of ['jobs','candidates'])for(const direction of ['previous','next'])$(type+'-'+direction).addEventListener('click',()=>run(async()=>{const isJobs=type==='jobs',history=isJobs?jobHistory:candidateHistory;let cursor=isJobs?jobsCursor:candidateCursor;if(direction==='next'){history.push(cursor);cursor=isJobs?jobs.at(-1).job_id:candidateNext;}else cursor=history.pop()||null;if(isJobs)jobsCursor=cursor;else{candidateCursor=cursor;selected=null;}await load();}));
   window.addEventListener('focus',()=>run(()=>session()));document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);}else run(()=>session());});window.addEventListener('pagehide',()=>clearTimeout(timer));
-  (async()=>{try{await session();const raw=readStorage();if(raw!==null){try{const generation=fenceGeneration,value=await decode(raw);current(generation);command=value;}catch(error){if(stopped)return;blocked=true;message(error,'recovery-error');}showRecovery();}await load(false);if(!stopped)$('workspace').hidden=false;}catch(error){if(storageKey&&!stopped){blocked=true;showRecovery();$('workspace').hidden=false;}message(error);}finally{$('loading').hidden=true;sync();}})();
+  (async()=>{try{await session();const raw=readStorage();if(raw!==null){try{const generation=fenceGeneration,value=await decode(raw);current(generation);command=value;}catch(error){if(stopped)return;blocked=true;message(error,'recovery-error');}showRecovery();}await load(false);await loadInstagram();if(!stopped)$('workspace').hidden=false;}catch(error){if(storageKey&&!stopped){blocked=true;showRecovery();$('workspace').hidden=false;}message(error);}finally{$('loading').hidden=true;sync();}})();
 })();

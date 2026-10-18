@@ -98,6 +98,8 @@ async def test_actual_adapter_default_capability_gate_survives_service_error_map
     fake, _, transport = adapter(api, enabled=False)
     fake.credential_loader = AsyncMock(side_effect=AssertionError("Default gate reached credentials"))
     monkeypatch.setattr(service, "_access", AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT)))
+    monkeypatch.setattr(service,"_connection_matches",AsyncMock(return_value=True))
+    monkeypatch.setattr(service,"_fresh_access",AsyncMock())
     row = job()
     dbs = [TenantDB([None, row]), TenantDB([None, row]), TenantDB([None, row])]
     assert not await service.run_job(Sessions(dbs), BUSINESS, row.id, instagram_provider=fake)
@@ -107,16 +109,13 @@ async def test_actual_adapter_default_capability_gate_survives_service_error_map
 
 
 @pytest.mark.asyncio
-async def test_actual_adapter_retained_bytes_are_dropped_by_unpatched_finish(api, monkeypatch):
+async def test_actual_adapter_originals_survive_collected_batch(api, monkeypatch):
     fake, _, transport = adapter(api)
-    monkeypatch.setattr(service, "_access", AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT)))
-    row = job()
-    dbs = [TenantDB([None, row]), TenantDB([None, row]), TenantDB([None, row, None])]
-    assert await service.run_job(Sessions(dbs), BUSINESS, row.id, instagram_provider=fake)
-    assert len(transport.calls) == 3
-    assert row.state == "review_required" and row.asset_id is None
-    assert len([record for record in dbs[-1].added if isinstance(record, ImportDraft)]) == 1
-    assert not any(isinstance(record, ImportAsset) for db in dbs for record in db.added)
+    batch = await service.collect_claim(claim(), fetcher=None, instagram_provider=fake)
+    assert batch.assets[0].content == PNG
+    assert len(transport.calls)==3
+    assert batch[0].state=='review_required'
+    assert 'ephemeral-synthetic' not in batch[0].model_dump_json()
 
 
 @pytest.mark.asyncio
@@ -154,7 +153,11 @@ async def test_actual_adapter_success_still_requires_shared_final_account_guard(
     fake, _, transport = adapter(api)
     access = AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT))
     monkeypatch.setattr(service, "_access", access)
+    monkeypatch.setattr(service, "_fresh_access", access)
     row = job()
+    async def connection(db,business_id,source):
+        return access.return_value.instagram_page_id==source['account_id']
+    monkeypatch.setattr(service,"_connection_matches",connection)
     class ChangeAfterProvider:
         async def fetch_owned_media(self, **kwargs):
             result = await fake.fetch_owned_media(**kwargs)

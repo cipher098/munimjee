@@ -6,6 +6,7 @@ from uuid import UUID
 class Settings(BaseSettings):
     APP_ENV: str = "development"
     V1_IMPORTS_ENABLED: bool = False
+    V1_INSTAGRAM_OWNED_MEDIA_ENABLED: bool = False  # Closed pending primary API/capability confirmation; carousel remains closed.
     V1_AUTH_ENABLED: bool = False
     V1_ENFORCE_LEGACY_ACCESS: bool = False
     V1_STOREFRONT_ENABLED: bool = False

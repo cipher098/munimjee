@@ -54,7 +54,7 @@ class TenantDB:
 def job(**updates):
     values = dict(id=uuid4(), business_id=BUSINESS, creator_id=ACTOR.user_id,
         idempotency_key=uuid4(), request_hash="a" * 64,
-        source={"kind": "instagram", "account_id": ACCOUNT, "media_id": MEDIA},
+        source={"kind": "instagram", "account_id": ACCOUNT, "media_id": MEDIA, "_connection":{"version":7}},
         asset_id=None, state="pending", revision=1, attempts=0, candidate_count=0,
         error_code=None, lease_token=None, lease_expires_at=None,
         created_at=service.now(), available_at=service.now())
@@ -69,9 +69,13 @@ def claim(row=None, **updates):
 
 
 def provider(*, facts=None, products=None, **extra):
+    import hashlib
+    content=b"\x89PNG\r\n\x1a\nsynthetic-original"
+    values=dict(assets=(SimpleNamespace(media_id=MEDIA,content=content,content_type="image/png",sha256=hashlib.sha256(content).hexdigest()),),media_type="IMAGE",connection_version=7)
+    values.update(extra)
     result = SimpleNamespace(account_id=ACCOUNT, media_id=MEDIA,
         products=(("media-product", facts or DraftFacts()),) if products is None else products,
-        **extra)
+        **values)
     return SimpleNamespace(fetch_owned_media=AsyncMock(return_value=result))
 
 
@@ -79,6 +83,13 @@ def provider(*, facts=None, products=None, **extra):
 def access(monkeypatch):
     callback = AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT))
     monkeypatch.setattr(service, "_access", callback)
+    monkeypatch.setattr(service, "_fresh_access", callback)
+    async def connection(db,business_id,source):
+        return callback.return_value.instagram_page_id==source['account_id']
+    monkeypatch.setattr(service,"_connection_matches",connection)
+    from app.services import instagram_credentials, import_originals
+    monkeypatch.setattr(instagram_credentials,"snapshot",AsyncMock(return_value=SimpleNamespace(usable=lambda:True,account_id=ACCOUNT,proof=lambda:{'version':7})))
+    monkeypatch.setattr(import_originals,"retain",AsyncMock())
     return callback
 
 
@@ -114,7 +125,7 @@ async def test_missing_account_does_not_create_a_job(access):
 
 @pytest.mark.asyncio
 async def test_provider_gets_only_committed_tenant_account_media_and_unknown_placeholder():
-    item, fake = claim(), provider(caption="Two dresses Rs999 stock10 BUY NOW", media_type="VIDEO")
+    item, fake = claim(), provider(caption="Two dresses Rs999 stock10 BUY NOW", media_type="IMAGE")
     candidates = await service.collect_claim(item, fetcher=None, instagram_provider=fake)
     fake.fetch_owned_media.assert_awaited_once_with(business_id=BUSINESS, account_id=ACCOUNT, media_id=MEDIA)
     assert len(candidates) == 1  # A media placeholder, never an inferred product count.
@@ -164,6 +175,7 @@ async def test_candidate_identity_survives_job_url_and_capture_changes_but_not_t
     other_media = replace(first, source={**first.source, "media_id": "180000000000072"})
     fake = provider()
     fake.fetch_owned_media.return_value.media_id = other_media.source["media_id"]
+    fake.fetch_owned_media.return_value.assets[0].media_id = other_media.source["media_id"]
     d = (await service.collect_claim(other_media, fetcher=None, instagram_provider=fake))[0]
     assert len({a.id, c.id, d.id}) == 3
 
@@ -185,20 +197,12 @@ async def test_reimport_preserves_seller_override_and_requires_review():
 
 
 @pytest.mark.asyncio
-async def test_original_media_result_is_not_falsely_persisted_by_existing_seam(access):
-    row = job(state="running", lease_token=uuid4(), lease_expires_at=service.now() + timedelta(seconds=30))
-    synthetic_bytes = b"\x89PNG\r\n\x1a\noriginal-garment-fixture"
-    fake = provider(assets=(SimpleNamespace(media_id=MEDIA, content=synthetic_bytes,
-        content_type="image/png", source_url="https://cdn.example.invalid/signed?secret=synthetic"),))
-    item = claim(row)
-    candidates = await service.collect_claim(item, fetcher=None, instagram_provider=fake)
-    db = TenantDB([None, row, None])
-    assert await service.finish_claim(db, item, candidates=candidates)
-    assert len([record for record in db.added if isinstance(record, ImportDraft)]) == 1
-    assert not any(isinstance(record, ImportAsset) for record in db.added)
-    assert row.asset_id is None
-    assert "original-garment" not in str([record.document for record in db.added if isinstance(record, ImportDraft)])
-    assert "signed?secret" not in str([record.details for record in db.added if isinstance(record, ImportAudit)])
+async def test_collected_envelope_retains_originals_without_putting_bytes_in_candidate(access):
+    item=claim()
+    batch=await service.collect_claim(item,fetcher=None,instagram_provider=provider())
+    assert isinstance(batch,service.CollectedBatch) and len(batch.assets)==1
+    assert batch.assets[0].content.startswith(b"\x89PNG")
+    assert 'synthetic-original' not in batch[0].model_dump_json()
 
 
 @pytest.mark.asyncio
@@ -239,7 +243,7 @@ async def test_stale_capture_keeps_newer_review_document_and_records_ignored_aud
         revision=7, document=newer.model_dump(mode="json"))
     before = dict(stored.document)
     db = TenantDB([None, row, stored])
-    assert await service.finish_claim(db, older_claim, candidates=(older,))
+    assert await service.finish_claim(db, older_claim, candidates=replace(await service.collect_claim(older_claim,fetcher=None,instagram_provider=provider()), candidates=(older,)))
     assert stored.document == before and stored.revision == 7
     assert [record.action for record in db.added] == ["stale_capture_ignored"]
 

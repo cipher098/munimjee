@@ -60,7 +60,7 @@ class AccessSnapshot:
     instagram_page_id: str | None
 
 
-async def _fresh_access(db, actor, business_id, capability):
+async def _fresh_access(db, actor, business_id, capability, *, lock=False):
     """Read authorization scalars from PostgreSQL, never ORM-cached objects.
 
     No autoflush/expire/populate operation may publish or overwrite unrelated
@@ -75,6 +75,8 @@ async def _fresh_access(db, actor, business_id, capability):
         Business.id == business_id, Business.is_active.is_(True), Seller.is_active.is_(True),
         Membership.is_active.is_(True), Membership.revoked_at.is_(None),
     ).execution_options(autoflush=False)
+    if lock:
+        query = query.with_for_update(read=True, of=(User, Membership))
     row = (await db.execute(query)).one_or_none()
     if row is None:
         raise HTTPException(404, "Business not found")
@@ -88,7 +90,7 @@ async def _access(db, actor, business_id, *, write=False, lock=False):
     with db.no_autoflush:
         await require_business_access(db, actor, business_id, capability)
         if lock:
-            await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
+            await db.scalar(select(Business).where(Business.id == business_id).with_for_update(key_share=True))
         # A concurrent revocation, downgrade or linked-account change may have
         # committed while waiting; scalar projections bypass the identity map.
         return await _fresh_access(db, actor, business_id, capability)
@@ -105,7 +107,7 @@ async def _job(db, business_id, job_id, *, lock=False):
 def job_view(job):
     return ImportJobRead(job_id=job.id, business_id=job.business_id, state=job.state,
         revision=job.revision, attempts=job.attempts, candidate_count=job.candidate_count,
-        error_code=job.error_code, source=job.source, created_at=job.created_at)
+        error_code=job.error_code, source={k:v for k,v in job.source.items() if not k.startswith("_")}, created_at=job.created_at)
 
 
 def candidate_view(row):
@@ -176,7 +178,11 @@ async def create_job(db, actor, business_id, payload: ImportJobCreate):
         account = access.instagram_page_id
         if not account:
             raise ImportConflict("Connected Instagram account required")
-        source.update(media_id=payload.media_id, account_id=account)
+        from app.services.instagram_credentials import snapshot
+        connection = await snapshot(db, business_id, lock=True)
+        if not connection.usable() or connection.account_id != account:
+            raise ImportConflict("A current verified Instagram connection is required")
+        source.update(media_id=payload.media_id, account_id=account, _connection=connection.proof())
         if payload.source_url:
             source["url"] = payload.source_url
     else:
@@ -288,6 +294,26 @@ async def review_candidate(db, actor, business_id, candidate_id, payload: Candid
 
 
 @dataclass(frozen=True)
+class CollectedBatch:
+    candidates: tuple
+    assets: tuple
+    account_id: str
+    media_id: str
+    media_type: str
+    connection_version: int
+
+    def __iter__(self): return iter(self.candidates)
+    def __len__(self): return len(self.candidates)
+    def __getitem__(self, index): return self.candidates[index]
+
+
+async def _connection_matches(db, business_id, source):
+    from app.services.instagram_credentials import snapshot
+    current = await snapshot(db, business_id, lock=True)
+    return current.usable() and current.matches(source.get('_connection'))
+
+
+@dataclass(frozen=True)
 class JobClaim:
     job_id: UUID
     business_id: UUID
@@ -307,7 +333,7 @@ def _fail(job, code):
 
 async def claim_job(db, business_id, job_id) -> JobClaim | None:
     # Tenant business lock also serializes candidate upserts across import jobs.
-    await db.scalar(select(Business).where(Business.id == business_id).with_for_update())
+    await db.scalar(select(Business).where(Business.id == business_id).with_for_update(key_share=True))
     job = await _job(db, business_id, job_id, lock=True)
     timestamp = now()
     if job.state == "running" and job.lease_expires_at > timestamp:
@@ -326,7 +352,7 @@ async def claim_job(db, business_id, job_id) -> JobClaim | None:
         _fail(job, "authorization_revoked")
         await db.flush()
         return None
-    if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
+    if job.source["kind"] == "instagram" and not await _connection_matches(db, business_id, job.source):
         _fail(job, "source_connection_changed")
         await db.flush()
         return None
@@ -352,7 +378,8 @@ async def claim_job(db, business_id, job_id) -> JobClaim | None:
 
 
 async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_provider=None):
-    source = {key: value for key, value in claim.source.items() if key != "account_id"}
+    source = {key: value for key, value in claim.source.items() if key != "account_id" and not key.startswith("_")}
+    batch = None
     if source["kind"] == "website":
         fetched = await fetcher.fetch(source["url"], authorized_origin=source["url"])
         items = extract_website(fetched)
@@ -378,6 +405,10 @@ async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_prov
             business_id=claim.business_id, account_id=claim.source["account_id"], media_id=source["media_id"]), timeout=15)
         if result.account_id != claim.source["account_id"] or result.media_id != source["media_id"]:
             raise FetchError("provider_ownership_mismatch")
+        batch = CollectedBatch((), tuple(getattr(result, "assets", ())), result.account_id, result.media_id,
+            getattr(result, "media_type", None), getattr(result, "connection_version", None))
+        from app.services.import_originals import checked_assets
+        checked_assets(claim, batch)
         items = result.products
         if not 1 <= len(items) <= 200:
             raise FetchError("invalid_provider_products")
@@ -392,12 +423,12 @@ async def collect_claim(claim: JobClaim, *, fetcher: SafeFetcher, instagram_prov
         candidates.append(begin_review(candidate, business_id=claim.business_id))
     if len({candidate.id for candidate in candidates}) != len(candidates):
         raise FetchError("duplicate_source_product_key")
-    return tuple(candidates)
+    return CollectedBatch(tuple(candidates), batch.assets, batch.account_id, batch.media_id, batch.media_type, batch.connection_version) if batch is not None else tuple(candidates)
 
 
 async def check_claim(db, claim: JobClaim):
     """Cancellation/revocation checkpoint after committed claim, before fetch."""
-    await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update())
+    await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
     job = await _job(db, claim.business_id, claim.job_id, lock=True)
     if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
         return False
@@ -407,7 +438,7 @@ async def check_claim(db, claim: JobClaim):
         _fail(job, "authorization_revoked")
         await db.flush()
         return False
-    if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
+    if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
         _fail(job, "source_connection_changed")
         await db.flush()
         return False
@@ -415,13 +446,14 @@ async def check_claim(db, claim: JobClaim):
 
 
 async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
-    await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update())
+    await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
     job = await _job(db, claim.business_id, claim.job_id, lock=True)
     if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
         return False  # Cancellation or a newer attempt fences late results.
     try:
         access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
-        if job.source["kind"] == "instagram" and access.instagram_page_id != job.source["account_id"]:
+        await _fresh_access(db, Actor(job.creator_id, "import_job"), claim.business_id, "catalogue.write", lock=True)
+        if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
             error_code = "source_connection_changed"
     except HTTPException:
         error_code = "authorization_revoked"
@@ -431,6 +463,11 @@ async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
         return False
     if not 1 <= len(candidates) <= 200:
         raise ImportReviewError("Expected bounded candidate results")
+    if job.source["kind"] == "instagram":
+        if not isinstance(candidates, CollectedBatch):
+            raise ImportReviewError("Original media collection required")
+        from app.services.import_originals import checked_assets
+        checked_assets(claim, candidates)
     for candidate in sorted(candidates, key=lambda item: str(item.id)):
         if candidate.provenance.business_id != claim.business_id or candidate.provenance.import_job_id != claim.job_id:
             raise ImportReviewError("Candidate provenance does not match claim")
@@ -454,6 +491,10 @@ async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
             details["changed_fields"] = [change.field.value for change in result.changes]
             row.document, row.last_job_id = result.candidate.model_dump(mode="json"), claim.job_id
             row.revision += 1
+        if isinstance(candidates, CollectedBatch):
+            await db.flush()
+            from app.services.import_originals import retain
+            await retain(db, claim, candidate, candidates)
         # Flush the draft first: its audit has a composite tenant FK.
         await db.flush()
         _audit(db, business_id=claim.business_id, actor_id=claim.actor_id,
@@ -480,6 +521,9 @@ async def run_job(sessions, business_id, job_id, *, fetcher=None, instagram_prov
     async with sessions.begin() as db:
         if not await check_claim(db, claim):
             return False
+    if claim.source["kind"] == "instagram" and instagram_provider is None:
+        from app.services.instagram_imports import provider_for
+        instagram_provider = provider_for(sessions, claim)
     try:
         candidates = await collect_claim(claim, fetcher=fetcher or SafeFetcher(), instagram_provider=instagram_provider)
         error_code = None
@@ -499,7 +543,8 @@ async def run_job(sessions, business_id, job_id, *, fetcher=None, instagram_prov
             "invalid_upload_size", "unsupported_upload_type", "provider_capability_pending",
             "provider_ownership_mismatch", "invalid_provider_products",
         }
-        candidates, error_code = (), exc.code if exc.code in allowed_errors else "source_adapter_failed"
+        from app.v1.imports.instagram_owned_transport import ERROR_CODES
+        candidates, error_code = (), exc.code if exc.code in allowed_errors | ERROR_CODES else "source_adapter_failed"
     except TimeoutError:
         candidates, error_code = (), "fetch_timeout"
     except (ImportReviewError, ValidationError, ValueError, TypeError):

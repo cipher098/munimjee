@@ -53,9 +53,12 @@ class FakeDB:
 def access(monkeypatch):
     authorize = AsyncMock(return_value=SimpleNamespace(instagram_page_id="linked-ig"))
     monkeypatch.setattr(service, "require_business_access", authorize)
-    async def fresh(db, actor, business_id, capability):
+    async def fresh(db, actor, business_id, capability, **kwargs):
         return await authorize(db, actor, business_id, capability)
     monkeypatch.setattr(service, "_fresh_access", fresh)
+    async def connection(db,business_id,source):
+        return authorize.return_value.instagram_page_id==source.get('account_id')
+    monkeypatch.setattr(service,"_connection_matches",connection)
     return authorize
 
 
