@@ -1,0 +1,22 @@
+{
+  "alembic_head": "0050_v1_assistance",
+  "application_switch": "pending: requires actual reviewed old/current application packages and mounted journey",
+  "container_effects": false,
+  "database_effects": false,
+  "execute_contract": "two allocated initially empty P01 lanes; private ownership attestation; new private archive directory",
+  "format": "munimjee.release-rehearsal.v1",
+  "mode": "plan",
+  "required_postgresql_major": 16,
+  "routine_rollback": "preserve post-cutover writes; compatibility preflight/forward fix; no snapshot overwrite or downgrade",
+  "stages": [
+    "validate inputs without connecting",
+    "hold both P01 leases",
+    "verify PG16 and empty source/target",
+    "migrate source using P01 and seed fixed synthetic fixture",
+    "export read-only consistent snapshot",
+    "private bounded pg_dump",
+    "recheck empty target and pg_restore single transaction",
+    "reconcile all table row/identity hashes, schema and monetary/reservation/pending totals",
+    "append newer target-only order; read-only compatibility probes preserve all facts"
+  ]
+}
