@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,14 @@ def enabled():
         raise HTTPException(404, 'Customer links are unavailable')
 
 
-router = APIRouter(tags=['v1-customer-links'], dependencies=[Depends(enabled)])
+PRIVATE = {'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow'}
+
+
+def private(response: Response):
+    response.headers.update(PRIVATE)
+
+
+router = APIRouter(tags=['v1-customer-links'], dependencies=[Depends(enabled), Depends(private)])
 BASE = '/api/v1/businesses/{business_id}/customer-links'
 STATIC = Path(__file__).resolve().parents[3] / 'static'
 
@@ -80,7 +87,7 @@ async def overview(request: Request, business_id: UUID, state: Literal['all', 'p
     total = await db.scalar(select(func.count()).select_from(query.subquery()))
     rows = (await db.scalars(query.order_by(Challenge.issued_at.desc(), Challenge.id).offset((page-1)*page_size).limit(page_size))).all()
     items = [await service.view(db, row) for row in rows]
-    await read_guard(request, db, actor, business_id)
+    access = await read_guard(request, db, actor, business_id)
     return {'business_id': str(business_id), 'business_name': access.business.name, 'can_manage': 'automation.manage' in access.capabilities,
         'items': items, 'page': page, 'page_size': page_size, 'total': total, 'verification_scope': service.SCOPE,
         'live_provider_canary': 'not_evaluated'}
