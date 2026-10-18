@@ -1,0 +1,25 @@
+$ env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -c 'from tests.safety import install_test_safety; install_test_safety(); import app.v1.imports; app.v1.imports.__path__.append("/Users/user/Documents/ChatGPT/munimjee-wave7-instagram-provider/backend/app/v1/imports"); import pytest; raise SystemExit(pytest.main(['"'"'-q'"'"', '"'"'tests/test_v1_instagram_owned_pipeline.py'"'"', '"'"'tests/test_v1_instagram_owned_pipeline_db.py'"'"', '"'"'tests/test_v1_instagram_owned_pipeline_provider.py'"'"', '"'"'tests/test_v1_import_jobs.py'"'"', '"'"'tests/test_v1_wave2_jobs.py'"'"', '"'"'tests/test_v1_import_drafts.py'"'"', '"'"'tests/test_v1_import_jobs_db.py'"'"', '"'"'-rs'"'"']))'
+
+........................................ssssss.......................... [ 33%]
+........................................................................ [ 66%]
+..............................................................sssssssss  [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_v1_instagram_owned_pipeline_db.py:62: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] tests/test_v1_instagram_owned_pipeline_db.py:92: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_import_jobs_db.py:52: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_import_jobs_db.py:70: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] tests/test_v1_import_jobs_db.py:101: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] tests/test_v1_import_jobs_db.py:114: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+200 passed, 15 skipped, 2 warnings in 0.42s
+
+exit_code=0
