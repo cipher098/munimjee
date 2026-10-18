@@ -10,7 +10,7 @@ from app.models.product import Product
 from app.models.commerce import Storefront
 from app.models.whatsapp import WhatsAppAccount, WhatsAppContact, WhatsAppMessage, WhatsAppTemplate
 from app.services import whatsapp_provider as provider
-from app.services.whatsapp_context import inbound_context, reel_catalogue_reply
+from app.services.whatsapp_context import inbound_context, reel_catalogue_reply, reel_reply_decision
 
 
 def now():
@@ -196,7 +196,8 @@ async def ingest_message(db, account, value, event):
         if isinstance(caption, str) and caption:
             text += '\n' + caption[:4096]
     context = await inbound_context(db, account, contact, event, text)
-    db.add(WhatsAppMessage(seller_id=account.seller_id, contact_id=contact.id, phone_number_id=account.phone_number_id, provider_message_id=mid, idempotency_key=f'in:{mid}', direction='inbound', kind=str(kind)[:30], text=text, payload=context, status='received', created_at=timestamp))
+    inbound = WhatsAppMessage(seller_id=account.seller_id, contact_id=contact.id, phone_number_id=account.phone_number_id, provider_message_id=mid, idempotency_key=f'in:{mid}', direction='inbound', kind=str(kind)[:30], text=text, payload=context, status='received', created_at=timestamp)
+    db.add(inbound)
     contact.last_inbound_at = max(contact.last_inbound_at or timestamp, timestamp)
     command = text.strip().casefold() if kind == 'text' else ''
     # Older deliveries cannot reverse a more recent consent decision.
@@ -208,7 +209,12 @@ async def ingest_message(db, account, value, event):
     if command in {'stop','unsubscribe','start'} or contact.opted_out or not account.enabled or not account.automation_enabled or not window_open(contact) or timestamp < now() - timedelta(hours=24):
         return
     if account.reel_replies_enabled and context.get('reel_context'):
-        reply = await reel_catalogue_reply(db, account.seller_id, context['reel_context'], text)
+        decision = await reel_reply_decision(db, account.seller_id, context['reel_context'], text)
+        reply = decision.reply
+        if decision.review_reason == 'activated_inferred_context':
+            from app.models.comment_operator import WhatsAppEnquiryReview
+            db.add(WhatsAppEnquiryReview(business_id=account.seller_id, inbound_message_id=inbound.id,
+                contact_id=contact.id, phone_number_id=account.phone_number_id, reason=decision.review_reason))
         if reply:
             await queue_message(db, account, contact, key=f'auto:reel:{mid}', text=reply,
                 context={'reel_context': context['reel_context'], 'customer_text': text})

@@ -4,6 +4,7 @@ Context is evidence for a reply, not permission to send one. Product matches are
 exact, active and seller-scoped; unknown or ambiguous references stay unresolved.
 """
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlsplit
 
@@ -117,7 +118,18 @@ async def inbound_context(db, account, contact, event, text):
     return result
 
 
+@dataclass(frozen=True)
+class ReelReplyDecision:
+    reply: str | None = None
+    review_reason: str | None = None
+
+
 async def reel_catalogue_reply(db, seller_id, context, customer_text):
+    """Existing text-only writer seam; a review decision never becomes a send."""
+    return (await reel_reply_decision(db, seller_id, context, customer_text)).reply
+
+
+async def reel_reply_decision(db, seller_id, context, customer_text):
     """A bounded catalogue response, not an open-ended AI sales conversation.
 
     Require one unambiguous product and recheck its reel mapping. Include only
@@ -125,21 +137,21 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
     """
     refs = context.get('references', [])
     if len(refs) != 1 or refs[0].get('status') != 'matched':
-        return None
+        return ReelReplyDecision()
     ref = refs[0]
     from app.services import sku_fact_replies as facts
     if facts.enabled():
         matches = await facts.exact_reel_products(db, seller_id, reel_url=ref.get('url', ''))
         if matches is None or len(matches) != 1 or [str(matches[0])] != [p.get('id') for p in ref.get('products', [])]:
-            return None
+            return ReelReplyDecision()
         if await facts.is_activated(db, seller_id, matches[0]):
             if context.get('source') not in {'message_link', 'referral_link', 'quoted_message'}:
-                return None
+                return ReelReplyDecision(review_reason='activated_inferred_context') if facts.enabled() and context.get('source') == 'recent_message' else ReelReplyDecision()
             observed = await facts.read_facts(db, seller_id, matches[0], reel=dict(reel_url=ref.get('url', '')))
             if observed is None:
-                return None
+                return ReelReplyDecision()
             question = facts.reel_question(customer_text)
-            return facts.render(observed) if question == "[customer sent media]" or facts.factual_request(question) else facts.HANDOFF
+            return ReelReplyDecision(facts.render(observed) if question == "[customer sent media]" or facts.factual_request(question) else facts.HANDOFF)
     products = (await db.scalars(select(Product).where(
         Product.seller_id == seller_id, Product.active.is_(True),
         Product.reel_urls.isnot(None),
@@ -147,13 +159,13 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
     matches = [p for p in products if any(r['shortcode'] == ref.get('shortcode')
         for r in instagram_references(' '.join(u for u in p.reel_urls or [] if isinstance(u, str))))]
     if len(matches) != 1 or [str(matches[0].id)] != [p.get('id') for p in ref.get('products', [])]:
-        return None
+        return ReelReplyDecision()
     product = matches[0]
     from app.services.channel_readiness import guard_legacy_product, CatalogueAuthorityHandoff
     try:
         await guard_legacy_product(db, seller_id, product.id, nowait=True)
     except CatalogueAuthorityHandoff:
-        return "Our team will confirm the current options, price and availability for this product."
+        return ReelReplyDecision("Our team will confirm the current options, price and availability for this product.")
     price = f'₹{product.listed_price / 100:,.2f}'
     reply = f'You’re asking about {product.name}.\nListed price: {price}.'
     question = customer_text.casefold()
@@ -167,4 +179,4 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
         reply += '\nOur team can confirm whether an offer is available.'
     elif product.description:
         reply += '\n' + product.description[:1800]
-    return reply[:4096]
+    return ReelReplyDecision(reply[:4096])

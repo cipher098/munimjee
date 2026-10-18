@@ -1,0 +1,29 @@
+{
+  "base": "3820d14",
+  "scope": "source/pure only; no DB/browser/providers",
+  "python_passed": 27,
+  "node_passed": 6,
+  "migration": "0056_v1_comment_operator",
+  "predecessor": "0055_v1_comment_binding",
+  "sha256": {
+    "artifacts/v1/comment-operator/node.txt": "b8265cdf2aa233f45bfadf1995a48fe0aca0200ac2bf222caa3cc9c743530841",
+    "artifacts/v1/comment-operator/pure.txt": "1f39df7b740fe970ccbf361004c8da0c126438a35c1fa342dc073133db2d1b30",
+    "artifacts/v1/comment-operator/pure.xml": "b7a8fb73e3b3575f3cf40261841b55a2d6f5b6b1d46ef9777973ad3a544a6e6f",
+    "artifacts/v1/comment-operator/verification.md": "82654984ef6b10ad7093dce4241f0216eaf2028cd1788fe1e4ef94b3ca85d095",
+    "backend/alembic/versions/0056_v1_comment_operator.py": "b324cccd57225b5c2260cd488b308f0274b55be68123c0ece33d80175d41c7be",
+    "backend/app/api/v1/comment_operator.py": "84354a1a5026822896bea0550ccae28d87eabd274f48fb4ceed6094e5edad313",
+    "backend/app/models/comment_operator.py": "76f09357674124c463275fb6c66a6f56286cbf78273b4612e22aa9df74251164",
+    "backend/app/schemas/comment_operator.py": "beb6e67f48349754902891ac6e5caaa7554f4b6905db648d5881ddcc7ac8e5df",
+    "backend/app/services/comment_operator.py": "40e79eb546fff3c21c83bfb173b246d372cee940496c6fbd109739a1eb5f2914",
+    "backend/app/services/whatsapp.py": "bee87cb96eca056428bf3cb7c614c16bec717a96243317fa325a21e4df90e2c7",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/static/comment_operator.css": "06c5e353b46af565f35ed8ebeb7cc61edced8d6a850a811ef96b085f2e0dcc48",
+    "backend/static/comment_operator.html": "3af2c84e6ee4c8abac8f3fdb7c1d8734f14849a8c39a4aab7bcbe866e569f037",
+    "backend/static/comment_operator.js": "50ddbc96086458e6ce1fc8144c827c0c2911f9283b7506a88240f2d247429050",
+    "backend/static/comment_operator_contract.js": "eab2f3777ed8fda8fd4880ef649006bbcf42b4546bc0282b83d1b3fec015b776",
+    "backend/tests/comment_operator_contract.test.mjs": "62e500bfb42728bb65e4c5239bb383732a13462cc04d125786dcb3b850b4fac8",
+    "backend/tests/test_comment_operator_db.py": "16e710ac5da3d995a0f3a33a8e94dcd9455f20f37c3169e762d8690551da904c",
+    "backend/tests/test_comment_operator_pure.py": "74ee92550c869a960272a2fe9b6c69675c7791a8dcf2e7d3f3a8a124276e2b7f",
+    "docs/v1-comment-operator-contract.md": "5b6ffa9de1318f7af8fa56345b2d3b8c221f83b578e2b6ffd8b0fd0e6cd2a895"
+  }
+}
