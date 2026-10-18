@@ -1,0 +1,3 @@
+product_ref,title,description,price,currency,stock,options_state
+kurta-001,Cotton kurta,"Seller supplied description, with a comma",1299.00,INR,0,none
+unresolved-002,Unresolved garment,,,,,unknown
