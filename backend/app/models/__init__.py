@@ -72,3 +72,6 @@ __all__ += ["ImportCatalogueBridge"]
 
 from app.models.parcel_tracking import ParcelConnector, OrderParcelLink, ParcelObservation, ParcelNotification, ParcelAudit
 __all__ += ["ParcelConnector", "OrderParcelLink", "ParcelObservation", "ParcelNotification", "ParcelAudit"]
+
+from app.models.storefront_theme_v1 import StorefrontThemeSettings, StorefrontThemeCommand
+__all__ += ["StorefrontThemeSettings", "StorefrontThemeCommand"]

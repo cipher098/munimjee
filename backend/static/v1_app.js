@@ -15,6 +15,7 @@
   function access() {
     businessLoad++; business = null; clearInvite(); $('profile-form').reset(); $('checklist').replaceChildren();
     $('business-heading').textContent = 'Your business';
+    $('business-tools').hidden = true; $('business-tools').replaceChildren();
     document.querySelectorAll('#access-form button, #workspace button').forEach(b => b.disabled = false);
     $('workspace').hidden = true; $('access').hidden = false; $('logout').hidden = true;
     $('access-title').textContent = mode === 'signup' ? 'Create your account' : mode === 'invite' ? 'Join your team' : 'Welcome back';
@@ -37,6 +38,7 @@
   async function loadBusiness() {
     const load = ++businessLoad; clearInvite();
     $('business-content').hidden = true;
+    $('business-tools').hidden = true; $('business-tools').replaceChildren();
     $('global-error').textContent = '';
     business = actor.businesses.find(b => b.id === $('business-picker').value) || actor.businesses[0];
     $('no-business').hidden = Boolean(business);
@@ -45,6 +47,13 @@
     const data = await api(`/api/v1/businesses/${business.id}/onboarding`);
     if (load !== businessLoad) return;
     $('business-content').hidden = false;
+    if (business.capabilities.includes('catalogue.read')) {
+      for (const [label, page] of [['Catalogue','catalogue'],['Imports','imports'],['Store design','themes']]) {
+        const link = text('a', label, 'button secondary');
+        link.href = `/v1/businesses/${business.id}/${page}`; $('business-tools').append(link);
+      }
+      $('business-tools').hidden = false;
+    }
     profileVersion = data.profile.version;
     const form = $('profile-form');
     form.elements.name.value = data.profile.name;

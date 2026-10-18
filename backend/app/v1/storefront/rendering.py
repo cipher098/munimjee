@@ -5,6 +5,7 @@ import json
 import re
 from urllib.parse import urlsplit
 from uuid import UUID
+from app.v1.storefront.design import public_design, design_text, DEFAULTS
 
 
 THEMES = frozenset({'editorial', 'catalogue', 'video'})
@@ -30,6 +31,7 @@ class PublicStorefront:
     publication_verified: bool = False
     checkout_enabled: bool = False
     payment_methods: tuple[str, ...] = ()
+    design: dict | None = None
 
 
 def canonical_origin(value: str) -> str:
@@ -96,6 +98,7 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
         value=getattr(store,field)
         if not isinstance(value,str) or len(value)>6000 or (field=='name' and not value.strip()):
             raise ValueError('Invalid public store text')
+    design = public_design(store.design, store.theme)
     origin = canonical_origin(origin)
     base = f'/stores/{store.slug}'
     products = [public_product(item) for item in store.products]
@@ -128,7 +131,7 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
     else:
         path, title, description = base, store.name, store.description
     visible = [item for item in products if not category_id or item['category_id'] == str(category_id)]
-    payload = {'contract_version': 'storefront.page.v1', 'store': {'slug': store.slug, 'name': store.name, 'theme': store.theme, 'currency': store.currency, 'description': store.description, 'shipping_policy': store.shipping_policy, 'return_policy': store.return_policy, 'payment_methods': [method for method in store.payment_methods if method in {'cod', 'razorpay'}]}, 'capabilities': {'public_catalogue': True, 'sku_checkout': store.checkout_enabled is True}, 'products': products, 'categories': categories, 'selected_product_id': str(product_id) if product_id else None, 'selected_category_id': str(category_id) if category_id else None}
+    payload = {'contract_version': 'storefront.page.v1', 'store': {'slug': store.slug, 'name': store.name, 'theme': store.theme, 'design': design, 'currency': store.currency, 'description': store.description, 'shipping_policy': store.shipping_policy, 'return_policy': store.return_policy, 'payment_methods': [method for method in store.payment_methods if method in {'cod', 'razorpay'}]}, 'capabilities': {'public_catalogue': True, 'sku_checkout': store.checkout_enabled is True}, 'products': products, 'categories': categories, 'selected_product_id': str(product_id) if product_id else None, 'selected_category_id': str(category_id) if category_id else None}
     cards = []
     for item in visible:
         image = f'<img src="{escape(item["photo_urls"][0], quote=True)}" alt="{escape(item["name"], quote=True)}" width="600" height="760" loading="lazy">' if item['photo_urls'] else '<div class="empty-state">Image unavailable</div>'
@@ -138,8 +141,17 @@ def render_storefront(store: PublicStorefront, origin: str, *, product_id: UUID 
         cards.append(f'<article class="product-card"><a class="product-image" href="{base}/products/{item["product_id"]}">{image}</a><div class="product-meta"><h3><a href="{base}/products/{item["product_id"]}">{escape(item["name"])}</a></h3><p>{price} INR</p><p>{availability}</p></div></article>')
     links = ''.join(f'<a href="{base}/categories/{item["category_id"]}">{escape(item["name"])}</a>' for item in categories)
     detail = f'<section class="brand-story"><h1>{escape(selected["name"])}</h1><p>{escape(selected["description"])}</p></section>' if selected else ''
+    text = lambda key, fallback='': escape(design_text(design, key, fallback))
+    # Presentation toggles leave categories and products in the public contract,
+    # and every canonical category/PDP route retains its existing authority.
+    navigation = f'<nav aria-label="Categories">{links}</nav>' if design['show_categories'] else ''
+    tagline = f'<p class="brand-tagline">{text("brand_tagline")}</p>' if design['brand_tagline'] else ''
+    hero_media = next((item['photo_urls'][0] for item in products if item['photo_urls']), None)
+    art = f'<img class="hero-image" src="{escape(hero_media, quote=True)}" alt="{escape(store.name, quote=True)}" width="600" height="760">' if hero_media else '<div class="empty-state">New pieces are on their way.</div>'
+    hero = f'<section class="hero"><div class="hero-copy"><span class="eyebrow">{text("hero_eyebrow")}</span><h1>{text("hero_headline")}</h1><p>{text("hero_intro")}</p><a class="primary-button" href="#collection">{escape(DEFAULTS[store.theme]["cta"])}</a></div><div class="hero-art">{art}</div></section>'
+    story = f'<section id="our-story" class="brand-story published-story"><h2>{text("story_heading", "Our story")}</h2><p>{text("story_body", store.description)}</p></section>' if design['show_story'] else ''
     schema = {'@context': 'https://schema.org', '@type': 'Product' if selected else 'CollectionPage', 'name': selected['name'] if selected else title, 'description': description, 'url': origin + path}
     if selected and selected['photo_urls']:
         schema['image'] = selected['photo_urls']
     # No Offer is asserted: shipping/tax/availability and payment authority stay server-side.
-    return f'''<!doctype html><html lang="en" data-theme="{store.theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)}</title><meta name="description" content="{escape(description[:300], quote=True)}"><meta name="robots" content="index,follow"><link rel="canonical" href="{escape(origin+path, quote=True)}"><meta property="og:title" content="{escape(title, quote=True)}"><meta property="og:url" content="{escape(origin+path, quote=True)}"><link rel="stylesheet" href="/storefront-assets/src/styles.css"><link rel="stylesheet" href="/storefront-assets/src/live.css"><script type="application/ld+json">{safe_json(schema)}</script><script id="storefront-data" type="application/json">{safe_json(payload)}</script><script type="module" src="/storefront-assets/src/live-entry.js"></script></head><body><a class="skip-link" href="#collection">Skip to collection</a><main id="live-app"><header class="shop-header"><a class="wordmark" href="{base}">{escape(store.name)}</a><nav aria-label="Categories">{links}</nav></header>{detail}<section class="collection" id="collection">{'<h2>More from the collection</h2>' if selected else '<h1>'+escape(title)+'</h1>'}<p>{escape(description)}</p><div class="product-grid">{''.join(cards) or '<p>No published pieces available.</p>'}</div></section></main><noscript>Browse the collection using the links above. JavaScript is required for the bag and checkout.</noscript></body></html>'''
+    return f'''<!doctype html><html lang="en" data-theme="{store.theme}" class="palette-{design['palette']}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)}</title><meta name="description" content="{escape(description[:300], quote=True)}"><meta name="robots" content="index,follow"><link rel="canonical" href="{escape(origin+path, quote=True)}"><meta property="og:title" content="{escape(title, quote=True)}"><meta property="og:url" content="{escape(origin+path, quote=True)}"><link rel="stylesheet" href="/storefront-assets/src/styles.css"><link rel="stylesheet" href="/storefront-assets/src/live.css"><script type="application/ld+json">{safe_json(schema)}</script><script id="storefront-data" type="application/json">{safe_json(payload)}</script><script type="module" src="/storefront-assets/src/live-entry.js"></script></head><body><a class="skip-link" href="#collection">Skip to collection</a><main id="live-app"><header class="shop-header"><div><a class="wordmark" href="{base}">{escape(store.name)}</a>{tagline}</div>{navigation}</header>{detail or hero}<section class="collection" id="collection"><h2>{text('collection_heading')}</h2><p>{escape(description)}</p><div class="product-grid">{''.join(cards) or '<p>No published pieces available.</p>'}</div></section>{story}</main><noscript>Browse the collection using the links above. JavaScript is required for the bag and checkout.</noscript></body></html>'''

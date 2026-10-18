@@ -15,6 +15,9 @@ def source(tmp_path):
     names=['backend/requirements.txt','backend/alembic.ini','backend/app/main.py',
            'backend/alembic/env.py','backend/alembic/versions/0046.py',
            'backend/static/v1_client.js','deploy/v1/Dockerfile']
+    names += ['backend/static/'+name for name in (
+        'import_workspace.html','import_workspace.css','import_workspace.js',
+        'theme_settings.html','theme_settings.css','theme_settings.js')]
     names += ['frontend/storefront/src/'+name for name in package.STOREFRONT]
     for name in names:
         path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('# synthetic runtime\n')
@@ -37,8 +40,12 @@ def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_p
         path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('SYNTHETIC-DO-NOT-PACKAGE-SENTINEL')
     stage(source)
     output=tmp_path/'context';manifest=package.create_context(source,output)
-    assert len(list((output/'storefront-src').iterdir()))==12
+    assert len(list((output/'storefront-src').iterdir()))==13
+    assert (output/'storefront-src/published-design.js').is_file()
     assert (output/'storefront-src/payment-handoff.js').is_file()
+    for prefix in ('import_workspace','theme_settings'):
+        for suffix in ('html','css','js'):
+            assert (output/f'backend/static/{prefix}.{suffix}').is_file()
     assert (output/'backend/alembic/versions/0046.py').is_file()
     assert manifest['excluded_dev_requirements']==['pytest','pytest-asyncio','vcrpy']
     assert (output/'requirements.txt').read_text()=='fastapi==0.111.0\n'

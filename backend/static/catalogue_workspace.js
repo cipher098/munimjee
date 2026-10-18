@@ -5,6 +5,9 @@
   const businessId = location.pathname.split('/')[3];
   const root = `/api/v1/businesses/${businessId}`;
   const catalogue = root + '/catalogue';
+  for (const [id, page] of [['imports-link','imports'],['themes-link','themes']]) {
+    $(id).href = `/v1/businesses/${businessId}/${page}`; $(id).hidden = false;
+  }
   const rawApi = window.V1.api;
   let sessionEnded = false;
   let access, store = null, productPage = 1, orderPage = 1, detail = null, detailEpoch = 0, orderEpoch = 0;
