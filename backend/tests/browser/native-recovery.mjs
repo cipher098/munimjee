@@ -2,8 +2,9 @@
  * microtask fence are controlled; no API/domain result or session is fabricated. */
 import {chromium,expect} from '../../../frontend/storefront/node_modules/@playwright/test/index.mjs';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 const base='http://127.0.0.1:8156',output=new URL('../../../artifacts/v1/native-recovery/',import.meta.url),baseline=process.argv.includes('--baseline');
 await mkdir(output,{recursive:true});const browser=await chromium.launch();let checks=0;const errors=[],external=[],results=[];
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPQC3QEAAFxAMFKELGAAAAAAElFTkSuQmCC','base64');
@@ -13,7 +14,7 @@ async function owner(){const c=await browser.newContext({viewport:{width:1365,he
  const response=await page.request.post(base+'/api/v1/auth/signup',{headers:{Origin:base},data:{email:`recovery-${crypto.randomUUID()}@example.com`,password:'synthetic-native-recovery-password',business_name:'Synthetic Recovery Boutique'}});assert.equal(response.status(),201,await response.text());const me=await response.json(),bid=me.businesses[0].id,headers={Origin:base,'X-CSRF-Token':me.csrf_token};return {c,page,bid,headers};}
 async function countIntent(page,prefix){return page.evaluate(prefix=>Object.keys(sessionStorage).filter(k=>k.startsWith(prefix)).length,prefix);}
 async function check(name,fn){await fn();checks++;results.push(name);}
-async function captureTheme(page,name){await page.setViewportSize({width:390,height:844});await page.frameLocator('#preview').getByRole('heading',{name:'Original publication draft',exact:true}).scrollIntoViewIfNeeded();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.locator('#preview').screenshot({path:new URL('mobile-private-preview.png',output).pathname});await page.evaluate(()=>scrollTo(0,0));await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.screenshot({path:new URL(name,output).pathname});}
+async function captureTheme(page,name){await page.setViewportSize({width:390,height:844});await page.evaluate(()=>scrollTo(0,0));await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.screenshot({path:new URL(name,output).pathname});}
 async function themeCase(kind,publish=false){const f=await owner(),{page,bid,headers}=f,path=`/api/v1/businesses/${bid}/theme-settings`,calls=[];try{
  if(publish||kind==='save-public-state'){const saved=await page.request.put(base+path,{headers,data:{expected_version:0,idempotency_key:crypto.randomUUID(),config:{hero_headline:'Original publication draft',theme:'editorial'}}});assert.equal(saved.status(),200);if(kind==='save-public-state'){const published=await page.request.post(base+path+'/publish',{headers,data:{expected_version:1,idempotency_key:crypto.randomUUID()}});assert.equal(published.status(),200);}}
  const before=await(await page.request.get(base+path)).json();
@@ -63,5 +64,5 @@ try{
   await check('typed theme stale permits explicit reload only',()=>typedStale());await check('typed importer stale clears only rejected command',()=>typedStale(false));
   await check('JSON guard queued fence zero dispatch',()=>importFence());await check('upload guard queued fence zero dispatch',()=>importFence(true));await check('read guard queued fence zero dispatch',()=>importFence(false,true));
  }
- assert.deepEqual(errors,[]);assert.deepEqual(external,[]);console.log(`PASS ${checks} ${baseline?'baseline reproduction':'actual native recovery'} checks; real app.main/0049 DB, no provider calls.`);await writeFile(new URL(baseline?'baseline-results.json':process.argv.includes('--preview-only')?'embedded-preview-results.json':'browser-results.json',output),JSON.stringify({checks,baseline,results,errors,external},null,2)+'\n');
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);console.log(`PASS ${checks} ${baseline?'baseline reproduction':'actual native recovery'} checks; real app.main/0049 DB, no provider calls.`);await writeFile(new URL(baseline?'baseline-results.json':process.argv.includes('--preview-only')?'embedded-preview-results.json':'browser-results.json',output),JSON.stringify({source_commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),ui_source_ref:baseline?'2d70c44':'current checkout',ui_hashes:Object.fromEntries(await Promise.all(['import_workspace.js','theme_settings.js'].map(async name=>[name,createHash('sha256').update(baseline?execFileSync('git',['show','2d70c44:backend/static/'+name]):await readFile(new URL('../../static/'+name,import.meta.url))).digest('hex')]))),checks,baseline,results,errors,external},null,2)+'\n');
 }finally{await browser.close();}
