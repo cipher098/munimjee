@@ -94,7 +94,8 @@ def embedded_configuration(settings, *, require_onboarding=True):
         app_id, config_id = identifier(settings.WHATSAPP_EMBEDDED_APP_ID), identifier(settings.WHATSAPP_EMBEDDED_CONFIG_ID)
     except ProtocolError:
         raise ProtocolError('configuration_unavailable') from None
-    if not settings.WHATSAPP_EMBEDDED_APP_SECRET or not settings.WHATSAPP_APP_SECRET:
+    if any(type(value) is not str or not 1<=len(value)<=4096 or any(ord(c)<33 or ord(c)>126 for c in value)
+           for value in (settings.WHATSAPP_EMBEDDED_APP_SECRET,settings.WHATSAPP_APP_SECRET)):
         raise ProtocolError('configuration_unavailable')
     if not hmac.compare_digest(settings.WHATSAPP_EMBEDDED_APP_SECRET, settings.WHATSAPP_APP_SECRET):
         raise ProtocolError('configuration_mismatch')

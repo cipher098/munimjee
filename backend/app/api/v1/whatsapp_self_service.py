@@ -63,7 +63,7 @@ async def read_final(request,db,business_id,actor):
     return await require_business_access(db,current,business_id,'inbox.read')
 
 
-async def authority(request,db,business_id,*,mutation=True):
+async def authority(request,db,business_id,*,mutation=True,bind_app=False):
     actor=await (require_v1_mutation(request,db) if mutation else read_actor(request,db,business_id))
     if actor.auth_method!='v1_user': raise HTTPException(401,'Sign in with your own V1 account')
     context=await native_session(db,request_auth_token(request))
@@ -73,7 +73,7 @@ async def authority(request,db,business_id,*,mutation=True):
         active=await native_session(db,request_auth_token(request))
         if current!=actor or active.session.id!=binding.session_id or active.session.auth_version!=binding.auth_version:
             raise HTTPException(401,'The authorizing native session changed')
-    result=service.Authority(binding,check)
+    result=service.Authority(binding,check,settings.WHATSAPP_EMBEDDED_APP_ID if bind_app else None)
     await result.check(db)
     return result
 
@@ -149,7 +149,7 @@ async def readiness(request:Request,business_id:UUID,db:AsyncSession=Depends(get
 
 @router.post(BASE+'/signup')
 async def start(request:Request,response:Response,business_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
-    auth=await authority(request,db,business_id)
+    auth=await authority(request,db,business_id,bind_app=True)
     payload=await command(request,StartSignup)
     try: result,nonce=await service.start_signup(db,auth,payload,provider=provider)
     except ProtocolError as error: protocol_error(error)
@@ -183,7 +183,7 @@ async def choices(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSessi
 
 @router.post(BASE+'/signup/{attempt_id}/exchange')
 async def exchange(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
-    auth=await authority(request,db,business_id)
+    auth=await authority(request,db,business_id,bind_app=True)
     payload=await command(request,ExchangeSignup)
     try: result=await service.exchange_signup(db,auth,attempt_id,payload,request.cookies.get(COOKIE),provider=provider)
     except ProtocolError as error: protocol_error(error)
@@ -196,7 +196,7 @@ async def exchange(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSess
 
 @router.post(BASE+'/signup/{attempt_id}/assets')
 async def assets(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
-    auth=await authority(request,db,business_id)
+    auth=await authority(request,db,business_id,bind_app=True)
     payload=await command(request,SignupAssets)
     try: result=await service.discover_assets(db,auth,attempt_id,payload,provider=provider)
     except ProtocolError as error: protocol_error(error)
@@ -206,7 +206,7 @@ async def assets(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSessio
 
 @router.post(BASE+'/signup/{attempt_id}/select')
 async def select_account(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
-    auth=await authority(request,db,business_id)
+    auth=await authority(request,db,business_id,bind_app=True)
     payload=await command(request,SelectSignup)
     try: result=await service.select_account(db,auth,attempt_id,payload,provider=provider)
     except ProtocolError as error: protocol_error(error)
