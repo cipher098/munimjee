@@ -1,0 +1,15 @@
+{
+  "source": "875cdf7",
+  "command": [
+    "/tmp/munimjee-release-ci-py311/bin/python",
+    "-m",
+    "pytest",
+    "tests/release/test_v1_release_rehearsal.py",
+    "tests/release/test_v1_application_compatibility.py",
+    "-q",
+    "--junitxml=/Users/user/Documents/ChatGPT/munimjee/artifacts/v1/restore-0056-harness-coordination/baseline-unit.xml"
+  ],
+  "exit_code": 1,
+  "environment": "allowlisted shell paths/locale only + REHEARSAL_ACCEPTANCE=0; no DB/provider variables",
+  "actual_restore": "NOT RUN"
+}

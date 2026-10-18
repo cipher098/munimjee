@@ -1,0 +1,23 @@
+F........................................s.................              [100%]
+=================================== FAILURES ===================================
+_______ test_default_plan_does_not_import_db_or_call_process_or_network ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b05a010>
+capsys = <_pytest.capture.CaptureFixture object at 0x10b05a450>
+
+    def test_default_plan_does_not_import_db_or_call_process_or_network(monkeypatch, capsys):
+        monkeypatch.setattr(rehearsal, "p01", lambda: pytest.fail("plan imported DB harness"))
+        monkeypatch.setattr(rehearsal.subprocess, "run", lambda *a, **k: pytest.fail("plan launched a subprocess"))
+        monkeypatch.setattr(rehearsal.os, "mkdir", lambda *a, **k: pytest.fail("plan created a directory"))
+>       assert rehearsal.main([]) == 0
+E       assert 1 == 0
+E        +  where 1 = <function main at 0x10ae9b1a0>([])
+E        +    where <function main at 0x10ae9b1a0> = rehearsal.main
+
+tests/release/test_v1_release_rehearsal.py:36: AssertionError
+----------------------------- Captured stderr call -----------------------------
+{"format": "munimjee.release-rehearsal.v1", "status": "failed", "reason": "Rehearsal refused or failed; private inputs and subprocess output withheld"}
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee/artifacts/v1/restore-0056-harness-coordination/baseline-unit.xml -
+=========================== short test summary info ============================
+FAILED tests/release/test_v1_release_rehearsal.py::test_default_plan_does_not_import_db_or_call_process_or_network
+1 failed, 57 passed, 1 skipped in 0.20s
