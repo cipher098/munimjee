@@ -1,0 +1,251 @@
+{
+  "base": "4d9f940d25e681fd6a80e168f4ea4c0510131fbd",
+  "branch": "codex/v1-restore-0056-harness-review",
+  "accepted_runtime": "a9880c56b6a8bf7b4e20f54837a362e4432aadda",
+  "review_mode": "static only; no harness/app/test/DB/tool/service execution",
+  "files": [
+    {
+      "path": "scripts/v1_release_rehearsal.py",
+      "sha256": "c410519761a4bac796a0493bfc14d170f7ba6c3ad9897f7f35bca9fb3a75e423",
+      "git_blob": "f4518ca8882874e41ed618626977768f95e714c0",
+      "functions": [
+        {
+          "name": "require",
+          "start": 37,
+          "end": 39,
+          "sha256": "4eb0575ad79a2d8f72db27ae1a9df948b1e594d9cd04ee4245dd6e0f6d250ad1"
+        },
+        {
+          "name": "repo_head",
+          "start": 42,
+          "end": 57,
+          "sha256": "a42e66734665166092e59fec90e135350455182b5dbab55e364a650ed8d7af88"
+        },
+        {
+          "name": "plan",
+          "start": 60,
+          "end": 73,
+          "sha256": "2ea3f9f4c460dc31c99057ae631f2df329a28c20ddebb5810649dd6d33f79fbf"
+        },
+        {
+          "name": "p01",
+          "start": 76,
+          "end": 83,
+          "sha256": "98ee20ae3c737e42088cc74512e16604ac6a8d45f5bec3188982b6e05334e628"
+        },
+        {
+          "name": "targets",
+          "start": 86,
+          "end": 94,
+          "sha256": "a28ab62b3a7f44f2ba62d228028c6900c8cb2c474aaaa3f5cf77f18cff13bcf5"
+        },
+        {
+          "name": "no_symlinks",
+          "start": 97,
+          "end": 101,
+          "sha256": "ec1a35736ae330524b901d11d1d89bf74f55b1c2c4822ef141e3dc6ba32bfbf2"
+        },
+        {
+          "name": "ownership",
+          "start": 104,
+          "end": 122,
+          "sha256": "f4075267e26591ee8dd0577f814df7ddca0a1ab329b532dc64e9e74e03ab550c"
+        },
+        {
+          "name": "archive_location",
+          "start": 125,
+          "end": 131,
+          "sha256": "db40df0ca85a629dc38c51c7207ac1690f3a0ec1d73298bf270be5030429b790"
+        },
+        {
+          "name": "private_file",
+          "start": 134,
+          "end": 137,
+          "sha256": "7e36c05f60c1ea848795815ee79d1b1886ef9c6f322b1b7f7b98948be9df22e3"
+        },
+        {
+          "name": "private_read",
+          "start": 140,
+          "end": 151,
+          "sha256": "e16e6761e33e356e0b731010abacd7458b585b7c2c759c7448e6c6386a874e7f"
+        },
+        {
+          "name": "private_sha256",
+          "start": 154,
+          "end": 162,
+          "sha256": "363e75b9a253787c81fde94ae810ebd75bfb1b9c629eb34671438e085dca87ae"
+        },
+        {
+          "name": "private_json",
+          "start": 165,
+          "end": 169,
+          "sha256": "ddf791062e3023458ef23863967111822035bc64f696eaf0e618d11cb60a5d4a"
+        },
+        {
+          "name": "child_env",
+          "start": 172,
+          "end": 179,
+          "sha256": "2d848a50685589e15a327d4b82cbeb8c7e047a1eacd36a0a640261e8602a9b0c"
+        },
+        {
+          "name": "command",
+          "start": 182,
+          "end": 190,
+          "sha256": "a6ba88e9bd4a2fb5464b94695390227fbaab51351ebd3dc2451605915d36d8a5"
+        },
+        {
+          "name": "owned_call",
+          "start": 194,
+          "end": 215,
+          "sha256": "0d1aea2f0d5076b871aba5b14334a79ef6418c34410be25ab5c831b1b7dc5b13"
+        },
+        {
+          "name": "pg_tools",
+          "start": 218,
+          "end": 230,
+          "sha256": "5579aaca8ee1bada720142d83e92960613fde62f1a54a88660d3ae987895582f"
+        },
+        {
+          "name": "query",
+          "start": 233,
+          "end": 235,
+          "sha256": "41d02e8657a7b55cb101c6e69acc2925577f7e805e9759bb823a3a0b53e2cf25"
+        },
+        {
+          "name": "empty_database",
+          "start": 238,
+          "end": 249,
+          "sha256": "240997986d19373bb4bb517c426eb71a8d2c7c51516fef12457b041768e4c232"
+        },
+        {
+          "name": "pg16",
+          "start": 252,
+          "end": 254,
+          "sha256": "e2b80612397623e36215e716841c10238b3ebc50802e1c110a1359224457e66d"
+        },
+        {
+          "name": "canonical_constraint",
+          "start": 257,
+          "end": 315,
+          "sha256": "1a42cf57c66c66369b905cf3b563338765d0df0be39d2891286faf753cc3fb59"
+        },
+        {
+          "name": "schema_fingerprint",
+          "start": 318,
+          "end": 363,
+          "sha256": "24222140e5562010d2a08df2985b33428351779f63b8124df51b35dda1f945d7"
+        },
+        {
+          "name": "snapshot",
+          "start": 366,
+          "end": 401,
+          "sha256": "0381037369dd70c0a3f0a422470390a4e9c422d70c4b0725e426fa92339a8c02"
+        },
+        {
+          "name": "run",
+          "start": 404,
+          "end": 481,
+          "sha256": "837861ba4bbc50bd18a564053b3c15130c6b3413f5c0e359bfb30acc474011fc"
+        },
+        {
+          "name": "main",
+          "start": 489,
+          "end": 513,
+          "sha256": "b5760841525f72410962d72b439029eeb14c3178872564d40780e484d5b25f8e"
+        }
+      ]
+    },
+    {
+      "path": "scripts/v1_release_synthetic.py",
+      "sha256": "72a8e5939c5e334c8b2d8a6f33ba070302efd630c8a9793962aba174a135ba77",
+      "git_blob": "e7305da24f56a683aac2826f145d49154e06723d",
+      "functions": [
+        {
+          "name": "uid",
+          "start": 16,
+          "end": 17,
+          "sha256": "827f35e7b18b9a8c20944fb37c15f60e52124934f6c9f00d5c5ef74b6cb018ac"
+        },
+        {
+          "name": "insert",
+          "start": 24,
+          "end": 30,
+          "sha256": "aa3776ec9cb2b057248c6bbad6c4fe0d1b1ff2fb77bca2bee682953fc2e16af9"
+        },
+        {
+          "name": "order",
+          "start": 33,
+          "end": 41,
+          "sha256": "76fd936ac2247d5a08260acd318e5a30e5f885c879d23f890b0b097910325669"
+        },
+        {
+          "name": "reservation",
+          "start": 44,
+          "end": 47,
+          "sha256": "3729ead73d2dde9fa5511e41703c390bb2b4c50f987ead8c1bac8858de62293f"
+        },
+        {
+          "name": "seed",
+          "start": 50,
+          "end": 81,
+          "sha256": "31b5c4a83f51760034dc8ccac6322122884ddfc72abd846a818cf19dcf3d2b8f"
+        },
+        {
+          "name": "validate_fixture",
+          "start": 84,
+          "end": 94,
+          "sha256": "0644219fdf61dd58841f0cc2ee5a5040a70ba187df3d0a5ad2b2ef40cfbb99f4"
+        },
+        {
+          "name": "newer_order",
+          "start": 97,
+          "end": 101,
+          "sha256": "f4ff3e305892d1cd2cd3a52563e936ce4ac3fad4d94295b5f15ae6721a2546f4"
+        }
+      ]
+    },
+    {
+      "path": "scripts/v1_release_exec.py",
+      "sha256": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+      "git_blob": "da53d42c6637b338795ef640fcb2fdba3911cde7",
+      "functions": [
+        {
+          "name": "main",
+          "start": 8,
+          "end": 18,
+          "sha256": "7a68b9033aafbfef724937d155b21f90cd59863a87a928f39ead832ba187019d"
+        }
+      ]
+    },
+    {
+      "path": "tests/release/test_v1_release_rehearsal.py",
+      "sha256": "25d34162ef37e476bc4fc1278d300cf37276c498a55322acf42c4e8a997b235a",
+      "git_blob": "f1bfd6a0a11458dc56b3e05a6afdd7e8a97dc487"
+    },
+    {
+      "path": "tests/release/run_application_compatibility.py",
+      "sha256": "9d7459227e4baf5d8ba472f900a1655f00f800cbaeb283c7e4571c4bd6d56cd8",
+      "git_blob": "55e7a6967887ddc0adb39fdecf0cfd8912a65691"
+    },
+    {
+      "path": "backend/alembic/versions/0055_v1_comment_binding.py",
+      "sha256": "abd075dccae72eba9f23a002555e2534c91066ee12b0eefe011e48fb3c204e9d",
+      "git_blob": "decbf540f441fe8ccaec291c63913d0ece451b7f"
+    },
+    {
+      "path": "backend/alembic/versions/0056_v1_comment_operator.py",
+      "sha256": "b324cccd57225b5c2260cd488b308f0274b55be68123c0ece33d80175d41c7be",
+      "git_blob": "8988e56e4866f7cb614c36c10db681227b4c27ce"
+    },
+    {
+      "path": "docs/v1-execution-status.md",
+      "sha256": "e450b30bb6879b4ef90b1021713764461c05048aa8f6bb2b972803cd02ed4869",
+      "git_blob": "513c405085b3b987950209ca200b1768785b9d3d"
+    },
+    {
+      "path": "docs/v1-wave7-producer-validation.md",
+      "sha256": "7ebe12982f088a77be8ec91bba7ab0117239ed0962e6a566d2de8a9c792c7781",
+      "git_blob": "2a265ba36b68834c5924345f03074479b30c1647"
+    }
+  ]
+}
