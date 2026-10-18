@@ -106,6 +106,17 @@ async def test_global_test_gate_revoked_during_final_projection_withholds_dispat
         actor_user_id=uid, actor_session_id=sid, actor_auth_version=0, connection_version=1)
     db = SimpleNamespace(scalar=AsyncMock(return_value=auth))
     monkeypatch.setattr(settings, 'V1_CHANNEL_TESTS_ENABLED', True)
+    for name, value in {
+        'V1_WHATSAPP_ONBOARDING_ENABLED': True,
+        'WHATSAPP_EMBEDDED_APP_ID': '123', 'WHATSAPP_EMBEDDED_CONFIG_ID': '456',
+        'WHATSAPP_EMBEDDED_APP_SECRET': 'synthetic-matching-only',
+        'WHATSAPP_APP_SECRET': 'synthetic-matching-only',
+        'WHATSAPP_EMBEDDED_GRAPH_VERSION': 'v26.0',
+        'WHATSAPP_WEBHOOK_VERIFY_TOKEN': 'synthetic-only',
+        'CHANNEL_ENCRYPTION_KEY': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+        'PUBLIC_BASE_URL': 'https://synthetic-review.example.com',
+    }.items():
+        monkeypatch.setattr(settings, name, value)
     monkeypatch.setattr(authority, 'current_provenance', AsyncMock())
     monkeypatch.setattr(authority, 'current_owner_session', AsyncMock())
     async def latest_projection(*args, **kwargs):
@@ -127,7 +138,7 @@ async def test_fixed_reply_authorization_never_outlives_its_verified_token(monke
     row = SimpleNamespace(id=test_id, business_id=bid, actor_user_id=uid, actor_session_id=sid,
         actor_auth_version=0, connection_version=1, phone_number_id='12345',
         recipient_contact_id=contact_id, inbound_message_id=inbound_id,
-        cancelled_at=None, expires_at=at+timedelta(minutes=5))
+        cancelled_at=None, expires_at=at+timedelta(minutes=5), inbound_provider_at=at)
     account = SimpleNamespace(seller_id=bid, phone_number_id='12345')
     contact = SimpleNamespace(id=contact_id, opted_out=False, last_inbound_at=at)
     token_expiry = at + timedelta(seconds=10)
