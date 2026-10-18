@@ -1,0 +1,20 @@
+✔ canonical command fingerprint matches Python with mixed language, emoji and case-sensitive frozen text (2.559ms)
+✔ well-shaped old acknowledgement cannot confirm a different exact command or target (0.209041ms)
+✔ exact receipt replay is a separate acknowledgement and never delivery evidence (0.047666ms)
+✔ recovery cannot change method, route, business, target or review confirmation (0.150625ms)
+✔ recovery rule scopes remain explicit and cannot be reconstructed from arbitrary URL/body (0.136875ms)
+✔ legacy wildcard rule is inspectable/disableable but is never admitted as a new native rule scope (0.066208ms)
+✔ old page fence deletes only its owned journal, not a replacement session or another business (1.970209ms)
+✔ ordinary read failure scrubs stale rows/editor and blocks fresh writes, preserving exact pending intent (0.824334ms)
+✔ unclassified409 after POST keeps same key/body and disables new work (0.539959ms)
+✔ only typed pre-mutation stale rejection releases a command and still requires fresh facts (0.412375ms)
+✔ older successful session guard cannot dispatch after a newer role downgrade (0.916541ms)
+✔ back link uses mounted native business picker route (0.0835ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.45075

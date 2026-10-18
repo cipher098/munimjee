@@ -1,0 +1,25 @@
+{
+  "checks": 15,
+  "passed": [
+    "real native signup and shared-mounted operator page use Secure loopback cookies",
+    "real signed comment receipt plus sole worker preserves split public acceptance and private uncertainty",
+    "unknown review has explicit confirmation and never offers resend or delivery certification",
+    "activated static-copy withholding is visible and closes without source rebind",
+    "signed inferred WhatsApp follow-up appears once with an honest manual reason and no second outbox",
+    "native disabled rule save is real and preview cannot claim it is eligible",
+    "lost committed rule response survives reload and explicitly replays exact key/body once",
+    "well-shaped old200 acknowledgement remains uncertain until same original command confirms",
+    "unclassified409 after actual commit retains the exact pending command",
+    "stale expected rule fingerprint rejects before mutation and cannot overwrite concurrent facts",
+    "activated product cannot enable static copy or create an accepted command",
+    "failed current list read clears stale rows and prevents fresh writes until a successful refresh",
+    "current role downgrade beats an older successful session guard and removes operator controls",
+    "same-user replacement session scrubs private DOM and preserves only the newer journal",
+    "zero external requests, zero page errors and unchanged synthetic provider attempts"
+  ],
+  "external_requests": 0,
+  "page_errors": [],
+  "tls": "ephemeral self-signed loopback; ignoreHTTPSErrors, not provider/public TLS evidence",
+  "composition": "actual shared app.main and P01 real0056; no manual router mount",
+  "provider": "synthetic private unknown/public accepted; WA sender never called"
+}
