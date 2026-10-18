@@ -27,7 +27,7 @@ const attempt=status=>({contract_version:'whatsapp-signup.v1',business_id:bid,at
   choices:status==='awaiting_selection'?[{choice_id:cid,display_name:'Synthetic account',phone_hint:'••12345'}]:[],
   setup:{subscription:'not_started',registration:'not_started',billing:'external_action_required'},provider_approval:'not_evaluated'});
 const testView=status=>({contract_version:'whatsapp-test.v1',business_id:bid,test_id:tid,connection_version:1,status,recipient_hint:null,
-  inbound_observed_at:null,message_id:null,provider_delivery_observed_at:null,delivery_confirmed:false,is_current_generation:true,proof_source:'synthetic_fixture',message:'Synthetic test only'});
+  inbound_observed_at:null,message_id:null,provider_delivery_observed_at:null,delivery_confirmed:false,recorded_effect_status:null,can_prepare_new_test:false,is_current_generation:true,proof_source:'synthetic_fixture',message:'Synthetic test only'});
 const ready={contract_version:'whatsapp-self-service.v1',business_id:bid,onboarding_available:true,connection_version:1,local_status:'paused',
   blockers:[],provider_approval:'not_evaluated',current_generation_test:null};
 const receipt=(body,action,resourceId,choiceId=null)=>({business_id:bid,idempotency_key:body.idempotency_key,action,expected_connection_version:body.expected_connection_version??1,resource_id:resourceId,selected_choice_id:choiceId});
@@ -133,7 +133,7 @@ test('a delayed owner session cannot revive a page ended by a newer401',async()=
 test('SDK code exchange occurs once and late FINISH data still reaches verified account review',async()=>{
   const f=await fixture();await prepare(f);await f.get('open-meta').fire('click');
   f.login({authResponse:{code:'synthetic-never-real-code'}});
-  await wait(()=>f.get('signup-status').textContent.includes('awaiting assets'));
+  await wait(()=>f.get('signup-status').textContent.includes('Review the authorized account'));
   await f.message({origin:'https://attacker.facebook.com',data:JSON.stringify({type:'WA_EMBEDDED_SIGNUP',event:'FINISH',data:{waba_id:'456',phone_number_id:'12345',business_id:'789'}})});
   assert(!f.calls.some(v=>v.path.endsWith('/assets')));
   await f.message({origin:'https://www.facebook.com',data:JSON.stringify({type:'WA_EMBEDDED_SIGNUP',event:'FINISH',data:{waba_id:'456',phone_number_id:'12345',business_id:'789'}})});
@@ -150,8 +150,39 @@ test('unknown account selection erases PIN and never persists or replays it on r
   f.get('account-choice').value=cid;f.get('registration-pin').value='123456';f.get('account-confirmed').checked=true;
   f.apiHook(async()=>{throw Error('Synthetic dropped selection');});await f.get('selection-form').fire('submit');
   await wait(()=>f.get('page-error').textContent);await wait(()=>f.get('registration-pin').value==='');
+  assert.equal(f.get('cancel-action').hidden,true);
+  assert.equal(f.get('connection-status').textContent,'Current connection needs a fresh check');
+  assert.equal(f.get('page-error').textContent,'The result could not be confirmed. Check saved state before another action.');
   const raw=[...f.stored.values()].join('');assert(!raw.includes('123456'));assert(!raw.includes('registration_pin'));
   const reloaded=await fixture({entries:f.stored});assert(!reloaded.calls.some(v=>v.options.method==='POST'));assert.equal(reloaded.get('retry-action').hidden,true);
+});
+
+test('explicit new-test review only reads the old receipt and resets recipient permission',async()=>{
+  const f=await fixture();f.get('recipient-authorized').checked=true;await f.get('challenge-form').fire('submit');
+  await wait(()=>f.get('private-command').value);
+  const previous={...testView('stale_connection'),is_current_generation:false,message_id:randomUUID(),
+    recorded_effect_status:'delivered',can_prepare_new_test:true};
+  f.apiHook(async path=>path.endsWith('/self-service')?{...ready,connection_version:2}:structuredClone(previous));
+  await f.get('check-test').fire('click');await wait(()=>f.get('prepare-new-test').hidden===false);
+  const count=f.calls.filter(v=>v.options.method==='POST').length;
+  await f.get('prepare-new-test').fire('click');await wait(()=>f.get('recipient-authorized').checked===false);
+  assert.equal(f.calls.filter(v=>v.options.method==='POST').length,count);
+  assert.equal(JSON.parse([...f.stored.values()][0]).test,null);
+  assert.equal(f.get('private-command').value,'');assert.equal(f.get('challenge-fields').disabled,false);
+});
+
+for(const effect of ['queued','sending','unknown'])test('stale '+effect+' cannot retire its journal or prepare another test',async()=>{
+  const f=await fixture();f.get('recipient-authorized').checked=true;await f.get('challenge-form').fire('submit');
+  await wait(()=>f.get('private-command').value);
+  const previous={...testView('stale_connection'),is_current_generation:false,message_id:randomUUID(),
+    recorded_effect_status:effect,can_prepare_new_test:false};
+  f.apiHook(async path=>path.endsWith('/self-service')?{...ready,connection_version:2}:structuredClone(previous));
+  await f.get('check-test').fire('click');await wait(()=>f.get('test-status').textContent.includes('earlier connection generation'));
+  assert.equal(f.get('prepare-new-test').hidden,true);
+  if(effect==='unknown')assert(f.get('test-status').textContent.includes('outcome is uncertain'));
+  const before=[...f.stored.values()][0],count=f.calls.filter(v=>v.options.method==='POST').length;
+  await f.get('prepare-new-test').fire('click');
+  assert.equal([...f.stored.values()][0],before);assert.equal(f.calls.filter(v=>v.options.method==='POST').length,count);
 });
 test('private challenge and exact recipient stay outside recovery, unknown send keeps the same local command',async()=>{
   const f=await fixture();f.get('recipient-authorized').checked=true;await f.get('challenge-form').fire('submit');

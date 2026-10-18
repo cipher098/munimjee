@@ -46,7 +46,7 @@ def test_private_challenge_response_does_not_repr_raw_command():
     private_command=challenge_command('synthetic-only',uuid4(),binding)
     view={'contract_version':'whatsapp-test.v1','business_id':str(binding.business_id),'test_id':str(uuid4()),
         'connection_version':0,'status':'awaiting_recipient','recipient_hint':None,'inbound_observed_at':None,
-        'message_id':None,'provider_delivery_observed_at':None,'delivery_confirmed':False,
+        'message_id':None,'provider_delivery_observed_at':None,'delivery_confirmed':False,'recorded_effect_status':None,'can_prepare_new_test':False,
         'is_current_generation':True,'proof_source':'not_recorded','message':'Waiting for intended recipient'}
     result=TestChallengeView(contract_version='whatsapp-test-challenge.v1',test=view,command=private_command,receipt={
         'business_id':binding.business_id,'idempotency_key':uuid4(),'action':'test_start','expected_connection_version':0,
