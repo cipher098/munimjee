@@ -1,0 +1,27 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.selectOption: Timeout 6000ms exceeded.
+Call log:
+[2m  - waiting for locator('#business-picker')[22m
+[2m    - locator resolved to <select id="business-picker">…</select>[22m
+[2m  - attempting select option action[22m
+[2m    2 × waiting for element to be visible and enabled[22m
+[2m      - element is not visible[22m
+[2m    - retrying select option action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible and enabled[22m
+[2m      - element is not visible[22m
+[2m    - retrying select option action[22m
+[2m      - waiting 100ms[22m
+[2m    12 × waiting for element to be visible and enabled[22m
+[2m       - element is not visible[22m
+[2m     - retrying select option action[22m
+[2m       - waiting 500ms[22m
+
+    at /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-onboarding-followup/backend/tests/browser/native-workspace-privacy.mjs:42:15 {
+  name: 'TimeoutError'
+}
+
+Node.js v26.0.0

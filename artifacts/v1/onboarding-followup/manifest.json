@@ -1,0 +1,36 @@
+{
+  "runtime_source": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+  "actual_revision": "0055_v1_comment_binding",
+  "focused": {
+    "passed": 190,
+    "synthetic_provider_security_transport": 170,
+    "native_migrated_http": 20,
+    "skipped": 0
+  },
+  "mounted_checks": 6,
+  "controlled_http_only_checks": 3,
+  "provider_calls": 0,
+  "capabilities_enabled": false,
+  "files": {
+    "artifacts/v1/onboarding-followup/controlled-final-source.txt": "784f24a89892491250eb60a96e00666816441fb5c03f68bb7ccfbe125f7b2666",
+    "artifacts/v1/onboarding-followup/controlled-final.txt": "784f24a89892491250eb60a96e00666816441fb5c03f68bb7ccfbe125f7b2666",
+    "artifacts/v1/onboarding-followup/controlled-hardened.txt": "784f24a89892491250eb60a96e00666816441fb5c03f68bb7ccfbe125f7b2666",
+    "artifacts/v1/onboarding-followup/controlled-initial.txt": "a765cac0aec7d5ffe36980505c2f3eab4c8b747032696c69d42d589dbab26690",
+    "artifacts/v1/onboarding-followup/final-focused.txt": "b6f2f5c8e9fd01c4fe5eac2027673e368ef372fc3e1660ee138aa4aac5d4cf04",
+    "artifacts/v1/onboarding-followup/final-focused.xml": "c6efa976e5ee0f517ee05796399605cf3e13b8e024bf88bcd760f1405efbc88e",
+    "artifacts/v1/onboarding-followup/mobile-access-ended.png": "0a2d43b41d78bd4ec631a942c826ebb2994e5cd4436411beb5c5b8975a4a3c3b",
+    "artifacts/v1/onboarding-followup/mounted/browser-results.json": "c9d892fedc73d13c747dc4125a4e24e24dcd7389a12749781d089820f039a5d1",
+    "artifacts/v1/onboarding-followup/mounted/mobile-owner-progress.png": "eeb5ea231c9cdb3e8f427a93898bd776894dd212776d454030e8dc302742fe29",
+    "artifacts/v1/onboarding-followup/mounted/mobile-session-ended.png": "d23ce721af1f13b56f1a8987a113db8412b59f8c31ea426ba628e280c82fc67d",
+    "artifacts/v1/onboarding-followup/mounted/mobile-viewer-progress.png": "f39046010668f03b21df4e09afc3cc0785d87039c3be7614e342ddf0ecd369e1",
+    "artifacts/v1/onboarding-followup/mounted-initial.txt": "136cc2907800d0655d6ad00f9b03c04ed2c6974ca4758acbb405699aa9ca09b4",
+    "artifacts/v1/onboarding-followup/native-actual-initial.txt": "502f1343fde0ad325f4fc6a62decceeb9285c460c5c47e777d586f034af7a47f",
+    "artifacts/v1/onboarding-followup/native-actual-initial.xml": "aea2cdd33b6db0ce4841e3234c646490c846ff72ed9c1b7e5821580a2ef74dd0",
+    "artifacts/v1/onboarding-followup/native-workspace-controlled.json": "03bbb5c6189ba8156be4fbf61e0465030472ff477dbcab0e22987c0c1a37943f",
+    "artifacts/v1/onboarding-followup/provider-compat-final-delta.txt": "9729cbf5ff9b8215c6da3bfd167b1f616740907a292008d80ed1d6dd6f8ac8c2",
+    "artifacts/v1/onboarding-followup/provider-compat-final-green.txt": "612bce2164ecc8dbbbc89c9dbfad6945dad0b766a1a4ff6c70eadad52cd7b90a",
+    "artifacts/v1/onboarding-followup/provider-compat-final.txt": "86579f64e034567ae79d12f54c4477e69b685a98a4378005709ca4c25c6f01b5",
+    "artifacts/v1/onboarding-followup/provider-compat-pure.txt": "fe26eaf4426c940ed6142e7a67a6159424184737648d054f57fcaea9a58e6a82",
+    "artifacts/v1/onboarding-followup/provider-matched-page-before-fix.txt": "681a82abe8d92d39b258417f33db56837a01dce0b6af8dd646584b5832ab6883"
+  }
+}
