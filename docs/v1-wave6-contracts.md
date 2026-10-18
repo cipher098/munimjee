@@ -23,6 +23,18 @@ does not declare release acceptance or permit live provider/customer actions.
   and isolated release tooling. Peers do not edit these shared files.
 - Remote owns SEO/sitemap/reviewed legacy redirects and independent QA/release
   followup. No CSV or migration ownership is delegated to remote.
+- Catalogue next owns V10 activity instrumentation, reserved0054 after real0053.
+  Default-off V1_ACTIVITY_ENABLED and per-business off/test/live; only a current
+  native owner may explicitly authorize live first-party measurement. Minimal
+  observed-browser contexts/events are not people or marketing attribution.
+  Missing/expired/foreign optional proof never blocks checkout or promotes it to
+  measured production; exact financial retries never backfill classification.
+  Raw events retain at most90 days with explicit bounded cleanup; immutable order
+  classification/link provenance stays separate. Source/coverage/test/bot limits
+  remain visible. Shared shell/order/IG/WA hooks require separate coordination.
+- Remote next owns a seller-authorized Instagram retrieval adapter in a separate
+  module. Integrator owns connection-generation rechecks and guarded original-byte
+  persistence in shared import services, coordinated after CSV; no blind overwrite.
 
 Release tooling remains on an isolated branch. Compatibility is explicitly
 reviewed for0052; CSV0053 requires its own compatibility update before execution.
