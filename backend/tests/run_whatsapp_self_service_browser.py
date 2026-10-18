@@ -28,17 +28,14 @@ def source_manifest(root):
     return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in paths if p.is_file()}
 
-async def main():
-    root = Path(__file__).resolve().parents[2]
-    output = root/'artifacts/v1/whatsapp-self-service/mounted'
-    output.mkdir(parents=True, exist_ok=True)
-    before = source_manifest(root)
+async def journey(root):
     nonce = secrets.token_hex(24)
     async with migrated_database() as engine:
         async with engine.connect() as db:
             actual = await db.scalar(text('SELECT version_num FROM alembic_version'))
             assert actual == current_migration_head()
             print('Actual Alembic head:', actual, flush=True)
+            print('Actual PostgreSQL:', await db.scalar(text('SHOW server_version')), flush=True)
         with tempfile.TemporaryDirectory(prefix='v1-wa-setup-loopback-tls-') as directory:
             key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
             subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'synthetic-loopback-only')])
@@ -71,10 +68,22 @@ async def main():
                 if server.returncode is None:
                     server.terminate()
                 await server.wait()
-    after = source_manifest(root)
-    (output/'source-manifest.json').write_text(json.dumps({'before': before, 'after': after}, indent=2)+'\n')
-    assert before == after, 'Application/harness source changed during mounted proof'
-    print(f'Stable application/harness hashes: {len(before)}', flush=True)
+
+async def main():
+    root = Path(__file__).resolve().parents[2]
+    output = root/'artifacts/v1/whatsapp-self-service/mounted'
+    output.mkdir(parents=True, exist_ok=True)
+    before = source_manifest(root)
+    (output/'source-before.json').write_text(json.dumps(before, indent=2)+'\n')
+    try:
+        await journey(root)
+    finally:
+        # Preserve hashes even when the first browser run fails; never replace
+        # a failed result with a success or leave a live server/TLS directory.
+        after = source_manifest(root)
+        (output/'source-manifest.json').write_text(json.dumps({'before': before, 'after': after}, indent=2)+'\n')
+        assert before == after, 'Application/harness source changed during mounted proof'
+        print(f'Stable application/harness hashes: {len(before)}', flush=True)
 
 if __name__ == '__main__':
     asyncio.run(main())
