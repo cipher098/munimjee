@@ -8,7 +8,7 @@ const base='https://127.0.0.1:8171',output=new URL('../../../artifacts/v1/whatsa
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const nonce=process.env.WA_SETUP_FIXTURE_NONCE,errors=[],external=[];
-let checks=0,sdkLoads=0,privatePosts=0;
+let checks=0,sdkLoads=0,privatePosts=0,heldOldDelivered=null;
 const sdk=`window.FB={init:function(v){window.__syntheticSDKConfig=v;},login:function(callback,options){window.__syntheticSDKLogin=options;window.__syntheticSDKCallback=callback;}};`;
 const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:1100}});
 await context.route('**/*',async route=>{
@@ -131,10 +131,11 @@ try{
 
   // Hold an old valid private GET, then replace this same user's actual native
   // session. Controlled input canaries test physical erasure, not screenshot masks.
-  let releaseOld,oldEntered;const oldWait=new Promise(resolve=>{releaseOld=resolve;}),oldStarted=new Promise(resolve=>{oldEntered=resolve;});
+  let releaseOld,oldEntered,oldFinished;const oldWait=new Promise(resolve=>{releaseOld=resolve;}),oldStarted=new Promise(resolve=>{oldEntered=resolve;}),oldDone=new Promise(resolve=>{oldFinished=resolve;});
   await page.route('**'+endpoint+`/tests/${testId}`,async route=>{
     const response=await route.fetch();oldEntered();await oldWait;
-    try{await route.fulfill({response});}catch(_){} // Ended page aborts its own request.
+    try{await route.fulfill({response});heldOldDelivered=true;}catch(_){heldOldDelivered=false;}
+    finally{oldFinished();} // Ended AbortController may cancel, rather than deliver, this GET.
   });
   await page.getByRole('button',{name:'Check test result',exact:true}).click();await oldStarted;
   await page.evaluate(value=>{document.querySelector('#private-command').value=value;document.querySelector('#registration-pin').value='123456';},privateCommand);
@@ -144,7 +145,7 @@ try{
   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect(page.locator('#access-needed')).toBeVisible();
   const replacementSecretsEmpty=await page.evaluate(()=>document.querySelector('#private-command').value===''&&document.querySelector('#registration-pin').value==='');
   assert.equal(replacementSecretsEmpty,true);await expect(page.locator('#logout')).toBeHidden();checks++;
-  releaseOld();await page.unroute('**'+endpoint+`/tests/${testId}`);
+  releaseOld();await oldDone;await page.unroute('**'+endpoint+`/tests/${testId}`);
   await page.evaluate(()=>{for(const id of ['consent-form','send-form'])document.getElementById(id).dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
   await page.waitForTimeout(100);assert.equal(privatePosts,postsBeforeReplacement);
   assert.equal(await page.locator('#test-status').textContent(),'');await expect(page.locator('#workspace')).toBeHidden();checks++;
@@ -162,6 +163,7 @@ try{
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks++;
   await writeFile(new URL('result.json',output),JSON.stringify({checks,actual_main_router:true,synthetic_provider:true,synthetic_sdk:true,
     synthetic_sdk_requests_fulfilled:sdkLoads,external_network_attempts:external.length,
+    held_old_get_handler_finished:true,held_old_get_route_fulfilled:heldOldDelivered,ended_abort_may_cancel_held_get:true,
     actual_meta_sdk_network_requests:0,page_errors:errors.length,real_meta_consent:false,live_delivery_proved:false},null,2)+'\n');
   console.log(`PASS ${checks} actual-mounted native/0057 browser checks; SDK/provider synthetic, real Meta/delivery not proved`);
 }finally{await browser.close();}
