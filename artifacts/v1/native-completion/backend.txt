@@ -1,0 +1,342 @@
+.....ssssssssssssssssssssssssss.............ssssssssssssssssssssssssssss [  5%]
+sssssssssssssssssssssssssssssssssssssssssssssssssssssssssss............. [ 10%]
+.....s.....ssssssssssssss..ssssss.ssssssssssssssssssssssssssssssssssssss [ 16%]
+ssss.ssssssssssssss..................................................... [ 21%]
+................ssssssssssssssssssss.sss.sssssssssss.................... [ 27%]
+....ssssssssssssssssssss.......ss....................................... [ 32%]
+.............................ssssssssssssssssssss....................... [ 38%]
+............ssssssss.....................sssssssssssss.sssss............ [ 43%]
+....................................sssssssssss......................... [ 49%]
+.............................................................sssssssssss [ 54%]
+sssssssssssss.ssss.............................................sssssss.s [ 59%]
+ssssssssssssssssssssssss..............................ssssssss.......... [ 65%]
+........................................................................ [ 70%]
+............................ss..........................sssssssss....... [ 76%]
+........................................sssssssssssssssssssssssssss..... [ 81%]
+...............................................................s........ [ 87%]
+............sssssssssss.ssssssssssss.......sssss........................ [ 92%]
+..........................................ss.sssssssssssssss.sssss...... [ 98%]
+..ssssssssssssssssssssssss                                               [100%]
+=============================== warnings summary ===============================
+../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/testclient.py:41
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+tests/test_seller_onboarding.py: 1 warning
+tests/test_v1_identity.py: 15 warnings
+  /Users/user/Documents/ChatGPT/munimjee-wave3-qa/.venv-qa-wave3/lib/python3.12/site-packages/jose/jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = timegm(datetime.utcnow().utctimetuple())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee/artifacts/v1/native-completion/backend.xml -
+=========================== short test summary info ============================
+SKIPPED [7] backend/tests/test_catalogue_boundaries.py:89: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:122: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:131: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_catalogue_boundaries.py:159: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:184: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_catalogue_boundaries.py:200: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_catalogue_boundaries.py:216: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:233: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:242: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_boundaries.py:255: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_catalogue_workspace.py:49: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_catalogue_workspace.py:65: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:97: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:116: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_channel_operator_db.py:129: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_channel_operator_db.py:157: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_channel_operator_db.py:185: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:209: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:231: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:242: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:254: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:280: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:305: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_channel_operator_db.py:332: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:352: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_channel_operator_db.py:363: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:404: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:426: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:454: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_channel_operator_db.py:485: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:499: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_channel_operator_db.py:511: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:66: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:96: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_checkout_sessions_api.py:125: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_checkout_sessions_api.py:153: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_checkout_sessions_api.py:177: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:190: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:221: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_checkout_sessions_api.py:239: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_checkout_sessions_api.py:277: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_checkout_sessions_api.py:305: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:342: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:361: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:375: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_checkout_sessions_api.py:398: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:418: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_checkout_sessions_api.py:439: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_checkout_sessions_api.py:461: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_checkout_sessions_api.py:482: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_checkout_sessions_api.py:506: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_checkout_sessions_api.py:529: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_claude_decide.py:169: No cassette at /Users/user/Documents/ChatGPT/munimjee/backend/tests/cassettes/decide_greeting.yaml. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest
+SKIPPED [1] backend/tests/test_comment_automation.py:66: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_comment_automation.py:82: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:97: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:107: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:122: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:132: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:149: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:159: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:179: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:193: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:265: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:285: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:299: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:311: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:320: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_comment_automation.py:343: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:70: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:93: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [7] backend/tests/test_commerce.py:105: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:125: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:153: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:167: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:179: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:193: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:209: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:226: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:239: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:260: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:279: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:293: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce.py:305: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:54: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:61: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_commerce_safeguards.py:66: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:82: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:93: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:102: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_commerce_safeguards.py:127: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:157: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:170: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:177: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:184: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:191: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:199: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:213: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:223: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:231: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:264: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:277: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:290: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_commerce_safeguards.py:304: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:313: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_commerce_safeguards.py:323: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_safeguards.py:341: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_whatsapp.py:18: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_whatsapp.py:42: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_commerce_whatsapp.py:56: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:58: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:86: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:99: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:114: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [9] backend/tests/test_import_catalogue.py:131: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [7] backend/tests/test_import_catalogue.py:160: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:192: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:226: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:246: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:334: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:351: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue.py:362: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue_schema.py:48: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_import_catalogue_schema.py:60: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_catalogue_schema.py:70: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_import_workspace.py:46: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_import_workspace.py:65: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:68: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:81: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:98: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:117: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:139: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:158: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:176: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:186: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:199: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:219: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_instagram_ingress_db.py:257: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:295: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_instagram_ingress_db.py:323: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:361: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:389: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:413: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:433: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_db.py:451: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_instagram_ingress_worker.py:155: Coordinator-allocated TEST_REDIS_URL required
+SKIPPED [1] backend/tests/test_instagram_ingress_worker.py:181: Coordinator-allocated TEST_REDIS_URL required
+SKIPPED [1] backend/tests/test_parcel_tracking.py:86: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:109: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:119: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:131: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:141: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:162: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:189: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:216: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:234: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:251: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:263: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:285: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:306: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:324: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_parcel_tracking.py:342: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_parcel_tracking.py:376: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:322: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:341: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:384: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:420: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:458: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:483: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:513: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_persistent_conversation.py:544: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_public_payment_projection.py:14: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:153: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:161: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_razorpay_checkout.py:187: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:201: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:218: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:237: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:257: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:282: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_razorpay_checkout.py:306: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_scenarios.py:166: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_storefront_publication.py:62: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_storefront_publication.py:92: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_storefront_publication.py:108: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_storefront_publication.py:120: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_storefront_publication.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_storefront_publication.py:155: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_test_safety.py:330: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_test_safety.py:350: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:65: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:93: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:136: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:154: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:181: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_v1_auth_onboarding.py:191: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:217: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:240: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:267: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:282: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_onboarding.py:312: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_sessions.py:53: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_v1_auth_sessions.py:63: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_sessions.py:83: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_sessions.py:96: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_v1_auth_sessions.py:122: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_auth_sessions.py:142: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_catalogue_db.py:53: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_catalogue_db.py:72: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_catalogue_db.py:85: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_catalogue_db.py:131: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_v1_catalogue_db.py:149: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:75: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:92: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:120: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:148: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:165: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_v1_checkout.py:189: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:204: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:218: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:235: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:269: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout.py:285: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_v1_checkout.py:300: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:71: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_v1_checkout_api.py:119: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:133: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:151: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:187: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:219: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:238: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_checkout_api.py:265: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_identity_db.py:75: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_identity_db.py:99: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_v1_identity_db.py:117: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_identity_db.py:135: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_identity_db.py:167: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_identity_db.py:185: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_import_integration.py:42: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_import_integration.py:100: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_import_jobs_db.py:52: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_import_jobs_db.py:70: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_import_jobs_db.py:101: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_v1_import_jobs_db.py:114: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [20] backend/tests/test_v1_mutation_boundary.py:16: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_mutation_boundary.py:82: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_mutation_boundary.py:113: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [5] backend/tests/test_v1_mutation_boundary.py:146: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_publication.py:89: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_settings.py:87: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_settings.py:112: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_v1_theme_settings.py:123: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_settings.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_settings.py:153: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [2] backend/tests/test_v1_theme_settings.py:166: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_theme_settings.py:181: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [8] backend/tests/test_v1_theme_settings.py:220: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_v1_theme_settings.py:264: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_wave2_boundaries.py:102: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_v1_wave2_boundaries.py:125: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [3] backend/tests/test_v1_wave2_boundaries.py:140: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:77: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:88: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:120: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:135: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:145: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:155: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:174: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:194: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:209: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:221: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:237: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:246: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:260: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:266: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:275: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:282: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:296: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:326: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:335: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:362: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:380: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:396: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:439: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:457: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:468: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:497: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:520: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:533: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:543: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [4] backend/tests/test_whatsapp.py:568: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:593: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:605: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:622: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:654: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [6] backend/tests/test_whatsapp.py:674: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:693: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:709: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+SKIPPED [1] backend/tests/test_whatsapp.py:719: DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1
+838 passed, 484 skipped, 19 warnings in 2.75s
