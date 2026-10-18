@@ -7,7 +7,9 @@
     "df_observed_available": "4.8GiB",
     "df_capacity": "98%",
     "current_available_bytes": 4975849472,
-    "volume": "/System/Volumes/Data"
+    "volume": "/System/Volumes/Data",
+    "final_available_bytes": 5165842432,
+    "final_read_at_utc": "2026-10-18T11:01:32.994317+00:00"
   },
   "docker": {
     "client_path": "/Users/user/.docker/bin/docker",
