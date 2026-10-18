@@ -49,3 +49,23 @@ Fresh actual complete/mounted/image/release gates must identify the candidate
 head; prior0053 proof never silently accepts0054/0055. Physical devices, hosted
 billing/nativeamd64, provider approvals/canaries, private ParcelDesk deployment
 and real template delivery remain separate open gates.
+
+
+## Next isolated repairs
+
+- Catalogue: channel API/service/page privacy and final native authorization,
+  optional receipt-first WA generation CAS, compatible legacy WA credential/config
+  writers. Canonical tenant locking is Business→Seller→control→WA; missing legacy
+  Business is never created. Port8169 reserved; payment_w6 only by explicit serial
+  lease. No DDL/shared native client writes.
+- Integrator: native workspace lifecycle/read guards, derived local readiness,
+  profile/team final staged-write boundary, conservative documentary IG parser
+  compatibility. Current actual provider capability flags stay false.
+- Social: reserved0056_v1_comment_operator after0055, immutable tenant command and
+  review ledgers, native capability-scoped rule/review UI and typed same-transaction
+  WA inferred-context queue. No sender/retry/rebind or historical effect rewrite.
+  Shared main/model/assets/nav/cleanup remain integrator-owned. Native operator
+  feature and its actual-chain/browser gates are not yet complete.
+
+Current frozen0055 full run3820d14:2325 passed,2 failed,8 skipped in982.14s;
+fixture corrections and a new full gate remain required. Raw failures preserved.

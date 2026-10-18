@@ -4,6 +4,7 @@ from datetime import timedelta
 from uuid import uuid4
 import pytest
 from sqlalchemy import func,select
+from sqlalchemy.exc import IntegrityError
 from app.models.activity_v1 import ActivitySource
 from app.models.instagram_ingress import InstagramIngress
 from app.models.whatsapp import WhatsAppContact,WhatsAppMessage
@@ -113,7 +114,13 @@ async def test_comment_source_requires_both_action_and_event_tenant(sessions,mon
         foreign_event=CommentEvent(seller_id=foreign,comment_id=uuid4().hex,media_id='synthetic',actor_id='private',text='private-comment',status='queued')
         db.add_all([own_event,foreign_event]);await db.flush()
         own=CommentAction(seller_id=bid,event_id=own_event.id,kind='private',body='private-reply-marker')
-        bad=CommentAction(seller_id=bid,event_id=foreign_event.id,kind='private',body='foreign-private-reply-marker')
-        db.add_all([own,bad]);await db.flush()
+        db.add(own);await db.flush()
+        # 0055 now prevents constructing a cross-tenant action in the first place.
+        with pytest.raises(IntegrityError):
+            async with db.begin_nested():
+                db.add(CommentAction(seller_id=bid,event_id=foreign_event.id,kind='private',body='foreign-private-reply-marker'))
+                await db.flush()
+        foreign_action=CommentAction(seller_id=foreign,event_id=foreign_event.id,kind='private',body='foreign-private-reply-marker')
+        db.add(foreign_action);await db.flush()
         assert await activity.record_source(db,bid,'comment_action',own.id,origin='automated',is_new=True)
-        assert not await activity.record_source(db,bid,'comment_action',bad.id,origin='automated',is_new=True)
+        assert not await activity.record_source(db,bid,'comment_action',foreign_action.id,origin='automated',is_new=True)

@@ -2,24 +2,43 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave7 next composition
+## Wave7 current composition and pending gates
 
-Verified/pushed prior checkpoint `abab30a` is clean at actual0053:1950 passed,
-8 documented skips, plus native-import47/CSV74/SKU5 mounted and SEO28 mounted HTTP.
-Its locked315-file arm64 image passes3 offline modes; restore53 is separate.
-Current local0054 activity composition is in progress; no later-head full-suite
-acceptance is claimed. Owner final74 Python/19 mounted/28 Node is reviewed; the
-shared writer's6 new actual API checks pass, with mounted customer-shell and
-retention integration checks underway. Initial fixture/schema/package failures
-are retained rather than erased. Channel producers remain null/uninstalled.
+Prior verified/pushed checkpoint `abab30a` remains the accepted complete actual0053
+baseline: 1950 passed,8 documented skips, plus native-import47/CSV74/SKU5 mounted,
+SEO28 mounted HTTP, locked315-file arm64 image and separate restore53 evidence.
 
-Isolated owned-Instagram final467 checks and33 mounted checks pass on newdiskPG16
-at5be22d8/runtimec4794bb after independent integrity/authority findings were fixed.
-Central composition and documentary principal/type/unavailable-original questions
-remain separate; both provider capabilities stay false. Social0055 source/pure
-repair is active. Independent V01/V07 audit already reproduces channel privacy
-and provider-wait session races; exact fixes and wider readiness work remain open.
-Ownership and DB serialization are in `docs/v1-wave7-contracts.md`.
+The frozen current actual0055 composition `3820d14` completed on the new disk-backed
+PG16 lane with **2325 passed,2 failed,8 skipped in982.14s**. This is not acceptance.
+Both failures are fixture compatibility: the new tenant FK rejects a deliberately
+foreign comment-action row, and a V1-only nullable activity field was forwarded
+into the legacy checkout schema. Raw log/XML are retained in
+`artifacts/v1/integration/wave7/full-0055.*`; corrections retain the DB rejection
+assertion and the independent legacy-writer test. A fresh complete gate is required.
+No old tmpfs database is used.
+
+Activity0054 is composed with shared public-shell/new-order-only provenance and
+ungated bounded retention cleanup. Central actual customer-shell8 journeys and
+retention/startup13 checks pass; owner final74 Python/19 mounted/28 Node remains
+separate. Channel producers remain null/uninstalled. Owned Instagram through
+5141177 is composed: isolated final467 checks and33 mounted checks pass on new
+PG16; exact private-byte/provenance and late-authority findings are fixed. Both
+provider capability gates remain false. Documentary principal/type/missing-original
+compatibility followup is isolated and not covered by those prior results.
+
+Comment safety0055 is reviewed/composed through88882f7: owner92 checks plus a
+5-check tail (one overlapping expanded case) pass on actual0055. Native comment
+management and durable inferred-WA visibility are owned next in0056, not complete.
+Channel/session repairs and truthful onboarding readiness are isolated work in
+progress; confirmed provider-wait session-revocation failures and private-DOM
+retention have preserved repros. No later full-suite, runtime-image, release,
+provider entitlement or live-delivery acceptance is implied.
+
+DB-heavy work is serialized on disk-backed55443 only. Catalogue owns channel
+hardening and compatible legacy WA generation writers; integrator owns native
+workspace/readiness and composition; social owns0056 and independent review.
+Remote follow-up QA is unconfirmed/host unavailable; it is not credited as running.
+Exact ownership is in `docs/v1-wave7-contracts.md`.
 
 ## Wave6 verified bounded checkpoint
 

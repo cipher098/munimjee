@@ -206,7 +206,7 @@ async def test_disabled_policy_never_falls_back_to_legacy_writer(sessions):
     business, pid, ids = await seed(sessions, enabled=False)
     with pytest.raises(HTTPException):
         await place(sessions, business, checkout(ids[0]))
-    payload = CheckoutInput(**{**checkout(ids[0]).model_dump(exclude={"items"}), "items": [{"product_id": pid, "quantity": 1}]})
+    payload = CheckoutInput(**{**checkout(ids[0]).model_dump(exclude={"items", "activity_context_id"}), "items": [{"product_id": pid, "quantity": 1}]})
     async with sessions.begin() as db:
         store = await svc.lock_store(db, business)
         with pytest.raises(HTTPException) as exc:
