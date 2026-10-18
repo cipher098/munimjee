@@ -335,3 +335,20 @@ async def test_unencodable_comment_is_not_accepted_or_forwarded(scene,monkeypatc
     monkeypatch.setattr(policy,'context',AsyncMock(return_value=producer_context(scene)))
     assert await ingest_comment(db,'100',{'field':'comments','value':{'id':'200','media':{'id':'300'},'from':{'id':'400'},'text':text}},verified_source=True) is None
     assert db.inserted is None and not db.added
+
+
+@pytest.mark.asyncio
+async def test_actual_task_cancellation_after_provider_entry_persists_uncertainty(scene,monkeypatch):
+    db,provider=install(scene,monkeypatch)
+    entered=asyncio.Event();never=asyncio.Event()
+    async def sending(*args):
+        entered.set();await never.wait()
+    provider.side_effect=sending
+    task=asyncio.create_task(worker.dispatch_one(db,scene.action.id))
+    await asyncio.wait_for(entered.wait(),1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):await task
+    assert task.done() and scene.action.status=='unknown' and scene.action.finalized_at is not None
+    assert any(a.stage=='provider_result' and a.reason=='delivery_not_confirmed' for a in db.audits)
+    assert not await worker.dispatch_one(db,scene.action.id)
+    provider.assert_awaited_once()
