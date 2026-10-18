@@ -130,3 +130,21 @@ Two narrow onboarding harness improvements were sent to the owner/coordinator:
 These are test repeatability/fidelity improvements, not reasons to hide the real
 privacy/layout failures. A tiny committed owner followup will be inspected without
 changing production or enlarging the original browser workload.
+
+
+### Baseline onboarding followup reviewed
+
+Committed `a3a3d6651121276d6b4aa289d7980e24992da6c2` resolves the two
+nonblocking harness followups: source hashes are compared before browser launch
+with bounded repository-relative paths, and logout tests the real
+`munimjee.checkout.v1:synthetic` prefix. Nominal synthetic emails were also changed
+to `example.com` so they conform to native validators. Independent blob checks
+confirm the same 32 IDs/outcomes (22 pass, 10 red), unchanged `abab30a` native and
+formatter source, and exact runner/fixture hashes. No application failure was hidden,
+no new browser scenario was added, and this reviewer did not rerun the browser.
+
+The coordinator subsequently supplied a **separate** fetched snapshot
+`8ae97c2d57c0efda5a03a41a469bf9447739ee72` (runtime delta `52fdda8`). Its
+onboarding comparison will receive a distinct review record when committed.
+The baseline results above continue to describe `abab30a`. An unfetched local
+`789db95`/migration 0056 report is not this review's source or evidence.
