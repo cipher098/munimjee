@@ -81,8 +81,10 @@ async def confirm(db,actor,business_id,order_id,payload,*,authority=None):
     request_hash=digest({'order':order_id,'candidate_token':payload.candidate_token,'fingerprint':payload.expected_order_fingerprint,'confirmed':payload.confirmed})
     previous=await db.scalar(select(OrderParcelLink).where(OrderParcelLink.business_id==business_id,OrderParcelLink.idempotency_key==payload.idempotency_key))
     if previous:
-        if previous.order_id!=order_id or previous.request_hash!=request_hash:raise HTTPException(409,'This command was already used for different details')
+        if previous.actor_id!=actor.user_id or previous.order_id!=order_id or previous.request_hash!=request_hash:raise HTTPException(409,'This command was already used for different details')
         return previous,True
+    if await db.scalar(select(ParcelAudit.id).where(ParcelAudit.business_id==business_id,ParcelAudit.idempotency_key==payload.idempotency_key)):
+        raise HTTPException(409,'This command identity was already used by another parcel action')
     if payload.confirmed is not True:raise HTTPException(422,'Confirm the parcel and selected order before linking')
     try:
         candidate=jwt.decode(payload.candidate_token,settings.SECRET_KEY,algorithms=['HS256'])
@@ -91,8 +93,8 @@ async def confirm(db,actor,business_id,order_id,payload,*,authority=None):
     connector=await connector_for(db,business_id)
     if candidate['connector']!=str(connector.id) or candidate.get('connector_version')!=digest([connector.origin,connector.instance_id,connector.credential_ref]) or candidate['fingerprint']!=fingerprint(order) or payload.expected_order_fingerprint!=fingerprint(order):
         raise HTTPException(409,'The order changed. Review the order and label again.')
-    existing=await db.scalar(select(OrderParcelLink.id).where(OrderParcelLink.business_id==business_id,OrderParcelLink.state!='unlinked',or_(OrderParcelLink.order_id==order_id,and_(OrderParcelLink.connector_id==connector.id,OrderParcelLink.courier_id==candidate['courier'],OrderParcelLink.awb==candidate['awb']))))
-    if existing:raise HTTPException(409,'This order or parcel already has an active association. Review it before changing it.')
+    existing=await db.scalar(select(OrderParcelLink.id).where(OrderParcelLink.business_id==business_id,or_(OrderParcelLink.order_id==order_id,and_(OrderParcelLink.connector_id==connector.id,OrderParcelLink.courier_id==candidate['courier'],OrderParcelLink.awb==candidate['awb']))))
+    if existing:raise HTTPException(409,'This order or parcel already has tracking history. Use an explicit reviewed resume or replacement.')
     link=OrderParcelLink(id=uuid4(),business_id=business_id,order_id=order_id,connector_id=connector.id,actor_id=actor.user_id,
         idempotency_key=payload.idempotency_key,request_hash=request_hash,order_fingerprint=fingerprint(order),courier_id=candidate['courier'],awb=candidate['awb'])
     db.add(link)
@@ -129,7 +131,7 @@ async def notification_decision(db,link,milestone):
     db.add(ParcelNotification(business_id=link.business_id,link_id=link.id,milestone=milestone,decision=decision,reason=reason,outbox_id=message.id if message else None))
 
 
-async def reconcile_snapshot(db,link,snapshot):
+async def reconcile_snapshot(db,link,snapshot,*,notify=True):
     shipment=snapshot['shipment']
     if str(link.remote_id or shipment['id'])!=shipment['id'] or link.courier_id!=shipment['courier_id'] or link.awb!=shipment['awb']:
         raise ConnectorUnavailable('parcel_identity_changed')
@@ -165,7 +167,7 @@ async def reconcile_snapshot(db,link,snapshot):
     link.tracking_state,link.raw_status=new_state,shipment['status']
     link.checked_at=checked or link.checked_at;link.attempted_at=attempted or link.attempted_at
     link.error_code=shipment['error_code'];link.state='linked';link.revision+=1
-    if checked and not shipment['error_code'] and new_state in {'in_transit','out_for_delivery','delivered','returned'}:
+    if notify and checked and not shipment['error_code'] and new_state in {'in_transit','out_for_delivery','delivered','returned'}:
         await notification_decision(db,link,new_state)
 
 
@@ -212,7 +214,12 @@ async def process_link(db,link_id,*,adapter_factory=ParcelAdapter,force_refresh=
         if error:
             link.state='enrollment_unknown' if pending else 'linked';link.error_code=error[:64]
         elif result:
-            try:await reconcile_snapshot(db,link,result)
+            try:
+                reviewed_replacement=pending and bool(await db.scalar(select(ParcelAudit.id).where(ParcelAudit.link_id==link.id,ParcelAudit.business_id==link.business_id,ParcelAudit.action=='seller_replaced_link')))
+                await reconcile_snapshot(db,link,result,notify=not reviewed_replacement)
+                if reviewed_replacement:
+                    from app.services.parcel_reviews import baseline
+                    await baseline(db,link)
             except ConnectorUnavailable as exc:link.state,link.error_code='review_required',str(exc)[:64]
     await db.commit()
 
@@ -227,6 +234,8 @@ async def revalidate_notification(db,message,contact):
     except ValueError:raise HTTPException(409,'Invalid parcel update') from None
     link=(await db.execute(select(OrderParcelLink.order_id,OrderParcelLink.state,OrderParcelLink.tracking_state,OrderParcelLink.error_code,OrderParcelLink.connector_id).where(OrderParcelLink.id==link_id,OrderParcelLink.business_id==message.seller_id).execution_options(autoflush=False))).first()
     if not link or link.state!='linked' or link.error_code or link.tracking_state!=parts[2] or not await business_live(db,message.seller_id):raise HTTPException(409,'Parcel updates are paused or superseded')
+    review=(await db.execute(select(ParcelAudit.created_at,ParcelAudit.details).where(ParcelAudit.business_id==message.seller_id,ParcelAudit.link_id==link_id,ParcelAudit.action.in_(['seller_resumed_tracking','seller_replaced_link'])).order_by(ParcelAudit.created_at.desc(),ParcelAudit.id.desc()).limit(1).execution_options(autoflush=False))).first()
+    if review and (message.created_at<=review.created_at or str(message.id) in review.details.get('withheld_outbox_ids',[])):raise HTTPException(409,'This earlier parcel update was withheld by an operator review')
     connector=(await db.execute(select(ParcelConnector.business_id,ParcelConnector.instance_id,ParcelConnector.origin,ParcelConnector.credential_ref,ParcelConnector.enabled).where(ParcelConnector.id==link.connector_id,ParcelConnector.business_id==message.seller_id).execution_options(autoflush=False))).first()
     try:
         if connector is None:raise ConnectorUnavailable('connector_unconfigured')
