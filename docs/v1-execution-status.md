@@ -2,6 +2,30 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
+## Wave 5 in progress
+
+Base `3082f1a`; ownership and consent/proof definitions frozen in
+`docs/v1-wave5-contracts.md`. Integrator owns explicit owner-consented read-only
+support grants and their separate assistance view (0051); catalogue owns truthful
+order-cohort analytics (no DDL); social owns dual authenticated endpoint-control
+consent and customer links (0052), plus independent support security review. All
+workers remain GPT-6.1 Sol/high. Remote CI/restore/rollback/multi-architecture
+rehearsal is independent and cannot authorize production changes.
+
+Current support schema migration smoke passed on actual PG16; first28 API/negative
+checks passed, with expanded expiry/revocation/race checks still running. Analytics
+owner reports10 actual PG16 checks; customer-link owner reports14 through the real
+0051/0052 chain. These are interim lane results, not integrated product acceptance.
+Default flags/allowlist remain deny-by-default. Final mounted/full/image gates are
+pending for this batch; the Wave4 verified checkpoint below remains authoritative.
+
+Queued code-owned V1 work after this batch: CSV import, seller-authorized Instagram
+media retrieval adapter, replies using authoritative activated-SKU facts, sitemap
+and reviewed legacy URL redirects. These are implementation work, not all external
+permission gates. Real provider approval/canaries and physical-device tests remain
+separate. Preserve historical raw evidence while an independent remote runner/hash
+consistency review is investigated; no result is silently rewritten.
+
 ## Wave 4 local integration
 
 The current candidate composes native import review/allocation, persisted configuration
