@@ -1,0 +1,290 @@
+............F.....F.F..........FF.........F......F.F.....                [100%]
+=================================== FAILURES ===================================
+_ test_provider_gets_only_committed_tenant_account_media_and_unknown_placeholder _
+
+    @pytest.mark.asyncio
+    async def test_provider_gets_only_committed_tenant_account_media_and_unknown_placeholder():
+        item, fake = claim(), provider(caption="Two dresses Rs999 stock10 BUY NOW", media_type="VIDEO")
+>       candidates = await service.collect_claim(item, fetcher=None, instagram_provider=fake)
+
+backend/tests/test_v1_instagram_owned_pipeline.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:409: in collect_claim
+    checked_assets(claim, batch)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+claim = JobClaim(job_id=UUID('b4d84a99-6368-4ef2-a369-1578cf9d05e3'), business_id=UUID('10000000-0000-0000-0000-000000000071')....datetime(2026, 10, 18, 8, 9, 20, 876663, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+batch = CollectedBatch(candidates=(), assets=(namespace(media_id='180000000000071', content=b'\x89PNG\r\n\x1a\nsynthetic-origi...fe5dea6bf165f8'),), account_id='178400000000071', media_id='180000000000071', media_type='VIDEO', connection_version=7)
+
+    def checked_assets(claim, batch):
+        if batch.account_id != claim.source.get('account_id') or batch.media_id != claim.source.get('media_id') or batch.connection_version != claim.source.get('_connection', {}).get('version'):
+            raise FetchError('instagram_binding_changed')
+        # Carousel remains closed: a single original must exactly match its parent.
+        if batch.media_type not in {'IMAGE','VIDEO'} or len(batch.assets) != 1:
+            raise FetchError('instagram_asset_invalid')
+        original, = batch.assets
+        expected_types = {'IMAGE': {'image/jpeg','image/png'}, 'VIDEO': {'video/mp4'}}
+        if original.media_id != batch.media_id or type(original.content) is not bytes or original.content_type not in expected_types[batch.media_type] or validate_upload(original.content, original.content_type) != original.sha256:
+>           raise FetchError('instagram_asset_invalid')
+E           app.v1.imports.fetching.FetchError: instagram_asset_invalid
+
+backend/app/services/import_originals.py:24: FetchError
+_ test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media _
+
+    @pytest.mark.asyncio
+    async def test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media():
+        first = claim()
+        changed = replace(first, job_id=uuid4(), captured_at=first.captured_at + timedelta(seconds=1),
+            source={**first.source, "url": "https://www.instagram.com/reel/new-reference/"})
+        a = (await service.collect_claim(first, fetcher=None, instagram_provider=provider()))[0]
+        b = (await service.collect_claim(changed, fetcher=None, instagram_provider=provider()))[0]
+        assert a.id == b.id and a.provenance.import_job_id != b.provenance.import_job_id
+        other_tenant = replace(first, business_id=uuid4())
+        c = (await service.collect_claim(other_tenant, fetcher=None, instagram_provider=provider()))[0]
+        other_media = replace(first, source={**first.source, "media_id": "180000000000072"})
+        fake = provider()
+        fake.fetch_owned_media.return_value.media_id = other_media.source["media_id"]
+>       d = (await service.collect_claim(other_media, fetcher=None, instagram_provider=fake))[0]
+
+backend/tests/test_v1_instagram_owned_pipeline.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:409: in collect_claim
+    checked_assets(claim, batch)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+claim = JobClaim(job_id=UUID('67e4610a-4046-46ab-9571-58fe834391b5'), business_id=UUID('10000000-0000-0000-0000-000000000071')....datetime(2026, 10, 18, 8, 9, 20, 918343, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+batch = CollectedBatch(candidates=(), assets=(namespace(media_id='180000000000071', content=b'\x89PNG\r\n\x1a\nsynthetic-origi...fe5dea6bf165f8'),), account_id='178400000000071', media_id='180000000000072', media_type='IMAGE', connection_version=7)
+
+    def checked_assets(claim, batch):
+        if batch.account_id != claim.source.get('account_id') or batch.media_id != claim.source.get('media_id') or batch.connection_version != claim.source.get('_connection', {}).get('version'):
+            raise FetchError('instagram_binding_changed')
+        # Carousel remains closed: a single original must exactly match its parent.
+        if batch.media_type not in {'IMAGE','VIDEO'} or len(batch.assets) != 1:
+            raise FetchError('instagram_asset_invalid')
+        original, = batch.assets
+        expected_types = {'IMAGE': {'image/jpeg','image/png'}, 'VIDEO': {'video/mp4'}}
+        if original.media_id != batch.media_id or type(original.content) is not bytes or original.content_type not in expected_types[batch.media_type] or validate_upload(original.content, original.content_type) != original.sha256:
+>           raise FetchError('instagram_asset_invalid')
+E           app.v1.imports.fetching.FetchError: instagram_asset_invalid
+
+backend/app/services/import_originals.py:24: FetchError
+_ test_collected_envelope_retains_originals_without_putting_bytes_in_candidate _
+
+access = <AsyncMock id='4464927056'>
+
+    @pytest.mark.asyncio
+    async def test_collected_envelope_retains_originals_without_putting_bytes_in_candidate(access):
+        item=claim()
+        batch=await service.collect_claim(item,fetcher=None,instagram_provider=provider())
+>       assert isinstance(batch,service.CollectedBatch) and len(batch.assets)==1
+E       AssertionError: assert (False)
+E        +  where False = isinstance((ImportCandidate(id=UUID('88e3cfcf-3c81-5d7d-8a8e-64dec0762b03'), provenance=Provenance(business_id=UUID('10000000-000...None), seller_product_ref=None, state=<CandidateState.REVIEW_REQUIRED: 'review_required'>, overrides=(), review=None),), <class 'app.services.imports_v1.CollectedBatch'>)
+E        +    where <class 'app.services.imports_v1.CollectedBatch'> = service.CollectedBatch
+
+backend/tests/test_v1_instagram_owned_pipeline.py:201: AssertionError
+___ test_stale_capture_keeps_newer_review_document_and_records_ignored_audit ___
+
+access = <AsyncMock id='4462836560'>
+
+    @pytest.mark.asyncio
+    async def test_stale_capture_keeps_newer_review_document_and_records_ignored_audit(access):
+        row = job(state="running", lease_token=uuid4(), lease_expires_at=service.now() + timedelta(seconds=30))
+        older_claim = claim(row)
+        older = (await service.collect_claim(older_claim, fetcher=None, instagram_provider=provider()))[0]
+        newer = (await service.collect_claim(replace(older_claim, job_id=uuid4(),
+            captured_at=older_claim.captured_at + timedelta(seconds=10)), fetcher=None, instagram_provider=provider()))[0]
+        newer = apply_overrides(newer, (SellerOverride(field="title", value="Newer correction", reviewer_id=ACTOR.user_id),), business_id=BUSINESS)
+        stored = ImportDraft(id=newer.id, business_id=BUSINESS, last_job_id=newer.provenance.import_job_id,
+            revision=7, document=newer.model_dump(mode="json"))
+        before = dict(stored.document)
+        db = TenantDB([None, row, stored])
+>       assert await service.finish_claim(db, older_claim, candidates=replace(await service.collect_claim(older_claim,fetcher=None,instagram_provider=provider()), candidates=(older,)))
+
+backend/tests/test_v1_instagram_owned_pipeline.py:244: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = (ImportCandidate(id=UUID('88e3cfcf-3c81-5d7d-8a8e-64dec0762b03'), provenance=Provenance(business_id=UUID('10000000-000...None), seller_product_ref=None, state=<CandidateState.REVIEW_REQUIRED: 'review_required'>, overrides=(), review=None),)
+changes = {'candidates': (ImportCandidate(id=UUID('88e3cfcf-3c81-5d7d-8a8e-64dec0762b03'), provenance=Provenance(business_id=UUI...one), seller_product_ref=None, state=<CandidateState.REVIEW_REQUIRED: 'review_required'>, overrides=(), review=None),)}
+
+    def replace(obj, /, **changes):
+        """Return a new object replacing specified fields with new values.
+    
+        This is especially useful for frozen classes.  Example usage::
+    
+          @dataclass(frozen=True)
+          class C:
+              x: int
+              y: int
+    
+          c = C(1, 2)
+          c1 = replace(c, x=3)
+          assert c1.x == 3 and c1.y == 2
+        """
+    
+        # We're going to mutate 'changes', but that's okay because it's a
+        # new dict, even if called with 'replace(obj, **my_changes)'.
+    
+        if not _is_dataclass_instance(obj):
+>           raise TypeError("replace() should be called on dataclass instances")
+E           TypeError: replace() should be called on dataclass instances
+
+/Users/gothi/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/dataclasses.py:1474: TypeError
+_ test_run_job_commits_private_review_candidate_and_redelivery_does_not_fetch __
+
+access = <AsyncMock id='4462897104'>
+
+    @pytest.mark.asyncio
+    async def test_run_job_commits_private_review_candidate_and_redelivery_does_not_fetch(access):
+        row = job()
+        dbs = [TenantDB([None, row]), TenantDB([None, row]), TenantDB([None, row, None])]
+        sessions = Sessions(dbs)
+        fake = provider()
+        async def fetch(**kwargs):
+            assert sessions.active == 0
+            return fake.fetch_owned_media.return_value
+        fake.fetch_owned_media.side_effect = fetch
+>       assert await service.run_job(sessions, BUSINESS, row.id, instagram_provider=fake)
+
+backend/tests/test_v1_instagram_owned_pipeline.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:553: in run_job
+    return await finish_claim(db, claim, candidates=candidates, error_code=error_code)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <tests.test_v1_instagram_owned_pipeline.TenantDB object at 0x10a08c0d0>
+claim = JobClaim(job_id=UUID('d80417bd-b864-4ab3-a160-e893159f3a22'), business_id=UUID('10000000-0000-0000-0000-000000000071')....datetime(2026, 10, 18, 8, 9, 20, 985188, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+
+    async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
+        await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
+        job = await _job(db, claim.business_id, claim.job_id, lock=True)
+        if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
+            return False  # Cancellation or a newer attempt fences late results.
+        try:
+            access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
+            if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
+                error_code = "source_connection_changed"
+        except HTTPException:
+            error_code = "authorization_revoked"
+        if error_code:
+            _fail(job, error_code)
+            await db.flush()
+            return False
+        if not 1 <= len(candidates) <= 200:
+            raise ImportReviewError("Expected bounded candidate results")
+        if job.source["kind"] == "instagram":
+            if not isinstance(candidates, CollectedBatch):
+>               raise ImportReviewError("Original media collection required")
+E               app.v1.imports.domain.ImportReviewError: Original media collection required
+
+backend/app/services/imports_v1.py:465: ImportReviewError
+____________ test_actual_adapter_originals_survive_collected_batch _____________
+
+api = <module 'app.v1.imports.instagram_owned' from '/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/backend/app/v1/imports/instagram_owned.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a263510>
+
+    @pytest.mark.asyncio
+    async def test_actual_adapter_originals_survive_collected_batch(api, monkeypatch):
+        fake, _, transport = adapter(api)
+        batch = await service.collect_claim(claim(), fetcher=None, instagram_provider=fake)
+>       assert batch.assets[0].content == PNG
+E       AttributeError: 'tuple' object has no attribute 'assets'
+
+backend/tests/test_v1_instagram_owned_pipeline_provider.py:114: AttributeError
+____ test_actual_adapter_success_still_requires_shared_final_account_guard _____
+
+api = <module 'app.v1.imports.instagram_owned' from '/Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/backend/app/v1/imports/instagram_owned.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a12a590>
+
+    @pytest.mark.asyncio
+    async def test_actual_adapter_success_still_requires_shared_final_account_guard(api, monkeypatch):
+        fake, _, transport = adapter(api)
+        access = AsyncMock(return_value=SimpleNamespace(instagram_page_id=ACCOUNT))
+        monkeypatch.setattr(service, "_access", access)
+        row = job()
+        class ChangeAfterProvider:
+            async def fetch_owned_media(self, **kwargs):
+                result = await fake.fetch_owned_media(**kwargs)
+                access.return_value = SimpleNamespace(instagram_page_id="178400000000072")
+                return result
+        dbs = [TenantDB([None, row]), TenantDB([None, row]), TenantDB([None, row])]
+>       assert not await service.run_job(Sessions(dbs), BUSINESS, row.id, instagram_provider=ChangeAfterProvider())
+
+backend/tests/test_v1_instagram_owned_pipeline_provider.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:515: in run_job
+    claim = await claim_job(db, business_id, job_id)
+backend/app/services/imports_v1.py:353: in claim_job
+    if job.source["kind"] == "instagram" and not await _connection_matches(db, business_id, job.source):
+backend/app/services/imports_v1.py:310: in _connection_matches
+    current = await snapshot(db, business_id, lock=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <tests.test_v1_instagram_owned_pipeline.TenantDB object at 0x109d81250>
+business_id = UUID('10000000-0000-0000-0000-000000000071')
+
+    async def snapshot(db, business_id, *, lock=False):
+>       with db.no_autoflush:
+E       AttributeError: 'TenantDB' object has no attribute 'no_autoflush'
+
+backend/app/services/instagram_credentials.py:43: AttributeError
+_ test_migrated_owned_import_reimport_preserves_unknowns_corrections_and_private_state _
+
+migrated_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10a014dc0>
+
+    @pytest.mark.asyncio
+    async def test_migrated_owned_import_reimport_preserves_unknowns_corrections_and_private_state(migrated_engine):
+        sessions = async_sessionmaker(migrated_engine, expire_on_commit=False)
+        business, actor = await seed(sessions)
+        first = await enqueue(sessions, business, actor)
+        fake = FakeProvider(business)
+>       assert await service.run_job(sessions, business, first.job_id, instagram_provider=fake)
+
+backend/tests/test_v1_instagram_owned_pipeline_db.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:553: in run_job
+    return await finish_claim(db, claim, candidates=candidates, error_code=error_code)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x109f72210>
+claim = JobClaim(job_id=UUID('aee94ccd-55d0-48e9-9146-22143322e5d5'), business_id=UUID('1b739f06-0ba1-4a60-a56f-398393feef51')....datetime(2026, 10, 18, 8, 9, 21, 853930, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+
+    async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
+        await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
+        job = await _job(db, claim.business_id, claim.job_id, lock=True)
+        if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
+            return False  # Cancellation or a newer attempt fences late results.
+        try:
+            access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
+            if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
+                error_code = "source_connection_changed"
+        except HTTPException:
+            error_code = "authorization_revoked"
+        if error_code:
+            _fail(job, error_code)
+            await db.flush()
+            return False
+        if not 1 <= len(candidates) <= 200:
+            raise ImportReviewError("Expected bounded candidate results")
+        if job.source["kind"] == "instagram":
+            if not isinstance(candidates, CollectedBatch):
+>               raise ImportReviewError("Original media collection required")
+E               app.v1.imports.domain.ImportReviewError: Original media collection required
+
+backend/app/services/imports_v1.py:465: ImportReviewError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/artifacts/v1/instagram-owned-integration/pipeline-initial.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_provider_gets_only_committed_tenant_account_media_and_unknown_placeholder
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_candidate_identity_survives_job_url_and_capture_changes_but_not_tenant_or_media
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_collected_envelope_retains_originals_without_putting_bytes_in_candidate
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_stale_capture_keeps_newer_review_document_and_records_ignored_audit
+FAILED backend/tests/test_v1_instagram_owned_pipeline.py::test_run_job_commits_private_review_candidate_and_redelivery_does_not_fetch
+FAILED backend/tests/test_v1_instagram_owned_pipeline_provider.py::test_actual_adapter_originals_survive_collected_batch
+FAILED backend/tests/test_v1_instagram_owned_pipeline_provider.py::test_actual_adapter_success_still_requires_shared_final_account_guard
+FAILED backend/tests/test_v1_instagram_owned_pipeline_db.py::test_migrated_owned_import_reimport_preserves_unknowns_corrections_and_private_state
+8 failed, 49 passed, 1 warning in 5.57s

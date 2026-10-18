@@ -1,0 +1,53 @@
+..........F............................................................. [ 17%]
+........................................................................ [ 35%]
+........................................................................ [ 53%]
+........................................................................ [ 71%]
+........................................................................ [ 89%]
+............................................                             [100%]
+=================================== FAILURES ===================================
+__ test_legacy_connect_result_cannot_restore_after_disconnect_during_exchange __
+
+migrated_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10edd9280>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f4e6d10>
+
+    @pytest.mark.asyncio
+    async def test_legacy_connect_result_cannot_restore_after_disconnect_during_exchange(migrated_engine,monkeypatch):
+        from app.main import app
+        from app.database import get_db
+        from app.api.routes import auth
+        from httpx import AsyncClient,ASGITransport
+        sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+        async def database():
+            async with sessions.begin() as db:yield db
+        prior=dict(app.dependency_overrides);app.dependency_overrides[get_db]=database
+        async def exchange(_):
+            async with sessions.begin() as writer:
+                await writer.execute(update(Seller).where(Seller.id==bid).values(instagram_token=None,instagram_page_id=None))
+                await writer.execute(update(ChannelConnectionState).where(ChannelConnectionState.business_id==bid).values(version=8,automation_enabled=False))
+            return 'new-must-not-save'
+        async def profile(_):return {'user_id':ACCOUNT}
+        monkeypatch.setattr(auth,'exchange_for_long_lived_token',exchange);monkeypatch.setattr(auth,'fetch_ig_user',profile)
+        token=auth._create_token({'sub':str(bid),'role':'seller'})
+        try:
+            async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+                response=await client.post('/auth/seller/connect-instagram',headers={'Authorization':'Bearer '+token},json={'short_lived_token':'synthetic-input'})
+>               assert response.status_code==409,response.text
+E               AssertionError: {"detail":"Could not connect Instagram. Check the account and try again."}
+E               assert 400 == 409
+E                +  where 400 = <Response [400 Bad Request]>.status_code
+
+backend/tests/test_v1_instagram_import_integration.py:161: AssertionError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-instagram-integration/artifacts/v1/instagram-owned-integration/focused-disk-pg16.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_import_integration.py::test_legacy_connect_result_cannot_restore_after_disconnect_during_exchange
+1 failed, 403 passed, 2 warnings in 122.02s (0:02:02)

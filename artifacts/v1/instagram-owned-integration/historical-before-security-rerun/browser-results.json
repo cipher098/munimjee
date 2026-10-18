@@ -1,0 +1,6 @@
+{
+  "checks": 33,
+  "external": [],
+  "errors": [],
+  "scope": "Actual app.main/PG0053/native browser, real owned adapter with explicitly synthetic Graph/CDN transport; no real provider/API permission evidence."
+}

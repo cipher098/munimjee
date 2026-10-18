@@ -1,0 +1,16 @@
+{
+  "private_original_archive": "/var/folders/l1/w4rzlrm12mxckqppsl5yh6w80000gn/T/munimjee-ig-original-evidence-6tamxhuy",
+  "reason": "Only synthetic dedicated DB credentials redacted; interrupted infrastructure failures preserved, not acceptance.",
+  "files": [
+    {
+      "path": "focused-complete.xml",
+      "original_sha256": "77ac90d0506522a9353947eb34ff9deef7219e84d3d388918191a20e7d27dae9",
+      "public_sha256": "764b8b55dc94fe7e9e4d858b69c17fe245eef8505f040bcb76b7d72931e2e958"
+    },
+    {
+      "path": "focused-complete.txt",
+      "original_sha256": "dfc5988f50e050d78218eb536e04165714c46421f4db3e483f601da7ab5d6c7c",
+      "public_sha256": "cb48607a44560df94bb5fb9d1146a0050505403160f543a1f81a2d696440a6c8"
+    }
+  ]
+}

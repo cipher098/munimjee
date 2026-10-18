@@ -1,0 +1,103 @@
+.....F..F                                                                [100%]
+=================================== FAILURES ===================================
+_____ test_original_bytes_manifest_exact_replay_foreign_access_and_tamper ______
+
+migrated_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10ba1a040>
+
+    @pytest.mark.asyncio
+    async def test_original_bytes_manifest_exact_replay_foreign_access_and_tamper(migrated_engine):
+        sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+        job=await enqueue(sessions,bid,actor)
+>       assert await jobs.run_job(sessions,bid,job.job_id,instagram_provider=FakeProvider(bid))
+
+backend/tests/test_v1_instagram_import_integration.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:553: in run_job
+    return await finish_claim(db, claim, candidates=candidates, error_code=error_code)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x10bb1f810>
+claim = JobClaim(job_id=UUID('00e347a2-d4c9-4ee0-afca-c6244ef9cbd9'), business_id=UUID('5be728f4-67b6-45ff-83c5-492284e9120e')....datetime(2026, 10, 18, 8, 9, 56, 906072, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+
+    async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
+        await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
+        job = await _job(db, claim.business_id, claim.job_id, lock=True)
+        if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
+            return False  # Cancellation or a newer attempt fences late results.
+        try:
+            access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
+            if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
+                error_code = "source_connection_changed"
+        except HTTPException:
+            error_code = "authorization_revoked"
+        if error_code:
+            _fail(job, error_code)
+            await db.flush()
+            return False
+        if not 1 <= len(candidates) <= 200:
+            raise ImportReviewError("Expected bounded candidate results")
+        if job.source["kind"] == "instagram":
+            if not isinstance(candidates, CollectedBatch):
+>               raise ImportReviewError("Original media collection required")
+E               app.v1.imports.domain.ImportReviewError: Original media collection required
+
+backend/app/services/imports_v1.py:465: ImportReviewError
+______ test_original_asset_and_manifest_roll_back_with_candidate_and_job _______
+
+migrated_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10bc509c0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10bcf6650>
+
+    @pytest.mark.asyncio
+    async def test_original_asset_and_manifest_roll_back_with_candidate_and_job(migrated_engine,monkeypatch):
+        sessions=async_sessionmaker(migrated_engine,expire_on_commit=False);bid,actor=await seed(sessions)
+        job=await enqueue(sessions,bid,actor)
+        original=import_originals.retain
+        async def fail_after_flush(*args):
+            await original(*args)
+            await args[0].flush()
+            raise RuntimeError('synthetic transaction boundary failure')
+        monkeypatch.setattr(import_originals,'retain',fail_after_flush)
+>       with pytest.raises(RuntimeError):await jobs.run_job(sessions,bid,job.job_id,instagram_provider=FakeProvider(bid))
+
+backend/tests/test_v1_instagram_import_integration.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/app/services/imports_v1.py:553: in run_job
+    return await finish_claim(db, claim, candidates=candidates, error_code=error_code)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x10bcf4390>
+claim = JobClaim(job_id=UUID('fe625a40-f103-4029-8295-8bcf747e2968'), business_id=UUID('517b549f-61f4-4956-bf90-ddbf9a64faa2')....datetime(2026, 10, 18, 8, 9, 59, 549504, tzinfo=datetime.timezone.utc), upload_content=None, upload_content_type=None)
+
+    async def finish_claim(db, claim: JobClaim, *, candidates=(), error_code=None):
+        await db.scalar(select(Business).where(Business.id == claim.business_id).with_for_update(key_share=True))
+        job = await _job(db, claim.business_id, claim.job_id, lock=True)
+        if job.state != "running" or job.lease_token != claim.lease_token or job.lease_expires_at <= now():
+            return False  # Cancellation or a newer attempt fences late results.
+        try:
+            access = await _access(db, Actor(job.creator_id, "import_job"), claim.business_id, write=True)
+            if job.source["kind"] == "instagram" and not await _connection_matches(db, claim.business_id, job.source):
+                error_code = "source_connection_changed"
+        except HTTPException:
+            error_code = "authorization_revoked"
+        if error_code:
+            _fail(job, error_code)
+            await db.flush()
+            return False
+        if not 1 <= len(candidates) <= 200:
+            raise ImportReviewError("Expected bounded candidate results")
+        if job.source["kind"] == "instagram":
+            if not isinstance(candidates, CollectedBatch):
+>               raise ImportReviewError("Original media collection required")
+E               app.v1.imports.domain.ImportReviewError: Original media collection required
+
+backend/app/services/imports_v1.py:465: ImportReviewError
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_import_integration.py::test_original_bytes_manifest_exact_replay_foreign_access_and_tamper
+FAILED backend/tests/test_v1_instagram_import_integration.py::test_original_asset_and_manifest_roll_back_with_candidate_and_job
+2 failed, 7 passed, 1 warning in 8.39s
