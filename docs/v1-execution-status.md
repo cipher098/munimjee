@@ -2,55 +2,57 @@
 
 Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified first-wave foundation: `7de7cd6`; preserved application baseline: `e7694ff`. This is a bounded implementation milestone, not full V1 acceptance or a production release.
 
-## Wave7 current composition and pending gates
+## Wave7 verified complete checkpoint and next ownership
 
-Prior verified/pushed checkpoint `abab30a` remains the accepted complete actual0053
-baseline: 1950 passed,8 documented skips, plus native-import47/CSV74/SKU5 mounted,
-SEO28 mounted HTTP, locked315-file arm64 image and separate restore53 evidence.
+The complete frozen actual0056 composition `eeb94a119736cae816af782f2af5e04cb877e616`
+passes **2425 tests,8 documented skips,0 failures in1119.92s** on the dedicated
+disk-backed PG16 lane. The subprocess exits0; all800 tracked non-artifact source,
+harness and documentation files match before/after. The database revision was
+independently read as `0056_v1_comment_operator`. Exact log/XML/hash proof and skip
+attribution are in `artifacts/v1/integration/wave7/full-0056*` and
+`docs/v1-wave7-validation.md`. This supersedes `abab30a` for complete backend source
+acceptance, while its actual0053 image/restore proof remains historical and separate.
 
-The frozen current actual0055 composition `3820d14` completed on the new disk-backed
-PG16 lane with **2325 passed,2 failed,8 skipped in982.14s**. This is not acceptance.
-Both failures are fixture compatibility: the new tenant FK rejects a deliberately
-foreign comment-action row, and a V1-only nullable activity field was forwarded
-into the legacy checkout schema. Raw log/XML are retained in
-`artifacts/v1/integration/wave7/full-0055.*`; corrections retain the DB rejection
-assertion and the independent legacy-writer test. A fresh complete gate is required.
-No old tmpfs database is used.
+Prior actual0055 run `3820d14` ended2325 passed/2 fixture failures/8 skips in982.14s.
+Those raw results are preserved, and corrected fixtures passed26 focused checks
+before this fresh complete run. The rejected activity run with concurrent config
+source drift is also preserved; only the subsequent frozen8-check rerun counts.
+No test resumes on the old tmpfs database.
 
-Activity0054 is composed with shared public-shell/new-order-only provenance and
-ungated bounded retention cleanup. Central actual customer-shell8 journeys and
-retention/startup13 checks pass; owner final74 Python/19 mounted/28 Node remains
-separate. Channel producers remain null/uninstalled. Owned Instagram through
-5141177 is composed: isolated final467 checks and33 mounted checks pass on new
-PG16; exact private-byte/provenance and late-authority findings are fixed. Both
-provider capability gates remain false. Documentary principal/type/missing-original
-compatibility followup is isolated and not covered by those prior results.
+Reviewed composition includes activity0054 shared public-shell/new-order-only
+provenance and ungated bounded cleanup; owned-Instagram generation/private-original
+fences with both provider capability gates still false;0055 immutable comment
+source/claim/audit safety; native channel late-session/privacy and cross-writer
+WA generation repair; derived onboarding readiness/final invitation authority;
+and0056 native no-send comment reviews/rule controls plus durable inferred-WA
+review. The five previously reproduced queued-comment safety failures are fixed
+within the reviewed sender scope. Broader semantic/provider V08 acceptance is not
+inferred. Channel producers remain uninstalled in this tested central composition.
 
-Comment safety0055 is reviewed/composed through88882f7: owner92 checks plus a
-5-check tail (one overlapping expanded case) pass on actual0055. Native comment
-management and durable inferred-WA visibility are owned next in0056, not complete.
-Channel/session repairs through0f5e5f0 are reviewed/composed:126 focused
-actual0055/mixed checks,25 actual-main browser checks and17 controlled-JS checks
-pass. Native onboarding through52fdda8 is reviewed/composed:190 focused
-(170 synthetic provider/parser/transport +20 native actual-DB) and6 actual-main
-browser journeys pass. Session/role changes discard private results and staged
-invitation/session writes roll back before commit. Local setup now advances from
-current facts; authorized messaging acceptance remains explicitly unavailable.
-Their confirmed failing-before-fix source/HTTP repros remain preserved.
-Native comment0056 service/schema is reviewed through7ed8bab:134 initial checks,
-33 affected checks (overlapping) and15 actual-main browser journeys pass. Central
-actual0056 native6 and shared activity8 also pass with stable source/harness maps.
-The activity source guard rejected one concurrent config-only edit; failed output
-is preserved and the frozen rerun is the accepted8-check result. Current composition is
-not covered by the older2325-pass run. No later full-suite, runtime-image, release,
-provider entitlement or live-delivery acceptance is implied.
+Separate mounted evidence: native onboarding6 and shared customer/activity8 at
+actual0056 with stable source/harness maps; comment owner15 at actual0056, channel
+owner25 at actual0055. Earlier owner gates remain separately attributed: activity
+74Python/19mounted/28Node, IG467checks/33mounted, channel126focused/17VM,
+onboarding190focused, comment134initial plus33affected (overlapping), composed
+Node107 plus operator lifecycle6. Full-run passing does not convert synthetic
+provider methods, controlled HTTP, or source review into live provider proof.
 
-DB-heavy work is serialized on disk-backed55443 only. Catalogue owns channel
-hardening and compatible legacy WA generation writers; integrator owns native
-workspace/readiness and composition; social owns0056 and independent review.
-Remote mobile/accessibility/offline QA dispatch is now confirmed active after the
-connection recovered; no result is credited before its exact reviewed handoff.
-Exact ownership is in `docs/v1-wave7-contracts.md`.
+Next isolated work: integrator owns trusted channel activity producers/outcome
+reporting (source-reviewed draft, actual gates pending); catalogue owns0057 WA v4
+self-service/explicit authorized-recipient test flow from frozen0056; social owns
+CSS-only mobile cart fallback repair. Remote owns native v1_app.js/css mobile,
+focus/error/long-name repairs from reviewed QA. No shared file collision is granted.
+The cart baseline reproduces6 painted-text failures out of75 synthetic UI cases;
+153 denied measurement attempts are a harness coverage gap, not an analytics defect.
+Its repaired rendered/mounted gate is pending. Existing five native privacy cases
+pass the remote fresh comparison; final remote repair packet is still pending.
+
+DB/browser work stays serialized on disk-backed55443. Social has the next
+parcel_w6/8156 slot after this checkpoint push; no other DB/browser starts until
+explicit release. New image/restore/rollback copies remain deferred under host
+disk headroom; no prune or evidence deletion is authorized. Provider approvals,
+physical devices, private ParcelDesk provisioning and operational deployment stay
+open. Exact boundaries are in `docs/v1-wave7-contracts.md`.
 
 ## Wave6 verified bounded checkpoint
 

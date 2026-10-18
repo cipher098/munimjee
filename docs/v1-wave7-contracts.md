@@ -1,80 +1,76 @@
 # Wave7 integration and safety ownership
 
-18 October2026. Prior verified/pushed checkpoint is `abab30a`: actual0053 complete
-1950 passed/8 documented skips and mounted/native/package/restore evidence in
-`docs/v1-wave6-validation.md`. All peers remain existing GPT-6.1 Sol/high.
-No live provider/customer action, running app change or production deployment.
+18 October2026. Frozen complete source `eeb94a119736cae816af782f2af5e04cb877e616`,
+actual0056:2425 passed/8 documented skips/0 failures1119.92s. All800 tracked
+non-artifact files match pre/post; see `docs/v1-wave7-validation.md`. Existing
+workers remain GPT-6.1 Sol/high. No live provider/customer action, running-app
+change, production deployment or new image/restore copy is authorized.
 
-- Integrator owns composition and shared main/models/schema/writer/public shell,
-  session cleanup, runtime package and retention schedule. Reviewed activity owner
-  chain through94f9d3e is composed locally; actual0054 integration remains its own
-  gate. Optional context stays frozen in financial body, absent/null preserves old
-  hashes, invalid proof never denies shopping and accepted order replay never
-  backfills provenance. Cleanup is bounded and ungated even when collection is
-  off; readiness remains a separate false-by-default operational assertion.
-- Catalogue owns independent shared activity-hook review, completed owner final
- 74 Python/19 mounted/28 Node and V01/V07 test-owned acceptance fromabab30a. Native
- channel identity privacy, final session authority after provider waits, static
- onboarding readiness and profile/invitation wait races are audited code work;
- provider permissions do not explain away missing application paths. Any runtime
- repair receives a separate explicit ownership boundary after its reproduction.
-- Integrator owns isolated owned-Instagram composition through5be22d8 (runtime
- c4794bb), independently reviewed authority/integrity fixes,467 actual/pure checks
- and33 mounted checks. Official docsadcdad1 distinguish response wrapper/account
- type uncertainty and unavailable licensed-audio originals from permissions.
- Both retrieval and carousel capabilities stay closed. No documentation or fake
- transport result is a live entitlement or canary. Central0054 composition remains
- separate from isolated0053 owner evidence.
-- Social owns `0055_v1_comment_binding` after actual0054 and its service/worker/
- immutable claim/audit repair. Queued source/account/generation, pause, active
- business, checked account access and accepted static configuration are rechecked
- after claim commit immediately before the existing provider. Legacy unbound,
- activated/ambiguous catalogue and unknown prior effects withhold/review; no blind
- retry or new sender. A provider effect during revocation cannot be recalled or
- described as delivered. Native comment management and durable inferred-WA
- handoff visibility remain subsequent code work.
-- Channel activity producers remain uninstalled: enquiry/outcome fields stay null,
- not zero. New dedup internal hooks must be reviewed against current IG/WA/comment
- ownership before reporting coverage. IG processed ingress is not send evidence.
-- Remote mobile/accessibility/offline QA is now confirmed active after connection
- recovery. Earlier unacknowledged attempts are not execution evidence. Exact
- reviewed results are still pending; local official Meta evidence is complete.
+## Reviewed composition
 
-New disk-backed dedicated PG16 on55443 only. DB-heavy runs are serialized and use
-P01 reset leases in dedicated names: wave6_integration, instagram_w6, payment_w6;
-parcel_w6 will be allocated explicitly when social needs it. The old RAM-backed
-container remains intact and unused. Reserve disk headroom before fresh restore
-pairs; no reset of used archive targets, broad cleanup, daemon changes or prune.
-Fresh actual complete/mounted/image/release gates must identify the candidate
-head; prior0053 proof never silently accepts0054/0055. Physical devices, hosted
-billing/nativeamd64, provider approvals/canaries, private ParcelDesk deployment
-and real template delivery remain separate open gates.
+- Integrator owns shared main/models/schema registration, public shell and financial
+  intent hooks, native session cleanup, package and bounded ungated retention.
+  Activity0054 optional context is frozen before financial POST; absent/null keeps
+  old hashes, bad optional proof never denies shopping, exact accepted replay never
+  backfills. Both collection/readiness flags remain false by default.
+- Reviewed owned-Instagram generation/CAS, legacy writer authorization, exact private
+  retained bytes and final readers are composed. Optimized-mode integrity and late
+  authority findings are fixed. Documentary singleton/type/missing-original parser
+  compatibility is bounded; both provider retrieval flags stay false.467 checks/
+  33 mounted are owner synthetic/local evidence, not actual API entitlement.
+- Social's0055 comment binding/claim/audit repair and0056 native rule/review/enquiry
+  slice are reviewed and composed. Current source/control/generation/config/window
+  gates surround the same durable single writer. Unknown effects never auto-retry;
+  activated static copy remains withheld. No-send reviews do not rewrite attempts,
+  receipts or customer consent. Current saved-enabled copy is not send authorization.
+- Catalogue's0f5e5f0 channel API/page final-session/privacy repair includes native and
+  compatible legacy WA generation writers. Business→Seller→control→Account is the
+  canonical order; missing legacy Business is never created.126focused/25mounted
+  and separately17VM are owner evidence; live self-service/test acceptance is absent.
+- Integrator's52fdda8 native workspace/read/readiness/invitation boundary preserves
+  all-session ordering and physical privacy scrub. Final inviter/session checks
+  precede commit; local readiness advances from current facts but authorized
+  messaging acceptance stays explicitly unavailable.190focused/6mounted are bounded.
 
+## Active next ownership
 
-## Next isolated repairs
+- Integrator: isolated `codex/v1-channel-activity-hooks` (physical prior onboarding
+  followup worktree), based eeb94a1. Trusted new-row IG/WA/comment hooks, internal
+  enum-only automated-outbox marking, failure-isolated savepoints, minimal coherent
+  report and analytics_activity.js. No financial/sender/consent authority change.
+  Source-reviewed draft54pure/4Node; actual SQL-failure/lock/contention/delayed-source
+  and mounted truth gates are prepared, not executed. Preserve0054 source timestamp
+  guard and explicit per-source time semantics; no normalization migration.
+- Catalogue: `codex/v1-whatsapp-self-service` from eeb94a1. Reserved
+  `0057_v1_whatsapp_self_service`→`0056_v1_comment_operator`. Native current-owner
+  v4 consent/exchange/explicit server-verified phone choice, bounded encrypted
+  provisional state and exact authorized-recipient test. No client assertion or
+  sandbox result is delivery proof. Partial phone uniqueness protects setting_up/
+  setup_unknown claims through expiry/unknown; successful Account attach and claim
+  release are atomic. After index waits, fresh incumbent ownership and native
+  session/generation are required. Integrator retains shared ingress/worker/config/
+  registry/main/checklist/activity hooks. No live provider calls/sends.
+- Social: `codex/v1-cart-fallback` from eeb94a1, runtime4eed8af, only
+  frontend/storefront/src/styles.css. Direct cart empty-state span/image sizing and
+  bounded text grid fix. Preserve exact six painted-text assertions across three
+  themes at320/390. Runtime outside CSS is not granted. Baseline69pass/6fail out
+  of75 is retained;153 denied activity requests are harness coverage, not a product
+  analytics finding. Repaired synthetic/actual mounted gate is next serial slot.
+- Remote: isolated backend/static/v1_app.js/css only, plus dedicated QA/docs. Focus
+  restoration/contrast, initial503 recovery and long unbroken names from reviewed
+  old-baseline failures; preserve current generation/session/privacy fences. No
+  server/schema/shared client/channel/activity edit. Original32 repair assertions
+  and independent render review are pending delivered packet; prior5 privacy
+  failures already pass fresh8ae97c2 comparison.
 
-- Catalogue: channel API/service/page privacy and final native authorization,
-  optional receipt-first WA generation CAS, compatible legacy WA credential/config
-  writers. Canonical tenant locking is Business→Seller→control→WA; missing legacy
-  Business is never created. Port8169 reserved; payment_w6 only by explicit serial
-  lease. No DDL/shared native client writes.
-- Integrator: native workspace lifecycle/read guards, derived local readiness,
-  profile/team final staged-write boundary, conservative documentary IG parser
-  compatibility. Current actual provider capability flags stay false.
-- Social: reserved0056_v1_comment_operator after0055, immutable tenant command and
-  review ledgers, native capability-scoped rule/review UI and typed same-transaction
-  WA inferred-context queue. No sender/retry/rebind or historical effect rewrite.
-  Shared main/model/assets/nav/cleanup remain integrator-owned. Native operator
-  feature and its actual-chain/browser gates are not yet complete.
+## Serial resources and release boundaries
 
-Current frozen0055 full run3820d14:2325 passed,2 failed,8 skipped in982.14s;
-fixture corrections and a new full gate remain required. Raw failures preserved.
-
-
-Reviewed current partial gates: channel0f5e5f0 (126 focused/25 mounted/17 VM),
-onboarding52fdda8 (190 focused/6 mounted), comment0056 initial134 atfe95e9c.
-The provider-wait native race and retained private-DOM failures are repaired within
-their reviewed source scopes. A fresh composed full gate is still required.
-V07 supported Embedded Signup/current protocol/account selection and authorized
-recipient-test/result policy are contract-first with catalogue; manual-token entry
-does not complete self-service onboarding. No0057 migration allocated yet.
+Only disk-backed dedicated PG16 numeric127.0.0.1:55443, P01 guarded disposable lanes:
+wave6_integration, instagram_w6, payment_w6, parcel_w6. DB-heavy AND mounted browser
+runs are serialized. Social parcel_w6/8156 is next after checkpoint push; explicit
+release precedes the next owner. Old55442 tmpfs container/evidence stays intact and
+unused. Host disk headroom blocks fresh image/restore copies; no prune, broad
+cleanup, live-service modification or target reuse. Existing actual0053 package/
+restore evidence is historical. New-head image/restore/rollback, hosted CI billing,
+nativeamd64, physical devices, Meta/payment canaries and private ParcelDesk rollout
+remain separate gates. Complete backend source acceptance is not full V1 release.

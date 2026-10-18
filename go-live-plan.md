@@ -27,10 +27,13 @@ native multiarchitecture and hosted CI billing remain separate release gates. Fl
 stay off by default. No real provider request, charge, customer send, running-project
 change or production cutover is authorized or claimed.
 
-The verified/pushed complete checkpoint remains `abab30a`, actual0053:1950 backend
-passes with8 documented skips; central native-import47/CSV74/SKU5 browser and28
-mounted SEO HTTP checks. Its315-file arm64 image passes3 offline modes; fresh0053
-restore53 is separate. Historical interrupted runs remain preserved.
+The fresh complete checkpoint is frozen `eeb94a1`, actual0056:2425 backend tests
+pass with8 documented skips and0 failures;800 tracked source/harness files match
+before/after. Central native onboarding6 and shared activity8 mounted journeys,
+plus separately attributed owner gates, are documented in `docs/v1-wave7-validation.md`.
+Prior `abab30a` actual0053 image/restore evidence remains separate:315-file arm64
+image/3 offline modes and fresh restore53 do not certify the new head. Historical
+failed/interrupted runs remain preserved. New copies await safe disk headroom.
 
 Wave7 now composes observed first-party activity0054 (shared public hooks, new-order
 provenance and ungated bounded retention cleanup), owned-Instagram private-original
@@ -43,19 +46,20 @@ The local checklist advances from current reviewed facts while authorized messag
 acceptance remains explicitly unavailable. Instagram documentary compatibility is
 bounded; both retrieval capabilities remain off and actual wire/grants are unproved.
 
-Native comment controls and durable inferred-WhatsApp review0056 are now composed
-and in their final actual-chain/browser gate (initial134 checks pass). They record
-no-send reviews and preserve unknown effects; they do not replay earlier replies.
-The older frozen0055 full run ended2325 passed,2 fixture failures,8 skipped; corrected
-fixtures pass26 checks, but a new composed full run is still required. Source
-composition is not complete acceptance. New-head runtime-image/restore/rollback
-proofs are also pending; prior0053 artifacts never certify0054–0056.
+Native comment controls and durable inferred-WhatsApp review0056 are reviewed,
+composed and covered by the new complete0056 gate; owner134 initial checks,
+33 affected checks (overlapping) and15 actual-main browser journeys remain separately
+attributed. They record no-send reviews and preserve unknown effects without replay.
+The older0055 full run's2 fixture failures and corrected26-check result remain
+preserved alongside the fresh green run. New-head runtime-image/restore/rollback,
+live provider and complete V1 acceptance remain pending.
 
 Remaining code-owned work includes installed channel activity producers/outcome
 reporting (currently null, not zero), supported WhatsApp v4 self-service consent and
 account selection, authorized-recipient test/result workflow, and the rest of the
-V1 acceptance matrix. Catalogue's0057 proposal is contract-first; no live provider
-action is authorized. Remote mobile/accessibility/offline QA is active after the
+V1 acceptance matrix. Catalogue owns reserved0057 v4 implementation from frozen0056 after reviewed
+contract approval; its runtime/DB/browser acceptance is pending and no live
+provider action is authorized. Remote mobile/accessibility/offline QA is active after the
 connection recovered; only reviewed delivered results count. Provider approvals,
 physical devices, international migration requirements and operational release
 remain separate gates. Exact current evidence and ownership are in

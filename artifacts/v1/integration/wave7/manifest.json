@@ -27,7 +27,17 @@
     "composed_contracts": 107,
     "operator_lifecycle": 6
   },
-  "full0056": "pending",
+  "full0056": {
+    "source": "eeb94a119736cae816af782f2af5e04cb877e616",
+    "alembic_revision": "0056_v1_comment_operator",
+    "passed": 2425,
+    "skipped": 8,
+    "failed": 0,
+    "duration_seconds": 1119.92,
+    "exit_code": 0,
+    "source_unchanged": true,
+    "stable_tracked_files": 800
+  },
   "image_restore_new_head": "pending; no new copies under disk headroom constraint",
   "files": {
     "activity-new-writer.txt": "64b0e82b795af79031834153ee974fe1589dc94d74d7843085e8e327de5a75a6",
@@ -68,6 +78,11 @@
     "fixture-corrections.xml": "36c41f2416f3e0d2c5122494a5d172ccc8602419f2bf11e3866cd036c80adbbe",
     "full-0055.txt": "771b1f1aeda5eaf9eb812609a36b2809249ec4d0b5b5dc5c55e4549edc315868",
     "full-0055.xml": "34a8ccdb871be82ce196696869e832737658fad857ce85d4f16922eab099098f",
+    "full-0056-before.json": "03c59b4b8b77cc93af76b1109c9eeabba0c5523d19c58670ce955b245212dd39",
+    "full-0056-runner.txt": "acc37d95b68f55a8841629bd5e0ed739ebb85b4989f83135ff43a295c01d174f",
+    "full-0056-source.json": "3e1e95454353fc932a9f0de954044ce7eb87afc6f4d92982cd85478fc871d230",
+    "full-0056.txt": "35a778a425718c9442fb1a6915e15dd86d11bdf83342bd7335fba5dd790469bb",
+    "full-0056.xml": "80083645b95efc7756fe4495423f16d23d7b3f7ada37bd3426dcb8262905ff6d",
     "native-boundary-initial.txt": "771bd679df30e646f1d9845b27a3b0fadecb48b7f36dbd5e202ed6f85b39e996",
     "native-boundary-initial.xml": "9c2706287430dafb7571344db792ba5f19176776561827b408bd57257c876fb5",
     "native-mounted-0056/browser-results.json": "a385af584d871c1939d64327dcb8da1966f4afbae7226f3a3e6aa4b610e204e5",
@@ -82,6 +97,18 @@
     "operator-cleanup-node.txt": "ebac54dc9cb5e4784254437f1296ab880bb6b9f0336b46532818b1cefbfbef97",
     "operator-contract-composed.txt": "94a390134ca866ebc3f1ce2921553da5e112922aa45e7a73ef7eada701f3f530",
     "operator-lifecycle-composed.txt": "af12ef90f28e69d48cc0fa0bb45db2a95e7b54e70aff268663bd5d15f43d7896",
-    "operator-registration-pure.txt": "e464ccbf60938f0af2c1972359092cf5ab5b007a89a7e4430955139cb935e495"
+    "operator-registration-pure.txt": "e464ccbf60938f0af2c1972359092cf5ab5b007a89a7e4430955139cb935e495",
+    "skip-attribution.json": "714c79216b8c5fa6de749395e4d6430411e6fbfe05dfa2156c8908e2c343384d"
+  },
+  "current_accepted_complete": {
+    "source": "eeb94a119736cae816af782f2af5e04cb877e616",
+    "alembic_revision": "0056_v1_comment_operator",
+    "passed": 2425,
+    "skipped": 8,
+    "failed": 0,
+    "duration_seconds": 1119.92,
+    "exit_code": 0,
+    "source_unchanged": true,
+    "stable_tracked_files": 800
   }
 }
