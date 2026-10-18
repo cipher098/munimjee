@@ -399,7 +399,10 @@ async def schema_fingerprint(connection):
       LEFT JOIN pg_class rc ON rc.oid=k.confrelid LEFT JOIN pg_namespace rn ON rn.oid=rc.relnamespace
       WHERE n.nspname='public' ORDER BY c.relname,k.conname""")).all())
     validate_constraint_metadata(metadata)
-    inventory["constraint_metadata"] = list(map(list, metadata))
+    # Exact known-FK validation happens above, before any canonicalization.
+    # Ordinary duplicated definitions need the same narrow PG16 cast treatment
+    # as the original constraint inventory, or equivalent reparses differ twice.
+    inventory["constraint_metadata"] = [list(row[:-1]) + [canonical_constraint(row[-1])] for row in metadata]
     for row in inventory["constraints"]:
         row[2] = canonical_constraint(row[2])
     inventory["sequence_state"] = []
