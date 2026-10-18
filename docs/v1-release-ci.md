@@ -1,0 +1,108 @@
+# Bounded V1 CI and package release checks
+
+18 October 2026. Application baseline `dd36b0d`, release lane base `3082f1a`.
+This lane changes release tooling only. Product/schema/auth/recovery source and
+`backend/requirements.txt` remain unchanged. Flags remain default off.
+
+## Immutable inputs and their sources
+
+`deploy/v1/Dockerfile` pins Python 3.11 slim **Bookworm** by its registry index
+digest. The PostgreSQL 16 CI service is pinned the same way. The index records
+include Linux amd64 and arm64 children; this establishes availability, not a
+successful build. Exact registry responses are in
+`artifacts/v1/release-ci/registry-pins.json`. These were obtained directly from
+Docker's public registry manifest endpoint after a public pull-token request.
+No registry credentials or tokens are saved. Docker documents digest pinning at
+<https://docs.docker.com/reference/cli/docker/image/pull/>.
+
+Every `uses:` action is pinned to an upstream Git commit, verified with
+`git ls-remote https://github.com/actions/<action>.git refs/tags/<version>`:
+checkout v4.2.2 `11bd71901bbe5b1630ceea73d27597364c9af683`, setup-python v5.6.0
+`a26af69be951a213d495a4c3e4e4022e16d87065`, setup-node v4.4.0
+`49933ea5288caeca8642d1e84afbd3f7d6820020`, upload-artifact v4.6.2
+`ea165f8d65b6e75b540449e92b4886f43607fa02`. These are deliberately verified
+stable versions, not a claim to be the latest releases. Node 22.23.3 was verified
+against <https://nodejs.org/dist/index.json>. Local Python 3.11.16 came from uv's
+managed CPython distribution. Hosted runner OS images and downloaded browser/OS
+packages are not immutable; record the runner image version in actual CI evidence.
+
+Runtime direct pins are mirrored exactly in `deploy/v1/runtime.in`, excluding only
+pytest, pytest-asyncio and vcrpy. `runtime.lock` pins the complete Python 3.11/Linux
+closure with distribution SHA256 hashes. `test.lock` adds the unchanged backend test
+dependencies under runtime constraints. The Docker recipe requires binary wheels,
+hash checking and `pip check`. See pip's primary guidance:
+<https://pip.pypa.io/en/stable/topics/secure-installs/>.
+
+Resolution used uv 0.12.9, public PyPI, no source builds, cutoff
+`2026-10-18T00:00:00Z`, Python 3.11 and `x86_64-unknown-linux-gnu`:
+
+```sh
+uv pip compile deploy/v1/runtime.in --python-version 3.11 --python-platform x86_64-unknown-linux-gnu --generate-hashes --only-binary=:all: --default-index https://pypi.org/simple --exclude-newer 2026-10-18T00:00:00Z --no-header --no-annotate -o deploy/v1/runtime.lock
+uv pip compile backend/requirements.txt -c deploy/v1/runtime.lock --python-version 3.11 --python-platform x86_64-unknown-linux-gnu --generate-hashes --only-binary=:all: --default-index https://pypi.org/simple --exclude-newer 2026-10-18T00:00:00Z --no-header --no-annotate -o deploy/v1/test.lock
+```
+
+The lock is intentionally scoped to Python 3.11/Linux, not every Python/platform.
+The initially attempted universal test resolution failed on an unrelated PyPy
+urllib3 constraint and was replaced by this explicit runtime scope. Saved public
+PyPI version JSON metadata validates every runtime distribution hash; this is
+registry provenance, not a vulnerability audit. Hashes prevent artifact substitution,
+not vulnerabilities in incumbent direct pins. Changing those pins requires a
+separate dependency/product compatibility review.
+
+## Package and smoke guarantees
+
+Only tracked allowlisted application/migration/static files, fixed storefront
+modules, the immutable Docker recipe and validated runtime inputs enter the context.
+Every enumerated static asset is now required, including scanner WASM/license.
+Symlinks, development dependencies, URL/options/local requirement entries, dotenv,
+uploads, tests and keys fail or remain excluded. The builder checks runtime direct
+pins against the unchanged backend input before creating the destination.
+
+`runtime-manifest.json` records the actual source file SHA256 values, generated
+context file hashes, source Git revision and a canonical content-map hash. The
+revision describes ancestry; **the content hash identifies packaged bytes**, including
+modified tracked files. Untracked files remain excluded. The package builder does
+not claim a clean checkout solely from its HEAD. File modes and timestamps are
+normalized. `archive --output <new-file.tar>` emits a sorted tar with uid/gid/mtime
+zero and empty owner/group names; existing outputs are never replaced. Identical
+HEAD/input bytes yield identical archives regardless of mtime and umask.
+This does not establish byte-for-byte OCI image reproducibility.
+
+Smoke uses one disposable container, network none, read-only root, nonroot
+10001:10001, dropped capabilities, bounded tmpfs/resources, synthetic configuration
+and three isolated off/enabled/missing-asset processes. It checks Python 3.11,
+UID/GID, exact complete manifest match, file digests, required private/static assets,
+startup refusal and zero recorded network/DNS attempts. Cleanup is only by the
+Docker-written 64-character CID and is verified; names never authorize removal.
+Docker inspect/cleanup calls are now bounded as well.
+
+## CI boundary and current evidence
+
+The workflow uses ephemeral GitHub-hosted Ubuntu 24.04 runners, `contents: read`,
+no persisted checkout credentials, no secrets, no deployment/push and job timeouts.
+It installs the hashed test closure, runs safety/package/Node contracts and maintained
+Playwright fixture journeys. Those browser journeys remain fixture evidence.
+The PostgreSQL 16 job uses a random published port, literal 127.0.0.1 and exact
+`munimjee_test_ci` P01 lane. Existing guards block provider sockets and hold the
+advisory lease across reset, actual migrations and each complete DB fixture.
+A required dedicated migration/lease test writes JUnit and a second command rejects
+missing, duplicate, failed, errored or skipped proof before the full backend suite.
+Native amd64 and arm64 jobs build and run the network-disabled image smoke; no
+multiarch registry manifest is published.
+
+Local Python 3.11.16: **114 passed, 2 skipped** in the pure package/CI/P01-safety
+selection; the two actual DB cases skipped explicitly because no lane was allocated.
+The hashed test closure installed successfully on local macOS arm64 and passed
+`uv pip check`; Python 3.11 compile checks passed. Raw sanitized output is under
+`artifacts/v1/release-ci/`. The first workflow-YAML validation found an unquoted
+colon in a command; it was corrected before the passing run.
+
+The single permitted read-only Docker info probe timed out at six seconds. No
+Docker restart, local build, actual new image smoke, actual PostgreSQL execution,
+remote CI run or multiarch result is claimed. Earlier wave4 image/database evidence
+belongs to its recorded source/inputs and does not certify this changed base/lock.
+Actual hashed wheel availability on both Linux architectures, hosted workflow runs,
+new image smoke and any OCI reproducibility claim remain pending. Rehearsal CLI
+composition awaits its independent safety-reviewed source checkpoint. Live provider,
+physical phone, migration/restore, business readiness and all other G0-G6 gates
+remain separate release requirements; this CI work does not make V1 released.

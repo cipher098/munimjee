@@ -1,0 +1,6 @@
+{
+  "command": "docker info --format <ServerVersion>",
+  "timeout_seconds": 6,
+  "result": "timeout",
+  "actual_build_executed": false
+}
