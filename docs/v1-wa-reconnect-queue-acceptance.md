@@ -34,3 +34,16 @@ order or stock reservation is added by these tests. Synthetic signup-session
 fixtures and transports are not actual customer or provider consent evidence.
 Actual execution requires an explicit released `parcel_w6` P01 allocation; collected
 names are not fake-persistence acceptance or a migrated pass.
+
+One additional prepared actual-PG case closes the remote material vocabulary
+repair's wiring gap: signed actual ingress with an exact activated reel plus
+“material and price?” must queue the conservative human handoff, retain one action
+under duplicate delivery, and regenerate the same handoff at the existing worker
+send boundary. A synthetic provider may be attempted once; no price/private facts
+may replace the unsupported-material answer. This is not a zero-send case.
+
+The remote owned runtime d3aacd9 (handoff a0d46df) is a required dependency before
+execution; it is not implemented or imported into production source by this test
+branch. **All3 tests collect only; no actual DB pass is claimed.** The source base
+and collection are separate from the future composed runtime under test. Serial
+lane permission remains withheld during the full producer gate.

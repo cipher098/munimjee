@@ -156,3 +156,62 @@ async def test_explicit_owner_reenable_before_dispatch_characterizes_current_fre
     async with world.j.sessions() as db:
         row = await db.get(WhatsAppMessage, world.message_id)
         assert row.status == 'accepted' and row.provider_message_id == 'synthetic-provider-acceptance'
+
+
+@pytest.mark.asyncio
+async def test_signed_material_plus_price_question_stays_handoff_at_queue_and_dispatch(sku_lane, monkeypatch):
+    """Prepared actual ingress/SQL/worker check of remote d3aacd9 vocabulary fix."""
+    from app.services.sku_fact_replies import HANDOFF
+    j = sku_lane
+    monkeypatch.setattr(settings, 'WHATSAPP_APP_SECRET', 'synthetic-v08-signature')
+    monkeypatch.setattr(settings, 'CHANNEL_ENCRYPTION_KEY', Fernet.generate_key().decode())
+    async with j.sessions.begin() as db:
+        db.add(WhatsAppAccount(seller_id=j.bid, phone_number_id=PHONE_ID, waba_id=WABA_ID,
+            access_token=encrypt('synthetic-material-only'), enabled=True,
+            automation_enabled=True, reel_replies_enabled=True))
+    from app.main import app
+    async def dependency():
+        async with j.sessions.begin() as db:
+            yield db
+    old = app.dependency_overrides.get(get_db)
+    app.dependency_overrides[get_db] = dependency
+    sends = []
+    async def provider_send(account, contact, message):
+        sends.append(message.text)
+        return 'synthetic-material-handoff-acceptance'
+    monkeypatch.setattr(whatsapp_provider, 'send', provider_send)
+    mid = 'synthetic-material-' + uuid4().hex
+    packet = {'object': 'whatsapp_business_account', 'entry': [{'id': WABA_ID, 'changes': [{
+        'field': 'messages', 'value': {'metadata': {'phone_number_id': PHONE_ID}, 'messages': [{
+            'id': mid, 'from': '919876543210', 'timestamp': str(int(datetime.now(timezone.utc).timestamp())),
+            'type': 'text', 'text': {'body': 'material and price? https://www.instagram.com/reel/Exact_code/'}}]}}]}]}
+    raw = json.dumps(packet).encode()
+    signature = 'sha256=' + hmac.new(b'synthetic-v08-signature', raw, hashlib.sha256).hexdigest()
+    try:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=ORIGIN) as client:
+            response = await client.post('/webhooks/whatsapp', content=raw,
+                headers={'Content-Type': 'application/json', 'X-Hub-Signature-256': signature})
+            assert response.status_code == 200
+            # Identical signed delivery must retain one inbound and one action.
+            assert (await client.post('/webhooks/whatsapp', content=raw,
+                headers={'Content-Type': 'application/json', 'X-Hub-Signature-256': signature})).status_code == 200
+        async with j.sessions() as db:
+            inbound = await db.scalar(select(WhatsAppMessage).where(WhatsAppMessage.seller_id == j.bid,
+                WhatsAppMessage.direction == 'inbound', WhatsAppMessage.provider_message_id == mid))
+            assert inbound is not None
+            outbound = (await db.scalars(select(WhatsAppMessage).where(WhatsAppMessage.seller_id == j.bid,
+                WhatsAppMessage.direction == 'outbound', WhatsAppMessage.idempotency_key == 'auto:reel:' + mid))).all()
+            assert len(outbound) == 1 and outbound[0].status == 'queued' and outbound[0].text == HANDOFF
+            message_id = outbound[0].id
+        await deliver_one(message_id, session_factory(j))
+        await deliver_one(message_id, session_factory(j))
+        assert sends == [HANDOFF]
+        assert '₹' not in sends[0] and 'PRIVATE' not in sends[0]
+        async with j.sessions() as db:
+            row = await db.get(WhatsAppMessage, message_id)
+            assert row.status == 'accepted' and row.provider_message_id == 'synthetic-material-handoff-acceptance'
+    finally:
+        if old is None:
+            app.dependency_overrides.pop(get_db, None)
+        else:
+            app.dependency_overrides[get_db] = old
