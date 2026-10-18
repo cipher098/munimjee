@@ -1,0 +1,71 @@
+{
+  "base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "mode": "Static source/evidence review; no tests/application imports or external effects",
+  "files": [
+    {
+      "path": "backend/app/services/sku_fact_replies.py",
+      "sha256": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+      "git_blob": "b915e4fe5b54db97d0a71030e5fb526b77901c38"
+    },
+    {
+      "path": "backend/app/services/whatsapp_context.py",
+      "sha256": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+      "git_blob": "6a9bf194efac3c455470b85a5097d1358011140b"
+    },
+    {
+      "path": "backend/app/bot/conversation.py",
+      "sha256": "e6436301a99822cd604441abfe34024a6ca47bd7856fb07d1a8d7c71d198d88d",
+      "git_blob": "92fe72e7485cae5a6db11a63923b5600634f2a01"
+    },
+    {
+      "path": "backend/app/schemas/sku_fact_replies.py",
+      "sha256": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+      "git_blob": "0a3eac8b5438fc9607973c391367518dcb9cac19"
+    },
+    {
+      "path": "backend/tests/test_v08_semantics_acceptance.py",
+      "sha256": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+      "git_blob": "9de0597a119c86728b8bafc1671aa5aede90854b"
+    },
+    {
+      "path": "backend/tests/test_v08_context_acceptance.py",
+      "sha256": "da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41",
+      "git_blob": "cc28adc39cd3a426ab67da3006236113632f3b0d"
+    },
+    {
+      "path": "backend/tests/test_sku_fact_replies.py",
+      "sha256": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1",
+      "git_blob": "2925ddeb758c6da7fb1de077e185cba451368fab"
+    },
+    {
+      "path": "backend/tests/safety.py",
+      "sha256": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+      "git_blob": "a4306030edcbda338023b3ae8c0cab052944c2f9"
+    },
+    {
+      "path": "backend/tests/conftest.py",
+      "sha256": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84",
+      "git_blob": "5a52763d4ad9309b1baffb5536c033bc532f20e9"
+    },
+    {
+      "path": "artifacts/v1/v08-semantics/first-run.xml",
+      "sha256": "fc42ba9f1f67f5ed2c2e261788aa1b1ea78414cb693cab7ed2e9d99261f39f91",
+      "git_blob": "0d0834cb97c8259649a57152d7c68d39e62b2e65"
+    },
+    {
+      "path": "artifacts/v1/v08-semantics/first-run.txt",
+      "sha256": "06b1e8b0107e086dcbbfe58145641afe06c8437a22fdce0bae7ed3e3269318ec",
+      "git_blob": "f39765dc88d1df3fc44d88f9885b53ae190da181"
+    },
+    {
+      "path": "artifacts/v1/v08-context/results.xml",
+      "sha256": "55e26222ad74cfed6fa1756e2b81bf5b739c37e1a456062c3101ef5ba45bd798",
+      "git_blob": "d1867f8631b6f3884df4186a1dc8eeaf541bbd67"
+    },
+    {
+      "path": "artifacts/v1/v08-review/independent-21.xml",
+      "sha256": "18447e894027c85ee4d2e8812f5c86b3ab7d8d5ba5b1fc1897eb893089fdc211",
+      "git_blob": "34a85b8698d16802585823531295bacbdf419f23"
+    }
+  ]
+}
