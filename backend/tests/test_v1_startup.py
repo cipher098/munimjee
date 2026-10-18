@@ -14,7 +14,8 @@ def test_all_foundation_models_are_registered():
             "channel_connection_states", "channel_oauth_attempts",
             "v1_import_assets", "v1_import_jobs", "v1_import_drafts", "v1_import_audits",
             "import_catalogue_bridges", "v1_parcel_connectors", "v1_order_parcel_links",
-            "v1_parcel_observations", "v1_parcel_notifications", "v1_parcel_audits"} <= set(Base.metadata.tables)
+            "v1_parcel_observations", "v1_parcel_notifications", "v1_parcel_audits",
+            "storefront_theme_settings_v1", "storefront_theme_commands_v1"} <= set(Base.metadata.tables)
 
 
 def test_versioned_identity_routes_are_mounted_on_actual_application():
@@ -24,6 +25,9 @@ def test_versioned_identity_routes_are_mounted_on_actual_application():
             "/api/v1/businesses/{business_id}/readiness", "/api/v1/auth/session",
             "/api/v1/businesses/{business_id}/onboarding", "/v1",
             "/v1/businesses/{business_id}/catalogue", "/v1/businesses/{business_id}/channels",
+            "/v1/businesses/{business_id}/imports", "/v1/businesses/{business_id}/themes",
+            "/api/v1/businesses/{business_id}/theme-settings",
+            "/api/v1/businesses/{business_id}/theme-settings/preview",
             "/api/v1/storefronts/{slug}/products",
             "/api/v1/businesses/{business_id}/catalogue/products",
             "/api/v1/businesses/{business_id}/imports/candidates/{candidate_id}/catalogue-preview"} <= paths
@@ -43,7 +47,8 @@ def test_foundation_migrations_form_one_actual_revision_chain():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).parents[1] / "alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["0048_v1_parcel_tracking"]
+    assert scripts.get_heads() == ["0049_v1_storefront_settings"]
+    assert scripts.get_revision("0049_v1_storefront_settings").down_revision == "0048_v1_parcel_tracking"
     assert scripts.get_revision("0048_v1_parcel_tracking").down_revision == "0047_v1_import_catalogue_bridge"
     assert scripts.get_revision("0047_v1_import_catalogue_bridge").down_revision == "0046_v1_import_jobs"
     assert scripts.get_revision("0046_v1_import_jobs").down_revision == "0045_v1_channel_operator"

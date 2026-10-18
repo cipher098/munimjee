@@ -56,7 +56,7 @@ for name,digest in manifest['files'].items():
     if name=='Dockerfile': continue  # recipe is hashed, never copied into runtime
     target=Path('/opt/munimjee')/name if name.startswith('storefront-src/') else Path('/app')/(name[8:] if name.startswith('backend/') else name)
     assert hashlib.sha256(target.read_bytes()).hexdigest()==digest
-assert len(list(Path('/opt/munimjee/storefront-src').iterdir()))==12
+assert len(list(Path('/opt/munimjee/storefront-src').iterdir()))==13
 assert not any(line.startswith(('pytest','vcrpy')) for line in Path('/app/requirements.txt').read_text().splitlines())
 paths={route.path for route in app.routes}
 with TestClient(app, base_url='https://configured.example') as client:
