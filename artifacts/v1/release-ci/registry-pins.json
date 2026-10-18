@@ -1,0 +1,160 @@
+{
+  "python": {
+    "tag": "3.11-slim-bookworm",
+    "digest": "sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "reference": "python:3.11-slim-bookworm@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "platforms": [
+      {
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "digest": "sha256:8a00ecb83ed9d0864dfd102a1bdb2067fda907ceb30bb86d09da9ee558b19590"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:187f59eb8a7e0a915681f6c9db5241207003e142da3e82108a355f82d14ad8ea"
+      },
+      {
+        "platform": {
+          "architecture": "arm",
+          "os": "linux",
+          "variant": "v7"
+        },
+        "digest": "sha256:ee315e04d67710f39aaa74f12674fc9bd0ceabbf705d9194b1397d68ed7e181f"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:3c500152de54d4824a99dc0ae48eacf447974dd2cd4a87a9709721b059f16f31"
+      },
+      {
+        "platform": {
+          "architecture": "arm64",
+          "os": "linux",
+          "variant": "v8"
+        },
+        "digest": "sha256:dabc8c628ee25179a9fcb8ab81e592938ee2bad3ffb15e64157f8fe428d5279f"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:17b8818b8f492b0443962da3daa5a7bc9ad575eab5a5e2c4ca3be75848bd9641"
+      },
+      {
+        "platform": {
+          "architecture": "386",
+          "os": "linux"
+        },
+        "digest": "sha256:ea5e594cbcdd39e6810d0081a7a5ffbfd78ad2dadaeb326c85ddf1b1e20c45fd"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:4fa1c4440ee1e4358c61d8de29604b1b3d7e60ba315bda6ff497ce4cf475eb7f"
+      },
+      {
+        "platform": {
+          "architecture": "ppc64le",
+          "os": "linux"
+        },
+        "digest": "sha256:5bc4bbbcd028306223dcd02d5863af86475e5dd9c89cce0dd36ceb66591e8ba7"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:7a33157144727f8906148af98c56ed06663980d94803354aff985dc6f351e041"
+      }
+    ]
+  },
+  "postgres": {
+    "tag": "16-bookworm",
+    "digest": "sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4",
+    "reference": "postgres:16-bookworm@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4",
+    "platforms": [
+      {
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "digest": "sha256:ec9f656f17c8b4dfebf49e58cf5c46d493d4846d4ea6d8b85d0637f68ee33bfc"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:3a623bd9bc23fd8463bdc6f8e7b07a6c8b9f829a70d6d2867a6980d4f992500a"
+      },
+      {
+        "platform": {
+          "architecture": "arm",
+          "os": "linux",
+          "variant": "v7"
+        },
+        "digest": "sha256:2cbff43061baf39d06e6b011ba68d221b65805020d4f4aef654978849c3fc745"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:c92c2aa49f6e2a72257fcd74b2fcdc23f8cb969706fca559e63aedff3cf218a0"
+      },
+      {
+        "platform": {
+          "architecture": "arm64",
+          "os": "linux",
+          "variant": "v8"
+        },
+        "digest": "sha256:6b0faa930dc29e5af5af9b50081ad496fad106b85a88ad66aea01f11d4494733"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:6ed8eb65f7ff0dcd30e5c743ea1bf9a4239181bdf60a77f64b558610273039ee"
+      },
+      {
+        "platform": {
+          "architecture": "386",
+          "os": "linux"
+        },
+        "digest": "sha256:8c65ca377fc80ec3af79f56a4c6ddcae5f646e38a47f3857306e14eda1081d62"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:7200f6bb83cd928689c46eed97747130fdd08039c14af841437ad68db572862b"
+      },
+      {
+        "platform": {
+          "architecture": "ppc64le",
+          "os": "linux"
+        },
+        "digest": "sha256:d3e39ea3dbcd06b83d9bde1f3f4fd625f8cd62d52eb1909f396f5cbe86b0c718"
+      },
+      {
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "digest": "sha256:6e539ad5666ec5f66c41fa5ea27f5292fc1e231bda157d6aa00a0ad3cf2e8613"
+      }
+    ]
+  }
+}
