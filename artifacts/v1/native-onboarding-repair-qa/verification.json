@@ -1,0 +1,164 @@
+{
+  "scope": "independent actual native source + actual formatter/fake rows + in-process synthetic HTTP; no real DB/session/provider",
+  "production_base": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "runtime_owner_commits": [
+    "c85e480cf30d7c3ca55fbdceaca8dd2f9d6d7a20",
+    "8e62ea770729d04bc0982aadf64dadae41973cb9"
+  ],
+  "runtime_composition": [
+    "539d259",
+    "16bd6ae"
+  ],
+  "qa_preparation_commit": "1478a95",
+  "qa_completion_observation_commit": "b8d7f77068d7dc0b0bac709f010d256fad680103",
+  "original_runner_sha256": "13d503519ef85510f87d7faf29b6505c58fbe00f113d81dcfae66782e8619afd",
+  "original_case_body_sha256": "9f1a4c19a8d655b8d2ddc5d7aee7331d60a421dc995d4d8b2ca81e766b82a6ee",
+  "case_body_byte_identical": true,
+  "same_32_case_ids_order": true,
+  "main_result": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "source_head": "16bd6aefe5d05eea3a96823ee2fbf16c956f037c"
+  },
+  "supplement_result": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "source_head": "b8d7f77068d7dc0b0bac709f010d256fad680103"
+  },
+  "prior_evidence": {
+    "commit": "9642527196f2e80b0a0effd69678949be34074af",
+    "path": "artifacts/v1/independent-onboarding-experience/comparison-8ae97c2/result.json",
+    "sha256": "10fb838b228f3d9199cb70aa38449aa04ec2295d835ca53da12e84387972a0e8",
+    "passed": 27,
+    "failed": 5,
+    "rerun": false
+  },
+  "fixed_ids": [
+    "keyboard-transition",
+    "contrast-focus",
+    "startup-error",
+    "long-business-name",
+    "logout-focus"
+  ],
+  "remaining_ids": [],
+  "earlier_baseline_artifacts_preserved": 22,
+  "source_hashes": {
+    "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "v1_app.js": "ee4a64b78b1a177e199a22f2cc1e10e146ff66120111bb2147f8bb0920ef9e91",
+    "v1_app.css": "6e9ca1e94315efe982654edab93ecb3e19442f71b1ec6e8a3da62777b25ef52c",
+    "v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_matches_runtime_owner_bytes": true,
+  "native_source_unchanged_both_runs": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "fixture_sources_verified_before_browser": true,
+  "screenshots": {
+    "focused-long-business-name-360.png": {
+      "width": 360,
+      "height": 3334,
+      "sha256": "a05f3003a51358389db94534546fbb10546a81fb5c0a7fa62e70c8f515563616"
+    },
+    "manual-retry-503-denied.png": {
+      "width": 390,
+      "height": 935,
+      "sha256": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783"
+    },
+    "manual-retry-503-valid.png": {
+      "width": 390,
+      "height": 2976,
+      "sha256": "b31262f066491b52a84235fc438787054e2731c4958ff704e00cdc298336a54a"
+    },
+    "manual-retry-transport-denied.png": {
+      "width": 390,
+      "height": 935,
+      "sha256": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783"
+    },
+    "manual-retry-transport-valid.png": {
+      "width": 390,
+      "height": 2976,
+      "sha256": "b31262f066491b52a84235fc438787054e2731c4958ff704e00cdc298336a54a"
+    },
+    "owner-1440.png": {
+      "width": 1440,
+      "height": 2189,
+      "sha256": "3a83c668d93dceaa0951cb7e44c7a4c0bf3edf3e3c5ba6253716667e5a82857d"
+    },
+    "owner-360.png": {
+      "width": 360,
+      "height": 3247,
+      "sha256": "cd3e8c8d06fb1ccadb4ec1138d417ba7864768e1fe9379e1eff2ab5aff983ead"
+    },
+    "owner-390.png": {
+      "width": 390,
+      "height": 3202,
+      "sha256": "102df9ac39ebe5ee8fdc7a91a8253a29fb7ec25b7a2a557ab2006c22067b0ff1"
+    },
+    "owner-768.png": {
+      "width": 768,
+      "height": 2470,
+      "sha256": "2fefc7b6f720477248e12bed96d42fa68789935906f1db4909e8adb73002904c"
+    },
+    "signup-1440.png": {
+      "width": 1440,
+      "height": 920,
+      "sha256": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d"
+    },
+    "signup-360.png": {
+      "width": 360,
+      "height": 935,
+      "sha256": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49"
+    },
+    "signup-390.png": {
+      "width": 390,
+      "height": 935,
+      "sha256": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783"
+    },
+    "signup-768.png": {
+      "width": 768,
+      "height": 920,
+      "sha256": "c950ec647eacbb3ba903c98583055c2a407dcdbe0238d106e624a44786c72826"
+    }
+  },
+  "artifact_sha256": {
+    "fixtures.json": "8dac591035b7e8980a8f842fe94f6daaf41d8eb4291d2bb94c6bf5d15c6da3b7",
+    "focused-long-business-name-360.png": "a05f3003a51358389db94534546fbb10546a81fb5c0a7fa62e70c8f515563616",
+    "manual-retry-503-denied.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "manual-retry-503-valid.png": "b31262f066491b52a84235fc438787054e2731c4958ff704e00cdc298336a54a",
+    "manual-retry-transport-denied.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "manual-retry-transport-valid.png": "b31262f066491b52a84235fc438787054e2731c4958ff704e00cdc298336a54a",
+    "owner-1440.png": "3a83c668d93dceaa0951cb7e44c7a4c0bf3edf3e3c5ba6253716667e5a82857d",
+    "owner-360.png": "cd3e8c8d06fb1ccadb4ec1138d417ba7864768e1fe9379e1eff2ab5aff983ead",
+    "owner-390.png": "102df9ac39ebe5ee8fdc7a91a8253a29fb7ec25b7a2a557ab2006c22067b0ff1",
+    "owner-768.png": "2fefc7b6f720477248e12bed96d42fa68789935906f1db4909e8adb73002904c",
+    "result.json": "4b3e2d04f6232c0945c3251c05788176d305c67eaf87935485cb14e2deea228b",
+    "run.txt": "b8e8a903cf13e39cde4e7481e7bb8d74e6c90e872d4529bbe25a934847f01288",
+    "signup-1440.png": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d",
+    "signup-360.png": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49",
+    "signup-390.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "signup-768.png": "c950ec647eacbb3ba903c98583055c2a407dcdbe0238d106e624a44786c72826",
+    "supplement-result.json": "7abee9467f5e40c27f9fd9f25c9436bb41cbf49eb054b0455f19f11d92c1dc52",
+    "supplement-run.txt": "5979b5a87df1d4f82f67f47b9b770d340eaef052c17fe33d2bc69b921f6ca5bf"
+  },
+  "script_sha256": {
+    "backend/tests/independent_onboarding_experience_qa.py": "5778358917bb2203d582ca84b43a1b874003bdc0c2fbfacb1b8d63b1ad5cec06",
+    "backend/tests/independent_onboarding_experience_qa.mjs": "27e9a351dc23228af7275f4ee89f9984420c338f2682030594c808ac1f787264",
+    "backend/tests/native_onboarding_repair_qa.mjs": "b540228478f33bae327d915ff8cd04e12afeeb0e97190ab635edd428311f3a16"
+  },
+  "commands": [
+    "/tmp/munimjee-release-ci-py311/bin/python backend/tests/independent_onboarding_experience_qa.py --output artifacts/v1/native-onboarding-repair-qa",
+    "/Users/user/.nvm/versions/node/v24.20.0/bin/node backend/tests/independent_onboarding_experience_qa.mjs > artifacts/v1/native-onboarding-repair-qa/run.txt 2>&1",
+    "/Users/user/.nvm/versions/node/v24.20.0/bin/node backend/tests/native_onboarding_repair_qa.mjs > artifacts/v1/native-onboarding-repair-qa/supplement-run.txt 2>&1"
+  ],
+  "limits": [
+    "No actual server/session/Set-Cookie race evidence",
+    "No mounted migrated DB",
+    "No physical touch or screen-reader run",
+    "No complete WCAG or contrast certification",
+    "No provider/production acceptance",
+    "Local integration eeb94a1/0056 reported only; not tested here"
+  ]
+}
