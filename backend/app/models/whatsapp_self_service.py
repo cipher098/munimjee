@@ -98,6 +98,7 @@ class WhatsAppAuthorizationProvenance(Base):
     phone_number_id = Column(String(40), nullable=False)
     waba_id = Column(String(40), nullable=False)
     verified_app_id = Column(String(40), nullable=False)
+    credential_fingerprint = Column(String(64), nullable=False)
     grants = Column(JSONB, nullable=False)
     token_expiry_kind = Column(String(12), nullable=False)
     token_expires_at = Column(DateTime(timezone=True))
@@ -107,6 +108,8 @@ class WhatsAppAuthorizationProvenance(Base):
         ForeignKeyConstraint(["attempt_id", "business_id"], ["whatsapp_signup_attempts.id", "whatsapp_signup_attempts.business_id"], name="wa_provenance_attempt"),
         CheckConstraint("actor_auth_version >= 0 AND connection_version >= 0", name="wa_provenance_versions"),
         CheckConstraint("phone_number_id ~ '^[0-9]{1,40}$' AND waba_id ~ '^[0-9]{1,40}$' AND verified_app_id ~ '^[0-9]{1,40}$'", name="wa_provenance_ids"),
+        CheckConstraint("credential_fingerprint ~ '^[0-9a-f]{64}$'", name="wa_provenance_credential"),
+        Index("ix_wa_provenance_credential", "business_id", "credential_fingerprint"),
         CheckConstraint("jsonb_typeof(grants) = 'array' AND jsonb_array_length(grants) = 2 AND grants @> '[\"whatsapp_business_management\",\"whatsapp_business_messaging\"]'::jsonb", name="wa_provenance_grants"),
         CheckConstraint("(token_expiry_kind = 'at' AND token_expires_at IS NOT NULL AND token_expires_at > verified_at) OR (token_expiry_kind = 'permanent' AND token_expires_at IS NULL)", name="wa_provenance_expiry"),
         CheckConstraint("evidence_kind IN ('provider','synthetic_fixture')", name="wa_provenance_evidence"),

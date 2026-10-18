@@ -87,8 +87,8 @@ def command_digest(secret: str, text) -> str | None:
     return canonical_digest(secret, 'wa-test-command.v1', text)
 
 
-def embedded_configuration(settings):
-    if not settings.V1_WHATSAPP_ONBOARDING_ENABLED:
+def embedded_configuration(settings, *, require_onboarding=True):
+    if require_onboarding and not settings.V1_WHATSAPP_ONBOARDING_ENABLED:
         raise ProtocolError('configuration_unavailable')
     try:
         app_id, config_id = identifier(settings.WHATSAPP_EMBEDDED_APP_ID), identifier(settings.WHATSAPP_EMBEDDED_CONFIG_ID)
