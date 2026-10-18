@@ -11,7 +11,9 @@ from datetime import timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.routing import APIRoute
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,7 +42,26 @@ COOKIE='wa_signup_nonce'
 
 
 def private(response:Response): response.headers.update(PRIVATE)
-router=APIRouter(tags=['v1-whatsapp-self-service'],dependencies=[Depends(private)])
+
+
+class PrivateRoute(APIRoute):
+    """Dependency Response headers do not survive HTTPException handling."""
+    def get_route_handler(self):
+        handler=super().get_route_handler()
+        async def protected(request):
+            try:
+                response=await handler(request)
+            except HTTPException as error:
+                error.headers={**(error.headers or {}),**PRIVATE}
+                raise
+            except RequestValidationError:
+                return JSONResponse(status_code=422,content={'detail':'Review the connection details and try again'},headers=PRIVATE)
+            response.headers.update(PRIVATE)
+            return response
+        return protected
+
+
+router=APIRouter(tags=['v1-whatsapp-self-service'],dependencies=[Depends(private)],route_class=PrivateRoute)
 
 
 def provider_dependency():
