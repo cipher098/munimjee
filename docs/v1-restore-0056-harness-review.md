@@ -28,7 +28,7 @@ Expected assertions must be independent literals/mutations, not production expec
 
 ## Checkpoints
 
-Implementation and QA checkpoints pending. No application, test, harness, DB, container, tool installation, daemon, capacity retry, credential, provider/model or actual restore was executed by this review.
+Implementation and QA checkpoints were pending at the initial review; exact final checkpoints are reviewed below. No application, test, harness, DB, container, tool installation, daemon, capacity retry, credential, provider/model or actual restore was executed by this review.
 
 ## Candidate source review
 
@@ -48,4 +48,25 @@ Independent immutable-byte comparison confirms20 pre-existing rehearsal function
 
 `probe_comment_fk` refuses an existing transaction, snapshots then rolls back its initial read, creates an explicit outer transaction, inserts the valid first event/public action and temporary seller, and tests a distinct second event/public action in a nested savepoint. `fk_error` requires SQLSTATE and constraint name on the same exception in the SQLAlchemy/asyncpg wrapper chain, not message text. Nested and outer rollback run in finally blocks; `rollback_owned` shields/drains cleanup under cancellation. After rollback, the full snapshot must equal the pre-probe snapshot and that read transaction is also rolled back. Source/target probes preserve full data/schema state rather than only count equality. These are source observations, not executed PostgreSQL enforcement or rollback proof.
 
-No other source blocker found at the corrected candidate. Exact QA test/evidence checkpoint and R01 regression review remain pending.
+No other source blocker found at the corrected candidate. Final QA and R01 regression review follow below.
+
+## Final QA/evidence review and disposition
+
+No remaining scoped blocker for source/unit preflight. Exact owner source is `992c8bf88704545117ca17b3dbc12b8f41412f15` plus R01 correction `bd24f74e541147713f0edf160f0faf5af9df03a2`. Owner source-only preflight evidence is `5270afe687d716160ce167a99087957df8326d3a`; its source/guard hashes also match. QA tests are `b57d5ea4999fd4fe3185bd7b524701e56eab7da2`; QA documentation/evidence is `6d78f4467736094f0098652bd6f0a1c60d8c4408`. Coordinator canonical source is `049019b2105a855f88a33149f7a2e4db49d7ceae`. All three owner source/fixture files and the three QA test files match across immutable owner/QA/coordinator Git blobs and the coordinator checkout.
+
+| Exact file | SHA256 |
+| --- | --- |
+| `scripts/v1_release_rehearsal.py` | `1e7a6a32d8ed483f6e90c355e736431c7c7e6c78f17050681878da93af4adbe2` |
+| `scripts/v1_release_synthetic.py` | `551a69e2d7586328e125cec840a06d0113f3815fe98ce4352f303b7a04111577` |
+| Locked fixture version1 | `1a33b7b2cfbc987e4a00611345026dd2bd40b07123357b4098933e11ed14c4d3` |
+| `tests/release/test_v1_release_0056.py` | `e0b36022bca3023461b17f7245eadd9df05e9c15843a885d9d1aebfe18e20364` |
+
+The root-approved finite49 additions are meaningful within their declared boundaries. R1 uses an independently transcribed15-field FK literal plus missing/altered/extra-NOT-VALID mutations. Its two whole-schema cases exercise both definition inventories, require equivalent cast reparses to hash equally and protected quoted-identifier changes to differ; they close R01's source/unit path. R2 independently pins distinct pending/public and unknown/public event IDs, new action UUIDs and temporary seller binds; transaction markers are restored only when the actual rollback calls occur. Correct, wrong/missing and absent diagnostics, positive-write failure and cancellation exercise success and refusal cleanup. R3 independently specifies count/totals/fixture lock/NULL/staged statements/target append and invokes actual semantic hashing on explicit raw rows. R4 changes a raw enquiry contact link, runs actual `semantic_state`, preserves aggregate counts and still reaches validator digest refusal. R5 injects different snapshot components and verifies orchestration order, held lease markers, archive reuse refusal and no success evidence after failures. None of these fake catalogue/SQL/transaction/engine boundaries is a PostgreSQL implementation or restore oracle.
+
+Independently verified all50 original assertion ASTs unchanged except the approved0053→0056 head literal. The old test-file adaptations add only the probe stub needed to reach its pre-existing lease failure episodes and exact new catalogue rows needed for schema fingerprint assertions. Prior quote/cast, private archive, P01, redaction, lease/cancellation and writer-protection assertions remain. Compatibility test bytes are unchanged. All22 recorded unchanged function/class hashes and the exec helper match the base; owner and QA change no backend runtime/migration/test files.
+
+QA final raw XML records **107 passed, 1 skipped, 0 failures/errors**, including49 new units. The existing53 release case slots include the one actual acceptance skip;52 executed prior release cases +6 compatibility units +49 new units =107 passes. Root's separately sanitized canonical three-file run records the same107/1 in0.38s. Its plan output records exact0056/version1/locked fixture/source52/target58 and no DB/container effects. I verified both XMLs, every QA raw artifact/document hash and canonical invocation/plan/text/XML hashes without executing another unit run. Root's invocation explicitly disables actual acceptance and supplies no target URLs; QA used an empty safe environment without opt-in/URLs. The first QA107/1 output remains diagnostic for its earlier uncommitted assertion version, as disclosed; the final committed-test result is authoritative.
+
+Final verification is under `artifacts/v1/restore-0056-harness-review/final-verification.json`. It records immutable source/test hashes, R01's correction, old-assertion/guard audits, exact result/skip accounting and canonical artifact hashes. No separate failing run of the initial R01 candidate was executed or inferred.
+
+**Actual acceptance remains blocked/unverified:** PostgreSQL catalogue projection and exact FK new-write enforcement, real savepoint/outer rollback, trigger-compatible populated source52 and target58, PG16 tools/two fresh owned lanes, actual dump/restore/schema/row parity, historical offender evaluation, mounted old/current package compatibility and routine rollback/forward preservation. The reported capacity/daemon/tool blockers were not retried. No actual restore, provider/model, credential, install/service/container or production action occurred in this review. Passing source/unit preflight is not0056 restore success or release readiness.
