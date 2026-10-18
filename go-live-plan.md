@@ -68,10 +68,17 @@ acceptance never means delivery. Remaining code-owned work includes supported
 WhatsApp v4 self-service consent and
 account selection, authorized-recipient test/result workflow, and the rest of the
 V1 acceptance matrix. Catalogue owns reserved0057 v4 implementation from frozen0056 after reviewed
-contract approval; its runtime/DB/browser acceptance is pending and no live
-provider action is authorized. Its reviewed source now includes explicit original-App
-binding, current native authority after provider claims, exact credential provenance
-and bounded test authorization; actual0057 proof is still pending. Remote reviewed
+contract approval; it remains isolated from the accepted central checkpoint. Its owner149 focused
+checks,8 additional actual checks, independent six actual claim/App races and30
+mounted actual-main checks now pass separately. A subsequent explicit fresh-test/
+uncertain-setup completion delta is source-reviewed and undergoing fresh serial
+checks; final frozen0057 full-suite acceptance is still pending. Both flags stay off,
+real SDK/provider canaries remain unproved, and no live provider action is authorized.
+Its source includes original-App binding, current native authority after provider
+claims, exact credential provenance and bounded test authorization. A13 native
+exact-one-enquiry reviewed link/eligible resume and A10 safe canonical-SKU comment
+action remain explicit code-owned gaps; inferred context cannot be promoted into
+resume permission. Reserved0058 requires its frozen receipt/dispatch contract first. Remote reviewed
 material-question handoff and local queued-reconnect cases pass105 focused checks
 (57 actual-PG/48 pure) plus five actual-main mounted SKU journeys at85d9390.
 They prove conservative handoff, effective paused withholding and separately

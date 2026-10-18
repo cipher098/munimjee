@@ -90,22 +90,46 @@ historical artifacts were restored byte-for-byte. Exact boundaries are in
 `docs/v1-wave7-v08-validation.md`. This is a focused runtime delta after the
 complete2441 source, not another complete-run claim or full V08 acceptance.
 
-0057 backend `e897ee6` resolves the
-reviewed App/config/claim/expiry source findings with independent16 no-network
-checks; page `93e6856` has18 controlled-DOM checks. Actual0057 migration, lock
-races and mounted browser acceptance remain pending. Isolated shared-hook
-installation `d541311` is independently source-cleared by both peers; its first
-actual0057 owner gate found missing private error headers after successful
-paused attach/replay. The owned wrapper fix `b853f4a` passes26 focused actual
-checks; the final mapped/legacy selection is still running, not acceptance. Both flags
-stay false; no provider wire or delivery claim follows from these source tests.
+0057 remains isolated from this accepted central checkpoint. Backend `e897ee6`
+resolves reviewed App/config/claim/expiry findings with16 independent no-network
+checks; the installed actual-main composition includes shared hooks `d541311`.
+The first actual gate found missing private error headers, fixed in `b853f4a`.
+Subsequent owner selection passes149 checks (26 new actual0057,8 legacy actual,
+115 pure), plus8 additional actual boundary checks. Independent six committed-claim
+SID and late-App races pass at isolated `646bb952`, actualPG16.15/head0057, with1826
+tracked files stable. These results are separate selections, not an aggregate full
+suite. The initial private-header failure remains preserved.
 
-DB/browser work stays serialized on disk-backed55443. The V08 parcel slot is
-released; catalogue now exclusively owns payment_w6 for focused0057 proof.
-No parallel DB/browser executor is authorized. New image/restore/rollback copies remain deferred under host
-disk headroom; no prune or evidence deletion is authorized. Provider approvals,
-physical devices, private ParcelDesk provisioning and operational deployment stay
-open. Exact boundaries are in `docs/v1-wave7-contracts.md`.
+The owner mounted flow passes30 actual-main checks at0057 with339 stable source/
+harness hashes, one fulfilled synthetic SDK request, zero actual Meta SDK requests,
+and zero other external requests/page errors. Three earlier harness timing/assertion
+failures are preserved. This is not final0057 acceptance: subsequent reviewed
+completion delta `99c632b` adds explicit fresh-test review after a known safe result,
+blocks all earlier queued/sending/unknown reply effects under the Account lock even
+across generation changes, and corrects uncertain-setup controls/copy. Its118 pure
+and22 controlled-DOM checks pass; fresh focused actual and mounted checks are now
+allocated serially. Both feature flags stay false. Real SDK, grants, phone registration,
+CSP and delivery canaries remain unproved. A full frozen0057 run is still required
+before integrating/pushing this isolated feature.
+
+Acceptance reconciliation also identifies remaining code-owned boundaries: A13 lacks
+a native exact-one-enquiry reviewed link/eligible resume command; existing legacy
+whole-reel-group mutation is not that native authority surface. Reserved0058 follows
+real0057 only after its exact receipt/schema contract freezes. Original inferred
+context must remain link/review-only. A10/V08 canonical activated-product comment
+action remains deliberately withheld by the safe static-copy policy; repaired native
+controls do not imply that action mode is implemented. Social owns the bounded
+58-row/23-journey reconciliation; root coordinates remote implementation assignments.
+
+DB/browser work stays serialized on disk-backed55443. Catalogue exclusively owns
+payment_w6 for the frozen0057 completion checks and mounted8171 proof; no other
+DB/browser executor is authorized until explicit release. All prior parcel slots
+are released. Host free space was2.7GiB at this allocation. New image/restore/rollback
+copies remain deferred under headroom; no prune or evidence deletion is authorized.
+Remote0056 release-harness upgrade `d1720fc` has107 source/unit passes and one
+explicit actual-PG skip; no actual0056 restore is claimed or allocated. Provider
+approvals, physical devices, private ParcelDesk provisioning and operational deployment
+stay open. Exact boundaries remain in `docs/v1-wave7-contracts.md`.
 
 ## Wave6 verified bounded checkpoint
 
