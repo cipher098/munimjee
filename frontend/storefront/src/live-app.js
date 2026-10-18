@@ -1,6 +1,7 @@
 import {el,button,money,art,productCard,productPriceText,dialogShell} from './components.js';
 import {addItem,setQuantity,findSku,limitFor,previewSubtotal} from './commerce.js';
 import {themes} from './theme-config.js';
+import {publishedDesign,applyDesignClass} from './published-design.js';
 import {CheckoutAttempt} from './checkout-attempt.js';
 import {createPaymentHandoff} from './payment-handoff.js';
 
@@ -10,7 +11,8 @@ export function viewProduct(dto,categories,base=''){
 }
 export function mountLiveStorefront({root,data,api,storage}){
   if(data.contract_version!=='storefront.page.v1'||data.capabilities?.public_catalogue!==true||!Object.hasOwn(themes,data.store.theme))throw new Error('Unsupported public storefront.');
-  const store=data.store,theme=themes[store.theme],base=`/stores/${encodeURIComponent(store.slug)}`;
+  const store=data.store,design=publishedDesign(store),theme=themes[store.theme],base=`/stores/${encodeURIComponent(store.slug)}`;
+  applyDesignClass(design);
   let products=data.products.map(dto=>viewProduct(dto,data.categories,base)),cart=[],selectedCategory=data.selected_category_id,search='',customerDraft=null;
   const attempt=new CheckoutAttempt({slug:store.slug,storage});
   const payment=createPaymentHandoff({slug:store.slug,storage});
@@ -84,12 +86,12 @@ export function mountLiveStorefront({root,data,api,storage}){
   function renderProducts(){const filtered=products.filter(p=>(!selectedCategory||p.category_id===selectedCategory)&&p.name.toLowerCase().includes(search.toLowerCase()));document.getElementById('live-grid').replaceChildren(...filtered.map(product=>productCard(product,openProduct)));document.getElementById('live-count').textContent=`${filtered.length} pieces`;}
   bagButton=button(`Bag (${cart.reduce((sum,line)=>sum+line.quantity,0)})`,openBag,{className:'bag-button'});
   const heroProduct=products[Math.min(theme.feature,products.length-1)];
-  const hero=el('section',{className:'hero'},el('div',{className:'hero-copy'},el('span',{className:'eyebrow'},theme.eyebrow),el('h1',{},theme.headline),el('p',{},store.description),el('a',{href:'#collection',className:'primary-button'},theme.cta+' ↗')),heroProduct?el('div',{className:'hero-art'},art(heroProduct,'hero-image')):el('div',{className:'empty-state'},'New pieces are on their way.'));
+  const hero=el('section',{className:'hero'},el('div',{className:'hero-copy'},el('span',{className:'eyebrow'},design.eyebrow),el('h1',{},design.headline),el('p',{},design.intro),el('a',{href:'#collection',className:'primary-button'},theme.cta+' ↗')),heroProduct?el('div',{className:'hero-art'},art(heroProduct,'hero-image')):el('div',{className:'empty-state'},'New pieces are on their way.'));
   const selected=data.selected_product_id?products.find(product=>product.id===data.selected_product_id):null;
   const detailSection=selected?el('section',{className:'brand-story'},el('h1',{},selected.name),el('p',{},selected.description),button('Choose your size',()=>openProduct(selected),{className:'primary-button'})):hero;
   const categories=el('nav',{className:'categories','aria-label':'Categories'},el('a',{href:base},'All pieces'),data.categories.map(category=>el('a',{href:`${base}/categories/${category.category_id}`},category.name)));
   const refresh=api?.readProducts?button('Refresh availability',async()=>{refresh.disabled=true;try{const dto=await api.readProducts();products=dto.products.map(item=>viewProduct(item,data.categories,base));renderProducts();live.textContent='Availability updated.';}catch(error){live.textContent=error.message;}finally{refresh.disabled=false;}},{className:'text-button'}):null;
-  root.replaceChildren(el('header',{className:'shop-header'},el('a',{className:'wordmark',href:base},store.name.toUpperCase()+theme.suffix),el('nav',{'aria-label':'Main'},el('a',{href:'#collection'},'The collection'),bagButton)),...(!checkoutReady?[el('aside',{className:'live-capability-notice'},'Browse this collection. Checkout is unavailable here. The store must enable an available payment method.')]:[]),detailSection,el('section',{id:'collection',className:'collection'},el('div',{className:'section-heading'},el('h2',{},theme.collection),refresh),el('div',{className:'collection-controls'},categories,el('label',{className:'search-label'},el('span',{className:'sr-only'},'Search products'),el('input',{type:'search',placeholder:'Search the collection',onInput:event=>{search=event.target.value;renderProducts();}}))),el('p',{id:'live-count',className:'result-count','aria-live':'polite'}),el('div',{id:'live-grid',className:'product-grid'})),el('footer',{},el('div',{className:'policies'},el('details',{},el('summary',{},'Delivery policy'),el('p',{},store.shipping_policy)),el('details',{},el('summary',{},'Returns policy'),el('p',{},store.return_policy)))),live);
+  root.replaceChildren(el('header',{className:'shop-header'},el('div',{},el('a',{className:'wordmark',href:base},store.name.toUpperCase()+theme.suffix),...(design.brand_tagline?[el('p',{className:'brand-tagline'},design.brand_tagline)]:[])),el('nav',{'aria-label':'Main'},el('a',{href:'#collection'},'The collection'),bagButton)),...(!checkoutReady?[el('aside',{className:'live-capability-notice'},'Browse this collection. Checkout is unavailable here. The store must enable an available payment method.')]:[]),detailSection,el('section',{id:'collection',className:'collection'},el('div',{className:'section-heading'},el('h2',{},design.collection),refresh),el('div',{className:'collection-controls'},...(design.show_categories?[categories]:[]),el('label',{className:'search-label'},el('span',{className:'sr-only'},'Search products'),el('input',{type:'search',placeholder:'Search the collection',onInput:event=>{search=event.target.value;renderProducts();}}))),el('p',{id:'live-count',className:'result-count','aria-live':'polite'}),el('div',{id:'live-grid',className:'product-grid'})),...(design.show_story?[el('section',{id:'our-story',className:'brand-story published-story'},el('h2',{},design.storyHeading),el('p',{},design.storyBody))]:[]),el('footer',{},el('div',{className:'policies'},el('details',{},el('summary',{},'Delivery policy'),el('p',{},store.shipping_policy)),el('details',{},el('summary',{},'Returns policy'),el('p',{},store.return_policy)))),live);
   renderProducts();
   if(attempt.locked&&attempt.current){openCheckout();}
   return {attempt};

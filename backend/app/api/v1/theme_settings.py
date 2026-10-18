@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth import enabled
 from app.api.v1.identity import current_actor
-from app.api.v1.session import require_v1_mutation
+from app.api.v1.session import business_mutation
 from app.database import get_db
 from app.schemas.storefront_theme_v1 import ThemeDraftWrite, ThemePublishWrite
 from app.services import storefront_theme_v1 as domain
@@ -37,12 +37,12 @@ async def read(business_id: UUID, actor: Actor = Depends(current_actor), db: Asy
 
 
 @router.put("/api/v1/businesses/{business_id}/theme-settings")
-async def save(business_id: UUID, body: ThemeDraftWrite, actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+async def save(business_id: UUID, body: ThemeDraftWrite, actor: Actor = Depends(business_mutation("business.write")), db: AsyncSession = Depends(get_db)):
     return await domain.apply_command(db, actor, business_id, body, "save")
 
 
 @router.post("/api/v1/businesses/{business_id}/theme-settings/publish")
-async def publish(business_id: UUID, body: ThemePublishWrite, actor: Actor = Depends(require_v1_mutation), db: AsyncSession = Depends(get_db)):
+async def publish(business_id: UUID, body: ThemePublishWrite, actor: Actor = Depends(business_mutation("business.write")), db: AsyncSession = Depends(get_db)):
     return await domain.apply_command(db, actor, business_id, body, "publish")
 
 

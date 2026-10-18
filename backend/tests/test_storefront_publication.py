@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.api.v1.auth import router as auth_router
 from app.api.v1.catalogue import router as catalogue_router
+from app.api.v1.theme_settings import router as theme_router
 from app.api.v1.storefront import create_router
 from app.config import settings
 from app.database import get_db
@@ -25,7 +26,7 @@ from app.services.storefront_publication import published_storefront_provider, P
 async def public_api(migrated_engine,monkeypatch):
     monkeypatch.setattr(settings,'V1_AUTH_ENABLED',True)
     monkeypatch.setattr(settings,'PUBLIC_BASE_URL','http://store.test')
-    app=FastAPI();app.include_router(auth_router);app.include_router(catalogue_router)
+    app=FastAPI();app.include_router(auth_router);app.include_router(catalogue_router);app.include_router(theme_router)
     app.include_router(create_router(canonical_base='https://configured.example.test',provider_dependency=published_storefront_provider))
     factory=async_sessionmaker(migrated_engine,expire_on_commit=False)
     async def database():
@@ -119,13 +120,21 @@ async def test_typed_stock_rejection_has_no_order_customer_reservation_or_token(
 @pytest.mark.asyncio
 async def test_all_three_presentations_use_identical_canonical_publication(public_api):
     client,factory=public_api;data=await setup(client)
-    from app.v1.storefront.rendering import render_storefront
-    async with factory() as db:
-        for theme in ('catalogue','editorial','video'):
-            store=await PublishedStorefrontProvider(db,theme=theme).public_store(data['slug'])
-            html=render_storefront(store,'https://configured.example.test')
-            assert f'data-theme="{theme}"' in html and 'Synthetic Indigo Dress' in html
-            assert store.payment_methods==('cod',) and store.checkout_enabled
+    version = 0
+    for theme in ('catalogue','editorial','video'):
+        url=f"/api/v1/businesses/{data['bid']}/theme-settings"
+        save=await client.put(url,headers=data['headers'],json={'expected_version':version,'idempotency_key':str(uuid4()),'config':{'theme':theme}})
+        assert save.status_code==200,save.text
+        publish=await client.post(url+'/publish',headers=data['headers'],json={'expected_version':version+1,'idempotency_key':str(uuid4())})
+        assert publish.status_code==200,publish.text
+        version+=2
+        response=await client.get(f"/stores/{data['slug']}")
+        assert response.status_code==200,response.text
+        assert f'data-theme="{theme}"' in response.text and 'Synthetic Indigo Dress' in response.text
+        async with factory() as db:
+            store=await PublishedStorefrontProvider(db).public_store(data['slug'])
+            assert store.theme==theme and store.payment_methods==('cod',) and store.checkout_enabled
+
 
 
 @pytest.mark.asyncio
