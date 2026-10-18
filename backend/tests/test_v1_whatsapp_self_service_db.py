@@ -5,6 +5,8 @@ proof; the later mounted journey must exercise those production registrations.
 """
 import asyncio
 import hashlib
+import hmac
+import json
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
@@ -301,3 +303,83 @@ async def test_actual_0057_unknown_provider_claim_never_retries_or_frees_phone_o
     blocked = await post(other, f'/signup/{other_flow.aid}/select', other_flow.selection, status=409)
     assert blocked['detail']['code'] == 'signup_phone_claimed'
     assert j.provider.calls['subscribe'] == 1 and j.provider.calls['register'] == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('bad', ['app_shape', 'expiry', 'foreign_sid', 'auth_version'])
+async def test_actual_0057_direct_signup_insert_enforces_shape_and_native_actor_binding(native_wa_setup, bad):
+    j = native_wa_setup
+    async with j.sessions() as db:
+        sid = await db.scalar(select(UserSession.id).where(UserSession.user_id == j.uid))
+        version = await db.scalar(select(UserSession.auth_version).where(UserSession.id == sid))
+    at = datetime.now(timezone.utc)
+    values = dict(id=uuid4(), business_id=j.bid, actor_user_id=j.uid, actor_session_id=sid,
+        actor_auth_version=version, idempotency_key=uuid4(), request_hash='a'*64,
+        nonce_digest='b'*64, connection_version=0, requested_app_id='123', evidence_kind='synthetic_fixture',
+        created_at=at, expires_at=at+timedelta(minutes=10), token_delete_after=at+timedelta(minutes=15))
+    if bad == 'app_shape': values['requested_app_id'] = 'non-numeric'
+    if bad == 'expiry': values['expires_at'] = at+timedelta(minutes=11)
+    if bad == 'auth_version': values['actor_auth_version'] = version+1
+    if bad == 'foreign_sid':
+        other = await j.signup('Foreign synthetic actor')
+        async with j.sessions() as db:
+            values['actor_session_id'] = await db.scalar(select(UserSession.id).where(UserSession.user_id == other.uid))
+    with pytest.raises(DBAPIError):
+        async with j.sessions.begin() as db:
+            db.add(WhatsAppSignupAttempt(**values))
+            await db.flush()
+
+
+@pytest.mark.asyncio
+async def test_actual_0057_cleanup_skips_locked_provisional_then_clears_with_flags_off(native_wa_setup, monkeypatch):
+    from app.services.whatsapp_self_service import cleanup_provisional
+    j = native_wa_setup
+    key = str(uuid4())
+    started = await post(j, '/signup', dict(idempotency_key=key, expected_connection_version=0, notice_reviewed=True))
+    aid = UUID(started['attempt']['attempt_id'])
+    await post(j, f'/signup/{aid}/exchange', dict(idempotency_key=key,
+        signed_state=started['signed_state'], code='synthetic-one-use-code'))
+    monkeypatch.setattr(settings, 'V1_WHATSAPP_ONBOARDING_ENABLED', False)
+    monkeypatch.setattr(settings, 'V1_CHANNEL_TESTS_ENABLED', False)
+    future = datetime.now(timezone.utc)+timedelta(minutes=16)
+    async with j.sessions.begin() as held:
+        row = await held.scalar(select(WhatsAppSignupAttempt).where(WhatsAppSignupAttempt.id == aid).with_for_update())
+        assert row.provisional_token_ciphertext is not None
+        async with j.sessions.begin() as cleanup:
+            assert await asyncio.wait_for(cleanup_provisional(cleanup, at=future), 2) == 0
+    async with j.sessions.begin() as cleanup:
+        assert await cleanup_provisional(cleanup, at=future) == 1
+    async with j.sessions() as db:
+        row = await db.get(WhatsAppSignupAttempt, aid)
+        assert row.provisional_token_ciphertext is None and row.state == 'expired'
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('location', ['text', 'caption', 'mid'])
+async def test_actual_0057_signed_reserved_ingress_redacts_even_default_off(native_wa_setup, monkeypatch, location):
+    j = native_wa_setup
+    await attached_signup(j)
+    challenged = await challenge(j)
+    monkeypatch.setattr(settings, 'V1_WHATSAPP_ONBOARDING_ENABLED', False)
+    monkeypatch.setattr(settings, 'V1_CHANNEL_TESTS_ENABLED', False)
+    event = dict(id='synthetic-reserved-inbound', type='text', **{'from': '910000000003'},
+        timestamp=str(int(datetime.now(timezone.utc).timestamp())), text={'body': challenged['command']})
+    if location == 'caption':
+        event.pop('text'); event['type']='image'; event['image']={'caption': challenged['command']}
+    if location == 'mid':
+        event['id']=challenged['command']; event['text']={'body': 'Literal harmless body'}
+    raw = json.dumps({'object':'whatsapp_business_account','entry':[{'id':j.provider.waba,
+        'changes':[{'field':'messages','value':{'metadata':{'phone_number_id':j.provider.phone},'messages':[event]}}]}]}).encode()
+    signature = 'sha256='+hmac.new(settings.WHATSAPP_APP_SECRET.encode(),raw,hashlib.sha256).hexdigest()
+    response = await j.client.post('/webhooks/whatsapp',content=raw,
+        headers={'content-type':'application/json','x-hub-signature-256':signature})
+    assert response.status_code == 200
+    async with j.sessions() as db:
+        rows = (await db.scalars(select(WhatsAppMessage).where(WhatsAppMessage.seller_id == j.bid))).all()
+        assert len(rows) == (0 if location == 'mid' else 1)
+        private_absent = challenged['command'] not in repr([row.__dict__ for row in rows])
+        assert private_absent, 'Reserved command must not survive in canonical metadata or body'
+        assert all(row.text == REDACTED_COMMAND and row.payload == {} for row in rows)
+        row = await db.get(WhatsAppConnectionTest, UUID(challenged['test']['test_id']))
+        assert row.inbound_message_id is None
+    assert j.provider.calls['subscribe'] == j.provider.calls['register'] == 1
