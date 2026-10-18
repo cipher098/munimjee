@@ -1,0 +1,1 @@
+PASS actual packaged current-create -> old-read -> current-read; all post-create hashes unchanged

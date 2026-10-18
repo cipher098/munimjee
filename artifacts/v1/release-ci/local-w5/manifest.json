@@ -1,0 +1,25 @@
+{
+  "image_id": "sha256:3f1d40cc0791cd6b01961580ec45ebe32f93a479dfcfc5fa40d77267351b6802",
+  "architecture": "arm64",
+  "size_bytes": 133924710,
+  "image_user": "10001:10001",
+  "build_source_commit": "cc9ee08b31a23335f9e2917ac0575577fa04940a",
+  "runtime_source_hashes": {
+    "deploy/v1/Dockerfile": "c2f73ed4f746e3a0e2a0b5731af8311e164b90254e9de19ada3de1d1bfb0be20",
+    "deploy/v1/runtime.in": "aadd2e23c2bcd1396a392bfea5c40191fea7c38afeae620630d63a3b8837f3cf",
+    "deploy/v1/runtime.lock": "88aaacf6306260168661758ebb0857f0ca580ca03641b05c7decdf9dfb3f5e93",
+    "scripts/v1_runtime_package.py": "ac7081916d2635aee03404ecd699b4765468fd073bcbcf0f543223eec4a90d69",
+    "scripts/smoke_v1_runtime.py": "29cdaef460e226e984ef32adb09f1b6021ca33729056ef0fc237da6fb881bc3d"
+  },
+  "allowlisted_files": 310,
+  "runtime_static_files": 60,
+  "storefront_modules": 13,
+  "base_image": "python:3.11-slim-bookworm@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+  "runtime_dependencies": "Hashed pinned closure, only-binary/require-hashes/pip-check",
+  "native_arm64_offline_modes": 3,
+  "offline_network_attempts": 0,
+  "cid_cleanup_verified": true,
+  "amd64_attempt": "Failed legacy builder intermediate-image platform mismatch before application build; log retained. No native amd64 proof.",
+  "hosted_ci": "Saved zero-step billing lock; no rerun",
+  "deployment": false
+}

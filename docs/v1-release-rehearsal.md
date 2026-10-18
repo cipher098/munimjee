@@ -184,3 +184,29 @@ and ownership attestations remain private outside Git. Public evidence is under
 Hosted CI, native architecture image proof and prior/current application compatibility,
 rollback and forward-fix mounted journeys remain pending. The generic SQL probe is
 not a package switch. No existing service, production data or provider was used.
+
+## Subsequent actual packaged HTTP read compatibility
+
+The opt-in `tests/release/run_application_compatibility.py` subsequently holds both
+leases on that owned restored pair. The current immutable hash-locked arm64 image
+executes actual native signup, reviewed product/SKU creation, explicit activation,
+publication/policy and COD checkout APIs to create a fourth post-cutover order.
+The preserved immutable dd36b0d arm64 package then reads the native session, seller
+order list, protected order status and authoritative product/remaining stock through
+its real app.main ASGI routes. The current package reads them again. Every table,
+schema and monetary/reservation/pending hash after creation remains unchanged across
+both read stages; source remains unchanged. Actual result and image identities are
+in `local-pg16-w5/application-compatibility.json`; six pure refusal/isolation checks
+are separate from this executed package proof.
+
+Each new nonroot/read-only bounded container shares the dedicated test PG network
+namespace, with Python connect/connect_ex/DNS restricted to its exact loopback PG
+port. Guest configuration and native/order capabilities stay in private stdin or
+memory, never Docker argv or committed evidence. CID-only cleanup is verified.
+Peer review found and fixed the initial argv/error-redaction and connect_ex seams
+before execution. The public result contains only hashes/counts/safe projections.
+
+This closes the narrower actual-package **read-only ASGI/HTTP compatibility** gate.
+It is not browser/proxy/routing, old-writer/background-job or production rollback
+approval. No old-package mutation, restore, schema downgrade or snapshot overwrite
+occurs. Full old-writer compatibility remains denied until separately reviewed.
