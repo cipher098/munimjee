@@ -8,6 +8,10 @@ contract original `f8008466ebac3255fe057ac80ecd297cc3d444eb`, composed here as
 `7f13ea36e39c75e82f66165a6603eca6686fcfe24323c731f45fa90e6335686e`.
 Reserve only `0058_v1_reel_operator` with real predecessor
 `0057_v1_whatsapp_self_service`.
+Approved six-line clarification `24f746f21247fca5a716018d8858241721b3990e`
+is composed as `afeecca`. Current contract SHA256 is
+`f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c`.
+The helper must run unconditionally as the last outer pre-send await.
 
 ## Ownership
 
@@ -48,10 +52,14 @@ clear it; late private responses physically scrub on session/role loss.
 
 ## Active checkpoint
 
-Contract hash verified, root and workers started from exact0057base. Implementation
-worker prepares early model/schema/helper checkpoint; QA finite matrix awaiting
-approval; independent review audits source as it arrives. Root prepares design
-before narrow UI implementation. No candidate tests or actual execution yet.
+Early backend `34f2125` is composed as `1ae794e`, review correction `a2d4109`
+as `da90309`, final-guard compatibility correction `9f7a2e8` as `21cddc4`.
+Root design-first UI is `9aaf659` with narrow followups `57b13cd`, `f01cee5`
+and bounded local rejection binding `4e0f905`. QA matrix is frozen46 cases:
+18pure,8Node and20DB-source-only. No candidate tests or actual DB/browser execution
+yet. Independent source review found and corrected NULL-open quote checks,
+result/action consistency and closed-dialog private DOM; review continues.
+`docs/v1-reel-operator-integration.md` is the early local installation guide.
 This file is the durable continuation pointer; do not replace this task with a
 readiness acknowledgment after compaction. Complete coherent source/test/review/
 visual packet, push clean branches, and state actual integration/acceptance gaps.
