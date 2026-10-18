@@ -67,6 +67,15 @@ async def bind(business_id:UUID,product_id:UUID,actor=Depends(require_v1_mutatio
     return fixtures[business_id]
 
 
+@app.post('/__test/sku-facts/{business_id}/{product_id}/second-reel')
+async def second_reel(business_id:UUID,product_id:UUID,actor=Depends(require_v1_mutation),db=Depends(get_db)):
+    await require_business_access(db,actor,business_id,'automation.manage')
+    product=await db.scalar(select(Product).where(Product.id==product_id,Product.seller_id==business_id))
+    if product is None:raise HTTPException(404)
+    product.reel_urls=['https://www.instagram.com/reel/Second_sku/']
+    return {'synthetic_mapping':'Second_sku'}
+
+
 @app.post('/__test/sku-facts/{business_id}/drain')
 async def drain(business_id:UUID,actor=Depends(require_v1_mutation),db=Depends(get_db)):
     await require_business_access(db,actor,business_id,'automation.manage')
@@ -78,7 +87,10 @@ async def drain(business_id:UUID,actor=Depends(require_v1_mutation),db=Depends(g
     await db.commit()
     await _process_thread(business_id,fixture['instagram_account'],fixture['customer'])
     for mid in mids:await deliver_one(mid)
+    receipts=(await db.execute(select(InstagramIngress.status,InstagramIngress.error_code).where(
+        InstagramIngress.seller_id==business_id).order_by(InstagramIngress.created_at))).all()
     return {'sends':[row for row in sends if row['business_id']==str(business_id)],
+        'receipts':[{'status':status,'error_code':error} for status,error in receipts],
         'mutations':{name:await db.scalar(select(func.count()).select_from(model)) for name,model in
             [('orders',CommerceOrder),('reservations',SKUReservation),('cycles',ConversationProduct)]}}
 

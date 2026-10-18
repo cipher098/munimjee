@@ -149,10 +149,14 @@ async def _send_and_tag(
     else:
         from app.services import sku_fact_replies as facts
         from app.services.channel_readiness import CatalogueAuthorityHandoff
+        selected = getattr(conversation, "_sku_batch_product", None)
+        if selected and str(selected) != str(conversation.product_id):
+            raise CatalogueAuthorityHandoff("Buffered product selection changed")
         # Ignore earlier generated text. Facts and current delivery gates share
         # one final scalar statement; no new catalogue lock survives the read.
         observed = await facts.read_facts(db, conversation.seller_id, conversation.product_id,
             reel=getattr(conversation, "_sku_reel_reference", None),
+            reels=getattr(conversation, "_sku_reel_references", None),
             instagram=dict(conversation_id=conversation.id, customer_id=conversation.customer_instagram_id,
                 token=client._token, page_id=client.fb_page_id))
         if observed is None:
