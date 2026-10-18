@@ -1,0 +1,146 @@
+{
+  "application_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "runtime_source": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+  "qa_head_at_final_run": "a7282ed267d09b4f28b3b22dba24495f59a834b7",
+  "baseline_application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "baseline_qa_commit": "a3a3d6651121276d6b4aa289d7980e24992da6c2",
+  "scenario_count": 32,
+  "baseline_counts": {
+    "passed": 22,
+    "failed": 10
+  },
+  "final_counts": {
+    "passed": 27,
+    "failed": 5
+  },
+  "fixed_old_case_ids": [
+    "session-switch-401",
+    "session-revoke-401",
+    "role-focus",
+    "session-focus",
+    "cross-identity-error"
+  ],
+  "remaining_old_case_ids": [
+    "keyboard-transition",
+    "contrast-focus",
+    "startup-error",
+    "long-business-name",
+    "logout-focus"
+  ],
+  "new_failure_ids": [],
+  "calibration": {
+    "counts": {
+      "passed": 26,
+      "failed": 6
+    },
+    "implementation_specific_case": "profile-lost-response",
+    "classification": "Coordinator-reviewed fresh authoritative recovery; obsolete literal conflict-message expectation replaced with stronger facts/effect/timing invariants",
+    "raw_trace": "semantic-diagnostic-result.json"
+  },
+  "commands": [
+    {
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python backend/tests/independent_onboarding_experience_qa.py",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave8-onboarding-followup-qa",
+      "exit_code": 0
+    },
+    {
+      "command": "node backend/tests/independent_onboarding_experience_qa.mjs > artifacts/v1/independent-onboarding-experience/comparison-8ae97c2/run.txt 2>&1",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee-wave8-onboarding-followup-qa",
+      "exit_code": 1,
+      "reason": "Five genuine UX assertions remain red"
+    }
+  ],
+  "fixture_adaptations": [
+    "Actual six-step formatter with fake zero/absent readiness rows and fresh profile",
+    "Matching synthetic readable CSRF cookie on initial/auth identity transitions and cleared logout",
+    "Visible terminal access-error observation for 401; privacy assertions unchanged",
+    "Full native profile replacement shape for synthetic writes",
+    "Separate owned comparison output preserving baseline",
+    "Reviewed strict semantic recovery invariants in same existing case"
+  ],
+  "source_sha256": {
+    "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "backend/static/v1_app.js": "a2e6a63f923c19b1eb5f5a822a8eaf150dea3e3707611e2b1a378fa22ff6d766",
+    "backend/static/v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "backend/static/v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "backend/static/commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+    "backend/app/services/onboarding.py": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+    "backend/app/services/identity.py": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+    "backend/app/api/v1/identity.py": "6c7ef2d291134af9c172c3cd4d2f79990a7355d8dba7054b4eff63dbdd2c46cf",
+    "backend/app/api/v1/auth.py": "946c3389657c8c264a37441d716d68ecaccc31e8a895a097c86baaeebfd34aa1",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/app/services/identity_auth.py": "f56afe150a6ade53b223af1c4eb3aeb8ebc8a8933854de42b760ef812740ca0d"
+  },
+  "owned_sha256": {
+    "backend/tests/independent_onboarding_experience_qa.py": "601b632ca1309826e32acec16901ff5493d00db0df5fe9aa3cd44286e5c4a00f",
+    "backend/tests/independent_onboarding_experience_qa.mjs": "13d503519ef85510f87d7faf29b6505c58fbe00f113d81dcfae66782e8619afd",
+    "docs/v1-independent-onboarding-followup-comparison.md": "6bd3b9bbd3a8d38e878684e997650f5987d8ed9810a04816d45fb9d6f9569f6f"
+  },
+  "baseline_preserved_byte_identical": true,
+  "baseline_file_sha256": {
+    "artifacts/v1/independent-onboarding-experience/contrast-focus.png": "7341d9e57e336b056f0d85121639c24f20f574afae6408c2e0c49a777bdc84a3",
+    "artifacts/v1/independent-onboarding-experience/cross-identity-error.png": "3b1c9f4ee87aeb573a4b9cb8d536bb9366a4182d4f0bffeaf030bb795d4de30f",
+    "artifacts/v1/independent-onboarding-experience/fixtures.json": "2ebbe85908e995094fdc0b3ad3242833a59e95383a9f49d0ca6bae4c1aeb2275",
+    "artifacts/v1/independent-onboarding-experience/keyboard-transition.png": "5de448a7ae5befe04748d7106606a40c3b3b3dd4793b026732f1845a8f7f431d",
+    "artifacts/v1/independent-onboarding-experience/logout-focus.png": "457afc20417df6d300f8a80e209a4aea11c974d3d66ee68aa6f70e8a5cd0ca35",
+    "artifacts/v1/independent-onboarding-experience/long-business-name.png": "4d1f9d41582ecefcf828c1dad303e66e716bcc0a4a80d01feedc647a0dfa9641",
+    "artifacts/v1/independent-onboarding-experience/owner-1440.png": "1192d052f30ecbfc6f42599ec1c0154763b2e2f8b6a3fc338090c4f596722bfa",
+    "artifacts/v1/independent-onboarding-experience/owner-360.png": "4f391c829ec4b75eccadacdef79032d0aa9164104f20cbd10ab6b032af409c27",
+    "artifacts/v1/independent-onboarding-experience/owner-390.png": "570f1c0361b42f70fad9ba860682ca1d9ce400b7a882a267ec080f75e6ab6138",
+    "artifacts/v1/independent-onboarding-experience/owner-768.png": "1442ef5fa0018d9734c04163321f59debc20f064f3a91463c6a4362d0671d4f5",
+    "artifacts/v1/independent-onboarding-experience/result.json": "393140f54a72828e9e9d3ccae74d201e94a34e1ac290cd26ee7f2f30604f473f",
+    "artifacts/v1/independent-onboarding-experience/role-focus.png": "5de448a7ae5befe04748d7106606a40c3b3b3dd4793b026732f1845a8f7f431d",
+    "artifacts/v1/independent-onboarding-experience/run.txt": "363e79bb7b8a86daac06a905bbb85c8fde4aa525ee221bf5fe720db75837bdd0",
+    "artifacts/v1/independent-onboarding-experience/session-focus.png": "570f1c0361b42f70fad9ba860682ca1d9ce400b7a882a267ec080f75e6ab6138",
+    "artifacts/v1/independent-onboarding-experience/session-revoke-401.png": "bac75ce829addaa5c3181909cc942c5354d7816ddc512776a04f2cd813150525",
+    "artifacts/v1/independent-onboarding-experience/session-switch-401.png": "7c1797447b28312756cccdb1ee06380ef07c55f73fa0df5cb68584891a939665",
+    "artifacts/v1/independent-onboarding-experience/signup-1440.png": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d",
+    "artifacts/v1/independent-onboarding-experience/signup-360.png": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49",
+    "artifacts/v1/independent-onboarding-experience/signup-390.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "artifacts/v1/independent-onboarding-experience/signup-768.png": "c950ec647eacbb3ba903c98583055c2a407dcdbe0238d106e624a44786c72826",
+    "artifacts/v1/independent-onboarding-experience/startup-error.png": "2e00851e037214d1e5baea6feb59e0cf094be10f2907f677925e8ab1a26341a6",
+    "artifacts/v1/independent-onboarding-experience/verification.json": "405559be2ac8ec705183af410e75aca973f7a00e41f931440d2ad5f441a9766d"
+  },
+  "artifact_sha256": {
+    "contrast-focus.png": "7341d9e57e336b056f0d85121639c24f20f574afae6408c2e0c49a777bdc84a3",
+    "first-pass-result.json": "0395f59890b724c57593a1d3643624d9d8f9538ab45c58bbe046c15bf15fe5d1",
+    "first-pass-run.txt": "cae7b5d2f3c1f68e0ab765a62571b7ca05c0f1fe00f9bccccc4440639b40ec62",
+    "first-pass-runner.mjs": "7c4bdbbbd0b32137ba2e81d541aee7ca3fae578b4664fe4f7e5f5e93cb03391b",
+    "fixtures.json": "8dac591035b7e8980a8f842fe94f6daaf41d8eb4291d2bb94c6bf5d15c6da3b7",
+    "keyboard-transition.png": "b31262f066491b52a84235fc438787054e2731c4958ff704e00cdc298336a54a",
+    "logout-focus.png": "10095b8c59b99f007de15b371620fcc71eb8792738483c0f97a3a3c48671352a",
+    "long-business-name.png": "af91aebccc9aa121773b882608dfe2a1f0cd2fb4ab6db242d3baab5c46c4c621",
+    "owner-1440.png": "3a83c668d93dceaa0951cb7e44c7a4c0bf3edf3e3c5ba6253716667e5a82857d",
+    "owner-360.png": "cd3e8c8d06fb1ccadb4ec1138d417ba7864768e1fe9379e1eff2ab5aff983ead",
+    "owner-390.png": "102df9ac39ebe5ee8fdc7a91a8253a29fb7ec25b7a2a557ab2006c22067b0ff1",
+    "owner-768.png": "2fefc7b6f720477248e12bed96d42fa68789935906f1db4909e8adb73002904c",
+    "profile-lost-response.png": "0c187c22b11b079e36731d441a313101c15dae00eff8d302c31f6730a82cfb5a",
+    "result.json": "10fb838b228f3d9199cb70aa38449aa04ec2295d835ca53da12e84387972a0e8",
+    "run.txt": "67234a0b00f123af9fe7f487530a3baf46e1d89faa32e0b1748f572679793adb",
+    "semantic-diagnostic-result.json": "ba5c3db0ac37a831d8b6f6f612c5899c391b0d685128b2ed25e6237804029540",
+    "semantic-diagnostic-run.txt": "0870e9fd94501421ed66c4c5ea1a2f61b979c0d83306ee7c7f729c3f1705fa59",
+    "semantic-diagnostic-runner.mjs": "16e7126bc527a98b25685e4aca77a477f50bd60d8decd0d0935952ad981f4083",
+    "signup-1440.png": "e814661f26651ed96dfc484cbd8f11ae7cdbb9a0e2d35e41690e3f87e718538d",
+    "signup-360.png": "52182817cb3d10a51f211064bcbbeb12d2ff83d2e880e38239c1b5ce821a0b49",
+    "signup-390.png": "712386a04f898ef19d2135a07965c1560b611f104d848b7011cc7e2385f51783",
+    "signup-768.png": "c950ec647eacbb3ba903c98583055c2a407dcdbe0238d106e624a44786c72826",
+    "startup-error.png": "2e00851e037214d1e5baea6feb59e0cf094be10f2907f677925e8ab1a26341a6"
+  },
+  "production_unchanged_from_compared_commit": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "unrun_gates": [
+    "actual mounted migrated DB",
+    "physical iPhone/Android",
+    "screen-reader interaction",
+    "complete contrast/WCAG audit",
+    "production/provider behavior"
+  ],
+  "actual_db_connections": 0,
+  "real_provider_calls": 0,
+  "server_started": false,
+  "harness_only_commits": [
+    "e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86",
+    "a7282ed267d09b4f28b3b22dba24495f59a834b7"
+  ]
+}

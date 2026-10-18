@@ -1,0 +1,39 @@
+{
+  "source_head": "e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86",
+  "passed": 26,
+  "failed": 6,
+  "unexpected_network": [],
+  "page_errors": [],
+  "failed_cases": [
+    {
+      "id": "keyboard-transition",
+      "name": "keyboard submit moves focus into newly opened workspace",
+      "message": "Focus did not enter new workspace: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}"
+    },
+    {
+      "id": "contrast-focus",
+      "name": "keyboard focus outline meets chosen 3:1 adjacent-background criterion",
+      "message": "{\"colors\":{\"outline\":\"rgb(149, 174, 149)\",\"width\":\"3px\",\"style\":\"solid\",\"focus_visible\":true,\"background\":\"rgb(255, 255, 255)\"},\"ratio\":2.3955324812741465,\"keyboard_tab\":true}"
+    },
+    {
+      "id": "startup-error",
+      "name": "startup 503 offers an actionable retry or sign-in path",
+      "message": "Both panels remain hidden and no retry/sign-in control is available"
+    },
+    {
+      "id": "long-business-name",
+      "name": "valid 160-character unbroken business name does not overflow 360px",
+      "message": "{\"scroll\":3062,\"viewport\":360}"
+    },
+    {
+      "id": "profile-lost-response",
+      "name": "lost save response is not acknowledged; explicit reload resumes persisted facts",
+      "message": "expect(locator).toContainText(expected) failed\n\nLocator: locator('#profile-error')\nExpected substring: \"changed\"\nReceived string:    \"\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"to.have.text\" with timeout 5000ms\n  - waiting for locator('#profile-error')\n    9 × locator resolved to <p role=\"alert\" class=\"error\" id=\"profile-error\"></p>\n      - unexpected value \"\"\n"
+    },
+    {
+      "id": "logout-focus",
+      "name": "sign-out leaves keyboard focus in the visible sign-in context",
+      "message": "Focus did not enter sign-in context: {\"tag\":\"BODY\",\"id\":\"\",\"inside\":false}"
+    }
+  ]
+}

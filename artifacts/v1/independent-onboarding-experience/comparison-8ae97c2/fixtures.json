@@ -1,0 +1,874 @@
+{
+  "mode": "actual-onboarding-formatter-with-fake-access-counts-and-readiness-rows-no-database",
+  "source_sha256": {
+    "backend/app/services/onboarding.py": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+    "backend/app/services/identity.py": "792a041ae2fab58dd71dc8abea1dd8be4abbdf1f19e4c2d6f799962873894896",
+    "backend/app/api/v1/identity.py": "6c7ef2d291134af9c172c3cd4d2f79990a7355d8dba7054b4eff63dbdd2c46cf",
+    "backend/app/api/v1/auth.py": "946c3389657c8c264a37441d716d68ecaccc31e8a895a097c86baaeebfd34aa1",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1"
+  },
+  "roles": {
+    "owner": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "owner",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "channels.connect",
+              "channels.disconnect",
+              "inbox.read",
+              "inbox.reply",
+              "members.manage",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "owner",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "channels.connect",
+              "channels.disconnect",
+              "inbox.read",
+              "inbox.reply",
+              "members.manage",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        }
+      }
+    },
+    "manager": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "manager",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "manager",
+            "capabilities": [
+              "analytics.read",
+              "automation.manage",
+              "business.read",
+              "business.write",
+              "catalogue.read",
+              "catalogue.write",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        }
+      }
+    },
+    "staff": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "staff",
+            "capabilities": [
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "staff",
+            "capabilities": [
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "inbox.reply",
+              "orders.read",
+              "orders.write",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        }
+      }
+    },
+    "viewer": {
+      "session": {
+        "user_id": "20000000-0000-4000-8000-000000000081",
+        "auth_method": "v1_user",
+        "csrf_token": "synthetic-browser-csrf-never-real",
+        "businesses": [
+          {
+            "id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "role": "viewer",
+            "capabilities": [
+              "analytics.read",
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "orders.read",
+              "readiness.read"
+            ]
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "role": "viewer",
+            "capabilities": [
+              "analytics.read",
+              "business.read",
+              "catalogue.read",
+              "inbox.read",
+              "orders.read",
+              "readiness.read"
+            ]
+          }
+        ],
+        "features": {
+          "support_grants": false,
+          "assisted_operator": false,
+          "customer_links": false
+        }
+      },
+      "records": {
+        "10000000-0000-4000-8000-000000000081": {
+          "business_id": "10000000-0000-4000-8000-000000000081",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000081/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000081",
+            "name": "Synthetic QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        },
+        "10000000-0000-4000-8000-000000000082": {
+          "business_id": "10000000-0000-4000-8000-000000000082",
+          "onboarding_complete": false,
+          "local_setup_complete": false,
+          "completed_steps": 2,
+          "total_steps": 6,
+          "steps": [
+            {
+              "id": "identity",
+              "label": "Account and access",
+              "status": "ready",
+              "reason": "Your active membership is confirmed.",
+              "action_url": null
+            },
+            {
+              "id": "business_profile",
+              "label": "Business details",
+              "status": "ready",
+              "reason": "Business details saved.",
+              "action_url": "#profile"
+            },
+            {
+              "id": "catalogue",
+              "label": "Reviewed catalogue",
+              "status": "action_required",
+              "reason": "0 reviewed snapshots. Explicit product activation and reviewed SKU allocation are still required.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channels",
+              "label": "Instagram and WhatsApp setup",
+              "status": "action_required",
+              "reason": "Connect the intended accounts, check current access and webhook setup, then explicitly enable eligible automation. Local checks do not prove delivery.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/channels"
+            },
+            {
+              "id": "storefront",
+              "label": "Storefront and checkout",
+              "status": "action_required",
+              "reason": "Publish the storefront, activate reviewed products and enable checkout with an available payment method. The public storefront runtime must also be enabled.",
+              "action_url": "/v1/businesses/10000000-0000-4000-8000-000000000082/catalogue"
+            },
+            {
+              "id": "channel_test",
+              "label": "Authorized messaging acceptance",
+              "status": "action_required",
+              "reason": "A consented real-recipient message test and recorded result are still required. Saved credentials and account-access checks do not prove delivery.",
+              "action_url": null,
+              "action_unavailable_reason": "An authorized message-test workflow is not available in this preview."
+            }
+          ],
+          "profile": {
+            "business_id": "10000000-0000-4000-8000-000000000082",
+            "name": "Second QA Atelier",
+            "profile": {
+              "support_email": "qa@example.com",
+              "phone": "",
+              "website": ""
+            },
+            "version": 3,
+            "confirmed": true
+          },
+          "local_channels": {
+            "instagram": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            },
+            "whatsapp": {
+              "configured": false,
+              "local_account_access_verified": false,
+              "webhook_configured": false,
+              "automation_enabled": false,
+              "ready": false
+            }
+          },
+          "external_readiness": {
+            "provider_approval": "not_evaluated",
+            "message_test": "not_recorded"
+          }
+        }
+      }
+    }
+  },
+  "database_connections": 0,
+  "provider_calls": 0
+}
