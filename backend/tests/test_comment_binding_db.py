@@ -211,6 +211,8 @@ async def test_accepted_source_body_claim_and_audit_are_immutable_and_tenant_bou
     async with j.sessions.begin() as db:
         for statement in (update(CommentEvent).where(CommentEvent.id==eid).values(text='rewritten'),
                           update(CommentAction).where(CommentAction.id==aid).values(body='rewritten'),
+                          update(CommentAction).where(CommentAction.id==aid).values(claim_hash='f'*64),
+                          update(CommentAction).where(CommentAction.id==aid).values(accepted_claim={'connection':'forged'}),
                           delete(CommentActionAudit).where(CommentActionAudit.action_id==aid)):
             with pytest.raises(IntegrityError) as failure:
                 async with db.begin_nested():await db.execute(statement)
@@ -220,3 +222,61 @@ async def test_accepted_source_body_claim_and_audit_are_immutable_and_tenant_bou
                 db.add(CommentActionAudit(id=uuid4(),seller_id=uuid4(),event_id=eid,action_id=aid,stage='accepted',after_status='pending'))
                 await db.flush()
         assert foreign.value.orig.sqlstate=='23503'
+
+
+@pytest.mark.asyncio
+async def test_provider_offset_timestamp_survives_real_postgres_roundtrip(comment_lane):
+    j=comment_lane
+    timestamp=datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5,minutes=30))).isoformat()
+    eid,ids=await queue(j,timestamp=timestamp)
+    assert len(ids)==1 and await dispatch(j,ids[0])
+    j.provider.assert_awaited_once()
+    async with j.sessions() as db:
+        assert (await db.get(CommentAction,ids[0])).status=='sent'
+        assert (await db.get(CommentEvent,eid)).status=='complete'
+
+
+@pytest.mark.asyncio
+async def test_new_source_requires_exact_types_and_complete_private_proof(comment_lane):
+    j=comment_lane
+    async with j.sessions.begin() as db:
+        proof=(await instagram_credentials.snapshot(db,j.bid)).proof()
+        invalid=[{**proof,'version':True},{**proof,'credential_hash':'invalid'},
+            {**proof,'expires_at':None},{**proof,'unexpected':'not-accepted'},None]
+        for binding in invalid:
+            with pytest.raises(IntegrityError) as failure:
+                async with db.begin_nested():
+                    db.add(CommentEvent(id=uuid4(),seller_id=j.bid,comment_id=uuid4().hex,media_id='300',actor_id='400',text='shape test',
+                        status='review_required',source_account_id='100',source_binding=binding,
+                        source_verified_at=datetime.now(timezone.utc),source_verification='signed_webhook'))
+                    await db.flush()
+            assert failure.value.orig.sqlstate=='23514'
+
+
+@pytest.mark.asyncio
+async def test_original_claim_time_token_receipt_and_finalization_never_reset(comment_lane):
+    j=comment_lane;_,ids=await queue(j);assert await dispatch(j,ids[0])
+    async with j.sessions.begin() as db:
+        for fields in ({'claim_token':uuid4()},{'claim_token':None},{'attempted_at':None},{'provider_id':None},
+                       {'provider_id':'invented-replacement'},{'finalized_at':None},{'status':'pending'}):
+            with pytest.raises(IntegrityError) as failure:
+                async with db.begin_nested():await db.execute(update(CommentAction).where(CommentAction.id==ids[0]).values(**fields))
+            assert failure.value.orig.sqlstate=='23514'
+    assert not await dispatch(j,ids[0]);j.provider.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_real_task_cancellation_persists_unknown_and_cannot_repeat(comment_lane):
+    j=comment_lane;eid,ids=await queue(j)
+    entered=asyncio.Event();never=asyncio.Event()
+    async def provider(*args):entered.set();await never.wait()
+    j.provider.side_effect=provider
+    task=asyncio.create_task(dispatch(j,ids[0]))
+    await asyncio.wait_for(entered.wait(),3)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):await task
+    async with j.sessions() as db:
+        action=await db.get(CommentAction,ids[0])
+        assert action.status=='unknown' and action.finalized_at and action.claim_token
+        assert (await db.get(CommentEvent,eid)).status=='review_required'
+    assert not await dispatch(j,ids[0]);j.provider.assert_awaited_once()
