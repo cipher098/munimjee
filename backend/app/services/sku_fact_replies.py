@@ -102,7 +102,7 @@ def render(facts):
 
 
 # Deliberately small factual vocabulary; other requests retain human handling.
-_FACT_WORDS = frozenset("price prices cost costs stock available availability option options variant variants colour colours color colors size sizes material materials what which is are the this that it its for of and or please pls plz hi hello hey show tell me you your in have hai kya ka ki ke kitna kitne rate rates details current catalogue product rupees rs".split())
+_FACT_WORDS = frozenset("price prices cost costs stock available availability option options variant variants colour colours color colors size sizes what which is are the this that it its for of and or please pls plz hi hello hey show tell me you your in have hai kya ka ki ke kitna kitne rate rates details current catalogue product rupees rs".split())
 
 
 def factual_request(text):
@@ -110,7 +110,7 @@ def factual_request(text):
         return False
     words = re.findall(r"[^\W\d_]+", text.casefold(), re.UNICODE)
     requested = {"price","prices","cost","costs","stock","available","availability","option","options",
-        "variant","variants","colour","colours","color","colors","size","sizes","material","materials","rate","rates","details","kitna","kitne"}
+        "variant","variants","colour","colours","color","colors","size","sizes","rate","rates","details","kitna","kitne"}
     return bool(requested.intersection(words)) and all(word in _FACT_WORDS for word in words) and not re.search(r"\d|https?://", text)
 
 
