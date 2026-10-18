@@ -32,3 +32,16 @@ to ambient 127.0.0.1:4317. Actual DB checks use unchanged P01 only when separate
 allocated; otherwise explicit skips. All work stays in owned paths. No new agents
 or other-chat messages. Independently inspect peers' committed scripts read-only,
 then push only owned tests/docs/evidence with exact source/runner hashes and limits.
+
+## Later source comparison
+
+Coordinator requested comparison against separately pushed onboarding follow-up
+`8ae97c2d57c0efda5a03a41a469bf9447739ee72` (runtime `52fdda8`). Preserve all
+`abab30a` evidence. The onboarding worker additionally owns the same new QA paths in
+`munimjee-wave8-onboarding-followup-qa` / `codex/v1-onboarding-followup-independent-qa`,
+`docs/v1-independent-onboarding-followup-comparison.md` and the comparison evidence
+subfolder. Apply only owned tests/evidence there, never older production source.
+Rebuild fixtures against that source and report fixed/remaining case IDs. Other
+workers review only attribution/harness changes. Current local `789db95` /0056 is
+reported context; fetched integration remained `abab30a` at this handoff request.
+Neither older 1,950-test evidence nor new follow-up reports certify that local head.

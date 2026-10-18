@@ -1,0 +1,19 @@
+{
+  "source_application_base": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "test_composition_at_start": "980d2eb",
+  "tests": 1961,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 724,
+  "passed": 1237,
+  "seconds_junit": 10.0,
+  "skips_by_message": {
+    "DB gate pending: set TEST_DATABASE_URL, TEST_LANE and TEST_DB_RESET=1": 721,
+    "No cassette at /Users/user/Documents/ChatGPT/munimjee/backend/tests/cassettes/decide_greeting.yaml. Record with VCR_RECORD=1 ANTHROPIC_API_KEY=sk-... pytest": 1,
+    "Coordinator-allocated TEST_REDIS_URL required": 2
+  },
+  "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -m pytest -q --junitxml=/tmp/munimjee-independent-experience-final-980d2eb.xml",
+  "cwd": "backend",
+  "scope": "Frozenabab30a app source plus3 new offline cases; not new8ae97c2/0055 or reported789db95/0056 acceptance",
+  "raw_xml": "Transient extraction input; bounded console text and summary retained"
+}

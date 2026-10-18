@@ -1,0 +1,52 @@
+.....ssssssssssssss........sssssssssssssssss...................sssssssss [  3%]
+sssssssssssssssss.............ssssssssssssssssssssssssssssssssssssssssss [  7%]
+ssssssssssssssssssssssssssssssssssssssssssssss..................s.....ss [ 11%]
+ssssssssssss..ssssss.ssssssssssssssssssssssssssssssssssssssssss.ssssssss [ 14%]
+ssssss..............sssssssssssssssssssssssssssssssss................... [ 18%]
+..................................................ssssssssssssssssssss.s [ 22%]
+ss.sssssssssss........................ssssssssssssssssssss.......ss..... [ 25%]
+.........................................................sss......ssssss [ 29%]
+ssssssssssssssssssssssssssssssssssssssssssss............................ [ 33%]
+.......ssssssss.....................sssssssssssss.sssss................. [ 36%]
+.........................................sssssssssssssssssssssssssssssss [ 40%]
+sssssssssssssssssssssss...........sssssssssss........sssssssssssssssssss [ 44%]
+sssssssssssss.ss........................................................ [ 47%]
+......................ssssssssssssssssssssssss.ssss..................... [ 51%]
+........................sssssss.sssssssssssssssssssssssss............... [ 55%]
+....................ssssssssssss.............................ssssssss... [ 58%]
+........................................................................ [ 62%]
+...................................ss..........................sssssssss [ 66%]
+..................................................ssssssssssssssssssssss [ 69%]
+ssssssssssssssssssssss.sssssssssss...................................... [ 73%]
+........................................................................ [ 77%]
+......................................................sssssss........... [ 80%]
+........................................................................ [ 84%]
+.............................................................sssssss.... [ 88%]
+......................................................s................. [ 91%]
+...sssssssssss.ssssssssssss.......sssss................................. [ 95%]
+.................................ss.sssssssssssssss.sssss........sssssss [ 99%]
+sssssssssssssssss                                                        [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+tests/test_v1_independent_offline_recovery.py::test_finite_import_burst_active_redelivery_and_repeat_drain_have_exact_effects
+  tests/test_v1_independent_offline_recovery.py:14: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+tests/test_v1_independent_offline_recovery.py::test_four_interrupted_claims_expire_then_bounded_recovery_drains_without_duplicates
+  tests/test_v1_independent_offline_recovery.py:53: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+tests/test_v1_independent_offline_recovery.py::test_transport_burst_cancelled_work_retains_four_slots_then_admission_recovers
+  tests/test_v1_independent_offline_recovery.py:96: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+-- generated xml file: /tmp/munimjee-independent-experience-final-980d2eb.xml --
+1237 passed, 724 skipped, 5 warnings in 10.02s
