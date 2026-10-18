@@ -108,7 +108,7 @@ async def test_global_test_gate_revoked_during_final_projection_withholds_dispat
     monkeypatch.setattr(settings, 'V1_CHANNEL_TESTS_ENABLED', True)
     for name, value in {
         'V1_WHATSAPP_ONBOARDING_ENABLED': True,
-        'WHATSAPP_EMBEDDED_APP_ID': '123', 'WHATSAPP_EMBEDDED_CONFIG_ID': '456',
+        'WHATSAPP_EMBEDDED_APP_ID': '123', 'WHATSAPP_EMBEDDED_CONFIG_ID': '789',
         'WHATSAPP_EMBEDDED_APP_SECRET': 'synthetic-matching-only',
         'WHATSAPP_APP_SECRET': 'synthetic-matching-only',
         'WHATSAPP_EMBEDDED_GRAPH_VERSION': 'v26.0',
