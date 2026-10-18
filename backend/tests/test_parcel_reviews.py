@@ -272,3 +272,21 @@ async def test_review_csrf_foreign_scope_confirmation_and_append_only_audit(api)
     async with api['factory']() as db:
         with pytest.raises(DBAPIError):await db.execute(text("UPDATE v1_parcel_audits SET action='modified'"))
         await db.rollback()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('action',['close_link','resume_tracking','replace'])
+async def test_session_revoked_after_staged_review_rolls_back_before_commit(api,monkeypatch,action):
+    lid=await terminal_conflict(api);body=await command_body(api,lid,action if action!='replace' else 'resume_tracking',replacement=action=='replace')
+    original=reviews.audit
+    async def staged_then_revoke(*args,**kwargs):
+        await original(*args,**kwargs)
+        async with api['factory'].begin() as db:(await db.scalar(select(UserSession))).revoked_at=datetime.now(timezone.utc)
+    monkeypatch.setattr(reviews,'audit',staged_then_revoke)
+    response=await post(api,lid,body,action=='replace');assert response.status_code==401,response.text
+    async with api['factory']() as db:
+        source=await db.get(OrderParcelLink,lid);assert source.state=='review_required' and source.tracking_state=='delivered'
+        assert await db.scalar(select(func.count()).select_from(OrderParcelLink))==1
+        assert await db.scalar(select(func.count()).select_from(ParcelAudit).where(ParcelAudit.action.in_(list(reviews.ACTIONS.values()))))==0
+        assert await db.scalar(select(func.count()).select_from(ParcelNotification).where(ParcelNotification.reason=='reviewed_without_notification'))==0
+    assert (await control('/__synthetic/stats'))['shipments']==1
