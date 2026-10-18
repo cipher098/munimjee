@@ -190,6 +190,14 @@ not a package switch. No existing service, production data or provider was used.
 
 ## Subsequent actual packaged HTTP read compatibility
 
+The subsequent fresh `release_src_w6`/`release_dst_w6` pair at application1281372
+executes the reviewed0053 fixture and passes **53 checks, zero skips, 2.26s**.
+Exact retained CSV bytes/hash, pending import row and all table/schema protections
+survive actual PG16 dump/restore; the newer target-only paid order is preserved.
+Public hashes/counts and source provenance are in `local-pg16-w6/`. Neither used
+pair is reset/reused. This0053 execution does not reuse the separate0052 package
+compatibility claim below.
+
 The opt-in `tests/release/run_application_compatibility.py` subsequently holds both
 leases on that owned restored pair. The current immutable hash-locked arm64 image
 executes actual native signup, reviewed product/SKU creation, explicit activation,

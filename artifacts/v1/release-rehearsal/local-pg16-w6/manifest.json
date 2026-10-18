@@ -1,0 +1,24 @@
+{
+  "test_invocation_git_head": "1281372",
+  "actual_head": "0053_v1_csv_import",
+  "source_files": {
+    "scripts/v1_release_rehearsal.py": "c410519761a4bac796a0493bfc14d170f7ba6c3ad9897f7f35bca9fb3a75e423",
+    "scripts/v1_release_exec.py": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+    "scripts/v1_release_synthetic.py": "72a8e5939c5e334c8b2d8a6f33ba070302efd630c8a9793962aba174a135ba77",
+    "tests/release/test_v1_release_rehearsal.py": "25d34162ef37e476bc4fc1278d300cf37276c498a55322acf42c4e8a997b235a"
+  },
+  "server": "PostgreSQL16.15 dedicated disposable container",
+  "archive_tools": "PostgreSQL16.13",
+  "test_result": {
+    "passed": 53,
+    "skipped": 0,
+    "seconds": 2.26
+  },
+  "source_lane": "release_src_w6",
+  "target_lane": "release_dst_w6",
+  "existing_pair_reset": false,
+  "private_archive_committed": false,
+  "fixture": "Retained exact CSV original+SHA256 and pending import job; support/customer tables empty (DDL protections restored, populated proof restoration not claimed).",
+  "application_switch": "pending_for_this0053_pair",
+  "independent_review": "Catalogue source delta review clear; reviewer did not execute restore."
+}
