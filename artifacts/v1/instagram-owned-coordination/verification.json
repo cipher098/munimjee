@@ -1,0 +1,68 @@
+{
+  "tested_source_commit": "fd05305c0a5e7e242c51617a87f0b995a715cd18",
+  "base_commit": "3f01ae1b8f0296df8c761d9ce52b534aa6b74b9a",
+  "provider_original": "d5ab4588b651f917fd92f38c5ffc7f1fd8a7f8a6",
+  "security_original": "6eabd6f79612300ae1b5155707654742f1f41c67",
+  "pipeline_qa_original": "5d986084750bb441d7a312a554c8e63e7b50aea8",
+  "python": "/tmp/munimjee-release-ci-py311/bin/python",
+  "workers": {
+    "instagram_provider": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    },
+    "instagram_security": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    },
+    "instagram_contract_qa": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "high",
+      "fork_turns": "none"
+    }
+  },
+  "source_sha256": {
+    "backend/app/v1/imports/instagram_owned.py": "8301bdbfe97d781a6dd8a10a8e569c1978e608557a4c92bfbef894142085b7ba",
+    "backend/app/v1/imports/instagram_owned_transport.py": "02db3ce8e8b90e5fa5edaea385a2ae6bbe35f28cee18fee6fe9de1808351f4a1",
+    "backend/app/services/imports_v1.py": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+    "backend/app/workers/v1_imports.py": "f212be6a865069363487b0e0dc6163e569f3f1783f7ff41c78887be6ca7f581d",
+    "backend/app/v1/imports/runner.py": "9d89b74f980f3b01ec00a607ef6ef5c8d5b87b2100299de0085eafd029a2b80f",
+    "backend/app/models/imports_v1.py": "222f1d856c0eaeb2f645f50e4e7537b971ecb06d9954a1462ad32830a4b1d2cd",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/tests/conftest_db.py": "89ed254cbd6bdb76d0fa6f0e6e2b8fec4d1b932b8ee603c98f37becd9fcb8472"
+  },
+  "checks": [
+    {
+      "name": "focused composed adapter/security/pipeline/import regressions",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee/backend",
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -m pytest -q tests/test_v1_instagram_owned_provider.py tests/test_v1_instagram_owned_security.py tests/test_v1_instagram_owned_security_transport.py tests/test_v1_instagram_owned_pipeline.py tests/test_v1_instagram_owned_pipeline_db.py tests/test_v1_instagram_owned_pipeline_provider.py tests/test_v1_import_jobs_fetch.py tests/test_v1_import_jobs.py tests/test_v1_wave2_jobs.py tests/test_v1_import_drafts.py tests/test_v1_import_jobs_db.py -rs",
+      "passed": 393,
+      "skipped": 15,
+      "seconds": 0.89,
+      "exit_code": 0
+    },
+    {
+      "name": "full composed backend",
+      "cwd": "/Users/user/Documents/ChatGPT/munimjee/backend",
+      "command": "env -u TEST_DATABASE_URL -u TEST_LANE -u TEST_DB_RESET /tmp/munimjee-release-ci-py311/bin/python -m pytest -q -rs",
+      "passed": 1350,
+      "skipped": 582,
+      "seconds": 9.14,
+      "exit_code": 0
+    }
+  ],
+  "overlapping_counts_not_added": true,
+  "skip_boundary": "Actual P01 DB lane unallocated. Skips do not establish DB/provider acceptance.",
+  "capabilities": {
+    "ig_login_media": false,
+    "carousel": false
+  },
+  "shared_product_edits": false,
+  "real_provider_calls": 0,
+  "real_token_reads": 0,
+  "database_allocations": 0,
+  "docker_operations": 0,
+  "production_actions": 0,
+  "release_ready": false
+}
