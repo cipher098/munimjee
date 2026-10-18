@@ -111,6 +111,19 @@ async def reel_catalogue_reply(db, seller_id, context, customer_text):
     if len(refs) != 1 or refs[0].get('status') != 'matched':
         return None
     ref = refs[0]
+    from app.services import sku_fact_replies as facts
+    if facts.enabled():
+        matches = await facts.exact_reel_products(db, seller_id, reel_url=ref.get('url', ''))
+        if matches is None or len(matches) != 1 or [str(matches[0])] != [p.get('id') for p in ref.get('products', [])]:
+            return None
+        if await facts.is_activated(db, seller_id, matches[0]):
+            if context.get('source') not in {'message_link', 'referral_link', 'quoted_message'}:
+                return None
+            observed = await facts.read_facts(db, seller_id, matches[0], reel=dict(reel_url=ref.get('url', '')))
+            if observed is None:
+                return None
+            question = facts.reel_question(customer_text)
+            return facts.render(observed) if question == "[customer sent media]" or facts.factual_request(question) else facts.HANDOFF
     products = (await db.scalars(select(Product).where(
         Product.seller_id == seller_id, Product.active.is_(True),
         Product.reel_urls.isnot(None),

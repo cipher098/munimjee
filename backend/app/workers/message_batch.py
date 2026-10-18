@@ -549,6 +549,7 @@ async def _process_events(events: list, conversation, seller, db) -> set[int]:
     text_parts = []
     reply_context_prefix = ""
     customer_mid: str | None = None
+    sku_reel_context = False
 
     for event in events:
         if event.get("type") == "text":
@@ -570,16 +571,24 @@ async def _process_events(events: list, conversation, seller, db) -> set[int]:
                         # conversation to that product so the answer is correct.
                         from app.models.product import Product as _Product
                         from sqlalchemy import select as _select
-                        r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id))
+                        r1 = await db.execute(_select(_Product).where(_Product.id == ref_product_id,
+                            _Product.seller_id == seller.id, _Product.active.is_(True)))
                         ref_product = r1.scalar_one_or_none()
                         if ref_product:
                             from app.services.channel_readiness import guard_legacy_product
-                            await guard_legacy_product(db, seller.id, ref_product.id)
+                            from app.services import sku_fact_replies as facts
+                            if not facts.enabled() or not await facts.is_activated(db, seller.id, ref_product.id):
+                                await guard_legacy_product(db, seller.id, ref_product.id)
                             conversation.product_id = ref_product_id
                             logger.info(
                                 "reply_to switched product: %s → %s",
                                 current_product_id, ref_product.name,
                             )
+                        else:
+                            from app.services import sku_fact_replies as facts
+                            if facts.enabled():
+                                from app.services.channel_readiness import CatalogueAuthorityHandoff
+                                raise CatalogueAuthorityHandoff("Explicit reply product is unavailable")
                         ref_name = ref_product.name if ref_product else ref_product_id
                         reply_context_prefix = (
                             f"[Customer is replying to {role_label}'s message about '{ref_name}': \"{ref['content']}\"]\n"
@@ -595,13 +604,24 @@ async def _process_events(events: list, conversation, seller, db) -> set[int]:
             ig_match = _IG_URL_RE.search(text)
             if ig_match:
                 await handle_reel(conversation, seller, ig_match.group(0), db, send_reply=False)
+                from app.services import sku_fact_replies as facts
+                if facts.enabled() and await facts.is_activated(db, seller.id, conversation.product_id):
+                    sku_reel_context = True
+                    question = text[:ig_match.start()] + text[ig_match.end():]
+                    if question.strip():
+                        text_parts.append(question.strip())
             else:
                 text_parts.append(text)
 
     # Phase 3 — one advance_conversation call with everything combined
-    has_media = any(e.get("type") in ("image", "reel") for e in events)
+    has_media = sku_reel_context or any(e.get("type") in ("image", "reel") for e in events)
 
     if text_parts:
+        from app.services import sku_fact_replies as facts
+        if facts.enabled() and await facts.is_activated(db, seller.id, conversation.product_id):
+            # Historical quoted text may contain obsolete prices. It supplies
+            # only the explicit product reference, never read-fact authority.
+            reply_context_prefix = ""
         combined_text = reply_context_prefix + "\n".join(text_parts)
         logger.info("message_batch: combined text=%r (had_media=%s)", combined_text, has_media)
         await advance_conversation(conversation, seller, combined_text, db, send_reply=True, customer_mid=customer_mid)
