@@ -21,6 +21,12 @@ class GrantCreate(Strict):
     expires_at: datetime
     consented: Literal[True]
 
+    @field_validator('consented',mode='before')
+    @classmethod
+    def explicit_consent(cls,value):
+        if value is not True:raise ValueError('Explicit boolean consent is required')
+        return value
+
     @field_validator('reason')
     @classmethod
     def reason_text(cls,value):
@@ -38,6 +44,13 @@ class GrantCreate(Strict):
 class GrantAction(Strict):
     idempotency_key: UUID
     confirmed: Literal[True]
+
+
+    @field_validator('confirmed',mode='before')
+    @classmethod
+    def explicit_confirmation(cls,value):
+        if value is not True:raise ValueError('Explicit boolean confirmation is required')
+        return value
 
 
 class GrantRead(Strict):

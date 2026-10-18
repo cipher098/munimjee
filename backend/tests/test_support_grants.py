@@ -88,7 +88,7 @@ async def test_nonowners_cannot_consent_or_lookup(support,role):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('kind',['disabled','unlisted','legacy','foreign_tenant','self','scope','expiry_short','expiry_long','missing_consent'])
+@pytest.mark.parametrize('kind',['disabled','unlisted','legacy','foreign_tenant','self','scope','expiry_short','expiry_long','missing_consent','numeric_consent'])
 async def test_privilege_and_input_negatives_do_not_write(support,monkeypatch,kind):
     c,f,bid,headers,_,owner_uid,op,uid,*_=support;body=create_body(uid)
     if kind=='disabled':monkeypatch.setattr(settings,'V1_SUPPORT_GRANTS_ENABLED',False)
@@ -103,6 +103,7 @@ async def test_privilege_and_input_negatives_do_not_write(support,monkeypatch,ki
     if kind=='expiry_short':body=create_body(uid,minutes=1)
     if kind=='expiry_long':body=create_body(uid,minutes=70)
     if kind=='missing_consent':body['consented']=False
+    if kind=='numeric_consent':body['consented']=1
     r=await c.post(owner_path(bid),headers=headers,json=body)
     assert r.status_code in (401,403,404,409,422),r.text
     async with f() as db:assert await db.scalar(select(func.count()).select_from(SupportGrant))==0
@@ -241,3 +242,9 @@ async def test_cookie_csrf_and_foreign_origin_cannot_create_or_read_summary(supp
     r=await c.post(open_path(gid),json=action_body(),headers={'Origin':'http://test'})
     assert r.status_code==403
     assert (await c.post(open_path(gid),json=action_body(),headers={'Origin':'http://test','X-CSRF-Token':csrf})).status_code==200
+
+
+def test_support_confirmations_reject_numeric_truth():
+    from app.schemas.support_grants import GrantAction
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):GrantAction(idempotency_key=uuid4(),confirmed=1)
