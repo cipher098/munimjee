@@ -1,0 +1,272 @@
+{
+  "mode": "actual-native-source-intercepted-synthetic-http-supplement",
+  "source_head": "b8d7f77068d7dc0b0bac709f010d256fad680103",
+  "source_hashes_before": {
+    "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "v1_app.js": "ee4a64b78b1a177e199a22f2cc1e10e146ff66120111bb2147f8bb0920ef9e91",
+    "v1_app.css": "6e9ca1e94315efe982654edab93ecb3e19442f71b1ec6e8a3da62777b25ef52c",
+    "v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_hashes_after": {
+    "v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "v1_app.js": "ee4a64b78b1a177e199a22f2cc1e10e146ff66120111bb2147f8bb0920ef9e91",
+    "v1_app.css": "6e9ca1e94315efe982654edab93ecb3e19442f71b1ec6e8a3da62777b25ef52c",
+    "v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged": true,
+  "runner_sha256": "b540228478f33bae327d915ff8cd04e12afeeb0e97190ab635edd428311f3a16",
+  "fixture_sha256": "8dac591035b7e8980a8f842fe94f6daaf41d8eb4291d2bb94c6bf5d15c6da3b7",
+  "fixture_sources_verified_before_browser": true,
+  "server_started": false,
+  "unexpected_network": [],
+  "page_errors": [],
+  "passed": 8,
+  "failed": 0,
+  "results": [
+    {
+      "id": "manual-retry-503-valid",
+      "result": "passed",
+      "observed": {
+        "fresh_session_gets": 6,
+        "valid": true,
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          }
+        ]
+      }
+    },
+    {
+      "id": "manual-retry-503-denied",
+      "result": "passed",
+      "observed": {
+        "fresh_session_gets": 2,
+        "valid": false,
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          }
+        ]
+      }
+    },
+    {
+      "id": "manual-retry-transport-valid",
+      "result": "passed",
+      "observed": {
+        "fresh_session_gets": 6,
+        "valid": true,
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          }
+        ]
+      }
+    },
+    {
+      "id": "manual-retry-transport-denied",
+      "result": "passed",
+      "observed": {
+        "fresh_session_gets": 2,
+        "valid": false,
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-signin-logout-focus",
+      "result": "passed",
+      "observed": {
+        "focus": {
+          "id": "access-title",
+          "tag": "H2"
+        },
+        "cutoff": 179.29999999701977
+      }
+    },
+    {
+      "id": "deferred-logout-new-signin-focus",
+      "result": "passed",
+      "observed": {
+        "current_user": "20000000-0000-4000-8000-000000000082",
+        "focus": "name",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "POST",
+            "path": "/api/v1/auth/logout"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "POST",
+            "path": "/api/v1/auth/login"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/onboarding"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/businesses/10000000-0000-4000-8000-000000000081/invitations"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/auth/session"
+          }
+        ]
+      }
+    },
+    {
+      "id": "passive-refresh-no-focus-steal",
+      "result": "passed",
+      "observed": {
+        "reads_before": 5,
+        "reads_after": 6,
+        "focus": {
+          "name": "name",
+          "id": ""
+        }
+      }
+    },
+    {
+      "id": "focused-long-name-captures",
+      "result": "passed",
+      "observed": {
+        "size": {
+          "viewport": 360,
+          "scroll": 360
+        },
+        "focus": {
+          "id": "business-heading",
+          "outline": "rgb(46, 81, 65)"
+        }
+      }
+    }
+  ],
+  "unrun_gates": [
+    "actual server/session/cookie race behavior",
+    "mounted migrated DB",
+    "physical touch",
+    "screen-reader interaction",
+    "full WCAG audit",
+    "provider behavior"
+  ]
+}
