@@ -38,6 +38,21 @@ assertions and prior red artifacts are byte-preserved. Unsupported Devanagari
 questions remain safe handoff, not answered Hindi questions. No arbitrary answer
 quality score or scope expansion.
 
+The additional matrix was frozen at six before test writes:
+
+| ID | Scenario | Required observation |
+| --- | --- | --- |
+| M01 | Plural material request | Existing handoff or explicit material uncertainty |
+| M02 | Price mixed with singular material | Handoff/uncertainty rather than partial catalogue answer |
+| M03 | Size/stock mixed with plural materials | Same conservative handling |
+| M04 | Supported mixed price/size/stock, including approved zero price and zero/null stock | Exact independent literal facts, preserving unknown stock |
+| M05 | Material question with no public SKU observation | Withhold; no new fact authority |
+| M06 | Mixed price/material with invalid missing required price | Withhold before classification; no new fact authority |
+
+The unchanged base reproduces M01–M03 as red and M04–M06 as passing. Raw baseline
+evidence is preserved in the new QA directory. Original21 tests already cover
+separate supported price/size/stock, singular material and unsupported Hindi.
+
 ## Verification and limits
 
 Exercise real parser/context/reply assembly with strict scripted raw projections,

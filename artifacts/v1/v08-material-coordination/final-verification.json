@@ -1,0 +1,97 @@
+{
+  "base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "runtime_owner_commit": "3b91a3a96a6c3f104e0666bb19dfbd97d1bc96e9",
+  "composition_checkpoint": "9d6e9ed4fcce1bbe775e6d0f0df100ac23b23875",
+  "runtime_paths": [
+    "backend/app/services/sku_fact_replies.py"
+  ],
+  "runtime_sha256": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+  "exact_two_substitutions_only": true,
+  "unchanged_service_functions": [
+    "enabled",
+    "is_activated",
+    "read_facts",
+    "render",
+    "reel_question",
+    "reel_candidates",
+    "exact_reel_products",
+    "instagram_batch_context",
+    "freeze_instagram_batch",
+    "instagram_filters"
+  ],
+  "all219_existing_test_files_byte_preserved": true,
+  "original21_bodies_and_execution_ids_order_preserved": true,
+  "prior16_V08_evidence_files_preserved": true,
+  "new_harness_sha256": "8bb6bc7877828fefc1f8d03bc0ce692393627cfe0f802aa061187b41cd2bbdb9",
+  "new_harness_same_in_baseline_and_repaired": true,
+  "new6_baseline_counts": {
+    "passed": 3,
+    "failed": 3,
+    "errors": 0,
+    "skipped": 0
+  },
+  "independent_focused48_counts": {
+    "passed": 48,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "author_focused65_counts": {
+    "passed": 65,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "all27_acceptance_cases_pass": true,
+  "root_extra_test_run": false,
+  "reason_no_extra_run": "Exact source, harness and artifacts match passing independent/author runs; no source changed. Root independently checked composition hashes, scope, protected bodies and XML outcomes.",
+  "commit_mapping": {
+    "3b91a3a": "d3aacd9",
+    "68441dd": "02d0fe3",
+    "aea4eff": "1557a2c",
+    "5faa152": "9d6e9ed",
+    "d888543": "f416327"
+  },
+  "source_and_tests_whitespace_pass": true,
+  "raw_baseline_whitespace": "Preserved verbatim; no whole-artifact whitespace normalization",
+  "source_and_safety_sha256": {
+    "backend/app/services/sku_fact_replies.py": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/tests/test_v08_semantics_acceptance.py": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+    "backend/tests/test_v08_context_acceptance.py": "da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41",
+    "backend/tests/test_sku_fact_replies.py": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1"
+  },
+  "artifact_manifest_sha256": {
+    "author": "587ec8dd55abd3ce78a0ab412fe0ed5ca9d1aa07392ed551410e09379d6cc828",
+    "qa": "d5db085a9da0a565d90a476b8d7154a9c401d33d4605227e727f759d9288c94e"
+  },
+  "scope": "Real deterministic parser/context/decision/fact validation/classification/render over strict raw projection boundary; no LLM/provider output injected; source-only synthetic-row evidence.",
+  "limits": [
+    "actual SQL authority/tenant/publication/activation/locks",
+    "durable queue/handoff/resume or reconnect",
+    "mounted migrated DB journey",
+    "authorized live provider policy/delivery",
+    "wider Hindi/language response quality",
+    "full V08/X01 acceptance"
+  ],
+  "independent_review": {
+    "original_commit": "d8885432143922afa881f326249f8f26bbe5b5e1",
+    "composed_commit": "f416327",
+    "disposition": "No scoped blocker. Bounded material-actionability symptom repaired conservatively. Real SQL/durable/provider/model/mounted/V08 completion not established.",
+    "review_reran_tests": false,
+    "all11_owner_function_hashes_verified_by_root": true
+  },
+  "review_artifact_sha256": {
+    "peer-verification.json": "e30d4957c344a4cf891edb5914ed090225ec958c30869d26da50a1b2fb297458",
+    "base-inventory.json": "28eead233e5f7cff292c93ddcd8cec2032aa4cd2e8d1ad829df7f3671a780650",
+    "source-review.json": "80aada956ba15b485340cf94b35730741a202a2d2ff21f8edfaa87c25daad784"
+  },
+  "worker_remote_heads_verified": {
+    "codex/v1-v08-material-repair": "aea4effd148810f63f079369adcf2dc87822290d",
+    "codex/v1-v08-material-qa": "5faa15255c085a16f50954ec2ae5ca7baa78a569",
+    "codex/v1-v08-material-review": "d8885432143922afa881f326249f8f26bbe5b5e1"
+  },
+  "worker_trees_clean": true
+}
