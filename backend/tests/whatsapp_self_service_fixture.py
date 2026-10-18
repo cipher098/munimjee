@@ -98,7 +98,7 @@ async def native_wa_setup(migrated_engine, monkeypatch):
                              headers={'Origin': 'https://test'})
         clients.append(client)
         response = await client.post('/api/v1/auth/signup', json={
-            'email': f'{uuid4().hex}@example.test', 'password': 'synthetic-owner-password-only',
+            'email': f'{uuid4().hex}@example.com', 'password': 'synthetic-owner-password-only',
             'business_name': name})
         assert response.status_code == 201, 'Synthetic native signup must succeed'
         data = response.json()
