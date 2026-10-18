@@ -215,3 +215,80 @@ async def test_theme_routes_deny_missing_native_session_without_database(monkeyp
             assert (await c.get(url)).status_code==401
         monkeypatch.setattr(settings,'V1_AUTH_ENABLED',False)
         assert (await c.get(f'/v1/businesses/{bid}/themes')).status_code==404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('revocation',['role','session'])
+@pytest.mark.parametrize('command',['save','publish','replay_save','replay_publish'])
+async def test_theme_mutation_guard_rejects_revocation_during_lock_wait_including_replay(theme_client,monkeypatch,revocation,command):
+    """Actual Alembic DB/HTTP: no successful receipt escapes revoked authority."""
+    import asyncio
+    from datetime import datetime,timezone
+    from app.models.identity import Business
+    from app.models.identity_auth import UserSession
+    from app.services import storefront_theme_v1 as domain
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings'
+    saved_body=draft(theme='editorial');publish_body={'expected_version':1,'idempotency_key':str(uuid4())}
+    if command!='save':assert (await c.put(url,json=saved_body,headers=csrf(c))).status_code==200
+    if command=='replay_publish':assert (await c.post(url+'/publish',json=publish_body,headers=csrf(c))).status_code==200
+    before=(await c.get(url)).json()
+    async with c.factory() as db:
+        before_receipts=len((await db.scalars(select(StorefrontThemeCommand))).all())
+    operation='publish' if 'publish' in command else 'save'
+    body=publish_body if operation=='publish' else saved_body
+    authorized=asyncio.Event();original=domain.authorize
+    async def checked(*args,**kwargs):
+        result=await original(*args,**kwargs);authorized.set();return result
+    monkeypatch.setattr(domain,'authorize',checked)
+    async with c.factory() as holder:
+        await holder.scalar(select(Business.id).where(Business.id==UUID(bid)).with_for_update())
+        request=asyncio.create_task(c.request('POST' if operation=='publish' else 'PUT',url+('/publish' if operation=='publish' else ''),json=body,headers=csrf(c)))
+        try:
+            await asyncio.wait_for(authorized.wait(),5)
+            if revocation=='role':
+                member=await holder.scalar(select(Membership).where(Membership.user_id==UUID(uid),Membership.business_id==UUID(bid)));member.role='viewer'
+            else:
+                sessions=(await holder.scalars(select(UserSession).where(UserSession.user_id==UUID(uid)))).all()
+                for session in sessions:session.revoked_at=datetime.now(timezone.utc)
+            await holder.commit()
+            response=await asyncio.wait_for(request,5)
+        finally:
+            if not request.done():request.cancel()
+    assert response.status_code==(403 if revocation=='role' else 401),response.text
+    async with c.factory() as db:
+        from app.services.storefront_theme_v1 import view
+        assert view(await db.get(StorefrontThemeSettings,UUID(bid)))==before
+        assert len((await db.scalars(select(StorefrontThemeCommand))).all())==before_receipts
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('revocation',['role','session'])
+@pytest.mark.parametrize('replay',[False,True])
+async def test_theme_guard_rechecks_after_staging_before_caller_commit(theme_client,monkeypatch,revocation,replay):
+    import asyncio
+    from datetime import datetime,timezone
+    from app.models.identity_auth import UserSession
+    from app.services import storefront_theme_v1 as domain
+    c=theme_client;bid,uid=await signup(c);url=f'/api/v1/businesses/{bid}/theme-settings';body=draft(theme='video')
+    if replay:assert (await c.put(url,json=body,headers=csrf(c))).status_code==200
+    before=(await c.get(url)).json();staged=asyncio.Event();release=asyncio.Event();original=domain.apply_command
+    async def pause_after_staging(*args,**kwargs):
+        result=await original(*args,**kwargs);staged.set();await release.wait();return result
+    monkeypatch.setattr(domain,'apply_command',pause_after_staging)
+    request=asyncio.create_task(c.put(url,json=body,headers=csrf(c)))
+    try:
+        await asyncio.wait_for(staged.wait(),5)
+        async with c.factory() as other:
+            if revocation=='role':
+                member=await other.scalar(select(Membership).where(Membership.user_id==UUID(uid),Membership.business_id==UUID(bid)));member.role='viewer'
+            else:
+                for session in (await other.scalars(select(UserSession).where(UserSession.user_id==UUID(uid)))).all():session.revoked_at=datetime.now(timezone.utc)
+            await other.commit()
+        release.set();response=await asyncio.wait_for(request,5)
+    finally:
+        release.set()
+        if not request.done():request.cancel()
+    assert response.status_code==(403 if revocation=='role' else 401),response.text
+    async with c.factory() as db:
+        assert domain.view(await db.get(StorefrontThemeSettings,UUID(bid)))==before
+        assert len((await db.scalars(select(StorefrontThemeCommand))).all())==(1 if replay else 0)

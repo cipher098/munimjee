@@ -11,16 +11,13 @@ from app.models.product import Product
 from app.models.product_category import ProductCategory
 from app.models.seller import Seller
 from app.services.checkout_v1 import public_product
+from app.services.storefront_theme_v1 import published_theme
 from app.v1.storefront.rendering import PublicStorefront
 
 
 class PublishedStorefrontProvider:
-    def __init__(self, db, *, theme="catalogue"):
-        # Presentation is application configuration, never an untrusted query or
-        # a claim that seller theme settings have been persisted.
-        if theme not in {"catalogue", "editorial", "video"}:
-            raise ValueError("Unsupported storefront presentation")
-        self.db, self.theme = db, theme
+    def __init__(self, db):
+        self.db = db
 
     async def public_store(self, slug):
         db = self.db
@@ -56,7 +53,10 @@ class PublishedStorefrontProvider:
         options = await public_payment_options(slug, db)
         methods = tuple(method for method, enabled in (("cod", options["cod_enabled"]),
             ("razorpay", options["razorpay_enabled"])) if enabled)
-        return PublicStorefront(slug=store.slug, name=store.name, theme=self.theme,
+        # Read only the saved published allowlist, after publication authorization.
+        # Drafts, receipts, editor/tenant identity and history never enter this DTO.
+        design = await published_theme(db, store.seller_id)
+        return PublicStorefront(slug=store.slug, name=store.name, theme=design["theme"], design=design,
             description=store.description, shipping_policy=store.shipping_policy, return_policy=store.return_policy,
             currency=store.currency, products=tuple(products),
             categories=tuple({"category_id":str(category.id),"name":category.name} for category in categories),
