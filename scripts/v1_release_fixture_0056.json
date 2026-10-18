@@ -1,0 +1,726 @@
+{
+  "format": "munimjee.release-fixture.0056",
+  "version": 1,
+  "source_counts": {
+    "alembic_version": 1,
+    "sellers": 1,
+    "businesses": 1,
+    "users": 1,
+    "memberships": 1,
+    "products": 1,
+    "catalogue_skus": 1,
+    "commerce_customers": 1,
+    "commerce_orders": 2,
+    "sku_reservations": 2,
+    "sku_payment_attempts": 1,
+    "conversations": 1,
+    "manual_actions": 1,
+    "v1_import_assets": 1,
+    "v1_import_jobs": 1,
+    "v1_activity_policies": 1,
+    "v1_activity_policy_commands": 1,
+    "v1_activity_contexts": 1,
+    "v1_activity_events": 2,
+    "v1_activity_gaps": 1,
+    "v1_order_activity": 2,
+    "whatsapp_contacts": 1,
+    "whatsapp_messages": 2,
+    "whatsapp_enquiry_reviews": 2,
+    "v1_activity_sources": 1,
+    "comment_rules": 1,
+    "comment_events": 4,
+    "comment_actions": 4,
+    "comment_action_audits": 8,
+    "comment_operator_commands": 2,
+    "comment_operator_reviews": 1,
+    "whatsapp_enquiry_closures": 1
+  },
+  "source_totals": {
+    "orders": 2,
+    "placed_total_minor": 2500,
+    "paid_total_minor": 1250,
+    "cod_collected_minor": 0,
+    "reservations": 2,
+    "reserved_quantity": 2,
+    "unknown_payments": 1,
+    "open_actions": 1,
+    "available_stock": 8
+  },
+  "scoped_counts": {
+    "activity_test_contexts": 1,
+    "activity_lossy_contexts": 1,
+    "activity_product_view": 1,
+    "activity_checkout_opened": 1,
+    "activity_gaps": 1,
+    "order_activity_test": 1,
+    "order_activity_unknown": 1,
+    "source_ledger_test_inbound": 1,
+    "comment_pending": 1,
+    "comment_unknown": 1,
+    "comment_sent": 1,
+    "comment_legacy_review_required": 1,
+    "bound_claims": 3,
+    "attempted_claims": 2,
+    "synthetic_provider_receipts": 1,
+    "comment_audits": 8,
+    "comment_reviews": 1,
+    "wa_enquiries_open": 1,
+    "wa_enquiries_closed": 1,
+    "wa_outbound_messages": 0
+  },
+  "records": {
+    "v1_activity_policies": [
+      {
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "mode": "test",
+        "revision": 1,
+        "updated_at": "2025-12-31T23:59:00+00:00"
+      }
+    ],
+    "v1_activity_policy_commands": [
+      {
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "idempotency_key": "694592c1-353f-5f00-adc7-0d4c8b37b4e9",
+        "actor_user_id": "dc5ad3d8-9079-5704-8040-15a0de073077",
+        "request_hash": "0f71df7b4cf6fdfda4965e827f1073cb52f021319d8bcdcd16cee63e37dca6ec",
+        "mode": "test",
+        "revision": 1,
+        "notice_version": "first-party.v1",
+        "created_at": "2025-12-31T23:59:00+00:00"
+      }
+    ],
+    "v1_activity_contexts": [
+      {
+        "id": "5e2a6535-04a6-5b60-87fb-45ba4c9f4ecf",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "idempotency_key": "44e2e23d-13c1-5065-bc5c-f29b2255bd08",
+        "classification": "test",
+        "reason": "policy_test",
+        "policy_revision": 1,
+        "started_at": "2026-01-01T00:00:00+00:00",
+        "expires_at": "2026-01-01T00:30:00+00:00",
+        "retained_until": "2026-04-01T00:00:00+00:00",
+        "lossy": true
+      }
+    ],
+    "v1_activity_events": [
+      {
+        "id": "5bafad29-f61f-5054-b504-bf04bdb0080b",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "context_id": "5e2a6535-04a6-5b60-87fb-45ba4c9f4ecf",
+        "event_kind": "product_view",
+        "product_id": "13fd5687-79ec-51a6-b43b-1af5c177e65a",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "e26faf9d-da54-5535-adbb-4f71c923774a",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "context_id": "5e2a6535-04a6-5b60-87fb-45ba4c9f4ecf",
+        "event_kind": "checkout_opened",
+        "product_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "v1_activity_gaps": [
+      {
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "classification": "test",
+        "minute": "2026-01-01T00:00:00+00:00",
+        "reason": "event_capacity"
+      }
+    ],
+    "v1_order_activity": [
+      {
+        "order_id": "407ce81b-bb8b-50a0-b812-1d5474ab4598",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "classification": "test",
+        "reason": "test_context",
+        "context_id": "5e2a6535-04a6-5b60-87fb-45ba4c9f4ecf",
+        "accepted_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "order_id": "52a80174-72c0-50d3-8714-759fb4cffec5",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "classification": "unknown",
+        "reason": "tracking_disabled",
+        "context_id": null,
+        "accepted_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "whatsapp_contacts": [
+      {
+        "id": "085267a0-ab4c-522b-87c6-125b7456c5aa",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "phone": "0000000001",
+        "name": "Synthetic restore contact",
+        "last_inbound_at": "2026-01-01T00:00:00+00:00",
+        "opted_out": true,
+        "utility_opt_in": false,
+        "marketing_opt_in": false,
+        "consent_updated_at": "2026-01-01T00:00:00+00:00",
+        "consent_history": [],
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "whatsapp_messages": [
+      {
+        "id": "52e76d7b-8b07-5f79-ab12-aff505ad3539",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "contact_id": "085267a0-ab4c-522b-87c6-125b7456c5aa",
+        "phone_number_id": "synthetic-restore-phone",
+        "provider_message_id": "synthetic-restore-inbound-open",
+        "idempotency_key": "in:synthetic-restore-open",
+        "direction": "inbound",
+        "kind": "text",
+        "text": "Synthetic retained enquiry",
+        "payload": {
+          "reel_context": {
+            "source": "recent_message",
+            "shared_at": "2026-01-01T00:00:00+00:00",
+            "references": []
+          }
+        },
+        "status": "received",
+        "error": null,
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "updated_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "7a1876fb-e873-584b-8bab-51652c7edb9e",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "contact_id": "085267a0-ab4c-522b-87c6-125b7456c5aa",
+        "phone_number_id": "synthetic-restore-phone",
+        "provider_message_id": "synthetic-restore-inbound-closed",
+        "idempotency_key": "in:synthetic-restore-closed",
+        "direction": "inbound",
+        "kind": "text",
+        "text": "Synthetic retained enquiry",
+        "payload": {
+          "reel_context": {
+            "source": "recent_message",
+            "shared_at": "2026-01-01T00:00:00+00:00",
+            "references": []
+          }
+        },
+        "status": "received",
+        "error": null,
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "updated_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "whatsapp_enquiry_reviews": [
+      {
+        "id": "bea51ef7-a807-5291-a194-15eaf391682d",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "inbound_message_id": "52e76d7b-8b07-5f79-ab12-aff505ad3539",
+        "contact_id": "085267a0-ab4c-522b-87c6-125b7456c5aa",
+        "phone_number_id": "synthetic-restore-phone",
+        "reason": "activated_inferred_context",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "2f504cdc-1164-585e-a9ee-2979f630393e",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "inbound_message_id": "7a1876fb-e873-584b-8bab-51652c7edb9e",
+        "contact_id": "085267a0-ab4c-522b-87c6-125b7456c5aa",
+        "phone_number_id": "synthetic-restore-phone",
+        "reason": "activated_inferred_context",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "v1_activity_sources": [
+      {
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "source_kind": "wa_inbound",
+        "source_id": "52e76d7b-8b07-5f79-ab12-aff505ad3539",
+        "classification": "test",
+        "origin": "inbound",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "retained_until": "2026-04-01T00:00:00+00:00"
+      }
+    ],
+    "comment_rules": [
+      {
+        "id": "2c4844ac-51a9-5b0c-a0bf-91337ddcb455",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "name": "Synthetic disabled restore rule",
+        "enabled": false,
+        "media_id": "synthetic-restore-media",
+        "keywords": [
+          "synthetic"
+        ],
+        "product_id": "13fd5687-79ec-51a6-b43b-1af5c177e65a",
+        "private_reply": "Synthetic retained private reply",
+        "public_reply": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "comment_events": [
+      {
+        "id": "215b7f8b-eaf4-5c28-9eb5-ce8bb9a72c49",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "comment_id": "synthetic-restore-comment-pending",
+        "media_id": "synthetic-restore-media",
+        "actor_id": "synthetic-restore-actor",
+        "text": "Synthetic retained comment",
+        "commented_at": "2026-01-01T00:00:00+00:00",
+        "status": "matched",
+        "reason": null,
+        "rule_id": "2c4844ac-51a9-5b0c-a0bf-91337ddcb455",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "source_account_id": "synthetic-no-provider-account",
+        "source_binding": {
+          "account_id": "synthetic-no-provider-account",
+          "version": 0,
+          "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+          "expires_at": "2026-01-02T00:00:00+00:00"
+        },
+        "source_verified_at": "2026-01-01T00:00:00+00:00",
+        "source_verification": "signed_webhook"
+      },
+      {
+        "id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "comment_id": "synthetic-restore-comment-unknown",
+        "media_id": "synthetic-restore-media",
+        "actor_id": "synthetic-restore-actor",
+        "text": "Synthetic retained comment",
+        "commented_at": "2026-01-01T00:00:00+00:00",
+        "status": "review_required",
+        "reason": null,
+        "rule_id": "2c4844ac-51a9-5b0c-a0bf-91337ddcb455",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "source_account_id": "synthetic-no-provider-account",
+        "source_binding": {
+          "account_id": "synthetic-no-provider-account",
+          "version": 0,
+          "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+          "expires_at": "2026-01-02T00:00:00+00:00"
+        },
+        "source_verified_at": "2026-01-01T00:00:00+00:00",
+        "source_verification": "signed_webhook"
+      },
+      {
+        "id": "70d9537c-ab56-5196-8fcb-68b6aa14d059",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "comment_id": "synthetic-restore-comment-sent",
+        "media_id": "synthetic-restore-media",
+        "actor_id": "synthetic-restore-actor",
+        "text": "Synthetic retained comment",
+        "commented_at": "2026-01-01T00:00:00+00:00",
+        "status": "processed",
+        "reason": null,
+        "rule_id": "2c4844ac-51a9-5b0c-a0bf-91337ddcb455",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "source_account_id": "synthetic-no-provider-account",
+        "source_binding": {
+          "account_id": "synthetic-no-provider-account",
+          "version": 0,
+          "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+          "expires_at": "2026-01-02T00:00:00+00:00"
+        },
+        "source_verified_at": "2026-01-01T00:00:00+00:00",
+        "source_verification": "signed_webhook"
+      },
+      {
+        "id": "bad9927f-5e3e-5947-b6df-165fa7c278c1",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "comment_id": "synthetic-restore-comment-legacy",
+        "media_id": "synthetic-restore-media",
+        "actor_id": "synthetic-restore-actor",
+        "text": "Synthetic retained comment",
+        "commented_at": "2026-01-01T00:00:00+00:00",
+        "status": "review_required",
+        "reason": "legacy_binding_unverified",
+        "rule_id": "2c4844ac-51a9-5b0c-a0bf-91337ddcb455",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "source_account_id": null,
+        "source_binding": null,
+        "source_verified_at": null,
+        "source_verification": null
+      }
+    ],
+    "comment_actions": [
+      {
+        "id": "b9e503a6-4d17-528d-9030-5336b331e9fa",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "215b7f8b-eaf4-5c28-9eb5-ce8bb9a72c49",
+        "kind": "private",
+        "body": "Synthetic retained private reply",
+        "status": "pending",
+        "error_code": null,
+        "provider_id": null,
+        "attempted_at": null,
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "accepted_claim": {
+          "contract_version": "comment-action.v1",
+          "event_hash": "c63665e5a4f9cd9d568d899f3dccfcb4c9d5fa90cfff110968849fdd0401a00d",
+          "connection": {
+            "account_id": "synthetic-no-provider-account",
+            "version": 0,
+            "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+            "expires_at": "2026-01-02T00:00:00+00:00"
+          },
+          "config_hash": "51510bda3d00bb81e6dc252c105cd69fa43b518ce72625d2e74cf9b3ef1b1fa8",
+          "body_hash": "bea5e81c9c0eea6d9065f4cbb5978b125cee7a2d8e521d3f31aa47eca0f041ed",
+          "kind": "private"
+        },
+        "claim_hash": "8b0fbe7e76cc35db06cbc9881aaa9cf8f1c0c013473152c3072d09c24af114bd",
+        "claim_token": null,
+        "finalized_at": null
+      },
+      {
+        "id": "e1b346e2-fba2-5a0a-b70c-a5f05f0f6b0f",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "kind": "private",
+        "body": "Synthetic retained private reply",
+        "status": "unknown",
+        "error_code": "provider_result_unknown",
+        "provider_id": null,
+        "attempted_at": "2026-01-01T00:00:00+00:00",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "accepted_claim": {
+          "contract_version": "comment-action.v1",
+          "event_hash": "a0f985c0ccbf34da6d56659313be538fdceaf3ca40d25ad8d8ba021165ec86f3",
+          "connection": {
+            "account_id": "synthetic-no-provider-account",
+            "version": 0,
+            "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+            "expires_at": "2026-01-02T00:00:00+00:00"
+          },
+          "config_hash": "51510bda3d00bb81e6dc252c105cd69fa43b518ce72625d2e74cf9b3ef1b1fa8",
+          "body_hash": "bea5e81c9c0eea6d9065f4cbb5978b125cee7a2d8e521d3f31aa47eca0f041ed",
+          "kind": "private"
+        },
+        "claim_hash": "f5343d60fdb91e226701d79ff8d8e1e243f5573a73cc69bc42dde9003d156649",
+        "claim_token": "c3413d47-39c4-535f-8dae-bc5045258263",
+        "finalized_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "bdc0c847-dae3-58d1-b818-32860ac9a107",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "70d9537c-ab56-5196-8fcb-68b6aa14d059",
+        "kind": "private",
+        "body": "Synthetic retained private reply",
+        "status": "sent",
+        "error_code": null,
+        "provider_id": "synthetic-restored-receipt-not-provider-proof",
+        "attempted_at": "2026-01-01T00:00:00+00:00",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "accepted_claim": {
+          "contract_version": "comment-action.v1",
+          "event_hash": "5eaa249768da300fde0dd687274594ec4be799e1781994cf5492d76b7b583307",
+          "connection": {
+            "account_id": "synthetic-no-provider-account",
+            "version": 0,
+            "credential_hash": "86111d6339322dcb248af0795799b9da5fc1e4883a4a09e3e33e92d17608a62c",
+            "expires_at": "2026-01-02T00:00:00+00:00"
+          },
+          "config_hash": "51510bda3d00bb81e6dc252c105cd69fa43b518ce72625d2e74cf9b3ef1b1fa8",
+          "body_hash": "bea5e81c9c0eea6d9065f4cbb5978b125cee7a2d8e521d3f31aa47eca0f041ed",
+          "kind": "private"
+        },
+        "claim_hash": "ca6d0909e675ee3505f4fd386285e2607586845c0b31985ebeee4cc2ad9a5ed9",
+        "claim_token": "46d3ebb4-6b98-551b-a568-ce6db0d36131",
+        "finalized_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "87132a4d-6fd3-5399-9674-3fe9989be61a",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "bad9927f-5e3e-5947-b6df-165fa7c278c1",
+        "kind": "private",
+        "body": "Synthetic retained private reply",
+        "status": "review_required",
+        "error_code": "legacy_binding_unverified",
+        "provider_id": null,
+        "attempted_at": null,
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "accepted_claim": null,
+        "claim_hash": null,
+        "claim_token": null,
+        "finalized_at": null
+      }
+    ],
+    "comment_action_audits": [
+      {
+        "id": "f51f1870-408c-5606-86d7-2992e3ef15f1",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "215b7f8b-eaf4-5c28-9eb5-ce8bb9a72c49",
+        "action_id": "b9e503a6-4d17-528d-9030-5336b331e9fa",
+        "claim_token": null,
+        "stage": "accepted",
+        "before_status": null,
+        "after_status": "pending",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "f9066385-7485-59ed-9274-08983e086c7d",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "action_id": "e1b346e2-fba2-5a0a-b70c-a5f05f0f6b0f",
+        "claim_token": null,
+        "stage": "accepted",
+        "before_status": null,
+        "after_status": "pending",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "ca64c2c9-a8f1-57c6-9186-e8d2486d3a32",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "action_id": "e1b346e2-fba2-5a0a-b70c-a5f05f0f6b0f",
+        "claim_token": "c3413d47-39c4-535f-8dae-bc5045258263",
+        "stage": "claim",
+        "before_status": "pending",
+        "after_status": "sending",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "f3a1abfe-3cd2-5de5-96f9-4928a2232a60",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "action_id": "e1b346e2-fba2-5a0a-b70c-a5f05f0f6b0f",
+        "claim_token": "c3413d47-39c4-535f-8dae-bc5045258263",
+        "stage": "provider_result",
+        "before_status": "sending",
+        "after_status": "unknown",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "4ebab8be-c918-50e6-95a7-a78ae5f30ad7",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "70d9537c-ab56-5196-8fcb-68b6aa14d059",
+        "action_id": "bdc0c847-dae3-58d1-b818-32860ac9a107",
+        "claim_token": null,
+        "stage": "accepted",
+        "before_status": null,
+        "after_status": "pending",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "2d37572c-c1da-54c5-b4be-c1ef5bd3086d",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "70d9537c-ab56-5196-8fcb-68b6aa14d059",
+        "action_id": "bdc0c847-dae3-58d1-b818-32860ac9a107",
+        "claim_token": "46d3ebb4-6b98-551b-a568-ce6db0d36131",
+        "stage": "claim",
+        "before_status": "pending",
+        "after_status": "sending",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "3298fdce-e22b-57e3-b20d-58d8f68f4c23",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "70d9537c-ab56-5196-8fcb-68b6aa14d059",
+        "action_id": "bdc0c847-dae3-58d1-b818-32860ac9a107",
+        "claim_token": "46d3ebb4-6b98-551b-a568-ce6db0d36131",
+        "stage": "provider_result",
+        "before_status": "sending",
+        "after_status": "sent",
+        "reason": "synthetic_retained_history",
+        "provider_id": "synthetic-restored-receipt-not-provider-proof",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "5168dc92-9d71-5379-a36f-68bcddf70717",
+        "seller_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "bad9927f-5e3e-5947-b6df-165fa7c278c1",
+        "action_id": "87132a4d-6fd3-5399-9674-3fe9989be61a",
+        "claim_token": null,
+        "stage": "withheld",
+        "before_status": null,
+        "after_status": "review_required",
+        "reason": "synthetic_retained_history",
+        "provider_id": null,
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "comment_operator_commands": [
+      {
+        "id": "dce3ab34-764f-5e9c-aed1-a40ed92db5f8",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "actor_id": "dc5ad3d8-9079-5704-8040-15a0de073077",
+        "idempotency_key": "d3674b7b-2fbb-51fb-94bc-2214eb0ab9e9",
+        "operation": "comment_close",
+        "request_hash": "51a8148c6f4dd2cac1034519bcba4dd0affea1a5a2878bd7394cedf82719f008",
+        "result": {
+          "resource_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+          "fingerprint": "2ffbca83bc7d6868714ac05549b9a6dcc77607f43fc5303bcebc8016e7f7bf88"
+        },
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "id": "45631e71-e39a-5f9c-b730-3ff078c4d521",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "actor_id": "dc5ad3d8-9079-5704-8040-15a0de073077",
+        "idempotency_key": "98df6b2d-5fad-5694-ac9d-030d9deebff9",
+        "operation": "enquiry_close",
+        "request_hash": "7df92e656722193725959bff7ec4acd5f88b9b01cbb637289f89802b78bcb831",
+        "result": {
+          "resource_id": "2f504cdc-1164-585e-a9ee-2979f630393e",
+          "fingerprint": "0a377e28e88ac91f57eef437d313183dc819481ba29d04560516bb1a80ccbdc4"
+        },
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "comment_operator_reviews": [
+      {
+        "id": "5935a44e-686e-5974-b99b-66067eb4ba2b",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "event_id": "6cb62451-5f68-5156-b4da-799169b3d119",
+        "command_id": "dce3ab34-764f-5e9c-aed1-a40ed92db5f8",
+        "reason": "Synthetic review preserves unknown outcome without another send",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ],
+    "whatsapp_enquiry_closures": [
+      {
+        "id": "3bf5edbc-3f0c-5852-81b7-528321434117",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "enquiry_id": "2f504cdc-1164-585e-a9ee-2979f630393e",
+        "command_id": "45631e71-e39a-5f9c-b730-3ff078c4d521",
+        "reason": "Synthetic review closed without creating any outbound message",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      }
+    ]
+  },
+  "append": {
+    "existing_financial_stage": "newer_order adds paid order + reservation, decrements stock8→7; no source mutation",
+    "additional_rows": 4,
+    "allowed_updates": [
+      {
+        "table": "v1_activity_policies",
+        "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+        "from": {
+          "mode": "test",
+          "revision": 1,
+          "updated_at": "2025-12-31T23:59:00+00:00"
+        },
+        "to": {
+          "mode": "off",
+          "revision": 2,
+          "updated_at": "2026-01-01T00:02:00+00:00"
+        }
+      }
+    ],
+    "records": {
+      "v1_order_activity": [
+        {
+          "order_id": "cb75841b-c95a-5aa5-a38e-3eb42e4cff65",
+          "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+          "classification": "test",
+          "reason": "nonproduction",
+          "context_id": null,
+          "accepted_at": "2026-01-01T00:00:00+00:00"
+        }
+      ],
+      "v1_activity_policy_commands": [
+        {
+          "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+          "idempotency_key": "b3748a23-2f61-54c9-84bd-e7c7572c92be",
+          "actor_user_id": "dc5ad3d8-9079-5704-8040-15a0de073077",
+          "request_hash": "e40fdc37a2e778f16ad359018a3b250407aa06ada271904673e6fb79f02fd6dc",
+          "mode": "off",
+          "revision": 2,
+          "notice_version": "first-party.v1",
+          "created_at": "2026-01-01T00:02:00+00:00"
+        }
+      ],
+      "comment_operator_commands": [
+        {
+          "id": "5596ef40-d155-5eed-95bb-ed95e5cfaca1",
+          "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+          "actor_id": "dc5ad3d8-9079-5704-8040-15a0de073077",
+          "idempotency_key": "edd9edf3-86d6-524b-b758-f72ec41b74d2",
+          "operation": "enquiry_close",
+          "request_hash": "5d21db777204a6df9d5a3f797106fed77460783596b97c65fd7864df0cb78bed",
+          "result": {
+            "resource_id": "bea51ef7-a807-5291-a194-15eaf391682d",
+            "fingerprint": "37ae81f3a60f5917c38dab372c0406b600cd63348abf006d7d64b2af5f91a0d2"
+          },
+          "created_at": "2026-01-01T00:02:00+00:00"
+        }
+      ],
+      "whatsapp_enquiry_closures": [
+        {
+          "id": "ef6673d2-64d6-524c-b12f-28fc4c7fca0f",
+          "business_id": "4ef2b8f6-1ea8-54ee-81cd-614dc7efdfc7",
+          "enquiry_id": "bea51ef7-a807-5291-a194-15eaf391682d",
+          "command_id": "5596ef40-d155-5eed-95bb-ed95e5cfaca1",
+          "reason": "Synthetic post-backup review preserves the original inbound and sends nothing",
+          "created_at": "2026-01-01T00:02:00+00:00"
+        }
+      ]
+    },
+    "post_counts": {
+      "alembic_version": 1,
+      "sellers": 1,
+      "businesses": 1,
+      "users": 1,
+      "memberships": 1,
+      "products": 1,
+      "catalogue_skus": 1,
+      "commerce_customers": 1,
+      "commerce_orders": 3,
+      "sku_reservations": 3,
+      "sku_payment_attempts": 1,
+      "conversations": 1,
+      "manual_actions": 1,
+      "v1_import_assets": 1,
+      "v1_import_jobs": 1,
+      "v1_activity_policies": 1,
+      "v1_activity_policy_commands": 2,
+      "v1_activity_contexts": 1,
+      "v1_activity_events": 2,
+      "v1_activity_gaps": 1,
+      "v1_order_activity": 3,
+      "whatsapp_contacts": 1,
+      "whatsapp_messages": 2,
+      "whatsapp_enquiry_reviews": 2,
+      "v1_activity_sources": 1,
+      "comment_rules": 1,
+      "comment_events": 4,
+      "comment_actions": 4,
+      "comment_action_audits": 8,
+      "comment_operator_commands": 3,
+      "comment_operator_reviews": 1,
+      "whatsapp_enquiry_closures": 2
+    },
+    "post_total_rows": 58,
+    "post_totals": {
+      "orders": 3,
+      "placed_total_minor": 3750,
+      "paid_total_minor": 2500,
+      "cod_collected_minor": 0,
+      "reservations": 3,
+      "reserved_quantity": 3,
+      "unknown_payments": 1,
+      "open_actions": 1,
+      "available_stock": 7
+    },
+    "post_state_deltas": {
+      "activity_policy_revision": "1→2/off",
+      "activity_commands": "1→2",
+      "order_activity": "2→3",
+      "operator_commands": "2→3",
+      "wa_enquiry_closures": "1→2",
+      "wa_enquiries_open": "1→0",
+      "unknown_comment_actions": "1 unchanged"
+    },
+    "required_comparison": "Freeze full post-append target snapshot; generic read probe and future reviewed old/current read stages must preserve every table/schema digest. Original source baseline stays unchanged. No actual package compatibility or old writer claim.",
+    "timestamp_warning": "Existing newer_order is inserted later but its created_at remains fixed Jan1 STAMP; it is not a later-created_at order. New order_activity accepted_at must equal that actual stored timestamp. Proposed nonproduction/test provenance uses NULL context, without retrofitting tracking_disabled after the later policy-off transition."
+  }
+}
