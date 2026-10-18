@@ -1,0 +1,319 @@
+{
+  "source_commit": "36535c8161ad65aa1f8ef9495bbbbcb7959f177c",
+  "branch": "codex/v1-restore-0056-review",
+  "review_mode": "SOURCE_ONLY; no app imports/execution/tests/DB/services/container/credentials/restore",
+  "backend_app_and_migrations_diff_from_accepted_eeb94a1": "",
+  "migration_heads_from_static_AST": [
+    "0056_v1_comment_operator"
+  ],
+  "reviewed_chain": {
+    "0053_v1_csv_import": "0052_v1_customer_links",
+    "0054_v1_activity": "0053_v1_csv_import",
+    "0055_v1_comment_binding": "0054_v1_activity",
+    "0056_v1_comment_operator": "0055_v1_comment_binding"
+  },
+  "files": [
+    {
+      "path": "go-live-plan.md",
+      "sha256": "17170454346c0826e2240823c5bfaefb229a21e39f3a2233b97a8afb32862fd1",
+      "git_blob": "c603dcc0e336a941e48fe87d0c2c195abb14dd9f"
+    },
+    {
+      "path": "docs/v1-release-rehearsal.md",
+      "sha256": "2a15453168f1dfc6081414b92d72e4f3b4fda7833b1305a2d04f24e6bd2ab0f8",
+      "git_blob": "f7cad3c8bf6417cd838bae0b00c8a2d2521e4dd3"
+    },
+    {
+      "path": "docs/v1-execution-status.md",
+      "sha256": "e232141eee6c9f78b0c54184a567c4e0331ebc4144403d88494d5dcdfc5bd534",
+      "git_blob": "5cd379bbc69fb0546fcf20760959881dfee7a6e9"
+    },
+    {
+      "path": "docs/v1-wave7-ui-validation.md",
+      "sha256": "360a964934d6795d0aa41983de093050a23f66b824be8d04da3b6c2092349bce",
+      "git_blob": "f01a983e98d1d3f722ce939305639587e024dd9a"
+    },
+    {
+      "path": "scripts/v1_release_synthetic.py",
+      "sha256": "72a8e5939c5e334c8b2d8a6f33ba070302efd630c8a9793962aba174a135ba77",
+      "git_blob": "e7305da24f56a683aac2826f145d49154e06723d",
+      "functions": [
+        {
+          "name": "uid",
+          "start": 16,
+          "end": 17
+        },
+        {
+          "name": "insert",
+          "start": 24,
+          "end": 30
+        },
+        {
+          "name": "order",
+          "start": 33,
+          "end": 41
+        },
+        {
+          "name": "reservation",
+          "start": 44,
+          "end": 47
+        },
+        {
+          "name": "seed",
+          "start": 50,
+          "end": 81
+        },
+        {
+          "name": "validate_fixture",
+          "start": 84,
+          "end": 94
+        },
+        {
+          "name": "newer_order",
+          "start": 97,
+          "end": 101
+        }
+      ]
+    },
+    {
+      "path": "scripts/v1_release_rehearsal.py",
+      "sha256": "c410519761a4bac796a0493bfc14d170f7ba6c3ad9897f7f35bca9fb3a75e423",
+      "git_blob": "f4518ca8882874e41ed618626977768f95e714c0",
+      "functions": [
+        {
+          "name": "require",
+          "start": 37,
+          "end": 39
+        },
+        {
+          "name": "repo_head",
+          "start": 42,
+          "end": 57
+        },
+        {
+          "name": "plan",
+          "start": 60,
+          "end": 73
+        },
+        {
+          "name": "p01",
+          "start": 76,
+          "end": 83
+        },
+        {
+          "name": "targets",
+          "start": 86,
+          "end": 94
+        },
+        {
+          "name": "no_symlinks",
+          "start": 97,
+          "end": 101
+        },
+        {
+          "name": "ownership",
+          "start": 104,
+          "end": 122
+        },
+        {
+          "name": "archive_location",
+          "start": 125,
+          "end": 131
+        },
+        {
+          "name": "private_file",
+          "start": 134,
+          "end": 137
+        },
+        {
+          "name": "private_read",
+          "start": 140,
+          "end": 151
+        },
+        {
+          "name": "private_sha256",
+          "start": 154,
+          "end": 162
+        },
+        {
+          "name": "private_json",
+          "start": 165,
+          "end": 169
+        },
+        {
+          "name": "child_env",
+          "start": 172,
+          "end": 179
+        },
+        {
+          "name": "command",
+          "start": 182,
+          "end": 190
+        },
+        {
+          "name": "owned_call",
+          "start": 194,
+          "end": 215
+        },
+        {
+          "name": "pg_tools",
+          "start": 218,
+          "end": 230
+        },
+        {
+          "name": "query",
+          "start": 233,
+          "end": 235
+        },
+        {
+          "name": "empty_database",
+          "start": 238,
+          "end": 249
+        },
+        {
+          "name": "pg16",
+          "start": 252,
+          "end": 254
+        },
+        {
+          "name": "canonical_constraint",
+          "start": 257,
+          "end": 315
+        },
+        {
+          "name": "schema_fingerprint",
+          "start": 318,
+          "end": 363
+        },
+        {
+          "name": "snapshot",
+          "start": 366,
+          "end": 401
+        },
+        {
+          "name": "run",
+          "start": 404,
+          "end": 481
+        },
+        {
+          "name": "main",
+          "start": 489,
+          "end": 513
+        }
+      ]
+    },
+    {
+      "path": "scripts/v1_release_exec.py",
+      "sha256": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+      "git_blob": "da53d42c6637b338795ef640fcb2fdba3911cde7",
+      "functions": [
+        {
+          "name": "main",
+          "start": 8,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "path": "tests/release/test_v1_release_rehearsal.py",
+      "sha256": "25d34162ef37e476bc4fc1278d300cf37276c498a55322acf42c4e8a997b235a",
+      "git_blob": "f1bfd6a0a11458dc56b3e05a6afdd7e8a97dc487"
+    },
+    {
+      "path": "tests/release/run_application_compatibility.py",
+      "sha256": "9d7459227e4baf5d8ba472f900a1655f00f800cbaeb283c7e4571c4bd6d56cd8",
+      "git_blob": "55e7a6967887ddc0adb39fdecf0cfd8912a65691"
+    },
+    {
+      "path": "backend/alembic/versions/0053_v1_csv_import.py",
+      "sha256": "4796cbc05550cfc0a83b1e8c29fb59356594aca6e49f3d47358f7dc44dd027fa",
+      "git_blob": "ac5f58d2ea321bf9b4b6f1b9f1c7a267ebdf7a3a"
+    },
+    {
+      "path": "backend/alembic/versions/0054_v1_activity.py",
+      "sha256": "3f1c1be152f8e30c81c81e053d7711fa5f4ebf6d360f60f9aac25ab20ef5de6d",
+      "git_blob": "733e93dd84b5c0ea9e8d7d17678c226346fb8813"
+    },
+    {
+      "path": "backend/alembic/versions/0055_v1_comment_binding.py",
+      "sha256": "abd075dccae72eba9f23a002555e2534c91066ee12b0eefe011e48fb3c204e9d",
+      "git_blob": "decbf540f441fe8ccaec291c63913d0ece451b7f"
+    },
+    {
+      "path": "backend/alembic/versions/0056_v1_comment_operator.py",
+      "sha256": "b324cccd57225b5c2260cd488b308f0274b55be68123c0ece33d80175d41c7be",
+      "git_blob": "8988e56e4866f7cb614c36c10db681227b4c27ce"
+    },
+    {
+      "path": "backend/app/models/activity_v1.py",
+      "sha256": "b1cbe14f31a9f1537b9cd397954e6913710e4c2201caa72de9c62746eeb6866d",
+      "git_blob": "57b25efc6bab75616c6032ee8afe8177520ff5ee"
+    },
+    {
+      "path": "backend/app/models/comment_automation.py",
+      "sha256": "dc90634bda204121653356726c74f61033e015addbad92d11d791425334d0917",
+      "git_blob": "c3e153ca7c5cf0059375e1e1681e7685a456a8c9"
+    },
+    {
+      "path": "backend/app/models/comment_operator.py",
+      "sha256": "76f09357674124c463275fb6c66a6f56286cbf78273b4612e22aa9df74251164",
+      "git_blob": "112025b48d58cbbaf08b6e02b51aa44791587761"
+    },
+    {
+      "path": "backend/app/models/whatsapp.py",
+      "sha256": "f23b0862f9603812aed4e6c5d845161383e8e3eb1167a807f982053dc6d4e521",
+      "git_blob": "ef7645a416c27bc1c68bf0f57db236d0f0e4794f"
+    },
+    {
+      "path": "backend/app/services/activity_v1.py",
+      "sha256": "ce10b4638ac204af756d1411b5e87fe191aa97fdb375ea024f019de00434a0e8",
+      "git_blob": "2fc17c9a2545416ba8172980006ca13f34e312df"
+    },
+    {
+      "path": "backend/app/services/comment_binding.py",
+      "sha256": "e5e1209e1deb05146bf0afeff39e5990b5d93c134d4070397742b01950288bff",
+      "git_blob": "14e821497a4c614cb63eb5e88db21c3dcae0de18"
+    },
+    {
+      "path": "backend/app/services/comment_operator.py",
+      "sha256": "40e3500b79615d73c51d9c4dbb1c64d4a394d8021cca0f11e14064e793de1cb4",
+      "git_blob": "91d4aa674c0566265df46bc55e43b5f408d3f29e"
+    },
+    {
+      "path": "backend/app/schemas/comment_binding.py",
+      "sha256": "df0f5cfe2b11390262ec017a5082ed9ce75c5424515bcf89446fbbaf7ac73a44",
+      "git_blob": "4ac27798dc5cb44363369548859935530aa7d94d"
+    },
+    {
+      "path": "backend/tests/test_v1_activity_schema.py",
+      "sha256": "08bcff1b17c8d1012473635218d2ea1939dd021518f22b341d4644edcd487cf3",
+      "git_blob": "f8271b34502575e949c3bb49f5f13d64939ea34b"
+    },
+    {
+      "path": "backend/tests/test_v1_activity_sources.py",
+      "sha256": "7e73a8681f57546503fc1fd2eecf9ee8fb5397f4720e1ed3d9ef9dc7085351e6",
+      "git_blob": "cb782d72b6edcd7d9aa7e9459d826efe0ad95042"
+    },
+    {
+      "path": "backend/tests/test_v1_activity_orders.py",
+      "sha256": "0879c80901815fd062b645649642d6198053df07eb0897458ae3dbfda9802107",
+      "git_blob": "2e69db57d30461ebf4cb1007f14be80f533e1d70"
+    },
+    {
+      "path": "backend/tests/test_comment_binding_db.py",
+      "sha256": "09f818ba84917d571ecff30ce454ad95a39140fbfb97bd98888db1b72778c067",
+      "git_blob": "8207aaf8e549273189fc01db27bd419f11d01dcd"
+    },
+    {
+      "path": "backend/tests/test_comment_operator_db.py",
+      "sha256": "cb8358001ce7f167de37651dadb603cb444ba04bf6e1d9ea2616bde5e193e91a",
+      "git_blob": "cc234a53d177af6f0b35083c3a1df94cb343e1a9"
+    },
+    {
+      "path": "backend/app/config.py",
+      "sha256": "548de1d2396247416ce6439321bed4c251bed122cdce288f2c0ad6b9c3aba7b5",
+      "git_blob": "450b1510938bc17cb3dbfabe7ec0bdaffe5a0915"
+    }
+  ],
+  "fixture_template_sha256": "9e4511c5ef8438739782126892ef1b0cefe269e64038c21a3d0c6636ffa1865d"
+}

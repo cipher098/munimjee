@@ -1,0 +1,12 @@
+{
+  "source_only": true,
+  "checks": "stdlib JSON count/field/relation proposal review only; no application imports, executable fixtures, tests or DB checks",
+  "delta_tables": 17,
+  "delta_rows": 35,
+  "source_populated_tables": 32,
+  "source_rows": 52,
+  "target_post_rows": 58,
+  "record_fields_match_static_model_AST": true,
+  "WA_exact_source_and_comment_tenant_binding_templates_match": true,
+  "database_constraints_or_restore_executed": false
+}
