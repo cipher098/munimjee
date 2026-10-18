@@ -21,26 +21,27 @@ test('null error body produces a recoverable error with its HTTP status',async()
 });
 test('native identity transitions erase private seller drafts and preserve customer checkout recovery',async()=>{
   for(const path of ['/api/v1/auth/login','/api/v1/auth/signup','/api/v1/auth/invitations/accept','/api/v1/auth/logout','/api/v1/auth/logout-all']){
-    const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command'],['munimjee.v1.parcel-link:user:business:order:session','private-parcel-command'],['munimjee.v1.gateway-intent:user:business:session','private-gateway-marker'],['munimjee.v1.assistance-command:user:business:session','private-assistance-command'],['munimjee.v1.import-command:user:business:session','private-import-command'],['munimjee.v1.theme-command:user:business','private-theme-command'],['munimjee.v1.support-command:user:business','private-support-command'],['munimjee.v1.customer-link-command:user:business','private-link-command'],['checkout:shop','customer-intent']]);
+    const entries=new Map([['munimjee.v1.catalogue-draft:user:business','private-command'],['munimjee.v1.parcel-link:user:business:order:session','private-parcel-command'],['munimjee.v1.gateway-intent:user:business:session','private-gateway-marker'],['munimjee.v1.assistance-command:user:business:session','private-assistance-command'],['munimjee.v1.import-command:user:business:session','private-import-command'],['munimjee.v1.theme-command:user:business','private-theme-command'],['munimjee.v1.support-command:user:business','private-support-command'],['munimjee.v1.customer-link-command:user:business','private-link-command'],['munimjee.activity-policy:user:business','private-policy-command'],['munimjee.v1.channel-command:user:business','private-channel-command'],['checkout:shop','customer-intent']]);
     const storage={get length(){return entries.size;},key:index=>[...entries.keys()][index],removeItem:key=>entries.delete(key)};
     const context={window:{sessionStorage:storage},fetch:async()=>({ok:true,json:async()=>({csrf_token:'new-bound-csrf'})})};
     vm.runInNewContext(source,context);
     await context.window.V1.api(path,{method:'POST'});
     assert.equal(entries.has('munimjee.v1.catalogue-draft:user:business'),false,path);
     assert.equal(entries.has('munimjee.v1.parcel-link:user:business:order:session'),false,path);
-    for(const prefix of ['munimjee.v1.gateway-intent:','munimjee.v1.assistance-command:','munimjee.v1.import-command:','munimjee.v1.theme-command:','munimjee.v1.support-command:','munimjee.v1.customer-link-command:'])assert.equal([...entries.keys()].some(key=>key.startsWith(prefix)),false,path);
+    for(const prefix of ['munimjee.v1.gateway-intent:','munimjee.v1.assistance-command:','munimjee.v1.import-command:','munimjee.v1.theme-command:','munimjee.v1.support-command:','munimjee.v1.customer-link-command:','munimjee.activity-policy:','munimjee.v1.channel-command:'])assert.equal([...entries.keys()].some(key=>key.startsWith(prefix)),false,path);
     assert.equal(entries.get('checkout:shop'),'customer-intent');
     assert.equal(context.window.V1.csrf,'new-bound-csrf');
   }
 });
 test('expired native identity clears private commands and old CSRF while ordinary reads retain them',async()=>{
-  const entries=new Map(['catalogue-draft','parcel-link','gateway-intent','assistance-command','import-command','theme-command','support-command','customer-link-command'].map(name=>['munimjee.v1.'+name+':user:business','private-command']));
+  const entries=new Map(['catalogue-draft','parcel-link','gateway-intent','assistance-command','import-command','theme-command','support-command','customer-link-command','channel-command'].map(name=>['munimjee.v1.'+name+':user:business','private-command']));
+  entries.set('munimjee.activity-policy:user:business','private-policy-command');
   const responses=[{ok:true,data:{csrf_token:'bound'}},{ok:true,data:null},{ok:false,status:401,data:{}}];
   const context={window:{sessionStorage:{get length(){return entries.size;},key:index=>[...entries.keys()][index],removeItem:key=>entries.delete(key)}},fetch:async()=>{const r=responses.shift();return {...r,json:async()=>r.data};}};
   vm.runInNewContext(source,context);
   await context.window.V1.session();
   await context.window.V1.api('/api/v1/businesses/own/catalogue/storefront');
-  assert.equal(entries.size,8);
+  assert.equal(entries.size,10);
   await assert.rejects(context.window.V1.session(),error=>error.status===401);
   assert.equal(entries.size,0);
   assert.equal(context.window.V1.csrf,null);
