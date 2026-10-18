@@ -1,0 +1,70 @@
+{
+  "observed_at_utc": "2026-10-18T10:52:53.474948+00:00",
+  "source_commit": "36535c8161ad65aa1f8ef9495bbbbcb7959f177c",
+  "architecture": "arm64",
+  "memory_bytes": 17179869184,
+  "filesystem": {
+    "df_observed_available": "4.8GiB",
+    "df_capacity": "98%",
+    "current_available_bytes": 4975849472,
+    "volume": "/System/Volumes/Data"
+  },
+  "docker": {
+    "client_path": "/Users/user/.docker/bin/docker",
+    "client_version": "29.7.2 build a7dcaa6",
+    "context_endpoint": "unix:///Users/user/.docker/run/docker.sock",
+    "environment_override_present": false,
+    "socket_exists": true,
+    "server_probe": "docker --host unix:///Users/user/.docker/run/docker.sock version --format {{json .Server}}",
+    "server_probe_timeout_seconds": 8,
+    "server_version_verified": false,
+    "daemon_started_or_changed": false,
+    "direct_local_readonly_ping": {
+      "endpoint": "local Unix /Users/user/.docker/run/docker.sock",
+      "operation": "GET /_ping",
+      "timeout_seconds": 2,
+      "received_bytes": 203,
+      "status_line": "HTTP/1.0 503 Service Unavailable"
+    }
+  },
+  "postgresql16": {
+    "PATH_binaries_found": [],
+    "checked_absent_prefixes": [
+      "/opt/homebrew/opt/postgresql@16/bin",
+      "/usr/local/opt/postgresql@16/bin",
+      "/Applications/Postgres.app/Contents/Versions/16/bin"
+    ],
+    "homebrew16_cellar_glob_matches": [],
+    "spotlight_binary_name_query": "Only unrelated repository paths named initdb, not a verified installed PostgreSQL toolchain; none executed",
+    "host_wide_absence_claimed": false
+  },
+  "decision": {
+    "actual_rehearsal": "NOT RUN",
+    "launch_proposal": "None: no verified PG16 toolchain/daemon and insufficient demonstrated disk headroom",
+    "services_containers_databases_installed_started_or_changed": false,
+    "next_gate": "Existing accessible PG16 toolchain plus ample disk; then exact owned dirs/ports/lanes/memory/network proposal reviewed by local integrator before launch"
+  },
+  "harness": {
+    "supported_head": "0053_v1_csv_import",
+    "repository_heads": [
+      "0056_v1_comment_operator"
+    ],
+    "plan_invocation_exit": 1,
+    "plan_mode_effects": "Migration-source read only; no configuration/provider/DB/container subprocess execution",
+    "plan_refusal_sha256": "c827c0a9eeb75f7001959a8c89ad2600485546fbcbad7346d3af9f1a17259422",
+    "head_constant_changed": false
+  },
+  "accepted_context": {
+    "full_backend": "eeb94a119736cae816af782f2af5e04cb877e616 actual0056,2425pass8documentedskips reported historical acceptance",
+    "UI": "e4183cfe78d36624bf0019048f0d5f64c9b00a2f scopedactual0056 native6/cart6",
+    "excluded_producer": "a9880c5 local/unpushed/fulltesting; not read or accepted"
+  },
+  "limits": [
+    "No actual restore or image build",
+    "No pg_dump/pg_restore/initdb executed",
+    "No existing target/production/archive used",
+    "No provider/credentials/externalcalls",
+    "No prior evidence deletion or cleanup",
+    "No broad synthetic regression rerun"
+  ]
+}
