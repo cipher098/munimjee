@@ -182,7 +182,7 @@
       storeMarker(marker);pending=marker;recoveryInvalid=false;sent=true;
       if(ended)return;
       const result=await api(endpoint,{method:'PUT',body});await identity();if(ended)return;
-      if(!validConfig(result)||!result.configured||result.key_id!==body.key_id||result.mode!==body.mode||result.enabled!==body.enabled)throw localError('The save response could not be verified.');
+      if(!validConfig(result)||!result.configured||result.key_id!==body.key_id||result.mode!==body.mode||result.enabled!==body.enabled||((body.key_secret||body.webhook_secret)&&result.configuration_revision===body.expected_revision))throw localError('The save response could not be verified.');
       removeMarker();pending=null;recoveryInvalid=false;replacement=false;recoveryRead=false;config=result;
       render();$('notice').textContent='Payment settings saved. A Razorpay connection was not checked.';
     }catch(error){

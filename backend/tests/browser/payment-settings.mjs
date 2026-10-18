@@ -60,6 +60,11 @@ try{
  const finalRevision=(await(await page.request.get(base+data.api)).json()).configuration_revision;
  // Delayed old conditional request cannot overwrite the newly reviewed replacement.
  const late=await page.request.put(base+data.api,{headers:data.headers,data:oldBody});assert.equal(late.status(),409);assert.equal((await late.json()).detail.code,'gateway_config_stale');assert.equal((await(await page.request.get(base+data.api)).json()).configuration_revision,finalRevision);checks++;
+ // A valid-shaped old 200 cannot acknowledge supplied secret replacement.
+ const oldAck=await(await page.request.get(base+data.api)).json();
+ await page.route('**'+data.api,async route=>{if(route.request().method()!=='PUT')return route.continue();const committed=await route.fetch();assert.equal(committed.status(),200);return route.fulfill({status:200,json:oldAck});});
+ await fill(page,{key:oldAck.key_id,api:secrets[0],webhook:secrets[1],enabled:oldAck.enabled});await page.getByRole('button',{name:'Save payment setup',exact:true}).click();await expect(page.locator('#recovery')).toBeVisible();await expect(page.locator('#notice')).toBeEmpty();await noSecrets(page);assert.equal(await page.evaluate(()=>Object.keys(sessionStorage).some(k=>k.startsWith('munimjee.v1.gateway-intent:'))),true);await page.unroute('**'+data.api);checks++;
+ await page.getByRole('button',{name:'Check saved settings',exact:true}).click();await page.getByRole('button',{name:'Replace current credentials',exact:true}).click();await fill(page,{key:oldAck.key_id,api:secrets[2],webhook:secrets[3],enabled:oldAck.enabled});await saved(page);
  // Malformed committed 200 also remains uncertain; no saved claim from GET.
  await page.route('**'+data.api,async route=>{if(route.request().method()!=='PUT')return route.continue();await route.fetch();return route.fulfill({status:200,json:{}});});
  await page.locator('#gateway-enabled').uncheck();await page.getByRole('button',{name:'Save payment setup',exact:true}).click();await expect(page.locator('#recovery')).toBeVisible();await expect(page.locator('#notice')).toBeEmpty();await noSecrets(page);await page.unroute('**'+data.api);
