@@ -29,12 +29,13 @@ identity/review permission loss. Selection/list epochs discard stale responses.
   dispatch; source-only UI is not connected-main acceptance.
 - Register the new journal prefix in global cleanup. An old page clears only its
   owned key; it must not delete a replacement session's key.
-- The incumbent V1 client currently exposes error code/status but drops structured
-  error detail. Preserve only the bounded typed pre-mutation rejection fields as
-  `error.detail` for this new endpoint/code, or retain uncertainty conservatively.
-  Root validation requires exact business/inbound/key/hash plus accepted=false;
-  code/status alone cannot release the frozen link intent. Do not expose arbitrary
-  validation bodies or credentials while adding this integration seam.
+- The incumbent V1 client intentionally exposes error code/status and drops raw
+  detail. The integrator clarified this boundary. The page captures the exact
+  request path and canonical body before transport, and only attaches that local
+  binding to the one allowlisted409 pre-mutation code from that transport call.
+  Rejection validation matches it against the frozen intent. Errors from session
+  pre/post-checks, unrelated bodies/routes and unclassified409/422 do not release
+  intent. No shared-client error forwarding or arbitrary detail object is needed.
 - Local actual-main/browser allocation must verify mobile wrapping, focus, native
   CSRF, identity replacement, reload recovery and receipt/dispatch outcomes.
 

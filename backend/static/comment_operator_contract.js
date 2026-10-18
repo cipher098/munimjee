@@ -63,6 +63,5 @@ export function validReelReceipt(value, intent) {
   return result.resume === 'held' && value.action === 'link_and_resume' && result.outbound_id === null && result.reason !== null;
 }
 export function validReelRejection(error, intent) {
-  const value = error?.detail;
-  return error?.status === 409 && keys(value, 'code,business_id,inbound_id,idempotency_key,request_hash,accepted,reason') && value.code === 'reel_operator_pre_mutation_rejection' && value.accepted === false && value.business_id === intent.business && value.inbound_id === intent.resource && value.idempotency_key === intent.body.idempotency_key && value.request_hash === intent.request_hash && reasonCode(value.reason) && value.reason !== null;
+  return error?.status === 409 && error.code === 'reel_operator_pre_mutation_rejection' && validReelIntent(intent, intent.business) && error.reel_request_path === intent.path && error.reel_request_body === stable(intent.body);
 }
