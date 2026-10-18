@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  document.body.classList.add('native-onboarding-page');
   const $ = id => document.getElementById(id);
   let mode = location.hash.startsWith('#invite=') ? 'invite' : 'signup';
   const invitation = mode === 'invite' ? location.hash.slice(8) : null;
@@ -77,6 +78,15 @@
     }
   }
   const text = (tag, value, className) => {const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n;};
+  function focusCurrentView(viewId, headingId, generation, epoch) {
+    const view = $(viewId);
+    if (generation !== fenceGeneration || epoch !== businessLoad || document.hidden || !document.hasFocus() || view.hidden || view.contains(document.activeElement)) return;
+    const heading = $(headingId); heading.tabIndex = -1; heading.focus();
+  }
+  const startupReload = text('button', 'Reload workspace', 'button secondary');
+  startupReload.id = 'startup-reload'; startupReload.type = 'button'; startupReload.hidden = true;
+  startupReload.addEventListener('click', () => location.reload());
+  $('global-error').after(startupReload);
   function clearInvite() {
     $('invite-result').hidden = true; $('invite-link').value = ''; $('invite-form').reset();
     $('invite-error').textContent = ''; $('team-list').replaceChildren();
@@ -189,7 +199,9 @@
     const body = {email: form.elements.email.value, password: form.elements.password.value};
     if (mode === 'signup') body.business_name = form.elements.business_name.value;
     if (mode === 'invite') body.token = invitation;
-    const data = await api('/api/v1/auth/' + (mode === 'invite' ? 'invitations/accept' : mode), {method: 'POST', body}); form.elements.password.value = ''; await workspace(data);
+    const data = await api('/api/v1/auth/' + (mode === 'invite' ? 'invitations/accept' : mode), {method: 'POST', body}); form.elements.password.value = '';
+    const generation = fenceGeneration, opening = workspace(data), epoch = businessLoad;
+    await opening; focusCurrentView('workspace', 'business-heading', generation, epoch);
   });});
   $('profile-form').addEventListener('submit', event => {event.preventDefault(); const form = event.currentTarget; busy(form, 'profile-error', async () => {
     const businessId = business.id, epoch = businessLoad;
@@ -206,9 +218,15 @@
     if ($('business-picker').value) history.replaceState(null, '', '/v1?business=' + encodeURIComponent($('business-picker').value) + location.hash);
     loadBusiness().catch(e => $('global-error').textContent=e.message);
   });
-  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {await api('/api/v1/auth/' + id, {method:'POST'});endWorkspace('Signed out. Sign in to continue.');});});
+  for (const id of ['logout','logout-all']) $(id).addEventListener('click', () => {busy($('workspace'), 'global-error', async () => {
+    const generation = fenceGeneration;
+    await api('/api/v1/auth/' + id, {method:'POST'});
+    if (generation !== fenceGeneration) return;
+    endWorkspace('Signed out. Sign in to continue.');
+    focusCurrentView('access', 'access-title', generation + 1, businessLoad);
+  });});
   async function recheck() {if (!actor || ended) return;if(checking){recheckPending=true;return;}checking = true;$('workspace').hidden = true;try {await checkedSession();} catch (_) {if (!ended) endWorkspace('Your current sign-in could not be checked. Sign in again.');} finally {checking = false;if (actor && !ended && !document.hidden) $('workspace').hidden = false;if(recheckPending && !ended){recheckPending=false;recheck();}}}
   window.addEventListener('focus', recheck);window.addEventListener('pageshow', recheck);window.addEventListener('pagehide', () => {$('workspace').hidden=true;});
   document.addEventListener('visibilitychange', () => {if (document.hidden) $('workspace').hidden=true;else recheck();});
-  (async () => {try {if (invitation) access(); else await workspace(await checkedSession(true));} catch(e) {if(e.stale) return;if(e.status===401) access();else $('global-error').textContent=e.message;} finally {$('loading').hidden=true;}})();
+  (async () => {try {if (invitation) access(); else await workspace(await checkedSession(true));} catch(e) {if(e.stale) return;if(e.status===401) access();else {$('global-error').textContent=e.message;startupReload.hidden = !$('access').hidden || !$('workspace').hidden;}} finally {$('loading').hidden=true;}})();
 })();
