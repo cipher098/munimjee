@@ -164,9 +164,19 @@ class SDKConfiguration(Contract):
         return self
 
 
+class OperationReceipt(Contract):
+    business_id: UUID
+    idempotency_key: UUID
+    action: Literal["signup_start", "signup_exchange", "signup_assets", "signup_select", "signup_cancel", "test_start", "test_send", "test_cancel"]
+    expected_connection_version: Version
+    resource_id: UUID
+    selected_choice_id: UUID | None
+
+
 class SignupStartView(Contract):
     contract_version: Literal["whatsapp-signup-start.v1"]
     attempt: SignupView
+    receipt: OperationReceipt
     signed_state: Annotated[StrictStr, Field(min_length=32, max_length=4096)] = Field(repr=False)
     sdk: SDKConfiguration
 
@@ -202,6 +212,7 @@ class TestChallengeView(Contract):
     __test__ = False
     contract_version: Literal["whatsapp-test-challenge.v1"]
     test: TestView
+    receipt: OperationReceipt
     command: Annotated[StrictStr, Field(pattern=r"^MUNIMJEE-WA-TEST:[A-Za-z0-9_-]{22}$")] = Field(repr=False)
 
 
@@ -210,6 +221,19 @@ class ReviewedChoicesView(Contract):
     business_id: UUID
     attempt_id: UUID
     choices: Annotated[tuple[ReviewedChoice, ...], Field(max_length=100)]
+
+
+class SignupCommandView(Contract):
+    contract_version: Literal["whatsapp-signup-command.v1"]
+    receipt: OperationReceipt
+    result: SignupView
+
+
+class TestCommandView(Contract):
+    __test__ = False
+    contract_version: Literal["whatsapp-test-command.v1"]
+    receipt: OperationReceipt
+    result: TestView
 
 
 class RecipientReview(Contract):
