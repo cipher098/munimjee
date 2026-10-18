@@ -26,7 +26,7 @@ from app.schemas.whatsapp_self_service import SDKConfiguration, SignupStartView,
 from app.services.channel_credentials import decrypt, encrypt
 from app.services.channel_operator import lock_tenant_rows
 from app.services.whatsapp_signup_provider import SignupProvider
-from app.services.whatsapp_test_authority import current_owner_session
+from app.services.whatsapp_test_authority import current_owner_session, owner_session_statement
 from app.services.whatsapp_test_protocol import (
     ProtocolError, SessionBinding, bound_nonce, canonical_digest, embedded_configuration,
 )
@@ -193,6 +193,8 @@ async def exchange_signup(db,authority,attempt_id,payload,nonce,*,provider=None)
     row.state='exchanging'; row.exchange_consumed_at=now(); row.updated_at=now()
     await authority.finalize(db); await db.commit()
     try:
+        await post_claim_authority(db,authority,attempt_id,stage='exchange')
+        embedded_configuration(settings)
         verified=await client.exchange(payload.code,now=now())
         embedded_configuration(settings)
         control,_=await locked_configuration(db,authority)
@@ -358,6 +360,8 @@ async def provider_step(db,authority,attempt_id,payload,client,*,stage,token):
             raise HTTPException(409,'A provider step is already claimed or unknown')
         setattr(row,attribute,'requesting'); row.updated_at=now()
         await authority.finalize(db); await db.commit()
+        await post_claim_authority(db,authority,attempt_id,stage=stage)
+        embedded_configuration(settings)
         if stage=='subscription': await client.subscribe(token,payload.waba_id)
         else: await client.register(token,payload.phone_number_id,payload.registration_pin)
         embedded_configuration(settings)
@@ -405,7 +409,7 @@ async def attach_account(db,authority,attempt_id,payload,*,token):
     db.add(WhatsAppAuthorizationProvenance(business_id=row.business_id,connection_version=control.version,
         attempt_id=row.id,actor_user_id=row.actor_user_id,actor_session_id=row.actor_session_id,
         actor_auth_version=row.actor_auth_version,phone_number_id=choice.phone_number_id,waba_id=choice.waba_id,
-        verified_app_id=row.verified_app_id,grants=['whatsapp_business_management','whatsapp_business_messaging'],
+        verified_app_id=row.verified_app_id,credential_fingerprint=hashlib.sha256(account.access_token.encode()).hexdigest(),grants=['whatsapp_business_management','whatsapp_business_messaging'],
         token_expiry_kind=row.token_expiry_kind,token_expires_at=row.token_expires_at,verified_at=timestamp,evidence_kind=row.evidence_kind))
     await db.flush()
     row.state='attached'; row.provisional_token_ciphertext=None; row.updated_at=timestamp
@@ -437,3 +441,48 @@ async def cleanup_provisional(db,*,at=None,limit=100):
         row.updated_at=timestamp
     await db.flush()
     return len(rows)
+
+
+async def post_claim_authority(db,authority,attempt_id,*,stage):
+    """Fresh, nonlocking authority after claim commit and before provider I/O.
+
+    A durable consumed claim does not authorize a new operation after a session,
+    owner, generation, configuration or expiry change during commit. Unknown
+    effect history is retained even when this last boundary withholds dispatch.
+    """
+    from app.models.identity import Membership
+    await authority.check(db)
+    attempt=WhatsAppSignupAttempt
+    query=owner_session_statement(authority.binding).join(attempt,
+        (attempt.business_id==Membership.business_id)&(attempt.actor_user_id==Membership.user_id)).join(
+        ChannelConnectionState,(ChannelConnectionState.business_id==attempt.business_id)&(ChannelConnectionState.channel=='whatsapp')).where(
+        attempt.id==attempt_id,attempt.actor_session_id==authority.binding.session_id,
+        attempt.actor_auth_version==authority.binding.auth_version,attempt.expires_at>func.clock_timestamp(),
+        ChannelConnectionState.version==attempt.connection_version)
+    if stage=='exchange':
+        query=query.where(attempt.state=='exchanging',attempt.exchange_consumed_at.is_not(None))
+    else:
+        query=query.where(attempt.state=='setting_up',getattr(attempt,stage+'_state')=='requesting',
+            attempt.provisional_token_ciphertext.is_not(None),attempt.token_expiry_kind=='at',
+            attempt.token_expires_at>func.clock_timestamp(),~select(WhatsAppAccount.seller_id).where(
+                WhatsAppAccount.phone_number_id==attempt.selected_phone_number_id,
+                WhatsAppAccount.seller_id!=attempt.business_id).exists())
+    if await db.scalar(query.execution_options(autoflush=False)) is None:
+        problem('signup_authority_changed','Current native owner, connection and setup claim are required before provider dispatch')
+
+
+async def cancel_signup(db,authority,attempt_id,payload):
+    await locked_configuration(db,authority)
+    row=await owned_attempt(db,authority,attempt_id,lock=True)
+    if payload.idempotency_key!=row.idempotency_key:
+        problem('signup_intent_conflict','Use the original signup action key')
+    if row.state in ('cancelled','expired'):
+        await authority.finalize(db)
+        return await signup_view(db,row)
+    if row.state not in ('pending','awaiting_assets','awaiting_selection'):
+        problem('signup_effect_review_required','A provider-claimed or uncertain setup cannot be cancelled here. Review it without repeating its steps.')
+    row.state='cancelled'; row.provisional_token_ciphertext=None; row.updated_at=now()
+    await authority.finalize(db)
+    result=await signup_view(db,row)
+    await authority.check(db)
+    return result
