@@ -78,10 +78,12 @@ async def validate_fixture(connection, snapshot):
     actual = {name: value["count"] for name, value in snapshot["tables"].items() if value["count"]}
     require(actual == expected, "Source contains data outside the fixed synthetic fixture")
     require(snapshot["totals"] == {"orders": 2, "placed_total_minor": 2500, "paid_total_minor": 1250,
-        "cod_collected_minor": 0, "reservations": 2, "reserved_quantity": 2, "unknown_payments": 1, "open_actions": 1},
+        "cod_collected_minor": 0, "reservations": 2, "reserved_quantity": 2, "unknown_payments": 1, "open_actions": 1, "available_stock": 8},
         "Synthetic monetary/reservation/pending fixture totals differ")
 
 
 async def newer_order(connection):
+    from sqlalchemy import text
+    await connection.execute(text("UPDATE catalogue_skus SET stock_available=stock_available-1 WHERE id=:id"), {"id": uid("sku")})
     await insert(connection, "commerce_orders", order("order-after-backup", paid=True))
     await reservation(connection, "order-after-backup")
