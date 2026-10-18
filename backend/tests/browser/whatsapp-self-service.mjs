@@ -83,7 +83,8 @@ try{
   let selectionWrites=0;page.on('request',request=>{if(request.url().endsWith('/select')&&request.method()==='POST')selectionWrites++;});
   await page.route('**'+endpoint+'/signup/*/select',async route=>{const response=await route.fetch();assert.equal(response.status(),200);await route.abort();});
   await page.getByRole('button',{name:'Register & save with automation paused',exact:true}).click();
-  assert.equal(await page.locator('#registration-pin').evaluate(input=>input.value===''),true);await expect(page.locator('#recovery-message')).toContainText('PIN was erased');
+  await expect(page.locator('#recovery-message')).toContainText('PIN was erased');
+  assert.equal(await page.locator('#registration-pin').evaluate(input=>input.value===''),true);
   const afterSelection=await storage();assert.equal(afterSelection.includes('registration_pin'),false);assert.equal(afterSelection.includes('synthetic-one-use-code'),false);assert.equal(afterSelection.includes('signed_state'),false);checks++;
   await page.setViewportSize({width:390,height:844});await screenshot('mobile-unknown-setup');
   await page.unroute('**'+endpoint+'/signup/*/select');await page.reload();await expect(page.locator('#check-action')).toBeVisible();
