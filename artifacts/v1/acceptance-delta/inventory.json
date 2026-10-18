@@ -1,0 +1,830 @@
+{
+  "format": "munimjee.v1.acceptance-delta.v1",
+  "date": "2026-10-18",
+  "frozen_source": "e750e5a5a78da74390572d116f5c98649a7334a1",
+  "contract_source": "1f00b39a419cf1d47280edff020eb1c684593bb2",
+  "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "evidence_mode": "read-only Git/source/saved artifacts; no new product execution",
+  "release_ready": false,
+  "historical_rows_unchanged": 58,
+  "source_refs": {
+    "plan": {
+      "path": "go-live-plan.md",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "b6ee5dd338a21ea20f89c70a8d618b3be7d0f6212fa0a66edb7d0e55ce053a89",
+      "line": 263,
+      "anchor": "## 10. Test strategy"
+    },
+    "audit": {
+      "path": "docs/v1-release-acceptance-audit.md",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "ee0b836fb18d61d333dd9fe2a5e4e830cd917c779ab5ea22db3ec408d636b39f",
+      "line": 11,
+      "anchor": "**V1 is not release-ready.**"
+    },
+    "matrix": {
+      "path": "artifacts/v1/release-audit/acceptance-matrix.json",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "c0f69d5412edd609f417be16515ca51785f3be9f01a00aaf00fd1a6f6237b60c",
+      "line": 1,
+      "anchor": null
+    },
+    "imports": {
+      "path": "backend/app/services/imports_v1.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "13e477b0702c6271abcbc719524329520bd97cc8efff6c661a29954161657e79",
+      "line": 342,
+      "anchor": "async def collect_claim"
+    },
+    "worker": {
+      "path": "backend/app/workers/v1_imports.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "f212be6a865069363487b0e0dc6163e569f3f1783f7ff41c78887be6ca7f581d",
+      "line": 17,
+      "anchor": "async def _drain"
+    },
+    "runner": {
+      "path": "backend/app/v1/imports/runner.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "9d89b74f980f3b01ec00a607ef6ef5c8d5b87b2100299de0085eafd029a2b80f",
+      "line": 8,
+      "anchor": "async def drain_jobs"
+    },
+    "schema": {
+      "path": "backend/app/schemas/imports_v1.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "4499d5e70753741381a6a7a8b49809837336ac032a3b4ad87ef5fe035426ca0b",
+      "line": 29,
+      "anchor": "class ImportJobCreate"
+    },
+    "context": {
+      "path": "backend/app/services/whatsapp_context.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "f47ef4cd1e96dfebeb5cebdd58a9ad61354fe9e49b525c2dd71b0c09608131c2",
+      "line": 104,
+      "anchor": "async def reel_catalogue_reply"
+    },
+    "sku_guard": {
+      "path": "backend/app/services/channel_readiness.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "9b11eefa64350a0768b2cd9a182f9d89369cb8fbe08a6bbee61c5809f714a010",
+      "line": 19,
+      "anchor": "async def guard_legacy_product"
+    },
+    "sku_tests": {
+      "path": "backend/tests/test_channel_operator_db.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "61e7b1b404099a5fa5a8596409dac60bdfb702badf26bdf76659a162d93545df",
+      "line": 334,
+      "anchor": "async def test_activated_catalogue_handoffs"
+    },
+    "onboarding": {
+      "path": "backend/app/services/onboarding.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "39f0bb52152cb94e9baf70594b84a98eaefb0828e08a5c6227f3916ad6da3ea9",
+      "line": 12,
+      "anchor": "async def onboarding_view"
+    },
+    "wa_connect": {
+      "path": "backend/app/api/v1/channel_operator.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "0b641d44b0ef603ad0d48ce2ef215eb7594a6c0591628e96c2e6ba4bd80ee209",
+      "line": 91,
+      "anchor": "async def whatsapp_connect"
+    },
+    "wa_ui": {
+      "path": "backend/static/channel_operator.js",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "dc3d8d5fc5eb9b924c503852c35a1c5078427b7ce7cd6c56e3f76cae6c42ca7f",
+      "line": 22,
+      "anchor": "$('wa-form').addEventListener('submit'"
+    },
+    "comment_cap": {
+      "path": "backend/app/workers/comment_automation.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "1a225180585a11b2d7ad3a8439fc5c57807bf33063d975c252365ce4646da6bb",
+      "line": 40,
+      "anchor": "if recent >= 250:"
+    },
+    "address": {
+      "path": "backend/app/services/commerce.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "1f0ac4fea269956048f589aa5f073e5c214013c93681337503a79f1e1f887577",
+      "line": 84,
+      "anchor": "class AddressInput"
+    },
+    "checkout": {
+      "path": "backend/app/services/checkout_v1.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "8a979108ec73c2809feb184cbf3b1f4ae9bb82c42ec4ef2434966c4cf611c325",
+      "line": 38,
+      "anchor": "if store.currency != \"INR\":"
+    },
+    "render": {
+      "path": "backend/app/v1/storefront/rendering.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+      "line": 92,
+      "anchor": "def render_storefront"
+    },
+    "seo_routes": {
+      "path": "backend/app/api/v1/storefront.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "5b15e389bb777213e2df7d6770e4f83146f5257a1dae2685b50dff785473214b",
+      "line": 33,
+      "anchor": "def create_router"
+    },
+    "publication": {
+      "path": "backend/app/services/storefront_publication.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "2ac040b0b2a1c2ca2a0af455d17681768f10769b93dee2f7e966c6950c059b22",
+      "line": 22,
+      "anchor": "async def public_store"
+    },
+    "release": {
+      "path": "docs/v1-release-coordination.md",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "df6323ea99bb059c90e0209d0b12a6a88c978aacae4400752fec1f2f88db7be0",
+      "line": 43,
+      "anchor": "## Execution boundaries and blockers"
+    },
+    "release_ci": {
+      "path": "docs/v1-release-ci.md",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "6b71d1fbd0a021017877bea4df87c7afcb96f1aae121a30b6acdd6f2b7b0b76b",
+      "line": 1,
+      "anchor": null
+    },
+    "rehearsal": {
+      "path": "docs/v1-release-rehearsal.md",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "02e50fb18538f05ddce56e2a95c896ad957225f591276898f3648a6ea83b37c8",
+      "line": 1,
+      "anchor": null
+    },
+    "verifier": {
+      "path": "backend/tests/test_v1_release_audit_evidence.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "b690135e4c9e1a330b283a4153df19d145c68178a030303eb1c67e95878e81df",
+      "line": 97,
+      "anchor": "def test_final_gate_and_native_source_hashes_match_actual_blobs"
+    },
+    "p01": {
+      "path": "backend/tests/isolated_database.py",
+      "source_commit": "e750e5a5a78da74390572d116f5c98649a7334a1",
+      "sha256": "3c3248dca9547ed70d7fa57cecacae9214f7f75c41e39888746c322c1f403e06",
+      "line": 50,
+      "anchor": "async def migrated_database"
+    },
+    "contract": {
+      "path": "docs/v1-seo-contracts.md",
+      "source_commit": "1f00b39a419cf1d47280edff020eb1c684593bb2",
+      "sha256": "b4f6629883eb1f61486968d4dbaf53d59479835ea7bb56850dae0d88f38c8b89",
+      "line": 1,
+      "anchor": "# V1 SEO and acceptance batch ownership"
+    }
+  },
+  "items": [
+    {
+      "id": "D01",
+      "title": "Instagram owned-media adapter and worker wiring",
+      "status": "unimplemented_in_frozen_source",
+      "owner": "Imports/Instagram owner; catalogue_commerce approves import seam",
+      "acceptance_rows": [
+        "V03",
+        "V04",
+        "A03",
+        "A04",
+        "G2"
+      ],
+      "source_refs": [
+        "imports",
+        "worker",
+        "runner",
+        "schema"
+      ],
+      "independently_safe_next_work": "Freeze adapter result/credential/error contract with local import owner, then implement in separately assigned files with fake transport; no CSV/import ownership takeover.",
+      "acceptance_criteria": [
+        "Worker drain passes a real owned-media adapter rather than None; supported account/media binding is checked before retrieval and after lease/revocation checkpoints.",
+        "Bound time/bytes/pages/products and redact provider errors; cross-tenant/account/media mismatches, expired/disconnected credentials, rate limits, timeout, cancellation and restart are explicit recoverable outcomes.",
+        "Stable source IDs/provenance, multi-product unknown facts, draft review, seller overrides and idempotent retries survive actual migrated isolated tests; uploads remain a separately verified fallback."
+      ],
+      "remaining_external_or_operational_gate": "Seller-authorized supported Meta account/media, current permissions and actual retrieval/reimport acceptance; no scraping or guessed provider capability.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D02",
+      "title": "Authoritative current-SKU automated answers",
+      "status": "unimplemented_in_frozen_source",
+      "owner": "Channels + catalogue owner, independent AI QA",
+      "acceptance_rows": [
+        "V08",
+        "A11",
+        "A13",
+        "A14",
+        "X01",
+        "G2"
+      ],
+      "source_refs": [
+        "context",
+        "sku_guard",
+        "sku_tests",
+        "checkout"
+      ],
+      "independently_safe_next_work": "Agree read-only public SKU projection and send-time recheck; implement/test fake-send paths without changing catalogue writes, schema or local CSV.",
+      "acceptance_criteria": [
+        "Instagram DM and WhatsApp answer supported approved price/options/availability from active current tenant SKU facts; legacy frozen price/floor/stock never leaks after activation.",
+        "Unknown stock, ambiguous variants/multi-product references and missing facts clarify/handoff; context switches and quoted/recent context cannot reuse unrelated or foreign facts.",
+        "At send/resume time recheck current product mapping, actor/account/consent/window, takeover and pause; deduplicate duplicate ingress and unknown-reel linking; uncertain sends remain quarantined.",
+        "Migrated tests mutate SKU facts between inbound/queue/send; native rule enable/pause/takeover/resume and unknown\u2192link\u2192eligible current-SKU reply have evidence."
+      ],
+      "remaining_external_or_operational_gate": "Actual permitted Instagram comment/DM and WhatsApp delivery canaries after implementation; safe handoff tests alone do not complete V08.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D03",
+      "title": "Bounded pilot load and mobile-performance harness",
+      "status": "missing_agreed_envelope_and_evidence",
+      "owner": "Operations/QA + business threshold owner",
+      "acceptance_rows": [
+        "X02",
+        "G5"
+      ],
+      "source_refs": [
+        "plan",
+        "release"
+      ],
+      "independently_safe_next_work": "Write fake-provider, bounded synthetic load/report runner and explicit threshold configuration; choose no production defaults or numeric pilot promises.",
+      "acceptance_criteria": [
+        "Record approved concurrency/rate, tenant mix, duration and data size before measurement; unknown pilot values remain MISSING until approved.",
+        "Report p50/p95/p99 latency, errors, queue age/depth/drain, retries and recovery with source/runtime/seed/command; threshold breaches fail clearly.",
+        "Measure all three storefronts with approved media budgets in lab; distinguish browser lab from physical-device/field metrics; hard stop and cleanup touch only owned isolated resources."
+      ],
+      "remaining_external_or_operational_gate": "Business must approve pilot envelope/budgets; execution requires separately allocated P01 runtime, never shared restart or live transport.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D04",
+      "title": "Operational signals, usage limits and support runbook",
+      "status": "partially_implemented_not_pilot_verified",
+      "owner": "Operations + channels/commerce domain owners",
+      "acceptance_rows": [
+        "G5",
+        "G0"
+      ],
+      "source_refs": [
+        "comment_cap",
+        "plan",
+        "release"
+      ],
+      "independently_safe_next_work": "Inventory existing counters/caps and design redacted health/backlog/unknown-operation signals, bounded usage policy and operator actions in isolated tests.",
+      "acceptance_criteria": [
+        "Preserve existing comment cap (250 per seller/action kind/hour); document that it is local policy, not a Meta quota.",
+        "Define tenant-scoped usage limits and overload/retry behavior for actual pilot workflows; concurrency/replay cannot bypass limits or duplicate financial/send effects.",
+        "Exercise actionable alerts for stuck/unknown imports, payments, sends and tracking; prohibit secrets/message bodies; document acknowledgement, escalation, pause and safe recovery.",
+        "Named on-call owner, thresholds, support triage and false-positive checks are reviewed before pilot."
+      ],
+      "remaining_external_or_operational_gate": "Live monitoring destinations, operational staffing and pilot limits are owner/provisioning decisions; existing cap/health endpoint does not satisfy whole G5.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D05",
+      "title": "Combined worker/process/Redis recovery acceptance",
+      "status": "fixture_and_harness_gap",
+      "owner": "QA/runtime + imports/channels/commerce/parcel owners",
+      "acceptance_rows": [
+        "A20",
+        "M04",
+        "M06",
+        "X02"
+      ],
+      "source_refs": [
+        "plan",
+        "release",
+        "p01"
+      ],
+      "independently_safe_next_work": "Build bounded multi-domain restart/fault fixtures using fake providers and an explicitly allocated PG16/Redis namespace; do not restart shared services.",
+      "acceptance_criteria": [
+        "Interrupt after durable ingress/claim, accepted-send-without-receipt, payment creation ambiguity, import allocation and parcel update checkpoints.",
+        "Recover without duplicate products, payments, reservations, sends, parcel associations or notifications; unknown provider outcomes stay held for review.",
+        "Verify pending/unknown records, consents, expired leases and newer committed work before/after controlled isolated process death; saved three Redis skips must execute or remain pending."
+      ],
+      "remaining_external_or_operational_gate": "Actual isolated PG16/Redis/process allocation required; real provider timeout behavior is separate permitted canary evidence.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D06",
+      "title": "Derived onboarding readiness and complete journeys",
+      "status": "incomplete_in_frozen_source_local_owner",
+      "owner": "Local foundation/onboarding + acceptance owner",
+      "acceptance_rows": [
+        "V01",
+        "V11",
+        "A01",
+        "A02",
+        "G4"
+      ],
+      "source_refs": [
+        "onboarding",
+        "plan"
+      ],
+      "independently_safe_next_work": "Local owner reviews derived readiness after support/catalogue/channel/publication composition; independent QA can prepare full journey fixtures now.",
+      "acceptance_criteria": [
+        "Replace permanent action-required/False placeholders only with verified persisted readiness; saved credentials never count as provider approval.",
+        "Fresh self-service and assigned sales-assisted invitation/signup\u2192profile\u2192review\u2192activation\u2192theme\u2192publish\u2192checkout works through native APIs/UI; logout resumes with correct blockers.",
+        "Revoked/expired support cannot act and no DB edits/shared passwords are needed; a sales rep who did not build it completes the journey."
+      ],
+      "remaining_external_or_operational_gate": "Depends on locally owned support/customer/catalogue and provider tests; no remote edit to local onboarding scope.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D07",
+      "title": "Final regression and accessibility acceptance coverage",
+      "status": "additional_candidate_evidence_required",
+      "owner": "Independent QA + storefront/channels owners",
+      "acceptance_rows": [
+        "V02",
+        "V04",
+        "V05",
+        "A05",
+        "A06",
+        "A07",
+        "A09",
+        "A14",
+        "A15",
+        "A17",
+        "A19",
+        "X01",
+        "X05",
+        "G4"
+      ],
+      "source_refs": [
+        "plan",
+        "audit",
+        "matrix"
+      ],
+      "independently_safe_next_work": "Prepare missing deterministic fixtures and maintained browser checks; fix only newly assigned defects after owner review.",
+      "acceptance_criteria": [
+        "Pin final candidate and app/harness hashes; reconcile all 23 acceptance rows without summing overlapping historical checks.",
+        "Use known/multi-product/unknown-price/unavailable-SKU/context-switch/mixed-language/malicious-source AI fixtures; declare soft thresholds before evaluation; zero cross-tenant facts, invented price/stock or unauthorized financial action.",
+        "All three themes cover browse/variant/cart/checkout/confirmation/theme switching at 360/390/768/1440 plus keyboard/focus/labels/contrast/long-name/loading/error states.",
+        "Customer/seller COD fulfilment\u2192delivery\u2192collection, cancellation, identity/history, stock contention and reconnect/queued-action paths use final API/migrated persistence."
+      ],
+      "remaining_external_or_operational_gate": "Physical iPhone/Android login, checkout and camera/touch and authorized real media/provider checks remain separate; browser emulation is insufficient.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "D08",
+      "title": "Conditional international pilot commerce",
+      "status": "unimplemented_for_unconfirmed_destinations",
+      "owner": "Business + commerce/migration owner",
+      "acceptance_rows": [
+        "V13",
+        "A22",
+        "M10"
+      ],
+      "source_refs": [
+        "address",
+        "checkout",
+        "render",
+        "plan"
+      ],
+      "independently_safe_next_work": "Collect a destination/requirements decision and prepare contract fixtures; no speculative broad address/currency rewrite.",
+      "acceptance_criteria": [
+        "If Dharaa migrates, explicitly approve destination/address/postcode/eligibility/shipping/charges/payment-currency/display/confirmation behavior and test each supported destination.",
+        "Unsupported destinations fail explicitly; server totals/payment authority and immutable order snapshots remain correct.",
+        "If requirements are not implemented/verified, preserve existing international purchasing route or defer seller migration, with owner decision recorded."
+      ],
+      "remaining_external_or_operational_gate": "Actual seller requirements, provider capability and route-retention/cutover decision; IN/INR frozen checkout does not prove international support.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "L01",
+      "title": "CSV fallback",
+      "status": "local_owned_in_progress_not_in_frozen_source",
+      "owner": "catalogue_commerce (wholly local)",
+      "acceptance_rows": [
+        "V03",
+        "A04",
+        "G2"
+      ],
+      "source_refs": [
+        "contract",
+        "schema",
+        "imports"
+      ],
+      "independently_safe_next_work": "Read/review handoff only; do not implement parser, import API/service/UI/schema/model or migration remotely.",
+      "acceptance_criteria": [
+        "Local product-per-row contract uses stable document UUID + product_ref, bounded validation, replay/override/provenance checks and reviewed private draft flow.",
+        "Reserved migration 0053 follows local customer links 0052; integrate only through coordinator review and actual ordered migrated/browser checks."
+      ],
+      "remaining_external_or_operational_gate": "Local source/test handoff and final composition required; absence at e750 is not evidence local work is unfinished now.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "L02",
+      "title": "Expiring support grants/global sales access",
+      "status": "local_owned_in_progress_not_in_frozen_source",
+      "owner": "Local support/foundation owner (0051)",
+      "acceptance_rows": [
+        "V01",
+        "V11",
+        "A02",
+        "G2"
+      ],
+      "source_refs": [
+        "contract",
+        "onboarding",
+        "audit"
+      ],
+      "independently_safe_next_work": "Read/review local handoff; do not duplicate grants/roles/schema.",
+      "acceptance_criteria": [
+        "Explicit tenant/actor/scope/expiry/revocation and audited use; cross-tenant, expired, revoked and unauthorized sales actions denied; assignment alone grants nothing.",
+        "Native complete sales-assisted journey proves credential-safe tools and owner control."
+      ],
+      "remaining_external_or_operational_gate": "Exact local commit + 0051 migrated evidence + final composition required.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "L03",
+      "title": "Verified customer identity links/CRM history",
+      "status": "local_owned_in_progress_not_in_frozen_source",
+      "owner": "Local customer/CRM owner (0052)",
+      "acceptance_rows": [
+        "V06",
+        "A17",
+        "M01",
+        "G2"
+      ],
+      "source_refs": [
+        "contract",
+        "audit"
+      ],
+      "independently_safe_next_work": "Read/review local handoff; no identity schema/API duplication.",
+      "acceptance_criteria": [
+        "Identity link has explicit verified basis and tenant-scoped audit/revoke behavior; matching phone/name alone cannot merge identities.",
+        "Unified conversation/order history and customer order privacy pass final native API/UI tests without foreign histories."
+      ],
+      "remaining_external_or_operational_gate": "Exact local commit + ordered 0052 migrated evidence + final composition required.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "L04",
+      "title": "Basic analytics",
+      "status": "reported_local_integration_unverified_here",
+      "owner": "Local analytics owner; reported commit 3556850",
+      "acceptance_rows": [
+        "V10",
+        "A18",
+        "G2"
+      ],
+      "source_refs": [
+        "contract",
+        "audit",
+        "plan"
+      ],
+      "independently_safe_next_work": "Request exact local source/evidence handoff through coordinator; no analytics writes.",
+      "acceptance_criteria": [
+        "Known dataset exactly reconciles visits/views/enquiries/checkout/placed/paid/cancelled/revenue/conversion/automation, test exclusions and unknown attribution.",
+        "Placed includes unpaid; revenue requires authoritative payment; COD collection/refund/cancellation and denominator/window definitions are explicit.",
+        "Verify reported source ancestry, affected event producers, migrated/native evidence and final merged tenant boundaries."
+      ],
+      "remaining_external_or_operational_gate": "3556850 is absent from this local Git object database; no fetch or source review performed and no integration/completion credit assigned.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "S01",
+      "title": "SEO sitemap and redirect infrastructure",
+      "status": "parallel_owner_implementation_not_in_frozen_source",
+      "owner": "SEO publication + independent SEO QA; coordinator composition",
+      "acceptance_rows": [
+        "V12",
+        "A21",
+        "M07",
+        "G2"
+      ],
+      "source_refs": [
+        "contract",
+        "seo_routes",
+        "publication",
+        "render"
+      ],
+      "independently_safe_next_work": "Read-only peer review after stable handoff; no duplicate implementation.",
+      "acceptance_criteria": [
+        "Default-off boundary and configured canonical origin; discoverable bounded index/store sitemap includes only active published tenant product/category URLs.",
+        "Explicit reviewed inventory defaults empty; fail closed on invalid/unsafe/unowned redirects, route collisions, chains/loops and revoked/foreign publication; independent adversarial tests.",
+        "Final V12 still needs actual legacy URL inventory/ownership, domain/provider redirect authority, actual canonical targets and customer order-link preservation plus migration reconciliation/rollback."
+      ],
+      "remaining_external_or_operational_gate": "Synthetic .example.test routing proves infrastructure only; actual URL/domain migration and old order links remain open even after source integration.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "R01",
+      "title": "Release runtime, restored data and old/current app switch",
+      "status": "source_implemented_execution_and_app_switch_pending",
+      "owner": "Release CI/rehearsal + operations",
+      "acceptance_rows": [
+        "G1",
+        "G5",
+        "G6",
+        "A23",
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06",
+        "M08",
+        "M09",
+        "M10",
+        "X03",
+        "X04",
+        "G0"
+      ],
+      "source_refs": [
+        "release",
+        "release_ci",
+        "rehearsal",
+        "p01",
+        "verifier"
+      ],
+      "independently_safe_next_work": "Reuse reviewed release tooling; prepare missing prior/current immutable-app switch/forward-fix fixture with fake providers under separately allocated resources.",
+      "acceptance_criteria": [
+        "Preserve exact final source and known failures; review secret provenance/package exclusions with declared scan scope rather than claiming whole-repo secret absence.",
+        "Final actual migrated PG16/held-lease JUnit proof and relevant mounted native journeys; skipped DB tests never pass release gate.",
+        "New locked amd64/arm64 image build and offline smoke on recorded source/locks; deterministic source archives are not reproducible OCI execution.",
+        "Two distinct empty synthetic PG16 lanes, dual held P01 leases, guarded private dump/restore and reconciliation of stable source/target IDs, customer provenance, historic orders/payment evidence/encrypted credential references, totals, stock/reservations, consents, pending/unknown actions and schema writer protections.",
+        "Run approved prior/current application read/write/worker compatibility switch or forward fix preserving newer orders/reservations/customer identities/pending work; no schema downgrade or old backup overwrite."
+      ],
+      "remaining_external_or_operational_gate": "Docker unavailable, no re-probe; hosted zero-step billing lock is saved evidence only, no retries/billing changes. Actual execution needs allocated capacity and final owner cutover approval.",
+      "acceptance_complete": false
+    },
+    {
+      "id": "E01",
+      "title": "Authorized provider/device/domain and production operations",
+      "status": "external_or_operational_gate_not_code_waiver",
+      "owner": "Account/seller/private connector/device/domain/business/operations owners",
+      "acceptance_rows": [
+        "V03",
+        "V05",
+        "V07",
+        "V09",
+        "V12",
+        "A03",
+        "A08",
+        "A10",
+        "A11",
+        "A12",
+        "A15",
+        "A16",
+        "A19",
+        "A21",
+        "G3",
+        "G4",
+        "G5",
+        "G6",
+        "M07",
+        "M10",
+        "X05"
+      ],
+      "source_refs": [
+        "plan",
+        "audit",
+        "contract",
+        "release",
+        "wa_connect",
+        "wa_ui"
+      ],
+      "independently_safe_next_work": "Prepare sanitized checklists and fixture contracts only; do not call providers, DNS, live DB or production.",
+      "acceptance_criteria": [
+        "Current supported Meta app/account mode and seller-owned IG media, comment/DM and WA authorized recipients plus actual statuses/revoke/reconnect; manual WA credentials alone do not establish supported self-service signup.",
+        "Confirm supported WhatsApp connection contract: if chosen official signup needs missing client/server code, assign channels a bounded implementation task before canary rather than classifying it as credentials-only.",
+        "Actual Razorpay test SDK/CSP/domain/callback/webhook/capture/failure/cancel/late payment; private ParcelDesk D1/TLS/machine trust plus order-confirmed existing-parcel refresh and permitted notification.",
+        "Named pilot scope, approved sources/policies, actual domain migration/order-link inventory, physical devices, backup/restore/alerts/support evidence, final owner approval and controlled reconciliation."
+      ],
+      "remaining_external_or_operational_gate": "No provider/device/domain/cutover success claimed. Shipment booking/new courier APIs remain outside V1.",
+      "acceptance_complete": false
+    }
+  ],
+  "local_report": {
+    "analytics_short_commit": "3556850",
+    "object_available": false,
+    "source_inspected": false,
+    "fetched": false,
+    "integrated_into_frozen_source": false
+  },
+  "coverage": {
+    "V01": [
+      "D06",
+      "L02"
+    ],
+    "V02": [
+      "D07"
+    ],
+    "V03": [
+      "D01",
+      "L01",
+      "E01"
+    ],
+    "V04": [
+      "D01",
+      "D07"
+    ],
+    "V05": [
+      "D07",
+      "E01"
+    ],
+    "V06": [
+      "L03"
+    ],
+    "V07": [
+      "E01"
+    ],
+    "V08": [
+      "D02"
+    ],
+    "V09": [
+      "E01"
+    ],
+    "V10": [
+      "L04"
+    ],
+    "V11": [
+      "D06",
+      "L02"
+    ],
+    "V12": [
+      "S01",
+      "E01"
+    ],
+    "V13": [
+      "D08"
+    ],
+    "A01": [
+      "D06"
+    ],
+    "A02": [
+      "D06",
+      "L02"
+    ],
+    "A03": [
+      "D01",
+      "E01"
+    ],
+    "A04": [
+      "D01",
+      "L01"
+    ],
+    "A05": [
+      "D07"
+    ],
+    "A06": [
+      "D07"
+    ],
+    "A07": [
+      "D07"
+    ],
+    "A08": [
+      "E01"
+    ],
+    "A09": [
+      "D07"
+    ],
+    "A10": [
+      "E01"
+    ],
+    "A11": [
+      "D02",
+      "E01"
+    ],
+    "A12": [
+      "E01"
+    ],
+    "A13": [
+      "D02"
+    ],
+    "A14": [
+      "D02",
+      "D07"
+    ],
+    "A15": [
+      "D07",
+      "E01"
+    ],
+    "A16": [
+      "E01"
+    ],
+    "A17": [
+      "D07",
+      "L03"
+    ],
+    "A18": [
+      "L04"
+    ],
+    "A19": [
+      "D07",
+      "E01"
+    ],
+    "A20": [
+      "D05"
+    ],
+    "A21": [
+      "S01",
+      "E01"
+    ],
+    "A22": [
+      "D08"
+    ],
+    "A23": [
+      "R01"
+    ],
+    "G0": [
+      "D04",
+      "R01"
+    ],
+    "G1": [
+      "R01"
+    ],
+    "G2": [
+      "D01",
+      "D02",
+      "L01",
+      "L02",
+      "L03",
+      "L04",
+      "S01"
+    ],
+    "G3": [
+      "E01"
+    ],
+    "G4": [
+      "D06",
+      "D07",
+      "E01"
+    ],
+    "G5": [
+      "D03",
+      "D04",
+      "R01",
+      "E01"
+    ],
+    "G6": [
+      "R01",
+      "E01"
+    ],
+    "M01": [
+      "L03",
+      "R01"
+    ],
+    "M02": [
+      "R01"
+    ],
+    "M03": [
+      "R01"
+    ],
+    "M04": [
+      "D05",
+      "R01"
+    ],
+    "M05": [
+      "R01"
+    ],
+    "M06": [
+      "D05",
+      "R01"
+    ],
+    "M07": [
+      "S01",
+      "E01"
+    ],
+    "M08": [
+      "R01"
+    ],
+    "M09": [
+      "R01"
+    ],
+    "M10": [
+      "D08",
+      "R01",
+      "E01"
+    ],
+    "X01": [
+      "D02",
+      "D07"
+    ],
+    "X02": [
+      "D03",
+      "D05"
+    ],
+    "X03": [
+      "R01"
+    ],
+    "X04": [
+      "R01"
+    ],
+    "X05": [
+      "D07",
+      "E01"
+    ]
+  }
+}
