@@ -222,5 +222,21 @@
       "session-revoke-401.png"
     ]
   },
-  "review_status": "Current original checkpoints reviewed. Narrow onboarding stale-fixture/source-hash and real-public-storage-namespace followup pending; no product failures suppressed."
+  "review_status": "Original checkpoints and narrow baseline onboarding followup reviewed. Current baseline remains 22pass/10red; pending separate 8ae97c2 source comparison review.",
+  "onboarding_baseline_followup": {
+    "commit": "a3a3d6651121276d6b4aa289d7980e24992da6c2",
+    "application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+    "runner_sha256": "0f673f66c91eca69d4e4ec682e0eeae7e827a7c2124b248d19c211aabf4fd210",
+    "exporter_sha256": "85a7a51b1d067593704783fdaa35b369eaefd6f3321d6ebd1295bca1e5816f76",
+    "same_32_case_ids_and_outcomes": true,
+    "runner_record_matches": true,
+    "fixture_record_matches": true,
+    "formatter_sources_match_frozen_base": true,
+    "native_sources_match_frozen_base": true,
+    "source_unchanged": true,
+    "passed": 22,
+    "failed": 10,
+    "review_findings": "No source/effect blocker found. Before browser launch all exported formatter/capability/safety hashes are checked with checkout-bounded paths. Actual public checkout key prefix is asserted. Nominal synthetic emails now conform to native validation. Both previously recorded nonblocking followups are resolved without new cases or suppression of ten failures.",
+    "browser_rerun_by_reviewer": false
+  }
 }
