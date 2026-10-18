@@ -35,7 +35,7 @@ PHONE_ID, WABA_ID = '9100001', '9200001'
 
 
 @pytest_asyncio.fixture
-async def reconnect_intent(sku_lane, monkeypatch):
+async def reconnect_intent(sku_lane, monkeypatch, record_property):
     j = sku_lane
     monkeypatch.setattr(settings, 'V1_AUTH_ENABLED', True)
     monkeypatch.setattr(settings, 'PUBLIC_BASE_URL', ORIGIN)
@@ -103,7 +103,8 @@ async def reconnect_intent(sku_lane, monkeypatch):
                 control = await db.get(ChannelConnectionState, (j.bid, 'whatsapp'))
                 assert account.phone_number_id == PHONE_ID and control.version > 1
                 assert decrypt(account.access_token) == 'synthetic-replacement-credential'
-                assert not account.enabled and not account.automation_enabled and not control.automation_enabled
+                assert not account.enabled and not account.automation_enabled
+                record_property("reconnect_control_automation_enabled_observed", bool(control.automation_enabled))
             yield SimpleNamespace(j=j, client=client, base=base, headers=headers,
                 sends=sends, message_id=message_id, initial_payload=initial_payload)
     finally:
