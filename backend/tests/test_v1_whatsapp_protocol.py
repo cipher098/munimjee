@@ -78,6 +78,8 @@ def test_sdk_configuration_has_no_implicit_measurement_or_secret():
 @pytest.mark.parametrize('override,code', [({'V1_WHATSAPP_ONBOARDING_ENABLED':False},'configuration_unavailable'),
     ({'WHATSAPP_EMBEDDED_APP_SECRET':'other'},'configuration_mismatch'),
     ({'WHATSAPP_APP_SECRET':''},'configuration_unavailable'),
+    ({'WHATSAPP_EMBEDDED_APP_SECRET':'invalid-unicode-☃'},'configuration_unavailable'),
+    ({'WHATSAPP_EMBEDDED_APP_SECRET':'invalid\nline'},'configuration_unavailable'),
     ({'CHANNEL_ENCRYPTION_KEY':'malformed'},'configuration_unavailable'),
     ({'WHATSAPP_WEBHOOK_VERIFY_TOKEN':''},'configuration_unavailable'),
     ({'WHATSAPP_EMBEDDED_GRAPH_VERSION':'v23.0'},'configuration_unavailable'),
