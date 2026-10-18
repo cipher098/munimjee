@@ -98,7 +98,23 @@
     "operator-contract-composed.txt": "94a390134ca866ebc3f1ce2921553da5e112922aa45e7a73ef7eada701f3f530",
     "operator-lifecycle-composed.txt": "af12ef90f28e69d48cc0fa0bb45db2a95e7b54e70aff268663bd5d15f43d7896",
     "operator-registration-pure.txt": "e464ccbf60938f0af2c1972359092cf5ab5b007a89a7e4430955139cb935e495",
-    "skip-attribution.json": "714c79216b8c5fa6de749395e4d6430411e6fbfe05dfa2156c8908e2c343384d"
+    "skip-attribution.json": "714c79216b8c5fa6de749395e4d6430411e6fbfe05dfa2156c8908e2c343384d",
+    "ui-composed/cart-mounted/catalogue-320-bag.png": "89d1d519dc8fd468949c06f1222ed15afe71596df9ac8c135fd2ef95a479ab85",
+    "ui-composed/cart-mounted/catalogue-390-bag.png": "266907313281469f955e857a180b5abd461c59735d97f9b8d0f1a5503735b5af",
+    "ui-composed/cart-mounted/cleanup.json": "56fbf93217c8157570a7cd78fc00090a040b6477768fdaff8deb2bd2daeb7e0f",
+    "ui-composed/cart-mounted/editorial-320-bag.png": "af2e9ed332c9d2a0f5752bddd89fe49d7a9390b66a212e5b56ebdc68a53955ba",
+    "ui-composed/cart-mounted/editorial-390-bag.png": "d8b46c6a00caae150791308a99ebb7ce028068ba2e62a2a3fc24716d1262260f",
+    "ui-composed/cart-mounted/result.json": "91fd98acca2d601863c3a3c87821d5fd9d75f7c2bd1a76fda31b1baea426ec78",
+    "ui-composed/cart-mounted/runner-output.txt": "02e99430a43d7efd523823a5ee16e5921d2137b29554bf792fa6d1e1eae53fa9",
+    "ui-composed/cart-mounted/video-320-bag.png": "760053eab357d77796b3ee5180d0f4304a5a236076493a667c6e83d914eb6f37",
+    "ui-composed/cart-mounted/video-390-bag.png": "0c8be1cc4fd6b33593540dbc0663173f7f81f8cc41dd99d5f86d4d077c237a54",
+    "ui-composed/cart-run.txt": "02e99430a43d7efd523823a5ee16e5921d2137b29554bf792fa6d1e1eae53fa9",
+    "ui-composed/native-mounted/browser-results.json": "32feb00eec972848384a42160f2be06ee0984898c47033822c404b4e2f755c1b",
+    "ui-composed/native-mounted/mobile-owner-progress.png": "1837f210c41ea54331b8a7fb9cecb1d160c059a283fc9556dd0913035847867d",
+    "ui-composed/native-mounted/mobile-session-ended.png": "d23ce721af1f13b56f1a8987a113db8412b59f8c31ea426ba628e280c82fc67d",
+    "ui-composed/native-mounted/mobile-viewer-progress.png": "5ca11c89f80ffc466b851ee48b7d6020e1491cd01a5ab576104045e13e8db803",
+    "ui-composed/native-run.txt": "136cc2907800d0655d6ad00f9b03c04ed2c6974ca4758acbb405699aa9ca09b4",
+    "ui-composed/source.json": "78bb097583f39127ac76ed0cdeaf3cac83436307695808113d67d9393b14f333"
   },
   "current_accepted_complete": {
     "source": "eeb94a119736cae816af782f2af5e04cb877e616",
@@ -110,5 +126,20 @@
     "exit_code": 0,
     "source_unchanged": true,
     "stable_tracked_files": 800
+  },
+  "scoped_ui_composition": {
+    "source": "e4183cfe78d36624bf0019048f0d5f64c9b00a2f",
+    "alembic_revision": "0056_v1_comment_operator",
+    "native_actual_mounted": 6,
+    "cart_actual_mounted": 6,
+    "stable_tracked_files": 817,
+    "remote_controlled_http": {
+      "original": 32,
+      "supplemental": 8
+    },
+    "cart_synthetic_ui": 75,
+    "cart_synthetic_activity_denials": 153,
+    "cart_synthetic_exit_code": 1,
+    "backend_migration_runtime_changed": false
   }
 }

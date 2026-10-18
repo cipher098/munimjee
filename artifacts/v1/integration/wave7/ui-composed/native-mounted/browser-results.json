@@ -1,0 +1,38 @@
+{
+  "source_commit": "e4183cfe78d36624bf0019048f0d5f64c9b00a2f",
+  "checks": 6,
+  "results": [
+    "first unauthenticated visit retains Create account; real UI signup opens six-step checklist",
+    "real profile save advances only the confirmed local setup step",
+    "real owner invitation returns a private one-use link without rendering it in evidence",
+    "real logout clears profile/team/invitation DOM and both identity actions",
+    "same-user real session replacement fences current workspace before another mutation",
+    "older real owner-session response cannot restore controls after newer actual viewer downgrade"
+  ],
+  "revision": "0056_v1_comment_operator",
+  "mount": "app.main",
+  "before": {
+    "backend/static/v1_app.js": "8ac29bd8b0282b8d77588ee3a343cda81f78333f6df2f2a7c8f8165c17641f45",
+    "backend/static/v1_client.js": "5b7798c1a6033ad3994cc905677fb9e12a47ac5fa61bd4626f0321f19ec0459b",
+    "backend/app/services/onboarding.py": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+    "backend/app/api/v1/auth.py": "946c3389657c8c264a37441d716d68ecaccc31e8a895a097c86baaeebfd34aa1",
+    "backend/app/api/v1/session.py": "55be1d82ba17f804edf49be0c9cf415ba6e01bed9a5fde53ecccd6f7c5689066",
+    "backend/tests/browser/onboarding-followup.mjs": "a84ca65ba0f4ed1b79ec1a0f81c908ba78909d1d6f6ca4b957d2bad16b7d0201",
+    "backend/tests/onboarding_followup_server.py": "521372989c5209ecddf7e4f941b59ce2bc11d4fc193e58099c95716be0cfa2c5",
+    "backend/tests/run_onboarding_followup_browser.py": "a832b0e9c14ca8842d617a2856aa609c10795db7cb461f923bc801a48bfc470f"
+  },
+  "after": {
+    "backend/static/v1_app.js": "8ac29bd8b0282b8d77588ee3a343cda81f78333f6df2f2a7c8f8165c17641f45",
+    "backend/static/v1_client.js": "5b7798c1a6033ad3994cc905677fb9e12a47ac5fa61bd4626f0321f19ec0459b",
+    "backend/app/services/onboarding.py": "208baa292f5ce1c62439eebca4b0f3b20e64974d8697ced07e7ba5cf1308cd2b",
+    "backend/app/api/v1/auth.py": "946c3389657c8c264a37441d716d68ecaccc31e8a895a097c86baaeebfd34aa1",
+    "backend/app/api/v1/session.py": "55be1d82ba17f804edf49be0c9cf415ba6e01bed9a5fde53ecccd6f7c5689066",
+    "backend/tests/browser/onboarding-followup.mjs": "a84ca65ba0f4ed1b79ec1a0f81c908ba78909d1d6f6ca4b957d2bad16b7d0201",
+    "backend/tests/onboarding_followup_server.py": "521372989c5209ecddf7e4f941b59ce2bc11d4fc193e58099c95716be0cfa2c5",
+    "backend/tests/run_onboarding_followup_browser.py": "a832b0e9c14ca8842d617a2856aa609c10795db7cb461f923bc801a48bfc470f"
+  },
+  "page_errors": [],
+  "external_requests": [],
+  "provider_calls": 0,
+  "proof_boundary": "Actual native API/DB; test-only nonce role fixture and held actual HTTP response; no provider evidence"
+}

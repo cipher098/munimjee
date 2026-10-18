@@ -33,7 +33,11 @@ before/after. Central native onboarding6 and shared activity8 mounted journeys,
 plus separately attributed owner gates, are documented in `docs/v1-wave7-validation.md`.
 Prior `abab30a` actual0053 image/restore evidence remains separate:315-file arm64
 image/3 offline modes and fresh restore53 do not certify the new head. Historical
-failed/interrupted runs remain preserved. New copies await safe disk headroom.
+failed/interrupted runs remain preserved. New copies await safe disk headroom. Subsequent
+scoped UI compositione4183cf passes actual0056 native6/cart6 with817 stable files;
+remote32+8 controlled cases and cart75 synthetic checks stay separately attributed.
+No backend/migration source changes or new complete-run claim accompanies this
+UI-only repair. Exact boundaries are in `docs/v1-wave7-ui-validation.md`.
 
 Wave7 now composes observed first-party activity0054 (shared public hooks, new-order
 provenance and ungated bounded retention cleanup), owned-Instagram private-original

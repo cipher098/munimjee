@@ -4,6 +4,13 @@ Updated: 18 October 2026. Coordinator branch: `codex/v1-integration`. Verified f
 
 ## Wave7 verified complete checkpoint and next ownership
 
+Subsequent reviewed UI composition `e4183cf` passes central actual0056 native6
+and cart6 mounted checks, with817 tracked source/harness files stable. Only native
+v1_app.js/css and storefront styles.css change at runtime; backend/migrations are
+identical to the complete source below. Remote32+8 controlled-HTTP and cart75
+synthetic checks remain separately attributed, with the synthetic activity-request
+coverage gap explicit. See `docs/v1-wave7-ui-validation.md`.
+
 The complete frozen actual0056 composition `eeb94a119736cae816af782f2af5e04cb877e616`
 passes **2425 tests,8 documented skips,0 failures in1119.92s** on the dedicated
 disk-backed PG16 lane. The subprocess exits0; all800 tracked non-artifact source,
@@ -39,17 +46,18 @@ provider methods, controlled HTTP, or source review into live provider proof.
 
 Next isolated work: integrator owns trusted channel activity producers/outcome
 reporting (source-reviewed draft, actual gates pending); catalogue owns0057 WA v4
-self-service/explicit authorized-recipient test flow from frozen0056; social owns
-CSS-only mobile cart fallback repair. Remote owns native v1_app.js/css mobile,
-focus/error/long-name repairs from reviewed QA. No shared file collision is granted.
+self-service/explicit authorized-recipient test flow from frozen0056; social completed/reviewed the CSS-only mobile cart fallback repair and now
+independently reviews0057 source. Remote native v1_app.js/css mobile, focus/error/
+long-name repairs are reviewed and composed. No shared file collision is granted.
 The cart baseline reproduces6 painted-text failures out of75 synthetic UI cases;
 153 denied measurement attempts are a harness coverage gap, not an analytics defect.
-Its repaired rendered/mounted gate is pending. Existing five native privacy cases
-pass the remote fresh comparison; final remote repair packet is still pending.
+Its repaired75 synthetic and six mounted cases pass. The final remote packet
+2681e91 is reviewed/composed, with32+8 controlled cases and the central native6
+actual-session rerun passing.
 
-DB/browser work stays serialized on disk-backed55443. Social has the next
-parcel_w6/8156 slot after this checkpoint push; no other DB/browser starts until
-explicit release. New image/restore/rollback copies remain deferred under host
+DB/browser work stays serialized on disk-backed55443. The cart slot is released. Integrator now holds instagram_w6 for isolated
+producer SQL-failure/lock/delayed-source/report gates; no other DB/browser starts
+until explicit release. New image/restore/rollback copies remain deferred under host
 disk headroom; no prune or evidence deletion is authorized. Provider approvals,
 physical devices, private ParcelDesk provisioning and operational deployment stay
 open. Exact boundaries are in `docs/v1-wave7-contracts.md`.

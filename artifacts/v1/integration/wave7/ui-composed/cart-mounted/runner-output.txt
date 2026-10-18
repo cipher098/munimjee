@@ -1,0 +1,6 @@
+PASS actual mounted editorial 320px missing-photo title/price
+PASS actual mounted editorial 390px missing-photo title/price
+PASS actual mounted catalogue 320px missing-photo title/price
+PASS actual mounted catalogue 390px missing-photo title/price
+PASS actual mounted video 320px missing-photo title/price
+PASS actual mounted video 390px missing-photo title/price

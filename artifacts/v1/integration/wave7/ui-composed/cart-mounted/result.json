@@ -1,0 +1,291 @@
+{
+  "mode": "actual-app.main-native-API-P01-migrated0056-publication-no-payment-or-provider",
+  "source_head": "e4183cfe78d36624bf0019048f0d5f64c9b00a2f",
+  "checks_passed": 6,
+  "results": [
+    {
+      "theme": "editorial",
+      "width": 320,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 208.515625,
+            "top": 281.109375,
+            "bottom": 301.109375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 176.71875,
+            "top": 301.109375,
+            "bottom": 321.109375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 321.109375,
+            "bottom": 341.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 231.1875,
+          "right": 285,
+          "top": 282.109375,
+          "bottom": 295.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    },
+    {
+      "theme": "editorial",
+      "width": 390,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 277.328125,
+            "top": 291.109375,
+            "bottom": 311.109375,
+            "width": 165.328125,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 311.109375,
+            "bottom": 331.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 301.1875,
+          "right": 355,
+          "top": 292.109375,
+          "bottom": 305.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    },
+    {
+      "theme": "catalogue",
+      "width": 320,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 208.515625,
+            "top": 281.109375,
+            "bottom": 301.109375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 176.71875,
+            "top": 301.109375,
+            "bottom": 321.109375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 321.109375,
+            "bottom": 341.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 231.1875,
+          "right": 285,
+          "top": 282.109375,
+          "bottom": 295.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    },
+    {
+      "theme": "catalogue",
+      "width": 390,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 277.328125,
+            "top": 291.109375,
+            "bottom": 311.109375,
+            "width": 165.328125,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 311.109375,
+            "bottom": 331.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 301.1875,
+          "right": 355,
+          "top": 292.109375,
+          "bottom": 305.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    },
+    {
+      "theme": "video",
+      "width": 320,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 208.515625,
+            "top": 281.109375,
+            "bottom": 301.109375,
+            "width": 96.515625,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 176.71875,
+            "top": 301.109375,
+            "bottom": 321.109375,
+            "width": 64.71875,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 321.109375,
+            "bottom": 341.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 231.1875,
+          "right": 285,
+          "top": 282.109375,
+          "bottom": 295.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    },
+    {
+      "theme": "video",
+      "width": 390,
+      "result": "passed",
+      "layout": {
+        "title": "Independent occasion dress",
+        "price": "₹1,299.50",
+        "titleRects": [
+          {
+            "left": 112,
+            "right": 277.328125,
+            "top": 291.109375,
+            "bottom": 311.109375,
+            "width": 165.328125,
+            "height": 20
+          },
+          {
+            "left": 112,
+            "right": 151.640625,
+            "top": 311.109375,
+            "bottom": 331.109375,
+            "width": 39.640625,
+            "height": 20
+          }
+        ],
+        "priceRect": {
+          "left": 301.1875,
+          "right": 355,
+          "top": 292.109375,
+          "bottom": 305.109375,
+          "width": 53.8125,
+          "height": 13
+        },
+        "overlaps": []
+      }
+    }
+  ],
+  "source_hashes_before": {
+    "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+    "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+    "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+    "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+    "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+    "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+    "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+    "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+    "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+    "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+    "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+    "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+    "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+    "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+    "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+    "frontend/storefront/src/styles.css": "6b40b997abd9ea9f511dc3afbe1a66ec88fa3abadd5416ef76fe0baca916bd7b",
+    "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374"
+  },
+  "source_hashes_after": {
+    "frontend/storefront/src/activity-client.js": "32e7d3cb5cfd2b74b165da551a60622a4b6bc457f67227a37c8e61c81a163c7b",
+    "frontend/storefront/src/app.js": "6e8ffaf39e15fa84af3bec6f1d96f03ba532dac38cc369bf31a191a3d769a3be",
+    "frontend/storefront/src/canonical-contract.js": "a49aba60a12f5f8684ced8587b722d6226a9bcd8f19fe88d469caa009a0e4155",
+    "frontend/storefront/src/catalogue-adapter.js": "bf91373a9765d29ca278a8e683fe0c4ac4e4f8dd271bf7ca0ed3d9c9c361b647",
+    "frontend/storefront/src/checkout-attempt.js": "b6cc0d891acbaf077d7b525706f1d1a4e30f5878019242f741b48158ef6dd495",
+    "frontend/storefront/src/commerce.js": "ae54e86645547501f1efbd82ea76598924996831438f6fd4690e3409537174b9",
+    "frontend/storefront/src/components.js": "1b7fb095462eece2bb40a23475741600ec38663baa98c1ed696372e09634c9f3",
+    "frontend/storefront/src/fixtures.js": "0794dccc12f280a2977dcc20a5dc29ab3d9578dfcc56fafe1e1491aa47a55966",
+    "frontend/storefront/src/live-api.js": "8fef95a67b818cfe069f0ca3ba33d77ac04002fb95176b4ac1d17c6eff01a705",
+    "frontend/storefront/src/live-app.js": "7152bcd487efac0ba20deec99fc967a2e629aa8a3eaa3d9a6620e7c58246ccb9",
+    "frontend/storefront/src/live-entry.js": "258919f891e7a425277a55d04c105289e76073301f1b5e882b3e61389d8181e7",
+    "frontend/storefront/src/live.css": "65afd6fe366fbf4ce7b4f7c7e7c747bb46a0d4110c75e11f3bd04e165844d882",
+    "frontend/storefront/src/order-status.js": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c",
+    "frontend/storefront/src/payment-handoff.js": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d",
+    "frontend/storefront/src/published-design.js": "4edd5418e57bcdda563964a175fa2fb2e0a056877cb8944788928930801f6c9d",
+    "frontend/storefront/src/styles.css": "6b40b997abd9ea9f511dc3afbe1a66ec88fa3abadd5416ef76fe0baca916bd7b",
+    "frontend/storefront/src/theme-config.js": "6aa9886a5b1606f627b6ee2c6c5dbd34ee0fecbbadf573367636ba461d6ba374"
+  },
+  "source_unchanged": true,
+  "external_requests": [],
+  "prohibited_financial_requests": [],
+  "page_errors": [],
+  "tls": "ephemeral self-signed loopback; ignoreHTTPSErrors, no public/providerTLS claim",
+  "runner_sha256": "6394dce92fe0e9e390672443893d7ce7ed808d9ee2b2ab5d7aef207638b622b6"
+}
