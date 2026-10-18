@@ -1,0 +1,36 @@
+{
+  "base_source_head": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f",
+  "mode": "actual0050 Alembic/P01 PostgreSQL16 + actual native main APIs + new owned analytics router",
+  "postgres_cases": 14,
+  "pure_contract_cases": 8,
+  "focused_total_passed": 22,
+  "node_cases": 3,
+  "chromium_checks": 21,
+  "provider_calls": 0,
+  "external_browser_requests": [],
+  "new_schema_migrations": false,
+  "main_registration_pending_integrator": true,
+  "source_sha256": {
+    "backend/app/api/v1/analytics_v1.py": "05ed9611f2321daa6a7f989e020f563b99ef245fcbfd2584beb35faccdb8969d",
+    "backend/app/services/analytics_v1.py": "310c2996af70c0247c74ff6d5838a49132f8c615cfe9ceb926b1e8bd90fae944",
+    "backend/app/schemas/analytics_v1.py": "007f1f274049a52e283dc71b1548cfdbe72798d2817a5192e3d8c235cc4b2fb5",
+    "backend/static/analytics_v1.html": "55012b246d40df80736e7b7486c48e95fa2da24317c520b141474726532d9958",
+    "backend/static/analytics_v1.js": "540924455f08b5f718b2c436f24680b067e33bc8dfbbfa8d380a4a11e379cf3f",
+    "backend/static/analytics_v1.css": "862b3504ef2ef803060e23ef74ef249521761b13b4cbed7b6976c80de5154356",
+    "backend/tests/browser/analytics_v1.mjs": "2ff9906e10460cf8476ad85f166ddd07d38553c50f6c7d1ad6025dec28126f03"
+  },
+  "unresolved": [
+    "complete immutable test provenance",
+    "visitor/conversion/attribution events",
+    "payment/refund settlement timestamps and completed refund facts",
+    "fee/net revenue facts",
+    "legacy conversation order reconciliation policy",
+    "representative high-volume query load"
+  ],
+  "resolved_during_local_checks": [
+    "mobile min-content table overflow",
+    "malformed pending option markup",
+    "explicit private page noindex headers",
+    "empty captured association not counted"
+  ]
+}
