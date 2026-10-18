@@ -21,9 +21,9 @@ import sys
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-# Reviewed additive support/customer-link schema. Keep this explicit: a later
+# Reviewed additive activity/comment/operator schema. Keep this explicit: a later
 # migration needs its own compatibility review rather than accepting any head.
-SUPPORTED_HEAD = "0053_v1_csv_import"
+SUPPORTED_HEAD = "0056_v1_comment_operator"
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_ROWS = 1000
 MAX_TABLES = 200
@@ -58,16 +58,22 @@ def repo_head(root=ROOT):
 
 
 def plan():
+    from v1_release_synthetic import fixture_0056, FIXTURE_SHA256
+    fixture_0056()
     return {
         "format": "munimjee.release-rehearsal.v1", "mode": "plan",
         "database_effects": False, "container_effects": False,
         "alembic_head": repo_head(), "required_postgresql_major": 16,
+        "fixture_version": 1, "fixture_sha256": FIXTURE_SHA256,
+        "source_rows": 52, "post_cutover_target_rows": 58,
         "execute_contract": "two allocated initially empty P01 lanes; private ownership attestation; new private archive directory",
         "stages": ["validate inputs without connecting", "hold both P01 leases", "verify PG16 and empty source/target",
-                   "migrate source using P01 and seed fixed synthetic fixture", "export read-only consistent snapshot",
+                   "migrate source using P01 and seed fixed synthetic fixture",
+                   "rollback-only exact tenant-FK enforcement probe on source", "export read-only consistent snapshot",
                    "private bounded pg_dump", "recheck empty target and pg_restore single transaction",
-                   "reconcile all table row/identity hashes, schema and monetary/reservation/pending totals",
-                   "append newer target-only order; generic read-only persisted-data probe preserves all facts"],
+                   "rollback-only exact tenant-FK enforcement probe on target",
+                   "reconcile all table row/identity hashes, exact schema metadata, semantics, historical offenders and totals",
+                   "append newer target-only order plus four fixed records and legal policy update; read-only probe preserves all facts"],
         "application_switch": "pending: requires actual reviewed old/current application packages and mounted journey",
         "routine_rollback": "preserve post-cutover writes; compatibility preflight/forward fix; no snapshot overwrite or downgrade",
     }
@@ -315,6 +321,34 @@ def canonical_constraint(definition):
     return "".join(output)
 
 
+FK_DEFINITION = "FOREIGN KEY (seller_id, event_id) REFERENCES comment_events(seller_id, id) NOT VALID"
+FK_METADATA = ("public", "comment_actions", "comment_action_event_tenant", "f", "public", "comment_events",
+               ["seller_id", "event_id"], ["seller_id", "id"], "a", "a", "s", False, False, False, FK_DEFINITION)
+
+
+def validate_constraint_metadata(rows):
+    """Exact stable catalog names/ordered keys; no OIDs or SQL normalization."""
+    known = []
+    for row in rows:
+        require(len(row) == 15, "Constraint metadata shape differs")
+        if tuple(row[:3]) == FK_METADATA[:3]:
+            require(all(row[index] is False for index in (11, 12, 13)), "Known FK state differs")
+            known.append(tuple(row))
+        else:
+            require(row[13] is True, "Unexpected NOT VALID constraint")
+    require(known == [FK_METADATA], "Known tenant FK metadata differs or is missing")
+
+
+async def historical_offenders(connection):
+    """Read only; retain every offending full row in a private aggregate digest."""
+    rows = list((await query(connection, """SELECT to_jsonb(a)::text FROM public.comment_actions a
+      LEFT JOIN public.comment_events e ON e.seller_id=a.seller_id AND e.id=a.event_id
+      WHERE e.id IS NULL LIMIT 1001""")).scalars())
+    require(len(rows) <= MAX_ROWS, "Historical offender inventory exceeds bounds")
+    return {"count": len(rows), "row_sha256": hashlib.sha256(
+        json.dumps(sorted(rows), separators=(",", ":")).encode()).hexdigest()}
+
+
 async def schema_fingerprint(connection):
     """Fingerprint restored public writer protections as well as columns/FKs.
 
@@ -322,6 +356,7 @@ async def schema_fingerprint(connection):
     by validated FK definitions rather than unstable generated object OIDs/names.
     """
     await query(connection, "SET LOCAL standard_conforming_strings = on")
+    await query(connection, "SET LOCAL search_path = pg_catalog, public")
     catalog = {
         "columns": """SELECT table_name,column_name,data_type,udt_name,is_nullable,column_default
           FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position""",
@@ -351,7 +386,20 @@ async def schema_fingerprint(connection):
           FROM pg_sequences WHERE schemaname='public' ORDER BY sequencename""",
     }
     inventory = {name: list(map(list, (await query(connection, sql)).all())) for name, sql in catalog.items()}
-    require(all(row[3] for row in inventory["constraints"]), "Unvalidated restored constraints are forbidden")
+    metadata = list((await query(connection, """SELECT n.nspname,c.relname,k.conname,k.contype,
+      rn.nspname,rc.relname,
+      ARRAY(SELECT a.attname::text FROM unnest(k.conkey) WITH ORDINALITY x(attnum,ord)
+            JOIN pg_attribute a ON a.attrelid=k.conrelid AND a.attnum=x.attnum ORDER BY x.ord),
+      ARRAY(SELECT a.attname::text FROM unnest(k.confkey) WITH ORDINALITY x(attnum,ord)
+            JOIN pg_attribute a ON a.attrelid=k.confrelid AND a.attnum=x.attnum ORDER BY x.ord),
+      k.confupdtype,k.confdeltype,k.confmatchtype,k.condeferrable,k.condeferred,k.convalidated,
+      pg_get_constraintdef(k.oid)
+      FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid
+      JOIN pg_namespace n ON n.oid=c.relnamespace
+      LEFT JOIN pg_class rc ON rc.oid=k.confrelid LEFT JOIN pg_namespace rn ON rn.oid=rc.relnamespace
+      WHERE n.nspname='public' ORDER BY c.relname,k.conname""")).all())
+    validate_constraint_metadata(metadata)
+    inventory["constraint_metadata"] = list(map(list, metadata))
     for row in inventory["constraints"]:
         row[2] = canonical_constraint(row[2])
     inventory["sequence_state"] = []
@@ -381,6 +429,9 @@ async def snapshot(connection):
         digest = hashlib.sha256(json.dumps(sorted(rows), separators=(",", ":")).encode()).hexdigest()
         result[name] = {"count": len(rows), "row_sha256": digest}
     schema_digest = await schema_fingerprint(connection)
+    from v1_release_synthetic import semantic_state
+    semantics = await semantic_state(connection)
+    offenders = await historical_offenders(connection)
     totals = (await query(connection, """SELECT count(*),coalesce(sum(total),0),
       coalesce(sum(total) FILTER (WHERE payment_status='paid'),0),
       coalesce(sum(total) FILTER (WHERE payment_status='collected'),0),
@@ -397,18 +448,21 @@ async def snapshot(connection):
     """)).scalar_one()
     require(integrity == 0, "Monetary/reservation integrity reconciliation failed")
     return {"head": versions[0], "tables": result, "schema_sha256": schema_digest,
+            "semantics": semantics, "historical_offenders": offenders,
             "totals": dict(zip(("orders", "placed_total_minor", "paid_total_minor", "cod_collected_minor",
                                 "reservations", "reserved_quantity", "unknown_payments", "open_actions", "available_stock"), map(int, totals)))}
 
 
 async def run(args, env):
+    from v1_release_synthetic import seed, newer_order, validate_fixture, fixture_0056, probe_comment_fk, FIXTURE_SHA256
+    repo_head()
+    fixture_0056()  # before tools, engines, private files or DB effects
     source, target = targets(args.source_lane, args.target_lane, env)
     ownership(args.attestation, source, target)
     archive_location(args.archive_dir)
     tools = await owned_call(pg_tools, args.pg_bin, {"PATH": env.get("PATH", os.defpath), "LANG": "C"})
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy.pool import NullPool
-    from v1_release_synthetic import seed, newer_order, validate_fixture
     _, acquire_lease = p01()
     engines = [create_async_engine(t.url, poolclass=NullPool, connect_args={"timeout": 5, "command_timeout": 120})
                for t in (source, target)]
@@ -430,6 +484,7 @@ async def run(args, env):
             await owned_call(command, [sys.executable, "-m", "tests.migrate_test_database"], migration_env)
             await seed(src)
             await src.commit()
+            source_fk_probe = await probe_comment_fk(src)
             async with src.begin():
                 await query(src, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
                 await query(src, "SET LOCAL TIME ZONE 'UTC'")
@@ -453,14 +508,17 @@ async def run(args, env):
                     await owned_call(command,
                         [tools["pg_restore"], "--no-owner", "--no-privileges", "--single-transaction", "--exit-on-error",
                          "--dbname", target.database], child_env(target, env), stdin=archive)
+                target_fk_probe = await probe_comment_fk(dst)
                 await query(dst, "SET LOCAL TIME ZONE 'UTC'")
                 restored = await snapshot(dst)
+                await validate_fixture(dst, restored)
                 require(restored == baseline, "Restored target reconciliation mismatch")
                 await dst.commit()
                 # Never mutate source or restore an older backup over newer writes.
                 await newer_order(dst)
                 await dst.commit()
                 before = await snapshot(dst)
+                await validate_fixture(dst, before, post_cutover=True)
                 await dst.commit()
                 async with dst.begin():
                     await query(dst, "SET TRANSACTION READ ONLY")
@@ -469,7 +527,9 @@ async def run(args, env):
                     require(await snapshot(dst) == before, "Persisted read-contract probe changed facts")
                 require(await snapshot(src) == baseline, "Source changed during read-only backup")
                 evidence = {"format": "munimjee.release-rehearsal.v1", "mode": "execute", "synthetic_only": True,
-                            "head": repo_head(), "restore": "passed", "reconciliation": restored,
+                            "head": repo_head(), "fixture_version": 1, "fixture_sha256": FIXTURE_SHA256,
+                            "fk_probes": {"source": source_fk_probe, "target": target_fk_probe},
+                            "restore": "passed", "reconciliation": restored,
                             "post_cutover_reconciliation": before,
                             "persisted_read_contract": "passed; generic SQL probe retains newer target-only order",
                             "application_switch": "pending_actual_old_current_application_journey",
