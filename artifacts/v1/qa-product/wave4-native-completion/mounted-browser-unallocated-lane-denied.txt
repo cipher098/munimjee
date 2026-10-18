@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/user/Documents/ChatGPT/munimjee-wave4-qa/backend/tests/run_wave4_native_browser.py", line 37, in <module>
+    asyncio.run(main())
+  File "/Users/user/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/user/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/user/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/user/Documents/ChatGPT/munimjee-wave4-qa/backend/tests/run_wave4_native_browser.py", line 16, in main
+    async with migrated_database():  # Validates exact assigned P01 URL and holds its lease.
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/user/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/user/Documents/ChatGPT/munimjee-wave4-qa/backend/tests/isolated_database.py", line 51, in migrated_database
+    target = validate_test_database(os.environ)  # Before engine or connection.
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/user/Documents/ChatGPT/munimjee-wave4-qa/backend/tests/safety.py", line 47, in validate_test_database
+    raise TestSafetyError("Destructive tests require explicit TEST_DB_RESET=1")
+tests.safety.TestSafetyError: Destructive tests require explicit TEST_DB_RESET=1

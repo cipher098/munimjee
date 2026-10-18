@@ -1,0 +1,80 @@
+{
+  "mode": "actual-source-dom-with-synthetic-http-no-database",
+  "source": "/Users/user/Documents/ChatGPT/munimjee-wave4-qa",
+  "source_head": "9252188569a92c115b10ecfffb6512430936b606",
+  "source_worktree_ui_status": "",
+  "source_hashes": {
+    "import_workspace.html": "3c87e8f495165fa6b61da7f303e5747d25141c049c22fa36e242853c38187cb4",
+    "import_workspace.js": "705e899201add6bacba473b3090456185b9930c922dae951634af3ffe205ae8a",
+    "import_workspace.css": "0d12dcab961c09ae3ff1115ca831f3fb967a60aedf7259fde08db5459513b0ca",
+    "v1_client.js": "09672e97fc95e0d836af11d5bd601e853fc64192d1acb35ed2fc9f8d60bcea3a",
+    "commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd"
+  },
+  "source_unchanged_during_run": true,
+  "runner_sha256": "9bff224f7fb19a0ac3aa5be024f6bdf0d2906f206f06e692913b816b71b43485",
+  "browser_version": "153.0.8010.12",
+  "physical_device": false,
+  "checks_passed": 13,
+  "checks_failed": 1,
+  "results": [
+    {
+      "name": "four combos require explicit quantities including zero and confirm all five facts",
+      "result": "passed"
+    },
+    {
+      "name": "unknown stock preview blocks allocation without replacing null with zero",
+      "result": "passed"
+    },
+    {
+      "name": "disabled server flag remains explicit and never offers a draft command",
+      "result": "passed"
+    },
+    {
+      "name": "unsaved factual edit clears confirmations and cannot create from stale saved facts",
+      "result": "passed"
+    },
+    {
+      "name": "rapid synthetic submits persist one command and send once",
+      "result": "passed"
+    },
+    {
+      "name": "lost receipt reload never auto-replays and retry sends exact original allocation/key",
+      "result": "passed"
+    },
+    {
+      "name": "malformed cross-candidate receipt retains durable command for exact retry",
+      "result": "passed"
+    },
+    {
+      "name": "late preview from a previous selected candidate cannot replace the current allocation",
+      "result": "passed"
+    },
+    {
+      "name": "old-session preview cannot repopulate private facts after focus identity cleanup",
+      "result": "passed"
+    },
+    {
+      "name": "corrupt storage blocks new allocation commands",
+      "result": "passed"
+    },
+    {
+      "name": "storage failure sends no command",
+      "result": "passed"
+    },
+    {
+      "name": "mobile keyboard allocation completes with inactive private receipt",
+      "result": "passed"
+    },
+    {
+      "name": "read-only capability removes allocation write authority",
+      "result": "passed"
+    },
+    {
+      "name": "identity loss during command digest cannot persist or display an old private command",
+      "result": "failed",
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": []
+}

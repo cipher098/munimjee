@@ -1,0 +1,81 @@
+{
+  "date_utc": "2026-10-18T05:52:00.243022+00:00",
+  "reviewed_composition": "79ea6480b0887d9c31a7f7d81b33ced1a649f5dc",
+  "tested_qa_merge": "af71097c3d25903c527136e4a8d366f570751dc7",
+  "application_source_worktree_status": "",
+  "focused_python": {
+    "passed": 67,
+    "skipped": 86,
+    "failed": 0,
+    "skip_reason": "all86 require unprovisioned guarded P01 database lane"
+  },
+  "new_independent_python": {
+    "passed": 2,
+    "database_skipped": 28,
+    "failed": 0
+  },
+  "browser_synthetic_http": {
+    "allocation_checks": 14,
+    "private_theme_checks": 6,
+    "public_provider_http_sdk_checks": 13,
+    "failed": 0,
+    "database_claim": false,
+    "real_provider_claim": false,
+    "physical_device": false
+  },
+  "actual_mounted_browser": {
+    "status": "prepared_not_run",
+    "unallocated_lane_guard": "verified_denied_before_connection_or_server",
+    "port": 4322
+  },
+  "source_hashes": {
+    "backend/app/main.py": "f361a54a9ec3fb5b8275dff4339229882854745dca60bb846c90d483cd4f858a",
+    "backend/app/api/v1/import_catalogue.py": "0961d7048148063ed347e6cec68cd9ad7c4d8dcf66e62cd349470bc0b2eeb29a",
+    "backend/app/api/v1/theme_settings.py": "bc4847c28a109ccdbaa00cd8ce1b7bf85752b767dbee31f79e9cc91c975632c7",
+    "backend/app/api/v1/session.py": "baa9f2bd3bea2c82e7b73bcb094de99d134d0f0671a3bcb45ccd9c31abab9163",
+    "backend/app/services/import_catalogue.py": "d110599d46fc46696e5c9a11a051f72525c0f820c5a809d4c208a5737bec7e7e",
+    "backend/app/services/storefront_publication.py": "2ac040b0b2a1c2ca2a0af455d17681768f10769b93dee2f7e966c6950c059b22",
+    "backend/app/services/storefront_theme_v1.py": "a516e96e0e684e6d66b3261e39cf68c802f5eec91a439bed6075adccb442e34f",
+    "backend/app/v1/storefront/rendering.py": "a221cd88b218003a4ff52a65626498fe3304d8c0da33a34d3abf13adba12bab2",
+    "backend/app/v1/storefront/design.py": "81da34f4e5d055f1e4a18bfd2e5d343bec0c1bd7a8c607e2f45ea972d4005a9f",
+    "backend/static/import_workspace.js": "40599f1d972ddde9dac62daf7bd924be52bbd748d11938c9f8c40d3ee23902cf",
+    "backend/static/import_workspace.html": "a50c1c77edb1f18eac12d2588e0a4a0ed3574a79e85ba84aad8bc96d88be3710",
+    "backend/static/import_workspace.css": "a2bb7903fb511a3e890070593541356bb21ca5567a74de9a3b549f8de1f1f689",
+    "backend/static/theme_settings.js": "367f441e505eab792ba3a08fa65f924e6b8ecbaed57fe0ed3712c52bc48e34ea",
+    "backend/static/v1_client.js": "09672e97fc95e0d836af11d5bd601e853fc64192d1acb35ed2fc9f8d60bcea3a",
+    "backend/alembic/versions/0049_v1_storefront_settings.py": "1d1fd498249ac0f6cda3ed21a090f353ea629613402e6aa53174dfa3b0099adf",
+    "docs/contracts/import-catalogue/ImportCatalogueWrite.schema.json": "ebbbafc55415bb4bb7ed8b5926fc458c29304609fc0591c61e85869e0882c9ca"
+  },
+  "payment_module_compatibility": [
+    {
+      "path": "frontend/storefront/src/payment-handoff.js",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "38781c23bb9018d8722a12b92da97c0651ed8d80f390eb17d9d148d29362628d"
+    },
+    {
+      "path": "frontend/storefront/src/checkout-attempt.js",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "9328c46471f992576c19d83221ae41cb851198dacc78070a1dd019701e853859"
+    },
+    {
+      "path": "frontend/storefront/src/order-status.js",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "bffdf78ef2cd03254d4c059c102e5f83ee5f8db680856f98165be5908517d49c"
+    },
+    {
+      "path": "frontend/storefront/src/canonical-contract.js",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "aa771ebfaa9ea6677be2673ee17643c81960e4f4c9fa52f064a7e53ec885a84b"
+    },
+    {
+      "path": "backend/app/services/checkout_sessions.py",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "948923d9d22ddaf9ca3f474eb6b1ceed7ae1008bc7cbaf48de4a439ad9dda383"
+    },
+    {
+      "path": "backend/app/api/v1/checkout_sessions.py",
+      "unchanged_from_a2ea26d": true,
+      "sha256": "975aa39f748cb1b495307d961fa6ec47ca89a7f2e274f9b7d1a9c73f8b5f3c12"
+    }
+  ]
+}
