@@ -1,0 +1,63 @@
+{
+  "format": "munimjee.reel-operator-source-only.v1",
+  "base": "6ff11c3d073c5617e18cc439e04809db6dd760ad",
+  "source_commit": "00f4e93935659c8a059adc4812949eaaadf9cbe4",
+  "contract_initial_sha256": "7f13ea36e39c75e82f66165a6603eca6686fcfe24323c731f45fa90e6335686e",
+  "contract_clarification_commit": "24f746f21247fca5a716018d8858241721b3990e",
+  "contract_clarification_sha256": "f0e3986b92a2a790b5e70e790c4d6dcc55c0c6a1372b513c12b9af01c9a9c46c",
+  "source_sha256": {
+    "backend/app/api/v1/whatsapp_reel_operator.py": "ee0c55174d2c9eaa40a06b0fd208a8936440e6ce4e3828c8cfd1d9b315e15dfb",
+    "backend/app/schemas/whatsapp_reel_operator.py": "6ec0fcea5ba4277b73599d5f930e9dbea10ef69e7602e1de81879c8425daf35b",
+    "backend/app/services/whatsapp_reel_operator.py": "0013bfe71694348cb753f8fa993c25e95f56c85665afa28677ff304b70914814",
+    "backend/app/models/whatsapp_reel_operator.py": "b8c4169afe6412aee75dbcf3d901ba40c04078cca08024c184ebac028d884e86",
+    "backend/alembic/versions/0058_v1_reel_operator.py": "2d6a859009e5747799875cedc16c36e899b8160cffd763a97aac1a89aa512c0f"
+  },
+  "in_memory_compile": {
+    "passed": 5,
+    "application_imports": false,
+    "bytecode_written": false
+  },
+  "migration": {
+    "revision": "0058_v1_reel_operator",
+    "down_revision": "0057_v1_whatsapp_self_service"
+  },
+  "existing_application_schema_tests_unchanged": true,
+  "registry_sender_main_install": "Integrator owned; not performed in this lane",
+  "tests": "QA owned; no tests or DB/browser/provider executed here",
+  "actual_migration": "UNRUN",
+  "actual_native_session_csrf": "UNRUN",
+  "actual_worker_dispatch": "UNRUN",
+  "limits": [
+    "Source and in-memory compilation only; SQL/trigger/driver behavior not certified",
+    "No DB allocation/server/browser/provider/credential/model/send/container/install/tool-capacity execution",
+    "No production/current Meta grants/window/permissions/delivery/device acceptance",
+    "Actual0057 base is approved source-only dependency, not final0057 acceptance"
+  ],
+  "source_review_followups": [
+    "a2d4109: quoted NULL proof, action/result/deferred completion, fresh control/mapping checks",
+    "9f7a2e8: approved unconditional final guard and current native flags",
+    "aba5c14: private recipient and reviewed product-label binding",
+    "86ba2ef: post-queue accepted-label changes hold",
+    "00f4e93: exact source/ref/selected-product reply-context insertion proof"
+  ],
+  "integrator_final_install_contract": "Unconditionally await revalidate_resume immediately before provider.send; no later await. Native-unbound branch preserves incumbent exact_test_authority as own last await.",
+  "exported_async_service_interfaces": {
+    "read_enquiry": {
+      "line": 175,
+      "arguments": "db, actor, business_id, inbound_id"
+    },
+    "list_enquiries": {
+      "line": 182,
+      "arguments": "db, actor, business_id, *, cursor=None, limit=20"
+    },
+    "link_enquiry": {
+      "line": 213,
+      "arguments": "db, actor, business_id, inbound_id, command, *, request_authority"
+    },
+    "revalidate_resume": {
+      "line": 384,
+      "arguments": "db, account, contact, message"
+    }
+  },
+  "proof_boundary": "Static/in-memory compile and git byte-scope only. Not a DB/SQL/trigger/native-session/provider/worker execution or acceptance test."
+}
