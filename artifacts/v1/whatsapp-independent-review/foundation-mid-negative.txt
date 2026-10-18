@@ -1,0 +1,15 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_reserved_secret_in_provider_mid_never_reaches_any_retained_message_scalar _
+backend/tests/test_v1_whatsapp_independent.py:34: in test_reserved_secret_in_provider_mid_never_reaches_any_retained_message_scalar
+    assert retained_reserved_metadata is False
+E   assert True is False
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_whatsapp_independent.py::test_reserved_secret_in_provider_mid_never_reaches_any_retained_message_scalar
+1 failed, 1 warning in 0.33s
