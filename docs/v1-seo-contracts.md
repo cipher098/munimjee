@@ -72,6 +72,14 @@ follows the [Sitemaps protocol location rule](https://www.sitemaps.org/protocol.
 Every generated location remains below the sitemap file's directory and shorter
 than 2,048 characters; no deployment or crawler submission is authorized here.
 
+The additive `install_seo_request_fence(app, *, canonical_base,
+legacy_redirects=())` helper must accompany direct router installation, as it does
+in storefront bootstrap. It rejects only declared SEO/legacy raw-path aliases
+before Starlette's automatic slash redirects can reflect a request authority.
+It must not mask existing routes, change global slash policy or add a catchall.
+Startup collision validation includes the final routing table and the aliases
+owned by that fence, not only the first installation snapshot.
+
 ## Verification and handoff
 
 Reuse P01 exact numeric-loopback lane validation, matching test database name,
