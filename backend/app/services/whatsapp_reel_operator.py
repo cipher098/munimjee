@@ -359,7 +359,8 @@ AND account.enabled AND account.automation_enabled AND account.reel_replies_enab
 AND encode(sha256(convert_to(account.access_token,'UTF8')),'hex')=c.credential_fingerprint
 AND encode(sha256(convert_to(contact.phone,'UTF8')),'hex')=c.recipient_fingerprint
 AND NOT contact.opted_out AND contact.last_inbound_at>clock_timestamp()-interval '24 hours' AND contact.last_inbound_at<=clock_timestamp()
-AND product.active AND product.name=:product_name AND store.published AND mapping.state='reviewed'
+AND product.active AND product.name=:product_name
+AND product.name=c.reply_context->'references'->0->'products'->0->>'name' AND store.published AND mapping.state='reviewed'
 AND mapping.revision=:mapping_revision AND mapping.revision>=activation.reviewed_revision
 AND encode(sha256(convert_to(coalesce(product.reel_urls,'[]'::jsonb)::text,'UTF8')),'hex')=c.accepted_mapping_fingerprint
 AND (SELECT count(*) FROM products candidate WHERE candidate.seller_id=auth.business_id AND candidate.active
