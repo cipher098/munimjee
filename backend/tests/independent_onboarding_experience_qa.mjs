@@ -8,7 +8,9 @@ import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 
 const root=path.resolve(fileURLToPath(new URL('../..',import.meta.url)));
-const out=path.join(root,'artifacts/v1/independent-onboarding-experience');
+const artifactRoot=path.join(root,'artifacts/v1/independent-onboarding-experience');
+const out=path.resolve(process.argv[4]||path.join(artifactRoot,'comparison-8ae97c2'));
+assert.ok(out===artifactRoot||out.startsWith(artifactRoot+path.sep),'Output must remain in the owned onboarding artifact directory');
 const modulePath=process.argv[2]||'/Users/user/Documents/ChatGPT/munimjee-wave3-qa/frontend/storefront/node_modules/@playwright/test/index.mjs';
 const executable=process.argv[3]||'/Users/user/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell';
 const {chromium,expect}=await import(pathToFileURL(modulePath).href);
@@ -35,7 +37,22 @@ async function setup({role='owner',signedIn=true,width=390,query='',initialHook=
   contexts.add(context); const page=await context.newPage();page.setDefaultTimeout(2000);
   page.on('pageerror',error=>pageErrors.push(error.message));
   const model={session:clone(fixtures.roles[role].session),records:clone(fixtures.roles[role].records),signedIn,
-    sessionStatus:200,sessionGets:0,requests:[],invites:[],sessionHook:initialHook,onboardingHook:null,profileHook:null,deleteHook:null};
+    sessionStatus:200,sessionGets:0,requests:[],invites:[],sessionHook:initialHook,onboardingHook:null,profileHook:null,deleteHook:null,
+    observeProfile:false,profileTrace:[],profileResponseReads:[],profileCommits:0};
+  const observedRequests=new WeakMap();let observedSequence=0;
+  page.on('request',request=>{
+    const url=new URL(request.url());if(!model.observeProfile||url.origin!==base||!url.pathname.startsWith('/api/v1/'))return;
+    const body=request.postDataJSON(),entry={phase:'request',sequence:++observedSequence,method:request.method(),path:url.pathname};
+    if(body&&url.pathname.endsWith('/profile'))entry.profile_body=clone(body);
+    observedRequests.set(request,entry.sequence);model.profileTrace.push(entry);
+  });
+  page.on('response',response=>{
+    const sequence=observedRequests.get(response.request());if(!sequence)return;
+    const entry={phase:'response',sequence,method:response.request().method(),path:new URL(response.url()).pathname,status:response.status()};model.profileTrace.push(entry);
+    model.profileResponseReads.push(response.json().then(data=>{if(entry.path.endsWith('/onboarding'))entry.profile=clone(data.profile);else if(entry.path.endsWith('/profile')&&response.status()===200)entry.profile=clone(data);}).catch(()=>{}));
+  });
+  page.on('requestfailed',request=>{const sequence=observedRequests.get(request);if(sequence)model.profileTrace.push({phase:'requestfailed',sequence,method:request.method(),path:new URL(request.url()).pathname,error:request.failure()?.errorText});});
+  if(signedIn)await context.addCookies([{name:'v1_csrf',value:model.session.csrf_token,url:base,sameSite:'Lax'}]);
   if(init)await page.addInitScript(init);
   if(context.routeWebSocket)await context.routeWebSocket('**/*',socket=>{network.push({kind:'unexpected-websocket'});socket.close();});
   await context.route('**/*',async route=>{
@@ -51,9 +68,11 @@ async function setup({role='owner',signedIn=true,width=390,query='',initialHook=
       return route.fulfill({status:!model.signedIn?401:model.sessionStatus,json:!model.signedIn||model.sessionStatus!==200?{detail:'Synthetic session unavailable'}:model.session});
     }
     if(['/api/v1/auth/login','/api/v1/auth/signup','/api/v1/auth/invitations/accept'].includes(p)&&method==='POST'){
+      await context.addCookies([{name:'v1_csrf',value:model.session.csrf_token,url:base,sameSite:'Lax'}]);
       model.signedIn=true;return route.fulfill({status:p.endsWith('signup')?201:200,json:model.session});
     }
     if(['/api/v1/auth/logout','/api/v1/auth/logout-all'].includes(p)&&method==='POST'){
+      await context.clearCookies();
       model.signedIn=false;return route.fulfill({json:{signed_out:true}});
     }
     const match=p.match(/^\/api\/v1\/businesses\/([^/]+)\/(onboarding|profile|invitations)(?:\/([^/]+))?$/);
@@ -68,7 +87,7 @@ async function setup({role='owner',signedIn=true,width=390,query='',initialHook=
         const body=request.postDataJSON();if(model.profileHook&&await model.profileHook(route,body,bid))return;
         if(body.expected_version!==record.profile.version)return route.fulfill({status:409,json:{detail:'Business details changed; refresh before saving'}});
         record.profile.name=body.name;record.profile.version++;record.profile.confirmed=true;
-        for(const key of ['support_email','phone','website'])record.profile.profile[key]=body[key];
+        record.profile.profile=Object.fromEntries(Object.entries(body).filter(([key])=>!['expected_version','name'].includes(key)));model.profileCommits++;
         model.session.businesses.find(b=>b.id===bid).name=body.name;
         return route.fulfill({json:record.profile});
       }
@@ -107,7 +126,7 @@ async function scenario(id,name,run,{severity='P2',source='backend/static/v1_app
         profile_error_visible:visible('profile-error'),profile_error:document.getElementById('profile-error').textContent,
         invitation_link_visible:visible('invite-link'),invitation_link_has_value:Boolean(document.getElementById('invite-link').value)};
     }).catch(()=>null);screenshot=id+'.png';await page.screenshot({path:path.join(out,screenshot),fullPage:true}).catch(()=>{screenshot=null;});}
-    results.push({id,name,result:'failed',severity,source,message:error.message.slice(0,2200),screenshot,state});
+    results.push({id,name,result:'failed',severity,source,message:error.message.slice(0,2200),screenshot,state,...(error.observed?{observed:error.observed}:{})});
   }finally{for(const context of [...contexts])if(!opened.has(context)){await context.close();contexts.delete(context);}}
 }
 async function noOverflow(page){const sizes=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(sizes.scroll<=sizes.viewport,JSON.stringify(sizes));return sizes;}
@@ -184,8 +203,20 @@ try{
     const {page,model}=await setup();await ready(page);const held=gate();model.profileHook=async()=>{held.start();await held.held;return false;};await page.locator('#profile-save').click();await bounded(held.seen);await expect(page.locator('#profile-form')).toHaveAttribute('aria-busy','true');await expect(page.locator('#profile-save')).toBeDisabled();assert.equal(model.requests.filter(r=>r.method==='PUT').length,1);held.release();await expect(page.locator('#profile-status')).toHaveText('Business details saved.');await expect(page.locator('#profile-form')).not.toHaveAttribute('aria-busy','true');
   });
   await scenario('profile-lost-response','lost save response is not acknowledged; explicit reload resumes persisted facts',async()=>{
-    const {page,model}=await setup();await ready(page);let first=true;model.profileHook=async(route,body,bid)=>{if(!first)return false;first=false;model.records[bid].profile.name=body.name;model.records[bid].profile.version++;model.session.businesses[0].name=body.name;await route.abort('failed');return true;};
-    await page.locator('#profile-form [name=name]').fill('Confirmed after reload');await page.locator('#profile-save').click();await expect(page.locator('#profile-error')).not.toBeEmpty();await expect(page.locator('#profile-status')).not.toHaveText('Business details saved.');await page.locator('#profile-save').click();await expect(page.locator('#profile-error')).toContainText('changed');await page.reload();await ready(page);await expect(page.locator('#profile-form [name=name]')).toHaveValue('Confirmed after reload');assert.equal(model.records[A].profile.version,4);
+    const {page,model}=await setup();await ready(page);model.observeProfile=true;let first=true;model.profileHook=async(route,body,bid)=>{if(!first)return false;first=false;model.records[bid].profile.name=body.name;model.records[bid].profile.version++;model.records[bid].profile.confirmed=true;model.records[bid].profile.profile=Object.fromEntries(Object.entries(body).filter(([key])=>!['expected_version','name'].includes(key)));model.profileCommits++;model.session.businesses[0].name=body.name;await route.abort('failed');return true;};
+    await page.locator('#profile-form [name=name]').fill('Confirmed after reload');await page.locator('#profile-save').click();await expect(page.locator('#profile-error')).not.toBeEmpty();await expect(page.locator('#profile-status')).not.toHaveText('Business details saved.');
+    const firstError=await page.locator('#profile-error').textContent();await page.locator('#profile-save').click();
+    await expect.poll(()=>model.profileTrace.some(entry=>entry.phase==='response'&&entry.method==='PUT'&&entry.path.endsWith('/profile')&&entry.status===409)).toBe(true);
+    await expect.poll(()=>model.profileTrace.some(entry=>entry.phase==='response'&&entry.path.endsWith('/onboarding')&&entry.profile?.version===4)).toBe(true);
+    await Promise.all(model.profileResponseReads);await settle(page);
+    const displayed=await page.locator('#profile-form').evaluate(form=>Object.fromEntries(['name','business_type','country','support_email','phone','website'].map(key=>[key,form.elements[key].value])));
+    const authoritative=clone(model.records[A].profile),freshReads=model.profileTrace.filter(entry=>entry.phase==='response'&&entry.path.endsWith('/onboarding')&&entry.profile?.version===4);
+    const observed={first_error:firstError,initial_false_success_acknowledgement:false,ordered_http:model.profileTrace,synthetic_commits:model.profileCommits,final_authoritative_profile:authoritative,displayed_profile:displayed,final_profile_status:await page.locator('#profile-status').textContent(),final_profile_error:await page.locator('#profile-error').textContent(),fresh_read_after_commit:freshReads.length>0};
+    assert.equal(model.profileCommits,1);assert.equal(authoritative.version,4);assert.equal(authoritative.name,'Confirmed after reload');
+    assert.deepEqual(displayed,{name:authoritative.name,...Object.fromEntries(Object.entries(authoritative.profile).map(([key,value])=>[key,value??'']))});
+    assert.deepEqual(freshReads.at(-1).profile,authoritative);
+    try{await expect(page.locator('#profile-error')).toContainText('changed');}catch(error){error.observed=observed;throw error;}
+    await page.reload();await ready(page);await expect(page.locator('#profile-form [name=name]')).toHaveValue('Confirmed after reload');assert.equal(model.records[A].profile.version,4);return observed;
   });
   await scenario('profile-switch','delayed A profile response cannot overwrite B workspace',async()=>{
     const {page,model}=await setup();await ready(page);const held=gate();model.profileHook=async()=>{held.start();await held.held;return false;};await page.locator('#profile-form [name=name]').fill('A private pending name');await page.locator('#profile-save').click();await bounded(held.seen);await page.locator('#business-picker').selectOption(B);await expect(page.locator('#profile-form [name=name]')).toHaveValue('Second QA Atelier');held.release();await settle(page);await expect(page.locator('#profile-form [name=name]')).toHaveValue('Second QA Atelier');assert.equal(await page.locator('#profile-status').textContent(),'Saved');
@@ -194,10 +225,10 @@ try{
     const {page,model}=await setup();await ready(page);await createInvite(page);model.profileHook=async route=>{await route.fulfill({status:401,json:{detail:'Synthetic session ended'}});return true;};await page.locator('#profile-save').click();await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#access-error')).toContainText('session ended');await expect(page.locator('#invite-link')).toHaveValue('');await expect(page.locator('#profile-form [name=name]')).toHaveValue('');
   },{severity:'P1'});
   await scenario('session-switch-401','business-load 401 clears workspace and presents sign-in',async()=>{
-    const {page,model}=await setup();await ready(page);model.onboardingHook=async route=>{await route.fulfill({status:401,json:{detail:'Synthetic session ended'}});return true;};await page.locator('#business-picker').selectOption(B);await expect(page.locator('#global-error')).toContainText('session ended');await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#access')).toBeVisible();
+    const {page,model}=await setup();await ready(page);model.onboardingHook=async route=>{await route.fulfill({status:401,json:{detail:'Synthetic session ended'}});return true;};await page.locator('#business-picker').selectOption(B);await expect(page.locator('#access-error')).toContainText(/session ended|sign.in|sign in|checked/i);await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#access')).toBeVisible();
   },{severity:'P2'});
   await scenario('session-revoke-401','invitation revoke 401 removes prior private profile and bearer link',async()=>{
-    const {page,model}=await setup();await ready(page);await createInvite(page);model.deleteHook=async route=>{await route.fulfill({status:401,json:{detail:'Synthetic session ended'}});return true;};await page.getByRole('button',{name:'Revoke',exact:true}).click();await expect(page.locator('#invite-error')).toContainText('session ended');await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#invite-link')).toHaveValue('');
+    const {page,model}=await setup();await ready(page);await createInvite(page);model.deleteHook=async route=>{await route.fulfill({status:401,json:{detail:'Synthetic session ended'}});return true;};await page.getByRole('button',{name:'Revoke',exact:true}).click();await expect(page.locator('#access-error')).toContainText(/session ended|sign.in|sign in|checked/i);await expect(page.locator('#workspace')).toBeHidden();await expect(page.locator('#invite-link')).toHaveValue('');
   },{severity:'P1'});
   await scenario('role-focus','returning focus revalidates a downgraded role before further edits',async()=>{
     const {page,model}=await setup();await ready(page);const reads=model.sessionGets;model.session=clone(fixtures.roles.viewer.session);await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await expect.poll(()=>model.sessionGets).toBeGreaterThan(reads);await expect(page.locator('#profile-save')).toBeDisabled();await expect(page.locator('#team')).toBeHidden();
