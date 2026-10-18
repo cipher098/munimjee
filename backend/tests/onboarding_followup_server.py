@@ -14,6 +14,15 @@ from app.main import app
 from app.database import AsyncSessionLocal
 from app.models.identity import Membership
 
+from app.services import channel_connections, razorpay_payments
+provider_calls = []
+async def forbidden_provider(*args, **kwargs):
+    provider_calls.append(True)
+    raise AssertionError('Native onboarding authorizes no provider request')
+channel_connections.ig.InstagramClient.send_message = forbidden_provider
+channel_connections.whatsapp_provider.graph = forbidden_provider
+channel_connections.whatsapp_provider.send = forbidden_provider
+razorpay_payments.gateway_request = forbidden_provider
 nonce = sys.argv[1]
 assert len([r for r in app.routes if getattr(r, 'path', '') == '/api/v1/businesses/{business_id}/onboarding']) == 1
 
@@ -22,7 +31,7 @@ assert len([r for r in app.routes if getattr(r, 'path', '') == '/api/v1/business
 async def identify():
     async with AsyncSessionLocal() as db:
         revision = await db.scalar(text('SELECT version_num FROM alembic_version'))
-    return {'nonce': nonce, 'revision': revision, 'mounted': 'app.main'}
+    return {'nonce': nonce, 'revision': revision, 'mounted': 'app.main', 'provider_calls': len(provider_calls)}
 
 
 @app.post('/__onboarding/viewer')
