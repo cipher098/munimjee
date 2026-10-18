@@ -1,0 +1,60 @@
+{
+  "qa_evidence_head": "76ed5181dad9b17d92429c4175eea522630287d4",
+  "manifest_sha256": "3aeefcdc2695e8d8df3e188dc6f4c5cb3c51b466ff2b3b9e26992fe9cb49f02c",
+  "artifact_hash_checks": [
+    {
+      "path": "artifacts/v1/reel-operator-qa/node.tap",
+      "sha256": "91be3f0f4bd7c549486d5b3c6f48995ab8e19b6c3cb3f044122fc83c5ec954a8"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-qa/pure-final.log",
+      "sha256": "aee956915c7849e09b89fb4a4a9b989a24f4816042e4a8c4efaebfd81616f74b"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-qa/pure-final.xml",
+      "sha256": "ad88b3d2030cc99d3d13dd38ea6873763c1ac5c7d5c50788494f796577953f75"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-qa/pure.log",
+      "sha256": "3b02a9cb42b4ea94b624f669c3cd18b70c4e751bfe2e0fa6d6e5ab2e4ec811e7"
+    },
+    {
+      "path": "artifacts/v1/reel-operator-qa/pure.xml",
+      "sha256": "57bf6a9c32d5ada48edca9789878d44660a17efc8e3be49f5048d4095d8ad728"
+    }
+  ],
+  "all_test_manifest_hashes_match": true,
+  "all_10_source_contract_hashes_match_owners": true,
+  "preexisting_test_files_byte_identical": 243,
+  "python_xml": [
+    {
+      "file": "pure.xml",
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "file": "pure-final.xml",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "node_result": {
+    "path": "node.tap",
+    "actual_format": "Node default spec output despite .tap filename",
+    "counts": {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "execution_by_review": "none; only committed blob/hash/XML/Node-summary inspection",
+  "source_boundary": "QA executed aba5c14; later86ba2ef and00f4e93 final SQL/DDL predicates source-reviewed but not evaluated by that run",
+  "database": "20 authored only; uncollected/unexecuted",
+  "review_diagnostic": "Initial static audit expected TAP hash-prefixed summary; actual raw default Node spec uses information marker. Parser corrected; no test rerun."
+}

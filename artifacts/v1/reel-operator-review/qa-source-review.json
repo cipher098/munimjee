@@ -1,0 +1,51 @@
+{
+  "source_checkpoint": "4938321402c38a8326fa272183d92541e3a805f9",
+  "files": [
+    {
+      "path": "backend/tests/test_whatsapp_reel_operator_pure.py",
+      "sha256": "722b9f10d101b9c0455af75742853b329c4e45d94c3c4e7ef0097363da2783ec",
+      "git_blob": "1cd58b80a1f04bac5a9fdafdb74ce2b9098640a5",
+      "python_ast": "parsed statically only"
+    },
+    {
+      "path": "backend/tests/test_whatsapp_reel_operator_db.py",
+      "sha256": "0687f8b17fc935122d93c227d43246a70f321d60c4a03da7961ea97f4d459f55",
+      "git_blob": "47c709e233b24ff45cf7e261af799694c24e527c",
+      "python_ast": "parsed statically only"
+    },
+    {
+      "path": "backend/tests/whatsapp_reel_operator_contract.test.mjs",
+      "sha256": "4a6a3a3a31c9d47e7bded4742fe36b9fd92cce4066f4d02c85a4e0a8dbf493da",
+      "git_blob": "55218b0eb0636c14459f986f5e61e1bb0c520040"
+    },
+    {
+      "path": "backend/tests/whatsapp_reel_operator_lifecycle.test.mjs",
+      "sha256": "1b6168f0456a4965718f1f1c46f1dd21013028fbfc5baf88c428d89b57e5238b",
+      "git_blob": "7d61a1d8c8d2b5c9d8ff26c83f5486cf757b9038"
+    }
+  ],
+  "frozen_matrix": {
+    "pure": 18,
+    "node": 8,
+    "database_authored_only": 20,
+    "total": 46
+  },
+  "execution_by_reviewer": "none; no DB collection",
+  "assertion_review": [
+    "literal expected facts/reply and canonical request digest",
+    "actual replay receipt before source; changed binding/body denial",
+    "actual helper regenerated facts+flush/final-scalar order; scripted scalar results disclosed",
+    "two explicit control-flow dispatch adapters not installed sender",
+    "actual UI/contract under NodeVM controlled DOM/session/transport; direct injected pending intent",
+    "DB20 actual-main route and migrated schema required; no fallback/create_all",
+    "NOWAIT same-transaction SELECT1; no duplicate23505 masking; retainedORM scalar race assertions"
+  ],
+  "limits": [
+    "scripted SQL does not evaluate predicates/constraints/transactions/session authority",
+    "Node DOM is not browser/native cookie/focus/mobile/storage reload proof",
+    "DB tests uncollected and unexecuted remotely",
+    "actual ingress/sender/provider/device acceptance local/unrun"
+  ],
+  "final_test_checkpoint": "6412d989536df3c0ac70b81b9c99533064e5eb2f",
+  "followup_review": "6412d98 adds recipient non-null assertion and exact unknown/link-only wire rejection within existing cases; no changed case count or assertion weakening"
+}
