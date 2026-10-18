@@ -1,4 +1,4 @@
-"""Draft/published design and durable command receipts. DDL reserved by integrator."""
+"""Draft/published design and durable receipts; actual Alembic revision 0049."""
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
