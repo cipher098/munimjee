@@ -271,3 +271,26 @@ async def test_signed_inferred_followup_has_one_visible_enquiry_and_no_second_se
         assert contact.utility_opt_in is contact.marketing_opt_in is False
         assert await db.scalar(select(func.count()).select_from(WhatsAppMessage).where(WhatsAppMessage.direction == 'outbound')) == 1
     send.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('enabled,expected', [(False, 'rule_configuration_changed'), (True, 'configuration_unavailable')])
+async def test_native_preview_reports_current_disabled_rule_or_missing_public_origin(operator, monkeypatch, enabled, expected):
+    from app.config import settings
+    from app.models.seller import Seller
+    from app.models.commerce import Storefront
+    from app.models.channel_operator import ChannelConnectionState
+    j = operator
+    _, _, rid = await seed_event(j)
+    monkeypatch.setattr(settings, 'META_WEBHOOK_SECRET', 'synthetic-preview-signature')
+    monkeypatch.setattr(settings, 'PUBLIC_BASE_URL', 'http://127.0.0.1:8156')
+    async with j.sessions.begin() as db:
+        await db.execute(update(Seller).where(Seller.id == j.bid).values(instagram_id='100', instagram_page_id='100',
+            instagram_token='synthetic-preview-only', instagram_token_expires_at=datetime.now(timezone.utc) + timedelta(hours=1)))
+        db.add(ChannelConnectionState(business_id=j.bid, channel='instagram', version=1, provider_account_id='100',
+            automation_enabled=True, check_status='verified', checked_at=datetime.now(timezone.utc)))
+        await db.execute(update(Storefront).where(Storefront.seller_id == j.bid).values(published=True))
+        await db.execute(update(CommentRule).where(CommentRule.id == rid).values(enabled=enabled))
+    response = await j.client.post(j.base + '/preview', headers=j.csrf, json={'rule_id': str(rid), 'text': 'price?', 'media_id': '300'})
+    assert response.status_code == 200, response.text
+    assert response.json()['sends'] is False and response.json()['matches'] is True and response.json()['withheld_reason'] == expected
