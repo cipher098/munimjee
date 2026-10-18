@@ -91,6 +91,9 @@ DDL = (
  AND quote.seller_id=src.seller_id AND quote.contact_id=src.contact_id AND quote.phone_number_id=src.phone_number_id
  AND quote.provider_message_id=src.payload->>'reply_to_message_id'
  AND wa_reel_source_fingerprint(quote.payload,quote.text,quote.kind,quote.created_at,quote.provider_message_id,quote.contact_id,quote.phone_number_id)=NEW.quoted_fingerprint))
+ AND NEW.reply_context=jsonb_set(src.payload->'reel_context','{references}',jsonb_build_array(
+ (src.payload->'reel_context'->'references'->0) || jsonb_build_object('status','matched','products',
+ jsonb_build_array(jsonb_build_object('id',p.id::text,'name',p.name)))))
  AND p.active AND encode(sha256(convert_to(coalesce(p.reel_urls,'[]'::jsonb)::text,'UTF8')),'hex')=NEW.accepted_mapping_fingerprint
  AND NEW.created_at BETWEEN transaction_timestamp() AND clock_timestamp()) THEN
  RAISE EXCEPTION 'Exact reviewed source/account/product required' USING ERRCODE='23514'; END IF;
