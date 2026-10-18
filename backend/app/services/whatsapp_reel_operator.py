@@ -158,7 +158,8 @@ async def review_state(db,business_id,inbound_id,*,locked=None):
         account_phone=account.phone_number_id if account else None,waba=account.waba_id if account else None,
         enabled=account.enabled if account else False,automation=account.automation_enabled if account else False,
         reels=account.reel_replies_enabled if account else False,control_enabled=control_enabled,contact_last=contact.last_inbound_at,
-        opted_out=contact.opted_out,newer=newer,prior=prior,matches=ids)
+        opted_out=contact.opted_out,newer=newer,prior=prior,matches=ids,candidates=candidates,
+        recipient_fingerprint=hashlib.sha256(contact.phone.encode()).hexdigest())
     return message,account,contact,state,reason,names,candidates
 
 
@@ -263,6 +264,9 @@ async def link_enquiry(db,actor,business_id,inbound_id,command,*,request_authori
     if product is None:
         reject('product_unavailable')
     product,before_mapping=product
+    reviewed_candidates={row['id']:row['name'] for row in state['candidates']}
+    if product.id not in reviewed_candidates or reviewed_candidates[product.id]!=product.name:
+        reject('product_review_changed')
     current_matches=await facts.exact_reel_products(db,business_id,reel_url=state['source']['url'])
     await guard()
     if current_matches is None or any(identity!=product.id for identity in current_matches):
@@ -303,6 +307,7 @@ async def link_enquiry(db,actor,business_id,inbound_id,command,*,request_authori
         provider_mid=message.provider_message_id,source_classification=state['source']['classification'],source_fingerprint=state['source_fingerprint'],
         quoted_message_id=state['quoted_id'],quoted_fingerprint=state['quoted_fingerprint'],shortcode=command.shortcode,source_url=state['source']['url'],
         product_id=product.id,connection_version=state['connection_version'],credential_fingerprint=state['credential'],
+        recipient_fingerprint=state['recipient_fingerprint'],
         expected_fingerprint=command.expected_fingerprint,expected_mapping_fingerprint=before_mapping,accepted_mapping_fingerprint=accepted_mapping,
         reply_context=context,result=result,created_at=accepted_at)
     db.add(receipt); await db.flush()
@@ -352,6 +357,7 @@ AND member.is_active AND member.revoked_at IS NULL AND member.role IN ('owner','
 AND account.phone_number_id=c.phone_number_id AND account.waba_id=c.waba_id AND account.access_token<>''
 AND account.enabled AND account.automation_enabled AND account.reel_replies_enabled AND control.automation_enabled AND control.version=c.connection_version
 AND encode(sha256(convert_to(account.access_token,'UTF8')),'hex')=c.credential_fingerprint
+AND encode(sha256(convert_to(contact.phone,'UTF8')),'hex')=c.recipient_fingerprint
 AND NOT contact.opted_out AND contact.last_inbound_at>clock_timestamp()-interval '24 hours' AND contact.last_inbound_at<=clock_timestamp()
 AND product.active AND product.name=:product_name AND store.published AND mapping.state='reviewed'
 AND mapping.revision=:mapping_revision AND mapping.revision>=activation.reviewed_revision
