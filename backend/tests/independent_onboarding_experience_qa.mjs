@@ -19,6 +19,12 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const before=Object.fromEntries(files.map(file=>[file,hash(assets[file])]));
 const sourceHead=execFileSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const fixtures=JSON.parse(await readFile(path.join(out,'fixtures.json'),'utf8'));
+assert.ok(Object.keys(fixtures.source_sha256||{}).length>0,'Fixture source hashes are required');
+for(const [file,expected] of Object.entries(fixtures.source_sha256)){
+  assert.match(file,/^backend\/(?:app|tests)\/[A-Za-z0-9_/.]+\.py$/,'Unexpected fixture source path');
+  assert.ok(!file.split('/').includes('..'),'Fixture source path must stay inside the checkout');
+  assert.equal(hash(await readFile(path.join(root,file))),expected,`Stale formatter/capability fixture source: ${file}; regenerate fixtures before browser launch`);
+}
 const [A,B]=fixtures.roles.owner.session.businesses.map(b=>b.id);
 const clone=value=>structuredClone(value), results=[],contexts=new Set(),network=[],pageErrors=[];
 const browser=await chromium.launch({headless:true,executablePath:executable,args:['--disable-background-networking','--disable-component-update','--disable-sync','--no-first-run','--no-default-browser-check']});
@@ -87,7 +93,7 @@ async function ready(page){await expect(page.locator('#business-content')).toBeV
 async function settle(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
 async function bounded(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Synthetic request gate did not start within 8 seconds')),8000))]);}finally{clearTimeout(timer);}}
 function gate(){let release,started;return {held:new Promise(r=>release=r),seen:new Promise(r=>started=r),release:()=>release(),start:()=>started()};}
-async function createInvite(page){await page.locator('#invite-form [name=email]').fill('synthetic-invitee@example.invalid');await page.locator('#invite-form button').click();await expect(page.locator('#invite-result')).toBeVisible();}
+async function createInvite(page){await page.locator('#invite-form [name=email]').fill('synthetic-invitee@example.com');await page.locator('#invite-form button').click();await expect(page.locator('#invite-result')).toBeVisible();}
 async function scenario(id,name,run,{severity='P2',source='backend/static/v1_app.js'}={}){
   const opened=new Set(contexts);let observed=null;
   try{observed=await run();results.push({id,name,result:'passed',observed});}
@@ -135,7 +141,7 @@ try{
   });
   await scenario('keyboard-transition','keyboard submit moves focus into newly opened workspace',async()=>{
     const {page}=await setup({signedIn:false});await expect(page.locator('#access')).toBeVisible();
-    await page.locator('#access-form [name=business_name]').fill('Synthetic QA Atelier');await page.locator('#access-form [name=email]').fill('qa@example.invalid');await page.locator('#access-form [name=password]').fill('synthetic-password');
+    await page.locator('#access-form [name=business_name]').fill('Synthetic QA Atelier');await page.locator('#access-form [name=email]').fill('qa@example.com');await page.locator('#access-form [name=password]').fill('synthetic-password');
     await page.locator('#access-submit').focus();await page.keyboard.press('Enter');await ready(page);
     const focus=await page.evaluate(()=>({tag:document.activeElement.tagName,id:document.activeElement.id,inside:document.getElementById('workspace').contains(document.activeElement)}));
     assert.ok(focus.inside,'Focus did not enter new workspace: '+JSON.stringify(focus));return focus;
@@ -205,7 +211,7 @@ try{
     await page.locator('#profile-save').click();await expect(page.locator('#profile-error')).toHaveText(marker);
     await page.locator('#logout').click();await expect(page.locator('#access')).toBeVisible();
     model.profileHook=null;model.session.user_id='20000000-0000-4000-8000-000000000082';model.session.csrf_token='synthetic-other-identity';model.session.businesses=model.session.businesses.filter(b=>b.id===B);
-    await page.locator('#access-form [name=email]').fill('second-identity@example.invalid');await page.locator('#access-form [name=password]').fill('synthetic-password');await page.locator('#access-submit').click();await ready(page);
+    await page.locator('#access-form [name=email]').fill('second-identity@example.com');await page.locator('#access-form [name=password]').fill('synthetic-password');await page.locator('#access-submit').click();await ready(page);
     await expect(page.locator('#business-heading')).toHaveText('Second QA Atelier');
     assert.equal(await page.locator('#profile-error').textContent(),'','Prior-context error remained visible under another identity/business');
   },{severity:'P1'});
@@ -213,7 +219,7 @@ try{
     const name='<img src=x onerror="window.__injected=true">';const {page}=await setup({initialHook:async(route,m)=>{m.session.businesses[0].name=name;m.records[A].profile.name=name;return false;}});await ready(page);await expect(page.locator('#business-heading')).toHaveText(name);assert.equal(await page.locator('#business-heading img').count(),0);assert.equal(await page.evaluate(()=>window.__injected),undefined);
   });
   await scenario('logout-storage','sign-out removes native recovery commands while preserving public checkout namespace',async()=>{
-    const {page}=await setup();await ready(page);await page.evaluate(()=>{sessionStorage.setItem('munimjee.v1.import-command:synthetic','private');sessionStorage.setItem('munimjee.v1.theme-command:synthetic','private');sessionStorage.setItem('public-checkout-fixture','public');});await page.locator('#logout').click();await expect(page.locator('#access')).toBeVisible();assert.deepEqual(await page.evaluate(()=>Object.keys(sessionStorage)),['public-checkout-fixture']);
+    const {page}=await setup();await ready(page);await page.evaluate(()=>{sessionStorage.setItem('munimjee.v1.import-command:synthetic','private');sessionStorage.setItem('munimjee.v1.theme-command:synthetic','private');sessionStorage.setItem('munimjee.checkout.v1:synthetic','public');});await page.locator('#logout').click();await expect(page.locator('#access')).toBeVisible();assert.deepEqual(await page.evaluate(()=>Object.keys(sessionStorage)),['munimjee.checkout.v1:synthetic']);
   });
   await scenario('logout-focus','sign-out leaves keyboard focus in the visible sign-in context',async()=>{
     const {page}=await setup();await ready(page);await page.locator('#logout').focus();await page.keyboard.press('Enter');await expect(page.locator('#access')).toBeVisible();const focus=await page.evaluate(()=>({tag:document.activeElement.tagName,id:document.activeElement.id,inside:document.getElementById('access').contains(document.activeElement)}));assert.ok(focus.inside,'Focus did not enter sign-in context: '+JSON.stringify(focus));return focus;
@@ -221,7 +227,7 @@ try{
   const after=Object.fromEntries(await Promise.all(files.map(async file=>[file,hash(await readFile(path.join(root,'backend/static',file)))])));
   const result={mode:'actual-native-onboarding-source-and-actual-formatter-with-synthetic-http',source_head:sourceHead,
     source_hashes_before:before,source_hashes_after:after,source_unchanged:JSON.stringify(before)===JSON.stringify(after),
-    runner_sha256:hash(await readFile(fileURLToPath(import.meta.url))),fixture_sha256:hash(await readFile(path.join(out,'fixtures.json'))),
+    runner_sha256:hash(await readFile(fileURLToPath(import.meta.url))),fixture_sha256:hash(await readFile(path.join(out,'fixtures.json'))),fixture_sources_verified_before_browser:true,
     playwright_module:modulePath,chromium_executable:executable,browser_version:browser.version(),origin:base,
     server_started:false,requests_intercepted:true,unexpected_network:network,page_errors:pageErrors,
     passed:results.filter(r=>r.result==='passed').length,failed:results.filter(r=>r.result==='failed').length,results,

@@ -38,7 +38,7 @@ async def main():
             businesses, records = [], {}
             for index, bid in enumerate(IDS):
                 business = SimpleNamespace(id=bid, name=["Synthetic QA Atelier", "Second QA Atelier"][index],
-                    profile={"support_email": "qa@example.invalid", "phone": "", "website": ""},
+                    profile={"support_email": "qa@example.com", "phone": "", "website": ""},
                     profile_version=3, profile_confirmed_at=datetime(2026, 10, 18, tzinfo=timezone.utc))
                 access = BusinessAccess(business, SimpleNamespace(role=role), SimpleNamespace())
                 onboarding.require_business_access = AsyncMock(return_value=access)
