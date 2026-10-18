@@ -1,0 +1,70 @@
+{
+  "tested_source_commit": "85d93906bc0b61b2ffbd21eb55c4b33266f0035a",
+  "owned_harness_commit": "7639453",
+  "central_harness_alias": "85d9390",
+  "runtime_ownership": "No shared runtime edits; composed material repair owned remotely, d3aacd9. Own branch contains tests/docs only and does not itself contain the composed runtime.",
+  "pytest": {
+    "passed": 105,
+    "failed": 0,
+    "skipped": 0,
+    "counts_by_module": {
+      "tests.test_v08_wa_reconnect_queue": 3,
+      "tests.test_v08_semantics_acceptance": 15,
+      "tests.test_v08_context_acceptance": 6,
+      "tests.test_v08_material_reply_regression": 6,
+      "tests.test_sku_fact_replies": 21,
+      "tests.test_sku_fact_replies_db": 54
+    },
+    "actual_migrated_db_cases": 57,
+    "projection_or_pure_cases": 48,
+    "stable_source_files": 512
+  },
+  "mounted": {
+    "passed": 5,
+    "stable_all_tracked_files": 1823,
+    "browser_errors": 0,
+    "external_requests": 0,
+    "historical_artifacts_restored": true,
+    "stale_printed_revision": "0052",
+    "actual_queried_revision": "0056_v1_comment_operator"
+  },
+  "first_attempt": {
+    "passed_before_interrupt": 58,
+    "fixture_errors": 2,
+    "runner_exit_code": 2,
+    "teardown_interrupt_warnings_preserved": true
+  },
+  "provider_scope": "Synthetic method attempts expected. Own three actual cases: paused send0; explicit owner enable/current facts send1; material handoff send1. Existing regressions also exercise synthetic IG/WA success/unknown. No aggregate fake-calls=0 claim; no live provider sends.",
+  "observation": "Native reconnect leaves Control.automation_enabled=True while Account.enabled=False and Account.automation_enabled=False. Effective pause/zero dispatch is verified; metadata inconsistency is not treated as provider send authority.",
+  "released": {
+    "database": "parcel_w6",
+    "port": 8156,
+    "remaining_database_sessions_at_final_check": 0,
+    "remaining_listener": 0
+  },
+  "sha256": {
+    "prepared-collection.txt": "69dfd68f0ad7099eb59fab6f9d3b5dc3c4274469ea8d3aa45c4241ceedcb2454",
+    "prepared-three-collection.txt": "3097f8eb622b2d45e1dfc8457cfd75d232a2f090a8e565c91fa269238a08e3c2",
+    "actual-final/source-before.json": "07267d9cc68d8f53e5dc5d0246c025377f8c781df07faa07129b145d3c838d74",
+    "actual-final/source-after.json": "07267d9cc68d8f53e5dc5d0246c025377f8c781df07faa07129b145d3c838d74",
+    "actual-final/pytest.txt": "3f1bf65f912ecd64303e425078a79f33aac3494f84575d32762ca7bd0bcaf51b",
+    "actual-final/database.json": "397ef5345000dcf14b728f0e84a0c75f3794f583678ae0c647d2aca1376ee88a",
+    "actual-final/pytest.xml": "ffa4e6713ab1cb20a8a9da16a0e31fa4e5086141a6d2eb6dcc247a6f6b34e990",
+    "actual-final/run.json": "688831973cc2d760fe398033923b1ca25b94c6fa7505883ba4fbd2743bbd630a",
+    "mounted-final/capture-attribution.json": "297d6ea96cb959e119aa2fff38c7223a33369deb1bd9eb3c77da019af28f07a5",
+    "mounted-final/source-before.json": "1d12e6c9f740ab45591c3871e9a70dfae8e14fae3b62adb6acd2caa78fda1e4b",
+    "mounted-final/mobile-untracked-inventory.png": "c11dc546b2dbe253c4abe1a74dcca0cb9cd2419d75ec7c7e972cd0f8a2424610",
+    "mounted-final/source-after.json": "1d12e6c9f740ab45591c3871e9a70dfae8e14fae3b62adb6acd2caa78fda1e4b",
+    "mounted-final/browser.txt": "f57814783d4443738d278f149c5e2d3429d142540c8791d56dcc8bbb57c63c41",
+    "mounted-final/database.json": "397ef5345000dcf14b728f0e84a0c75f3794f583678ae0c647d2aca1376ee88a",
+    "mounted-final/browser-results.json": "bde7f633d105512834ee1bdda6f376e7404bd95754e1e69a5c716c0ddfc91ee6",
+    "mounted-final/desktop-current-inventory.png": "594feacbeda17779359ca128bfbaf8896f9005f14d8e72f1b8574b1554b1ff69",
+    "mounted-final/run.json": "c330cd12bbb7f59850f477bc34251db66f5ab2eacf99b0761d8955776bac947b",
+    "actual-first/source-before.json": "50d0c7ead3ef4b29dd6b3c8ec3cb954927abc6590794844daa34cbb345cf0357",
+    "actual-first/source-after.json": "50d0c7ead3ef4b29dd6b3c8ec3cb954927abc6590794844daa34cbb345cf0357",
+    "actual-first/pytest.txt": "dfd59bc94de02ac08996040c861a5ef279ba3057d9a4d75bdd04ea02c06af8b5",
+    "actual-first/pytest.xml": "1f92f9e5691ae11c818a00cc6b5b16a01487a4b4b24411ce12cf48c694031200",
+    "actual-first/run.json": "1262fe9d7cb837d84ed790fb1e429d6eec0903cf73c29d8401e900d45a1fd491"
+  },
+  "raw_jwt_pattern_matches": 0
+}
