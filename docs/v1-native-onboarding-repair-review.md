@@ -100,3 +100,40 @@ hashes, review all 32 existing assertions plus bounded retry/focus additions,
 independently inspect exact screenshots and verify shared-page style isolation.
 Actual mounted/migrated sessions, physical phones, assistive technology and full V1
 acceptance remain separate gates. Local eeb94a1/0056 is context, not this source.
+
+## Committed runtime source review after transfer
+
+Root explicitly confirmed the two-file ownership transfer before runtime writes.
+Implementation original `c85e480` plus one-line label followup
+`8e62ea770729d04bc0982aadf64dadae41973cb9` were reviewed via read-only Git
+objects. This reviewer did not apply a patch or modify product/test source. No
+third file was needed and no static blocker was found in the committed scope.
+
+Only `v1_app.js` and `v1_app.css` differ from `8ae97c2`. All twelve protected
+helper bodies (including endWorkspace, applyAuthority, checkedSession, pathAccess,
+api, access, busy, loadBusiness, workspace and recheck) remain byte-identical.
+Existing CSS bytes are unchanged; all six appended rules require
+`body.native-onboarding-page`. Native JS alone adds that marker. Shared parcel/
+customer HTML and JS, global commerce CSS, native HTML and shared client are
+byte-identical to base. Exact hashes are in `committed-source-review.json`.
+
+A concrete pre-commit review finding was resolved: `api()` returns a confirmed
+logout response before its usual post-response generation check. The explicit
+logout handler now captures generation before awaiting, rejects changed generation
+before terminal cleanup, then invokes focus only for the current resulting sign-in
+view. This is a narrow UI cleanup/focus fence, not an auth-policy change or proof
+about real Set-Cookie races. Independent QA should keep the mock-callback limit.
+
+New focus calls occur only after explicit access-form completion and confirmed
+logout. The helper checks current generation/businessLoad, current visible view,
+visible/focused document and whether focus already lies in that view. Programmatic
+headings receive tabindex=-1; passive helpers acquire no new focus calls. The
+manual reload button preserves the announced error and uses only location.reload.
+Its final label, “Reload and try again”, also preserves the original recovery
+assertion without editing that assertion. CSS preserves 3px outline/offset, scopes
+dark green to the native page, wraps literal business headings and permits flex/
+picker shrinking without an overflow-hiding substitute.
+
+Exact-source browser and visual acceptance remains pending independent QA. Static
+review alone does not establish all 32 cases, contrast, focus timing or shared-page
+computed-style behavior.
