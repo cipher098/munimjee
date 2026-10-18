@@ -1,0 +1,44 @@
+{
+  "runtime_source": "1e2bdbc97db1d3de45de4ebaea889ed58d9b65dd",
+  "backend_test_source": "f3c9440c39249c4a1f5ea43f7c38666e4c13ed67",
+  "final_ui_harness_source": "31cb5beb8d5e0e7333f157b39fccbf65e9a6652a",
+  "backend": {
+    "passed": 241,
+    "skipped": 1,
+    "failed": 0,
+    "seconds": 173.61,
+    "skip": "real Redis requires coordinator-allocated URL"
+  },
+  "browser": {
+    "passed": 8,
+    "provider_calls": 0,
+    "source_states": "synthetic canonical fixtures",
+    "actual_native_api_pg": true,
+    "source_unchanged": true
+  },
+  "independent_review": "Social source and final desktop/mobile copy/render SHIP; no independent execution",
+  "files": {
+    "backend-first-source.json": "ad1070d99c04e818c6b6a918d45f041c61cbe3b8980ee26fc930e4bee17baa9b",
+    "backend-first.txt": "947a4e759d8d22e5887bc94ed62a942122e19a7ca54f0fee4ba28abe24333999",
+    "backend-first.xml": "33cbbf2558abcac1fb8994210c76fe1197d71e4306fdad17e607fe3f1decb738",
+    "backend-focused-source.json": "564fe0feedaaa967d93355a31b5fa586410c0cbfed0f68cc2a5d9a533d0efc5a",
+    "backend-focused.txt": "e5056c8da3b602fd681836ba60289cd7f97ac921d20e57993ce39f7ed583dd17",
+    "backend-focused.xml": "f3354acba52ed9a22dca79b97b98a601bb7977c7946960e5dfc427cfdde1780a",
+    "browser-final-source.json": "d453076e8abc9fee467f53512167e0995ce405bcc0ef6956bdea039ecfed5f7d",
+    "browser-final.txt": "38712360d32fc0a8a4370c537d09ec1087959c0d14bd5037b2a4fd994d5dcd5c",
+    "browser-first-render/browser-results.json": "7dc3621c8b28002d92cfd103887c2e55aaf7b3665e4896c023d8f809934ca138",
+    "browser-first-render/desktop-partial.png": "735854faf3d30f11901a4e321e7d5eaca4d2bacf4bd549fa5fc58e879d28a1c6",
+    "browser-first-render/mobile-partial.png": "e37bd839889664bb71f67bc2f5b9df42fc131e85c00a200dc26dc7cabb7bc54c",
+    "browser-first-source.json": "564fe0feedaaa967d93355a31b5fa586410c0cbfed0f68cc2a5d9a533d0efc5a",
+    "browser-first.txt": "38712360d32fc0a8a4370c537d09ec1087959c0d14bd5037b2a4fd994d5dcd5c",
+    "browser-results.json": "7dc3621c8b28002d92cfd103887c2e55aaf7b3665e4896c023d8f809934ca138",
+    "design-detector.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "desktop-partial.png": "4799d85ff439248dfbb1288170e927fed5f8ae737db11311756c52bfd23740ba",
+    "mobile-channel-observations.png": "a0bbee353a9f70a8b453a0e6b65e1b52a6dd87cdf6cd40287f78ab152ce60c5d",
+    "mobile-partial.png": "7fe5c89c7ba6dde2bfbb9d814b24dd49caa53ada9b7d9c47aac01c2d55f74bb3",
+    "selection-error-source.json": "3d37416c8d1e8d0f33d981e39da42382aace68f3bee285b029cd0142f867c7ea",
+    "selection-error.txt": "1feb13efef43308362ae106a0797e41c6ccfea2a5a04ca79abf7bd99e01ffe13",
+    "selection-error.xml": "9084fba4fb91a5f6646634198c0e3d39892cb355bed7a7b35cb7c1b907b3402c",
+    "verification.md": "0d9f384a18720cc2ccbce458cca56198320de9cf6b44752c5e5c877c15385d42"
+  }
+}
