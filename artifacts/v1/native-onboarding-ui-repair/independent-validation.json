@@ -1,0 +1,47 @@
+{
+  "runtime_owner_commits": [
+    "c85e480cf30d7c3ca55fbdceaca8dd2f9d6d7a20",
+    "8e62ea770729d04bc0982aadf64dadae41973cb9"
+  ],
+  "qa_evidence_commit": "a0350f779658093325e776acb18ef9d9f7dd8b1f",
+  "qa_verification_path": "artifacts/v1/native-onboarding-repair-qa/verification.json",
+  "qa_verification_sha256": "cb8cba3601d92e860af44dff953e6793dd3bae485c978054a71446046811364a",
+  "review_evidence_commit": "ed35aa77d280b525d7649b3c503db9b92f1bdeb3",
+  "review_path": "artifacts/v1/native-onboarding-repair-review/final-evidence-review.json",
+  "review_evidence_sha256": "d12ed5fb5785628e10afcc70386a147c0959594521066d74e5753586cc34a5b3",
+  "original_32_case_ids_and_assertion_body_preserved": true,
+  "main_result": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "source_head": "16bd6aefe5d05eea3a96823ee2fbf16c956f037c"
+  },
+  "supplement_result": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "source_head": "b8d7f77068d7dc0b0bac709f010d256fad680103"
+  },
+  "fixed_ids": [
+    "keyboard-transition",
+    "contrast-focus",
+    "startup-error",
+    "long-business-name",
+    "logout-focus"
+  ],
+  "source_matches_owner": true,
+  "source_unchanged_both_runs": true,
+  "unexpected_network": [],
+  "page_errors": [],
+  "independent_review_disposition": "No blocking findings in scoped two-file UI repair, exact-source40-case synthetic evidence and nine independent screenshot reviews. Suitable for integration review; not mounted-session, physical-device, screen-reader, full-WCAG, provider or release certification.",
+  "shared_style_boundary": "Static isolation proof: unchanged shared HTML/JS do not load native v1_app.js or add the marker; all six appended rules require that absent body marker, so none match shared parcel/customer documents. No shared-page computed-style/browser run claimed.",
+  "limits": [
+    "No actual server/session/Set-Cookie race evidence",
+    "No mounted migrated DB",
+    "No physical touch or screen-reader run",
+    "No complete WCAG or contrast certification",
+    "No provider/production acceptance",
+    "Local integration eeb94a1/0056 reported only; not tested here"
+  ],
+  "author_executed_independent_suites": false
+}
