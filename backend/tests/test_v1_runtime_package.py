@@ -19,7 +19,10 @@ def source(tmp_path):
         'import_workspace.html','import_workspace.css','import_workspace.js',
         'theme_settings.html','theme_settings.css','theme_settings.js',
         'assistance.html','assistance.css','assistance.js',
-        'payment_settings.html','payment_settings.css','payment_settings.js')]
+        'payment_settings.html','payment_settings.css','payment_settings.js',
+        'support_grants.html','support_grants.css','support_grants.js',
+        'analytics_v1.html','analytics_v1.css','analytics_v1.js',
+        'customer_links.html','customer_links.css','customer_links.js')]
     names += ['frontend/storefront/src/'+name for name in package.STOREFRONT]
     for name in names:
         path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('# synthetic runtime\n')
@@ -45,7 +48,7 @@ def test_context_excludes_tracked_and_untracked_sensitive_sentinels(source,tmp_p
     assert len(list((output/'storefront-src').iterdir()))==13
     assert (output/'storefront-src/published-design.js').is_file()
     assert (output/'storefront-src/payment-handoff.js').is_file()
-    for prefix in ('import_workspace','theme_settings','assistance','payment_settings'):
+    for prefix in ('import_workspace','theme_settings','assistance','payment_settings','support_grants','analytics_v1','customer_links'):
         for suffix in ('html','css','js'):
             assert (output/f'backend/static/{prefix}.{suffix}').is_file()
     assert (output/'backend/alembic/versions/0046.py').is_file()
@@ -64,7 +67,7 @@ def test_context_rejects_symlink_reads_and_preserves_existing_destination(source
     assert sentinel.read_text()=='keep'
 
 
-@pytest.mark.parametrize('missing',['import_workspace.js','theme_settings.html','assistance.js','payment_settings.html'])
+@pytest.mark.parametrize('missing',['import_workspace.js','theme_settings.html','assistance.js','payment_settings.html','support_grants.js','analytics_v1.html','customer_links.js'])
 def test_missing_native_runtime_assets_refuse_packaging(source,tmp_path,missing):
     (source/'backend/static'/missing).unlink()
     subprocess.run(['git','-C',str(source),'add','-u'],check=True)
