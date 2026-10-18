@@ -1,0 +1,97 @@
+{
+  "frozen_baseline": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
+  "compared_application_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "compared_runtime_source": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+  "source_audit": {
+    "baseline_application_and_plan_files_unchanged": 264,
+    "new_storefront_Git_blob_hashes_match": 20,
+    "new_onboarding_native_Git_blob_hashes_match": 5,
+    "new_onboarding_formatter_Git_blob_hashes_match": 5,
+    "executed_comparison_runner_hashes_match_committed_harnesses": true,
+    "SSR_and_onboarding_fixture_hashes_match": true
+  },
+  "baseline_backend": {
+    "passed": 1237,
+    "skipped": 724,
+    "failures": 0,
+    "source": "abab30a only; no new8ae/0055 or local0056/0057 acceptance"
+  },
+  "baseline_node": {
+    "passed": 71,
+    "failures": 0
+  },
+  "offline": {
+    "new_scenarios_passed": 3,
+    "real_database_or_restart": false,
+    "real_pilot_envelope": "MISSING"
+  },
+  "fresh_storefront": {
+    "passed": 69,
+    "failed": 6,
+    "distinct_confirmed_defects": 1,
+    "case_scope": "missing-photo title-price overlap, three themes x320/390",
+    "denied_same_origin_activity_context_requests": 153,
+    "activity_coverage": "MISSING in this shopping harness; not production analytics failure or collection proof",
+    "page_errors": [],
+    "original_QA": "faec01614c27578afd38bef750b9dc2205ee7c98",
+    "comparison_harness": "51f24801a5beb7f39ee57f8739301c633b056272",
+    "comparison_evidence": "12c85209883825892e874dab7e68ddf3c2cd3a91"
+  },
+  "fresh_onboarding": {
+    "passed": 27,
+    "failed": 5,
+    "fixed_old_case_ids": [
+      "session-switch-401",
+      "session-revoke-401",
+      "role-focus",
+      "session-focus",
+      "cross-identity-error"
+    ],
+    "remaining_P2_case_ids": [
+      "keyboard-transition",
+      "contrast-focus",
+      "startup-error",
+      "long-business-name",
+      "logout-focus"
+    ],
+    "new_product_defects": [],
+    "unexpected_network": [],
+    "page_errors": [],
+    "original_QA": "d92406e2f2d62c7db859cd4d0bf0e91544c24376",
+    "baseline_fidelity": "a3a3d6651121276d6b4aa289d7980e24992da6c2",
+    "comparison_adaptation": "e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86",
+    "semantic_harness": "a7282ed267d09b4f28b3b22dba24495f59a834b7",
+    "comparison_evidence": "9642527196f2e80b0a0effd69678949be34074af",
+    "diagnostic_26_pass_6_fail_preserved": true,
+    "lost_response_classification": "Valid self-healing after fresh complete read and exactly one synthetic commit; obsolete conflict-copy expectation removed, strict invariants retained."
+  },
+  "effects": {
+    "real_provider_calls": 0,
+    "real_credential_reads": 0,
+    "database_allocations": 0,
+    "actual_customer_sends": 0,
+    "charges": 0,
+    "deployments": 0,
+    "DNS_billing_changes": 0,
+    "hosted_CI_retries": 0,
+    "Docker_operations": 0,
+    "ambient_4317_service_access": false,
+    "production_files_modified": false
+  },
+  "unrun": [
+    "physical devices/touch/virtual keyboard",
+    "screen-reader journey/full WCAG",
+    "actual migrated DB/Redis concurrency and restart",
+    "provider/production behavior",
+    "commercial pilot capacity and soak",
+    "reported local789db95/0056 and later0057 acceptance"
+  ],
+  "release_ready": false,
+  "final_independent_review": {
+    "original_commit": "8870079b76a86d16faa07f23833e871e9031d203",
+    "composed_commit": "60efee0",
+    "safety_or_assertion_fidelity_blockers": [],
+    "all_three_workers_completed_and_pushed": true,
+    "product_assertions_stay_red": true
+  }
+}
