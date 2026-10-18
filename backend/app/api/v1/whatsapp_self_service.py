@@ -24,7 +24,7 @@ from app.models.whatsapp import WhatsAppAccount, WhatsAppContact
 from app.models.whatsapp_self_service import WhatsAppAuthorizationProvenance, WhatsAppConnectionTest, WhatsAppSignupChoice, WhatsAppTestAuthorization
 from app.schemas.whatsapp_self_service import (
     Command, ExchangeSignup, InvalidWhatsAppCommand, ReadinessView, RecipientReview, ReviewedChoicesView,
-    SelectSignup, SendTest, SignupAssets, StartSignup, StartTest, TestChallengeView, parse_command,
+    SelectSignup, SendTest, SignupAssets, StartSignup, StartTest, TestChallengeView, SignupCommandView, TestCommandView, parse_command,
 )
 from app.services.auth_sessions import native_session, request_auth_token
 from app.services.identity import require_business_access
@@ -191,35 +191,40 @@ async def exchange(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSess
     except HTTPException:
         await service.effect_unknown(db,attempt_id,stage='exchange')
         raise
-    return result
+    return signup_ack(result,payload,'signup_exchange')
 
 
 @router.post(BASE+'/signup/{attempt_id}/assets')
 async def assets(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
     auth=await authority(request,db,business_id)
-    try: result=await service.discover_assets(db,auth,attempt_id,await command(request,SignupAssets),provider=provider)
+    payload=await command(request,SignupAssets)
+    try: result=await service.discover_assets(db,auth,attempt_id,payload,provider=provider)
     except ProtocolError as error: protocol_error(error)
     await auth.finalize(db)
-    return result
+    return signup_ack(result,payload,'signup_assets')
 
 
 @router.post(BASE+'/signup/{attempt_id}/select')
 async def select_account(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db),provider=Depends(provider_dependency)):
     auth=await authority(request,db,business_id)
-    try: result=await service.select_account(db,auth,attempt_id,await command(request,SelectSignup),provider=provider)
+    payload=await command(request,SelectSignup)
+    try: result=await service.select_account(db,auth,attempt_id,payload,provider=provider)
     except ProtocolError as error: protocol_error(error)
     try: await auth.finalize(db)
     except HTTPException:
         await service.effect_unknown(db,attempt_id,stage='registration')
         raise
-    return result
+    return signup_ack(result,payload,'signup_select',choice_id=payload.choice_id)
 
 
 @router.post(BASE+'/tests')
 async def start_test(request:Request,business_id:UUID,db:AsyncSession=Depends(get_db)):
     auth=await authority(request,db,business_id)
-    view,private_command=await tests.start_test(db,auth,await command(request,StartTest))
-    result=TestChallengeView(contract_version='whatsapp-test-challenge.v1',test=view,command=private_command)
+    payload=await command(request,StartTest)
+    view,private_command=await tests.start_test(db,auth,payload)
+    result=TestChallengeView(contract_version='whatsapp-test-challenge.v1',test=view,command=private_command,receipt={
+        'business_id':view.business_id,'idempotency_key':payload.idempotency_key,'action':'test_start',
+        'expected_connection_version':view.connection_version,'resource_id':view.test_id,'selected_choice_id':None})
     await auth.finalize(db)
     return result
 
@@ -235,18 +240,19 @@ async def test(request:Request,business_id:UUID,test_id:UUID,db:AsyncSession=Dep
 @router.post(BASE+'/tests/{test_id}/send')
 async def send_test(request:Request,business_id:UUID,test_id:UUID,db:AsyncSession=Depends(get_db)):
     auth=await authority(request,db,business_id)
-    result=await tests.queue_fixed_reply(db,auth,test_id,await command(request,SendTest))
+    payload=await command(request,SendTest)
+    result=await tests.queue_fixed_reply(db,auth,test_id,payload)
     await auth.finalize(db)
-    return result
+    return test_ack(result,payload,'test_send')
 
 
 @router.post(BASE+'/tests/{test_id}/cancel')
 async def cancel_test(request:Request,business_id:UUID,test_id:UUID,db:AsyncSession=Depends(get_db)):
     auth=await authority(request,db,business_id)
-    await command(request,Command)
+    payload=await command(request,Command)
     result=await tests.cancel_test(db,auth,test_id)
     await auth.finalize(db)
-    return result
+    return test_ack(result,payload,'test_cancel')
 
 
 @router.get(BASE+'/tests/{test_id}/recipient')
@@ -280,6 +286,19 @@ async def recipient(request:Request,business_id:UUID,test_id:UUID,db:AsyncSessio
 @router.post(BASE+'/signup/{attempt_id}/cancel')
 async def cancel_signup(request:Request,business_id:UUID,attempt_id:UUID,db:AsyncSession=Depends(get_db)):
     auth=await authority(request,db,business_id)
-    result=await service.cancel_signup(db,auth,attempt_id,await command(request,Command))
+    payload=await command(request,Command)
+    result=await service.cancel_signup(db,auth,attempt_id,payload)
     await auth.finalize(db)
-    return result
+    return signup_ack(result,payload,'signup_cancel')
+
+
+def signup_ack(result,payload,action,*,choice_id=None):
+    return SignupCommandView(contract_version='whatsapp-signup-command.v1',result=result,receipt={
+        'business_id':result.business_id,'idempotency_key':payload.idempotency_key,'action':action,
+        'expected_connection_version':result.connection_version,'resource_id':result.attempt_id,'selected_choice_id':choice_id})
+
+
+def test_ack(result,payload,action):
+    return TestCommandView(contract_version='whatsapp-test-command.v1',result=result,receipt={
+        'business_id':result.business_id,'idempotency_key':payload.idempotency_key,'action':action,
+        'expected_connection_version':result.connection_version,'resource_id':result.test_id,'selected_choice_id':None})
