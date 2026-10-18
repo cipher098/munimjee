@@ -26,3 +26,17 @@ test('policy acknowledgement binds exact key mode expected revision and business
  const receipt={contract_version:'activity-policy-receipt.v1',business_id:data.business_id,idempotency_key:body.idempotency_key,mode:'live',applied_revision:3,accepted_at:'2026-10-18T00:00:00Z',replayed:false};
  assert(window.review.validReceipt(receipt,body));assert(!window.review.validReceipt({...receipt,applied_revision:2},body));assert(!window.review.validReceipt({...receipt,idempotency_key:crypto.randomUUID()},body));
 });
+test('partial channel observations never manufacture delivery, resolution or empty-family zero',()=>{
+ const partial=JSON.parse(readFileSync(new URL('../../../docs/contracts/activity-v1/channel-partial-report.json',import.meta.url)));
+ assert(window.review.validReport(partial,partial.from_date,partial.to_date));
+ for(const variant of ['delivery','resolution','duplicate','empty-family','zero','test-only']){
+  const value=structuredClone(partial),h=value.channel_activity;
+  if(variant==='delivery')h.automation_outcomes.delivered=1;
+  if(variant==='resolution')h.automation_outcomes.resolved_enquiries=1;
+  if(variant==='duplicate')h.included_source_kinds.push('wa_outbound');
+  if(variant==='empty-family')h.included_source_kinds=['instagram_ingress'];
+  if(variant==='zero')h.enquiry_messages=0;
+  if(variant==='test-only')h.reason='no_production_observations';
+  assert.equal(window.review.validReport(value,value.from_date,value.to_date),false,variant);
+ }
+});

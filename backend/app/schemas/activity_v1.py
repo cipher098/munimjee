@@ -145,7 +145,25 @@ class AutomationOutcomes(Contract):
 class ChannelActivity(Contract):
     enquiry_messages:int|None=Field(default=None,strict=True,ge=0)
     automation_outcomes:AutomationOutcomes|None=None
-    reason:Literal['producer_not_installed','measurement_not_started','partial_coverage']|None
+    included_source_kinds:list[Literal['instagram_ingress','wa_inbound','wa_outbound','comment_action']]=Field(default_factory=list,max_length=4)
+    excluded_test:int=Field(default=0,strict=True,ge=0)
+    excluded_unclassified:int=Field(default=0,strict=True,ge=0)
+    reason:Literal['producer_not_installed','measurement_not_started','partial_coverage','no_production_observations']|None
+
+    @model_validator(mode='after')
+    def partial_observations(self):
+        kinds=set(self.included_source_kinds)
+        if len(kinds)!=len(self.included_source_kinds):raise ValueError('Source kinds must be unique')
+        if self.reason in {'partial_coverage','no_production_observations'}:
+            inbound=bool(kinds & {'instagram_ingress','wa_inbound'})
+            outbound=bool(kinds & {'wa_outbound','comment_action'})
+            if inbound!=(self.enquiry_messages is not None) or (self.enquiry_messages is not None and self.enquiry_messages<1):
+                raise ValueError('Only observed inbound families have a count')
+            if outbound!=(self.automation_outcomes is not None):raise ValueError('Only observed outbound families have counts')
+            if self.automation_outcomes is not None and not sum(getattr(self.automation_outcomes,k) for k in ('queued','sending','accepted','failed','unknown')):
+                raise ValueError('An observed outbound family must have an outcome')
+            if bool(kinds)!=(self.reason=='partial_coverage'):raise ValueError('Observed coverage remains partial')
+        return self
 
 
 class ActivityRead(Contract):

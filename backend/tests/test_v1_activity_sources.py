@@ -78,7 +78,7 @@ async def test_new_manual_and_known_test_outbound_cannot_become_live_automation(
         report=await activity.report(db,bid,now.date(),now.date()+timedelta(days=1))
         assert report.channel_activity.enquiry_messages is None
         assert report.channel_activity.automation_outcomes is None
-        assert report.channel_activity.reason=='producer_not_installed'
+        assert report.channel_activity.reason=='no_production_observations'
 
 
 @pytest.mark.asyncio

@@ -44,7 +44,10 @@
   "channel_activity": {
     "enquiry_messages": null,
     "automation_outcomes": null,
-    "reason": "producer_not_installed"
+    "reason": "no_production_observations",
+    "included_source_kinds": [],
+    "excluded_test": 0,
+    "excluded_unclassified": 0
   },
   "attribution": null
 }

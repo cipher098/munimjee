@@ -362,6 +362,32 @@ WITH bounds AS (
  FROM commerce_orders o CROSS JOIN bounds b LEFT JOIN v1_order_activity a
  ON a.order_id=o.id AND a.business_id=o.seller_id
  WHERE o.seller_id=b.bid AND o.created_at>=b.lo AND o.created_at<b.hi
+), source_cohort AS (
+ SELECT s.* FROM v1_activity_sources s CROSS JOIN bounds b
+ WHERE s.business_id=b.bid AND s.created_at>=GREATEST(b.lo,b.retained) AND s.created_at<b.hi
+), source_rows AS (
+ SELECT s.source_kind,s.classification,s.origin,NULL::text AS status,false AS receipt
+ FROM source_cohort s JOIN instagram_ingress i ON i.id=s.source_id AND i.seller_id=s.business_id
+ WHERE s.source_kind='instagram_ingress' AND NULLIF(i.provider_message_id,'') IS NOT NULL
+ UNION ALL
+ SELECT s.source_kind,s.classification,s.origin,NULL::text,false
+ FROM source_cohort s JOIN whatsapp_messages m ON m.id=s.source_id AND m.seller_id=s.business_id
+ WHERE s.source_kind='wa_inbound' AND m.direction='inbound' AND NULLIF(m.provider_message_id,'') IS NOT NULL
+ UNION ALL
+ SELECT s.source_kind,s.classification,s.origin,m.status,NULLIF(m.provider_message_id,'') IS NOT NULL
+ FROM source_cohort s JOIN whatsapp_messages m ON m.id=s.source_id AND m.seller_id=s.business_id
+ WHERE s.source_kind='wa_outbound' AND m.direction='outbound'
+ UNION ALL
+ SELECT s.source_kind,s.classification,s.origin,a.status,NULLIF(a.provider_id,'') IS NOT NULL
+ FROM source_cohort s JOIN comment_actions a ON a.id=s.source_id AND a.seller_id=s.business_id
+ JOIN comment_events e ON e.id=a.event_id AND e.seller_id=a.seller_id
+ WHERE s.source_kind='comment_action'
+), live_sources AS (
+ SELECT *,CASE WHEN receipt THEN 'accepted' WHEN status IN ('queued','pending') THEN 'queued'
+ WHEN status='sending' THEN 'sending' WHEN status='failed' THEN 'failed' ELSE 'unknown' END AS outcome
+ FROM source_rows WHERE classification='live' AND
+ ((source_kind IN ('instagram_ingress','wa_inbound') AND origin='inbound') OR
+ (source_kind IN ('wa_outbound','comment_action') AND origin='automated'))
 ), production AS (SELECT * FROM orders WHERE class='live'), money AS (
  SELECT currency,SUM(total)::text AS placed_order_value_minor,
  COALESCE(SUM(total) FILTER(WHERE payment_method='razorpay' AND payment_status='paid' AND captured),0)::text AS online_paid_minor,
@@ -394,6 +420,19 @@ SELECT jsonb_build_object(
  'excluded_test',(SELECT COUNT(*) FROM orders WHERE class='test'),
  'excluded_unknown',(SELECT COUNT(*) FROM orders WHERE class='unknown'),
  'classified_started',EXISTS(SELECT 1 FROM v1_order_activity WHERE business_id=b.bid)
+ ,'channel_sources',jsonb_build_object(
+   'included_source_kinds',COALESCE((SELECT jsonb_agg(kind ORDER BY kind) FROM
+     (SELECT DISTINCT source_kind AS kind FROM live_sources) kinds),'[]'::jsonb),
+   'excluded_test',(SELECT COUNT(*) FROM source_rows WHERE classification='test'),
+   'excluded_unclassified',(SELECT COUNT(*) FROM source_rows WHERE classification='unknown'),
+   'enquiries',(SELECT COUNT(*) FROM live_sources WHERE origin='inbound'),
+   'outbound',(SELECT COUNT(*) FROM live_sources WHERE origin='automated'),
+   'outcomes',(SELECT jsonb_build_object(
+     'queued',COUNT(*) FILTER(WHERE outcome='queued'),
+     'sending',COUNT(*) FILTER(WHERE outcome='sending'),
+     'accepted',COUNT(*) FILTER(WHERE outcome='accepted'),
+     'failed',COUNT(*) FILTER(WHERE outcome='failed'),
+     'unknown',COUNT(*) FILTER(WHERE outcome='unknown')) FROM live_sources WHERE origin='automated'))
 ) FROM bounds b CROSS JOIN coverage c
 ''')
 
@@ -424,9 +463,17 @@ async def report(db,business_id,from_date,to_date):
         production={field:None for field in production}
     production.update(state='not_started' if not data['classified_started'] else 'partial' if data['excluded_unknown'] else 'available',
         currency_totals=data['money'],excluded_test=data['excluded_test'],excluded_unclassified=data['excluded_unknown'])
+    channel=data['channel_sources']
+    # Installed hooks cannot establish complete historical coverage. Neither
+    # an empty range nor only excluded test rows establishes a production zero.
+    channel_projection={'enquiry_messages':channel['enquiries'] or None,
+        'automation_outcomes':channel['outcomes'] if channel['outbound'] else None,
+        'included_source_kinds':channel['included_source_kinds'],
+        'excluded_test':channel['excluded_test'],'excluded_unclassified':channel['excluded_unclassified'],
+        'reason':'partial_coverage' if channel['included_source_kinds'] else 'no_production_observations'}
     return ActivityRead(business_id=business_id,from_date=from_date,to_date=to_date,generated_at=data['stamp'],
         coverage={'state':state,'measurement_mode':data['current_mode'],'available_from':data['available_from'],
             'available_to':data['available_to'],'reasons':reasons,'retention_ready':settings.V1_ACTIVITY_RETENTION_READY,
             'cleanup_overdue_rows':data['cleanup_overdue_rows'],'cleanup_lag_seconds':data['cleanup_lag_seconds']},counts=counts,
         conversion={'numerator':numerator,'denominator':denominator,'percentage':percentage,'unavailable_reason':unavailable},
-        production_orders=production,channel_activity={'reason':'producer_not_installed'})
+        production_orders=production,channel_activity=channel_projection)
