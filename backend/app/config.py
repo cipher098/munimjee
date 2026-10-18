@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     CHANNEL_ENCRYPTION_KEY: str = ""  # Fernet key for per-seller messaging secrets
     WHATSAPP_WEBHOOK_VERIFY_TOKEN: str = ""
     WHATSAPP_APP_SECRET: str = ""
+    WHATSAPP_EMBEDDED_APP_ID: str = ""
+    WHATSAPP_EMBEDDED_APP_SECRET: str = ""  # Must match current WA webhook app; no implicit multi-app authority.
+    WHATSAPP_EMBEDDED_CONFIG_ID: str = ""
+    WHATSAPP_EMBEDDED_GRAPH_VERSION: str = "v26.0"  # Explicit v4 contract pin; legacy transport version is independent.
     WHATSAPP_GRAPH_VERSION: str = "v23.0"
     PAYMENT_ENCRYPTION_KEY: str = ""  # Fernet key; required before storing gateway secrets
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
