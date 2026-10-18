@@ -1,0 +1,154 @@
+{
+  "source_base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "runtime_owner_commit": "3b91a3a96a6c3f104e0666bb19dfbd97d1bc96e9",
+  "runtime_composed_as": "fb8e927",
+  "source_head_at_repaired_run": "fb8e9276a60053d472109203a350d58f122b349a",
+  "qa_baseline_commit": "68441dd",
+  "runtime_source_matches_owner_bytes": true,
+  "runtime_changed_paths": [
+    "backend/app/services/sku_fact_replies.py"
+  ],
+  "runtime_sha256_baseline": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+  "runtime_sha256_repaired": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+  "source_sha256_after": {
+    "backend/app/services/sku_fact_replies.py": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/tests/test_v08_semantics_acceptance.py": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+    "backend/tests/test_v08_context_acceptance.py": "da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41",
+    "backend/tests/test_sku_fact_replies.py": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1"
+  },
+  "source_unchanged_except_reviewed_runtime": true,
+  "harness_sha256": "8bb6bc7877828fefc1f8d03bc0ce692393627cfe0f802aa061187b41cd2bbdb9",
+  "harness_byte_identical_both_runs": true,
+  "existing_tests_preserved": 219,
+  "original21_byte_identical": true,
+  "prior_v08_artifacts_preserved": {
+    "artifacts/v1/v08-context/results.xml": "55e26222ad74cfed6fa1756e2b81bf5b739c37e1a456062c3101ef5ba45bd798",
+    "artifacts/v1/v08-context/run.txt": "7823b28da49e06fef2939b8fff67abba19aeb8fd3722b009f515429e7bef8bd9",
+    "artifacts/v1/v08-context/verification.json": "7915e87c5edfde80d4bc6257948380950a1a011715c1c6ca8bcb4e8e2b23c937",
+    "artifacts/v1/v08-review/collection-diagnostic.txt": "ff8f8acd59c28def8e565ed06d3fba8f25848ba855f7eb23fd7395351d2529fb",
+    "artifacts/v1/v08-review/independent-21.txt": "abc4e9dfa5330919cddb06d2146cd270a8847f1a8e7c1a2a6f7d34f7828b9ae0",
+    "artifacts/v1/v08-review/independent-21.xml": "18447e894027c85ee4d2e8812f5c86b3ab7d8d5ba5b1fc1897eb893089fdc211",
+    "artifacts/v1/v08-review/peer-review-verification.json": "807c3752c0a0e6ebe6b5ba1fed74fed176b9c2cb8192ce8b08bcc56298667375",
+    "artifacts/v1/v08-review/source-inventory.json": "a781b8985c02145d579ebefd84dd1efb08093cc0d2dba88e4f567fb0bb566757",
+    "artifacts/v1/v08-semantics-coordination/composed-focused.txt": "e64be2120b16f4b28cc5bf9941f3095ccfef76e15ca63e07745d3feeb1f10ad3",
+    "artifacts/v1/v08-semantics-coordination/composed-focused.xml": "d5fcdf78f99984e21aaa00905a399a589a735d756e38bbb8f26649dd60184ee5",
+    "artifacts/v1/v08-semantics-coordination/existing-focused.txt": "f43559d4d31ada468e62b54fb62671379051d480e4c626abad2ab2ecf6dd597a",
+    "artifacts/v1/v08-semantics-coordination/existing-focused.xml": "46f8d54e8548ee4fcdf1faf3eb6f32df3cd42ebf1e48e6faf7e236b1bde425a3",
+    "artifacts/v1/v08-semantics-coordination/final-verification.json": "624b8dcdeae0fd0c403ce5217d3a439e9d546900cc14d23b0b5ff9d47dc643c7",
+    "artifacts/v1/v08-semantics/first-run.txt": "06b1e8b0107e086dcbbfe58145641afe06c8437a22fdce0bae7ed3e3269318ec",
+    "artifacts/v1/v08-semantics/first-run.xml": "fc42ba9f1f67f5ed2c2e261788aa1b1ea78414cb693cab7ed2e9d99261f39f91",
+    "artifacts/v1/v08-semantics/verification.json": "5d73f90c080894960cd2b028cc1ebdbd054d821fcc03a53812a856f2a52a5372"
+  },
+  "baseline_artifact_sha256_preserved": {
+    "baseline/results.xml": "37b37199f3c7521f0b2461740fbfe115aad44cba3075921f79a30a0912fcaa36",
+    "baseline/run.txt": "51917ef54a994b072dfcd7f415d54174ea01557e4c43f3b517ac7fdca3719808"
+  },
+  "baseline_results": {
+    "passed": 3,
+    "failed": 3,
+    "errors": 0,
+    "skipped": 0,
+    "exit_code": 1,
+    "pytest_test_seconds": 0.18
+  },
+  "repaired_results": {
+    "passed": 48,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "pytest_test_seconds": 0.24,
+    "module_counts": {
+      "tests.test_v08_semantics_acceptance": 15,
+      "tests.test_v08_context_acceptance": 6,
+      "tests.test_v08_material_reply_regression": 6,
+      "tests.test_sku_fact_replies": 21
+    }
+  },
+  "new_case_observations": [
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M01-plural]",
+      "properties": {
+        "scenario_id": "M01-plural",
+        "question": "What materials are available?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M02-price-material]",
+      "properties": {
+        "scenario_id": "M02-price-material",
+        "question": "What price and material is this?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_missing_material_requires_handoff_or_specific_uncertainty[M03-sizes-stock-materials]",
+      "properties": {
+        "scenario_id": "M03-sizes-stock-materials",
+        "question": "What sizes stock and materials are available?",
+        "reply": "Our team will confirm the current options, price and availability for this product.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m04_supported_mixed_request_preserves_zero_price_zero_and_unknown_stock",
+      "properties": {
+        "scenario_id": "M04-supported-mixed-zero-price",
+        "question": "What prices sizes and stock are available?",
+        "reply": "Current catalogue: Semantic kurta.\n\u2022 Color: Indigo; Size: M \u2014 \u20b90.00; recorded available: 2.\n\u2022 Color: Indigo; Size: L \u2014 \u20b9145.67; recorded out of stock.\n\u2022 Color: Indigo; Size: XL \u2014 \u20b9167.89; availability untracked; please confirm with our team.\nAvailability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m05_empty_material_observation_still_withholds_authority",
+      "properties": {
+        "scenario_id": "M05-empty-material-observation",
+        "question": "What material is this?",
+        "reply": "<withheld>",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    },
+    {
+      "name": "test_m06_null_required_price_still_withholds_mixed_material_reply",
+      "properties": {
+        "scenario_id": "M06-null-price-material",
+        "question": "What price and material is this?",
+        "reply": "<withheld>",
+        "raw_projection_calls": "[\"exact_reel_products\", \"inbound_context_product_names\", \"exact_reel_products\", \"is_activated\", \"read_facts\"]"
+      }
+    }
+  ],
+  "repaired_command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest tests/test_v08_semantics_acceptance.py tests/test_v08_context_acceptance.py tests/test_v08_material_reply_regression.py tests/test_sku_fact_replies.py -q -o junit_family=xunit1 --junitxml=../artifacts/v1/v08-material-qa/repaired/results.xml > ../artifacts/v1/v08-material-qa/repaired/run.txt 2>&1",
+  "command_cwd": "backend",
+  "artifacts_sha256": {
+    "baseline/results.xml": "37b37199f3c7521f0b2461740fbfe115aad44cba3075921f79a30a0912fcaa36",
+    "baseline/run.txt": "51917ef54a994b072dfcd7f415d54174ea01557e4c43f3b517ac7fdca3719808",
+    "baseline-verification.json": "d430734c34dda5d7f24e5db65b081ec9cde56240d6e2557c6a7cddec796e8c01",
+    "repaired/results.xml": "50b4caca64e6e1806dc2b35a251c137e356960fbccdb13be85daa3be2df04901",
+    "repaired/run.txt": "186aaf4d5e9b45b0fea3104912b8c75199aa64450cb17e2fceb607f05d3c8b26"
+  },
+  "injections": [
+    "trusted synthetic rollout enabled",
+    "unchanged strict read-only raw scalar/projection adapter"
+  ],
+  "domain_function_monkeypatches": [],
+  "database_connections": 0,
+  "servers_started": 0,
+  "provider_calls": 0,
+  "llm_calls": 0,
+  "customer_sends": 0,
+  "not_proven": [
+    "actual SQL authority/tenant/publication/activation/locks",
+    "durable queue/handoff/resume or reconnect",
+    "mounted migrated DB journey",
+    "authorized live provider policy/delivery",
+    "wider Hindi/language response quality",
+    "full V08/X01 acceptance"
+  ]
+}
