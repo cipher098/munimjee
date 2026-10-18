@@ -35,3 +35,27 @@ def test_conversion_is_exact_bounded_and_never_zero_denominator_percentage():
     assert Conversion(numerator=0,denominator=0,percentage=None,unavailable_reason='no_observed_contexts').percentage is None
     for n,d,p,reason in [(2,1,'100.00',None),(1,3,'33.34',None),(0,0,'0.00',None),(None,None,None,None),(1,3,'33.33','partial_coverage')]:
         with pytest.raises(ValidationError):Conversion(numerator=n,denominator=d,percentage=p,unavailable_reason=reason)
+from datetime import datetime,timedelta,timezone
+from types import SimpleNamespace
+from uuid import uuid4
+from fastapi import HTTPException
+from jose import jwt
+from app.config import settings
+from app.services import activity_v1 as domain
+
+
+@pytest.mark.parametrize('change',['role','purpose','audience','extra','boolean_time','long_window','future'])
+def test_activity_capability_is_distinct_strict_and_bounded(change):
+    now=datetime.now(timezone.utc)
+    row=SimpleNamespace(id=uuid4(),business_id=uuid4(),started_at=now,expires_at=now+timedelta(minutes=30))
+    token=domain.issue_capability(row);claims=domain.decode_capability('Bearer '+token)
+    if change=='role':claims['role']='v1_user'
+    elif change=='purpose':claims['purpose']='v1_public_checkout'
+    elif change=='audience':claims['aud']='munimjee.checkout-session.v1'
+    elif change=='extra':claims['paid']=True
+    elif change=='boolean_time':claims['iat']=True
+    elif change=='long_window':claims['exp']+=1
+    else:claims['iat']+=60;claims['exp']+=60
+    changed=jwt.encode(claims,settings.SECRET_KEY,algorithm=settings.JWT_ALGORITHM)
+    with pytest.raises(HTTPException) as error:domain.decode_capability('Bearer '+changed)
+    assert error.value.status_code==401 and error.value.detail=='Measurement context is invalid or expired'

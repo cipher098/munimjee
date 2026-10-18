@@ -1,13 +1,50 @@
 {
-  "contract_version":"seller-activity.v1",
-  "business_id":"e0000000-0000-4000-8000-000000000005",
-  "from_date":"2026-10-01",
-  "to_date":"2026-10-19",
-  "generated_at":"2026-10-18T08:00:00Z",
-  "coverage":{"state":"disabled","measurement_mode":"off","available_from":null,"available_to":null,"reasons":["measurement_off"],"retention_days":90},
-  "counts":{"visits":null,"product_views":null,"checkout_starts":null,"accepted_placements":null},
-  "conversion":{"numerator":null,"denominator":null,"percentage":null,"window_minutes":30,"unavailable_reason":"measurement_off"},
-  "production_orders":{"state":"not_started","placed":null,"online_paid":null,"cod_collected":null,"cancelled":null,"expired":null,"currency_totals":[],"excluded_test":0,"excluded_unclassified":3},
-  "channel_activity":{"enquiry_messages":null,"automation_outcomes":null,"reason":"producer_not_installed"},
-  "attribution":null
+  "contract_version": "seller-activity.v1",
+  "business_id": "e0000000-0000-4000-8000-000000000005",
+  "from_date": "2026-10-01",
+  "to_date": "2026-10-19",
+  "generated_at": "2026-10-18T08:00:00Z",
+  "coverage": {
+    "state": "disabled",
+    "measurement_mode": "off",
+    "available_from": null,
+    "available_to": null,
+    "reasons": [
+      "measurement_off"
+    ],
+    "retention_days": 90,
+    "retention_ready": false,
+    "cleanup_overdue_rows": 0,
+    "cleanup_lag_seconds": null
+  },
+  "counts": {
+    "visits": null,
+    "product_views": null,
+    "checkout_starts": null,
+    "accepted_placements": null
+  },
+  "conversion": {
+    "numerator": null,
+    "denominator": null,
+    "percentage": null,
+    "window_minutes": 30,
+    "unavailable_reason": "measurement_off"
+  },
+  "production_orders": {
+    "state": "not_started",
+    "placed": null,
+    "online_paid": null,
+    "cod_collected": null,
+    "cancelled": null,
+    "expired": null,
+    "currency_totals": [],
+    "excluded_test": 0,
+    "excluded_unclassified": 3
+  },
+  "channel_activity": {
+    "enquiry_messages": null,
+    "automation_outcomes": null,
+    "reason": "producer_not_installed"
+  },
+  "attribution": null
 }

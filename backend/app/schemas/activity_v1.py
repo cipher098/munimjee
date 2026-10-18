@@ -85,6 +85,9 @@ class Coverage(Contract):
     available_to:AwareDatetime|None
     reasons:list[Literal['measurement_off','collector_disabled','measurement_not_started','uncovered_interval','retention_truncated','ingestion_capped']]
     retention_days:Literal[90]=90
+    retention_ready:bool=Field(strict=True)
+    cleanup_overdue_rows:int=Field(strict=True,ge=0)
+    cleanup_lag_seconds:int|None=Field(default=None,strict=True,ge=0)
 
 
 class Counts(Contract):
