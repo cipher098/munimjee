@@ -244,7 +244,8 @@ def test_fence_blocks_only_seo_alias_normalization_and_preserves_unrelated_route
         assert client.get("/unrelated/").status_code == 307
 
 
-@pytest.mark.parametrize("existing", ["/sitemap-store-tara.xml", "/sitemap-store-tara.{format}"])
+@pytest.mark.parametrize("existing", ["/sitemap-store-tara.xml", "/sitemap-store-tara.{format}",
+    "/sitemap-store-tara.xml/", "/sitemap.xml///"])
 def test_new_parameter_sitemap_never_shadows_concrete_or_intersecting_pattern(existing):
     app = FastAPI()
     @app.get(existing)
@@ -255,6 +256,38 @@ def test_new_parameter_sitemap_never_shadows_concrete_or_intersecting_pattern(ex
     router = seo.create_seo_router(canonical_base=ORIGIN, provider_dependency=dependency)
     with pytest.raises(ValueError, match="collides"):
         seo.validate_route_collisions(app, router)
+
+
+@pytest.mark.parametrize("existing", ["/legacy/rose-dress/", "/legacy/{item}/"])
+def test_request_fence_aliases_never_shadow_existing_route(existing):
+    app = FastAPI()
+    @app.get(existing)
+    async def protected():
+        return {"protected":True}
+    async def dependency():
+        return Provider()
+    inventory = seo.parse_legacy_redirects(json.dumps([reviewed()]), ORIGIN)
+    router = seo.create_seo_router(canonical_base=ORIGIN, provider_dependency=dependency, legacy_redirects=inventory)
+    with pytest.raises(ValueError, match="collides"):
+        seo.validate_route_collisions(app, router)
+
+
+def test_fence_preserves_internal_double_slash_resource_and_inventory_rejects_trailing_aliases():
+    with pytest.raises(ValueError):
+        seo.parse_legacy_redirects(json.dumps([reviewed(), reviewed(source_path=reviewed()["source_path"]+"/")]), ORIGIN)
+    app = FastAPI()
+    @app.get("/legacy//rose-dress")
+    async def protected():
+        return {"protected":True}
+    async def dependency():
+        return Provider()
+    inventory = seo.parse_legacy_redirects(json.dumps([reviewed()]), ORIGIN)
+    router = seo.create_seo_router(canonical_base=ORIGIN, provider_dependency=dependency, legacy_redirects=inventory)
+    seo.validate_route_collisions(app, router)
+    seo.install_seo_request_fence(app, canonical_base=ORIGIN, legacy_redirects=inventory)
+    app.include_router(router)
+    with TestClient(app, base_url=SOURCE) as client:
+        assert client.get("/legacy//rose-dress").json() == {"protected":True}
 
 
 def test_inventory_never_collides_with_new_parameter_sitemap_route():
