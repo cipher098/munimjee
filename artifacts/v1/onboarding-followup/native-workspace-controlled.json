@@ -1,0 +1,9 @@
+{
+  "checks": 3,
+  "results": [
+    "confirmed401 physically clears profile/team/picker/invite bearer and hides identity actions",
+    "same-user native session replacement fences before another mutation and clears private profile",
+    "older session response cannot revive revoked business options or owner team/payment controls"
+  ],
+  "proof_scope": "Actual current HTML/JS in Chromium with controlled local HTTP; no database/provider acceptance"
+}

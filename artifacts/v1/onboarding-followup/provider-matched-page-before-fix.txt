@@ -1,0 +1,43 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+___ test_complete_matched_page_is_validated_before_any_original_fetch[None] ____
+
+tail = None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('tail',[None,{'id':'malformed'},{'id':'67890','media_type':'VIDEO','media_url':'https://scontent.cdninstagram.com/conflicting.mp4'}])
+    async def test_complete_matched_page_is_validated_before_any_original_fetch(tail):
+        subject,transport=provider([response({'user_id':ACCOUNT,'account_type':'BUSINESS'}),response({'data':[media(),tail]}),response(body=PNG,mime='image/png')])
+>       with pytest.raises(OwnedInstagramError,match='instagram_response_invalid'):await fetch(subject)
+E       Failed: DID NOT RAISE <class 'app.v1.imports.instagram_owned_transport.OwnedInstagramError'>
+
+backend/tests/test_v1_instagram_documentary_compat.py:58: Failed
+___ test_complete_matched_page_is_validated_before_any_original_fetch[tail1] ___
+
+tail = {'id': 'malformed'}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('tail',[None,{'id':'malformed'},{'id':'67890','media_type':'VIDEO','media_url':'https://scontent.cdninstagram.com/conflicting.mp4'}])
+    async def test_complete_matched_page_is_validated_before_any_original_fetch(tail):
+        subject,transport=provider([response({'user_id':ACCOUNT,'account_type':'BUSINESS'}),response({'data':[media(),tail]}),response(body=PNG,mime='image/png')])
+>       with pytest.raises(OwnedInstagramError,match='instagram_response_invalid'):await fetch(subject)
+E       Failed: DID NOT RAISE <class 'app.v1.imports.instagram_owned_transport.OwnedInstagramError'>
+
+backend/tests/test_v1_instagram_documentary_compat.py:58: Failed
+___ test_complete_matched_page_is_validated_before_any_original_fetch[tail2] ___
+
+tail = {'id': '67890', 'media_type': 'VIDEO', 'media_url': 'https://scontent.cdninstagram.com/conflicting.mp4'}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('tail',[None,{'id':'malformed'},{'id':'67890','media_type':'VIDEO','media_url':'https://scontent.cdninstagram.com/conflicting.mp4'}])
+    async def test_complete_matched_page_is_validated_before_any_original_fetch(tail):
+        subject,transport=provider([response({'user_id':ACCOUNT,'account_type':'BUSINESS'}),response({'data':[media(),tail]}),response(body=PNG,mime='image/png')])
+>       with pytest.raises(OwnedInstagramError,match='instagram_response_invalid'):await fetch(subject)
+E       Failed: DID NOT RAISE <class 'app.v1.imports.instagram_owned_transport.OwnedInstagramError'>
+
+backend/tests/test_v1_instagram_documentary_compat.py:58: Failed
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_instagram_documentary_compat.py::test_complete_matched_page_is_validated_before_any_original_fetch[None]
+FAILED backend/tests/test_v1_instagram_documentary_compat.py::test_complete_matched_page_is_validated_before_any_original_fetch[tail1]
+FAILED backend/tests/test_v1_instagram_documentary_compat.py::test_complete_matched_page_is_validated_before_any_original_fetch[tail2]
+3 failed, 21 deselected in 0.06s
