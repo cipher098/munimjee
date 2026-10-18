@@ -24,7 +24,7 @@ unchanged.
 New session-storage envelopes use format 2 and hash the exact body plus expected
 private/public configuration snapshots. Existing format-1 draft saves still use
 their saved config and key. A format-1 publication has no original draft snapshot;
-it remains preserved for explicit owner reconciliation rather than inferring
+it remains preserved without another POST for explicit owner reconciliation rather than inferring
 intent from today's design. No migration or shared client/router/package/payment
 changes are introduced.
 

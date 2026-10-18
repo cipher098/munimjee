@@ -103,9 +103,10 @@
       await identity(true,epoch);
       const saved=await decode(sessionStorage.getItem(storageKey));assertLive(epoch);
       if(JSON.stringify(saved)!==JSON.stringify(pending))throw Error('Recovery changed in this window. Sign in again before continuing.');
-      const sent=pending,result=await api(endpoint+(pending.operation==='publish'?'/publish':''),{method:pending.operation==='save'?'PUT':'POST',body:pending.body});
-      await identity(false,epoch);assertLive(epoch);
+      const sent=pending;
       if(sent.format===1&&sent.operation==='publish')throw Error('This older saved publication has no original draft snapshot. Its exact command is preserved. Ask your business owner to reconcile the published design before starting another action.');
+      const result=await api(endpoint+(pending.operation==='publish'?'/publish':''),{method:pending.operation==='save'?'PUT':'POST',body:pending.body});
+      await identity(false,epoch);assertLive(epoch);
       if(!confirms(sent,result))throw Error('The response did not confirm this exact saved design action. Retry the same saved action; do not start another.');
       const current=await api(endpoint);await identity(false,epoch);assertLive(epoch);
       if(!validRecord(current)||current.version<result.version||(current.version===result.version&&(!configSame(current.draft,result.draft)||current.published_revision!==result.published_revision||!((current.published===null&&result.published===null)||configSame(current.published,result.published))||current.published_at!==result.published_at)))throw Error('The current design did not confirm the saved action. Retry the same saved action.');

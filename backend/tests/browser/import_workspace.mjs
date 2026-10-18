@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 const {chromium,expect}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:new URL('../../../frontend/storefront/node_modules/@playwright/test/index.mjs',import.meta.url).href);
-const base='http://127.0.0.1:4320',output=new URL('../../../artifacts/v1/import-workspace/',import.meta.url);
+const base=process.argv.includes('--parcel-lane-port')?'http://127.0.0.1:8155':'http://127.0.0.1:4320',output=new URL('../../../artifacts/v1/import-workspace/',import.meta.url);
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE}:{})});
 const bid='11111111-1111-4111-8111-111111111111',uid='22222222-2222-4222-8222-222222222222',jid='33333333-3333-4333-8333-333333333333',cid='44444444-4444-4444-8444-444444444444',aid='55555555-5555-4555-8555-555555555555';
