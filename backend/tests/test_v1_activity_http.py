@@ -253,3 +253,22 @@ async def test_publication_revoked_during_policy_wait_discards_context(activity)
         await blocker.rollback();response=await asyncio.wait_for(pending,5)
         assert response.status_code==404,response.text
     async with j.sessions() as db:assert await db.scalar(select(func.count()).select_from(ActivityContext))==0
+
+
+@pytest.mark.asyncio
+async def test_policy_read_projects_latest_owner_role_after_awaited_query(activity,monkeypatch):
+    from sqlalchemy.ext.asyncio import AsyncSession
+    j=activity;original=AsyncSession.execute;changed=False
+    async def downgrade_after_policy_query(db,statement,*args,**kwargs):
+        nonlocal changed
+        result=await original(db,statement,*args,**kwargs)
+        if not changed and 'v1_activity_policies.mode' in str(statement):
+            changed=True
+            async with j.sessions.begin() as revoker:
+                await revoker.execute(update(Membership).where(Membership.business_id==j.bid,
+                    Membership.user_id==j.uid).values(role='viewer'))
+        return result
+    monkeypatch.setattr(AsyncSession,'execute',downgrade_after_policy_query)
+    response=await j.client.get(j.policy)
+    assert changed and response.status_code==200,response.text
+    assert response.json()['can_change'] is False
