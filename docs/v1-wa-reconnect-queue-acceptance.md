@@ -24,8 +24,10 @@ facts/current account checks, not stale queued text. The second prepared case
 observes that boundary, edits authoritative price/stock, and requires once-only
 current facts if that explicit enable authorizes the queued action. It is not an
 invented hard generation policy or proof that reconnect automatically rebinds an
-action. Root was asked to clarify if stronger generation fencing is intended;
-policy interpretation must stay explicit before using this as release acceptance.
+action. Root confirmed the existing contract: the requirement concerns implicit reconnect
+authorization, not a blanket cancellation rule after deliberate current-owner
+re-enable. Compliant fresh-fact regeneration is not a defect. The integrator
+source-reviewed both prepared cases; neither is actual migrated evidence yet.
 
 No support, legacy impersonation, phone/name matching, consent/window mutation,
 order or stock reservation is added by these tests. Synthetic signup-session
