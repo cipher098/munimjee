@@ -29,6 +29,7 @@ DDL = (
 	token_expires_at TIMESTAMP WITH TIME ZONE, 
 	verified_app_id VARCHAR(40), 
 	selected_choice_id UUID, 
+	selected_phone_number_id VARCHAR(40), 
 	selected_key UUID, 
 	selected_hash VARCHAR(64), 
 	subscription_state VARCHAR(20) DEFAULT 'not_started' NOT NULL, 
@@ -45,7 +46,7 @@ DDL = (
 	CONSTRAINT wa_signup_steps CHECK (subscription_state IN ('not_started','requesting','unknown','confirmed','failed') AND registration_state IN ('not_started','requesting','unknown','confirmed','failed')), 
 	CONSTRAINT wa_signup_token_expiry CHECK (token_expiry_kind IN ('unknown','at','permanent') AND ((token_expiry_kind = 'at' AND token_expires_at IS NOT NULL) OR (token_expiry_kind <> 'at' AND token_expires_at IS NULL))), 
 	CONSTRAINT wa_signup_app_id CHECK (verified_app_id IS NULL OR verified_app_id ~ '^[0-9]{1,40}$'), 
-	CONSTRAINT wa_signup_selection CHECK ((selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL)), 
+	CONSTRAINT wa_signup_selection CHECK ((selected_key IS NULL AND selected_hash IS NULL AND selected_choice_id IS NULL AND selected_phone_number_id IS NULL) OR (selected_key IS NOT NULL AND selected_hash IS NOT NULL AND selected_hash ~ '^[0-9a-f]{64}$' AND selected_choice_id IS NOT NULL AND selected_phone_number_id IS NOT NULL AND selected_phone_number_id ~ '^[0-9]{1,40}$')), 
 	FOREIGN KEY(business_id) REFERENCES businesses (id), 
 	FOREIGN KEY(actor_user_id) REFERENCES users (id), 
 	FOREIGN KEY(actor_session_id) REFERENCES user_sessions (id)
@@ -65,6 +66,7 @@ DDL = (
 	CONSTRAINT wa_choice_attempt FOREIGN KEY(attempt_id, business_id) REFERENCES whatsapp_signup_attempts (id, business_id), 
 	CONSTRAINT wa_choice_phone UNIQUE (attempt_id, waba_id, phone_number_id), 
 	CONSTRAINT wa_choice_tenant UNIQUE (id, attempt_id, business_id), 
+	CONSTRAINT wa_choice_phone_tenant UNIQUE (id, attempt_id, business_id, phone_number_id), 
 	CONSTRAINT wa_choice_ids CHECK (waba_id ~ '^[0-9]{1,40}$' AND phone_number_id ~ '^[0-9]{1,40}$'), 
 	CONSTRAINT wa_choice_fingerprint CHECK (fingerprint ~ '^[0-9a-f]{64}$'), 
 	CONSTRAINT wa_choice_registration CHECK (provider_registration_status IN ('unknown','registered','unregistered'))
@@ -161,10 +163,12 @@ DDL = (
 	FOREIGN KEY(actor_session_id) REFERENCES user_sessions (id), 
 	UNIQUE (outbound_message_id)
 )""",
-    """ALTER TABLE whatsapp_signup_attempts ADD CONSTRAINT wa_signup_selected_choice FOREIGN KEY(selected_choice_id, id, business_id) REFERENCES whatsapp_signup_choices (id, attempt_id, business_id)""",
+    """ALTER TABLE whatsapp_signup_attempts ADD CONSTRAINT wa_signup_selected_choice FOREIGN KEY(selected_choice_id, id, business_id, selected_phone_number_id) REFERENCES whatsapp_signup_choices (id, attempt_id, business_id, phone_number_id)""",
+    """CREATE UNIQUE INDEX wa_signup_phone_claim ON whatsapp_signup_attempts (selected_phone_number_id) WHERE state IN ('setting_up','setup_unknown')""",
     """CREATE INDEX ix_wa_signup_cleanup ON whatsapp_signup_attempts (token_delete_after)""",
     """CREATE INDEX ix_wa_test_created ON whatsapp_connection_tests (business_id, issued_at)""",
 )
+
 
 def upgrade():
     op.create_unique_constraint("wa_message_tenant_identity", "whatsapp_messages", ["id", "seller_id"])
@@ -202,7 +206,7 @@ BEGIN
  IF TG_TABLE_NAME='whatsapp_signup_attempts' AND (
  to_jsonb(NEW)->>'state'<>'pending' OR to_jsonb(NEW)->>'exchange_consumed_at' IS NOT NULL OR to_jsonb(NEW)->>'provisional_token_ciphertext' IS NOT NULL
  OR to_jsonb(NEW)->>'token_expiry_kind'<>'unknown' OR to_jsonb(NEW)->>'token_expires_at' IS NOT NULL OR to_jsonb(NEW)->>'verified_app_id' IS NOT NULL
- OR to_jsonb(NEW)->>'selected_choice_id' IS NOT NULL OR to_jsonb(NEW)->>'subscription_state'<>'not_started' OR to_jsonb(NEW)->>'registration_state'<>'not_started') THEN
+ OR to_jsonb(NEW)->>'selected_choice_id' IS NOT NULL OR to_jsonb(NEW)->>'selected_phone_number_id' IS NOT NULL OR to_jsonb(NEW)->>'subscription_state'<>'not_started' OR to_jsonb(NEW)->>'registration_state'<>'not_started') THEN
  RAISE EXCEPTION 'Signup must start without provider effects' USING ERRCODE='23514'; END IF;
  IF TG_TABLE_NAME='whatsapp_connection_tests' AND (to_jsonb(NEW)->>'inbound_message_id' IS NOT NULL OR to_jsonb(NEW)->>'cancelled_at' IS NOT NULL) THEN
  RAISE EXCEPTION 'Test must start without recipient proof' USING ERRCODE='23514'; END IF;
@@ -213,8 +217,8 @@ BEGIN RAISE EXCEPTION 'WhatsApp authorization evidence is immutable' USING ERRCO
     op.execute("""CREATE FUNCTION wa_signup_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF TG_OP='DELETE' THEN RAISE EXCEPTION 'Signup history is retained' USING ERRCODE='23514'; END IF;
- IF (to_jsonb(NEW)-ARRAY['state','exchange_consumed_at','provisional_token_ciphertext','token_expiry_kind','token_expires_at','verified_app_id','selected_choice_id','selected_key','selected_hash','subscription_state','registration_state','updated_at'])
- IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['state','exchange_consumed_at','provisional_token_ciphertext','token_expiry_kind','token_expires_at','verified_app_id','selected_choice_id','selected_key','selected_hash','subscription_state','registration_state','updated_at']) THEN
+ IF (to_jsonb(NEW)-ARRAY['state','exchange_consumed_at','provisional_token_ciphertext','token_expiry_kind','token_expires_at','verified_app_id','selected_choice_id','selected_phone_number_id','selected_key','selected_hash','subscription_state','registration_state','updated_at'])
+ IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['state','exchange_consumed_at','provisional_token_ciphertext','token_expiry_kind','token_expires_at','verified_app_id','selected_choice_id','selected_phone_number_id','selected_key','selected_hash','subscription_state','registration_state','updated_at']) THEN
  RAISE EXCEPTION 'Signup identity is immutable' USING ERRCODE='23514'; END IF;
  IF OLD.exchange_consumed_at IS NOT NULL AND NEW.exchange_consumed_at IS DISTINCT FROM OLD.exchange_consumed_at
  OR OLD.exchange_consumed_at IS NULL AND NEW.exchange_consumed_at IS NOT NULL AND (OLD.state<>'pending' OR NEW.state<>'exchanging' OR NEW.exchange_consumed_at<OLD.created_at OR NEW.exchange_consumed_at>OLD.expires_at)
@@ -228,7 +232,7 @@ BEGIN
  OR OLD.state='awaiting_selection' AND NEW.state IN ('setting_up','failed')
  OR OLD.state='setting_up' AND NEW.state IN ('setup_unknown','attached','failed')) THEN
  RAISE EXCEPTION 'Invalid signup transition' USING ERRCODE='23514'; END IF;
- IF OLD.selected_key IS NOT NULL AND ROW(NEW.selected_choice_id,NEW.selected_key,NEW.selected_hash) IS DISTINCT FROM ROW(OLD.selected_choice_id,OLD.selected_key,OLD.selected_hash)
+ IF OLD.selected_key IS NOT NULL AND ROW(NEW.selected_choice_id,NEW.selected_phone_number_id,NEW.selected_key,NEW.selected_hash) IS DISTINCT FROM ROW(OLD.selected_choice_id,OLD.selected_phone_number_id,OLD.selected_key,OLD.selected_hash)
  OR OLD.selected_key IS NULL AND NEW.selected_key IS NOT NULL AND (OLD.state<>'awaiting_selection' OR NEW.state<>'setting_up') THEN
  RAISE EXCEPTION 'Selected account is immutable' USING ERRCODE='23514'; END IF;
  IF NEW.provisional_token_ciphertext IS DISTINCT FROM OLD.provisional_token_ciphertext AND NEW.provisional_token_ciphertext IS NOT NULL
@@ -302,6 +306,7 @@ BEGIN
  IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['provider_message_id','status','error','updated_at']) THEN
  RAISE EXCEPTION 'Bound test message identity is immutable' USING ERRCODE='23514'; END IF;
  END IF;
+ IF TG_OP='DELETE' THEN RETURN OLD; END IF;
  RETURN NEW;
 END; $$""")
     op.execute("""CREATE FUNCTION wa_choice_guard() RETURNS trigger LANGUAGE plpgsql AS $$
