@@ -1,0 +1,76 @@
+..........................................................F......        [100%]
+=================================== FAILURES ===================================
+_ test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-material] _
+
+case_id = 'missing-approved-material', question = 'What material is this?'
+record_property = <function record_property.<locals>.append_property at 0x1099945e0>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('case_id,question', MISSING_CASES, ids=[row[0] for row in MISSING_CASES])
+    async def test_missing_approved_fact_withholds_or_identifies_uncertainty(case_id, question, record_property):
+        rows = [] if case_id == 'missing-approved-skus' else approved_rows()
+        if case_id == 'missing-approved-price':
+            rows[0]['price_minor'] = None
+        decision = await decide(question, rows, record_property)
+        record_property('scenario_id', case_id)
+        if case_id != 'missing-approved-material':
+            assert decision.reply is None, 'Missing public facts must not produce an automatic catalogue answer'
+            return
+        reply = decision.reply or ''
+        material_lines = [line.casefold() for line in reply.splitlines()
+                          if re.search(r'\b(material|fabric|composition)\b', line, re.I)]
+        explicit_unknown = any(re.search(r'unknown|unrecorded|not (?:recorded|listed|confirmed|available)|need[s]? confirmation|please confirm|confirm with', line)
+                               for line in material_lines)
+>       assert reply == EXPECTED_HANDOFF or explicit_unknown, (
+            'Missing material requires material-specific uncertainty or human handoff; '
+            'a generic catalogue dump does not answer the unavailable fact. Actual reply:\n' + reply)
+E       AssertionError: Missing material requires material-specific uncertainty or human handoff; a generic catalogue dump does not answer the unavailable fact. Actual reply:
+E         Current catalogue: Semantic kurta.
+E         • Color: Indigo; Size: M — ₹123.45; recorded available: 2.
+E         • Color: Indigo; Size: L — ₹145.67; recorded out of stock.
+E         • Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.
+E         Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team.
+E       assert ('Current cata...ith our team.' == 'Our team wil...this product.'
+E         
+E         - Our team will confirm the current options, price and availability for this product.
+E         + Current catalogue: Semantic kurta.
+E         + • Color: Indigo; Size: M — ₹123.45; recorded available: 2.
+E         + • Color: Indigo; Size: L — ₹145.67; recorded out of stock.
+E         + • Color: Indigo; Size: XL — ₹167.89; availability untracked; please confirm with our team.
+E         + Availability is a current catalogue observation, not a reservation. Please confirm your preferred option with our team. or False)
+
+backend/tests/test_v08_semantics_acceptance.py:207: AssertionError
+=============================== warnings summary ===============================
+../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[english-price]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[english-size]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[english-stock]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hinglish-price]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hinglish-size]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hinglish-stock]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hindi-price]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hindi-size]
+tests/test_v08_semantics_acceptance.py::test_language_question_preserves_exact_approved_facts_or_safe_handoff[hindi-stock]
+  tests/test_v08_semantics_acceptance.py:161: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+tests/test_v08_semantics_acceptance.py::test_buyer_policy_override_is_data_and_retains_human_handling[english-policy-override]
+tests/test_v08_semantics_acceptance.py::test_buyer_policy_override_is_data_and_retains_human_handling[hindi-policy-override]
+tests/test_v08_semantics_acceptance.py::test_buyer_policy_override_is_data_and_retains_human_handling[hinglish-policy-override]
+  tests/test_v08_semantics_acceptance.py:176: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+tests/test_v08_semantics_acceptance.py::test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-skus]
+tests/test_v08_semantics_acceptance.py::test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-price]
+tests/test_v08_semantics_acceptance.py::test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-material]
+  tests/test_v08_semantics_acceptance.py:191: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.asyncio
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee/artifacts/v1/v08-semantics-coordination/composed-focused.xml -
+=========================== short test summary info ============================
+FAILED backend/tests/test_v08_semantics_acceptance.py::test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-material]
+1 failed, 64 passed, 16 warnings in 0.35s

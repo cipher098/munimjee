@@ -1,0 +1,167 @@
+{
+  "base": "d4026b1ebf8e9e11865ccf2172ded41bcdc0ac22",
+  "reference_runtime": "eeb94a119736cae816af782f2af5e04cb877e616",
+  "source_matches_reference_runtime": true,
+  "root_reproduction_head": "c9fc6f9d2c88428d4d6fd7c5a40a3dcbc4b9f226",
+  "new_frozen_counts": {
+    "passed": 20,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 0,
+    "total": 21
+  },
+  "existing_baseline_counts": {
+    "passed": 44,
+    "failed": 0
+  },
+  "composed_counts": {
+    "passed": 64,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 0,
+    "total": 65
+  },
+  "root_pytest_exit": 1,
+  "failed_node": "test_missing_approved_fact_withholds_or_identifies_uncertainty[missing-approved-material]",
+  "failure_classification": "P2 missing-material-specific uncertainty/handoff, not an invented-fact or financial-action violation",
+  "source_sha256": {
+    "backend/app/schemas/sku_fact_replies.py": "15868938220a0f55527cfc776669f72441a85827ba54c8ee634af21cc1242159",
+    "backend/app/services/sku_fact_replies.py": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+    "backend/app/services/whatsapp_context.py": "341c300caea396ff47c94cbd9ba8abbfd0ffbb408d9f9e6f0855736d63647329",
+    "backend/tests/conftest.py": "86593e55cc19dc97d001d214ba8c514922a0ca42c4825883e1c30ac6301a6e84",
+    "backend/tests/safety.py": "e32957b384487cc14172bc87c58ae5ed3c88fab8acba647c68101cb9fa02a0e1",
+    "backend/app/services/instagram_ingress.py": "a084457445150b190e717ef3adfd8cf04fd0c7e2de87e3047aa1a6e2ce30db5b",
+    "backend/app/services/channel_readiness.py": "64cbe1a8d419049c303e8446828436ad9093d77e7dfe09dcd9cfe7e9ccf5d076",
+    "backend/app/services/whatsapp.py": "bee87cb96eca056428bf3cb7c614c16bec717a96243317fa325a21e4df90e2c7",
+    "backend/app/workers/whatsapp.py": "0c7fdc5013aaf4406314ff382eef551853eaebfb350f18081f672fd85d837b62",
+    "backend/app/services/comment_binding.py": "e5e1209e1deb05146bf0afeff39e5990b5d93c134d4070397742b01950288bff",
+    "backend/tests/test_sku_fact_replies.py": "38a03bc041b64e98b4da5def9044b0532d82842f2f7c9475bc62177f49a880e1",
+    "backend/tests/test_sku_fact_replies_db.py": "a19e189279ef8f58e2fe04789baaa3514ee1ba5d42cb0febd841713161f1babd",
+    "backend/tests/test_whatsapp.py": "cd1240647f241009e77b93193dd7044eeb15646850edb07618c7457388162b38",
+    "backend/tests/test_instagram_ingress_worker.py": "3d501cdb085bfda9475e1455929c93971c4e7f27c27052208b5b61d9b47dc570",
+    "backend/tests/test_comment_binding_db.py": "09f818ba84917d571ecff30ce454ad95a39140fbfb97bd98888db1b72778c067",
+    "backend/tests/test_v1_channel_hardening.py": "dbd44eef5e1d57e3ffa1fe9dadb5e719bade0c6508114b329e9590bf5a89adb5",
+    "backend/tests/test_channel_operator_db.py": "0c4137b87339ae2b6154f4825d18d27b1a9045c120a4207b45e2a46d1f30c6fa",
+    "go-live-plan.md": "42bfda286288bb4d0241544736d7e512677d1671c175d95ae4b5c62de0552c8a",
+    "docs/v1-execution-status.md": "44e44f42da388efa6f28648757807930eb9375d32f91728ed32575d9d1aec791",
+    "artifacts/v1/release-audit/acceptance-matrix.json": "c0f69d5412edd609f417be16515ca51785f3be9f01a00aaf00fd1a6f6237b60c"
+  },
+  "verified_function_hashes": [
+    {
+      "function": "app.services.whatsapp_context.instagram_references",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 21,
+      "end_line": 36,
+      "function_sha256": "1d56dcb4b6943cb4d3a33c6fcd962e47ea90891221f9576aa6067c49b586606a"
+    },
+    {
+      "function": "app.services.whatsapp_context.inbound_context",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 39,
+      "end_line": 118,
+      "function_sha256": "ac894fe9dea3c51777b927110703ceecb96ee4e55f7208f6c2cef8562cedbab0"
+    },
+    {
+      "function": "app.services.whatsapp_context.reel_reply_decision",
+      "path": "backend/app/services/whatsapp_context.py",
+      "start_line": 132,
+      "end_line": 182,
+      "function_sha256": "58be12f9aedf4013c79feac0fa14e998340cf42620ca2c2c2177ef4396dd7065"
+    },
+    {
+      "function": "app.services.sku_fact_replies.exact_reel_products",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 152,
+      "end_line": 161,
+      "function_sha256": "04689fa85a741f47b6dbdd1ca3e534bebdf61a00777822716c64b2e79afa604d"
+    },
+    {
+      "function": "app.services.sku_fact_replies.is_activated",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 31,
+      "end_line": 37,
+      "function_sha256": "afa0faefb31ace32f8ba319dbf784d4c888a16847e667394cfc2df0ed3080fbb"
+    },
+    {
+      "function": "app.services.sku_fact_replies.read_facts",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 40,
+      "end_line": 89,
+      "function_sha256": "7fcc09f47c33345ca0f76d7efa620be4be210760d865c8608b3543810aeddb6f"
+    },
+    {
+      "function": "app.services.sku_fact_replies.reel_question",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 117,
+      "end_line": 122,
+      "function_sha256": "540fe0fec0c988ad52f382a74aa987afb76359d6c551cd25ce175b00a6873266"
+    },
+    {
+      "function": "app.services.sku_fact_replies.factual_request",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 108,
+      "end_line": 114,
+      "function_sha256": "60b86710060c9353285d8ca65de3df1774eafa1d70245f22d3afa879d368e520"
+    },
+    {
+      "function": "app.services.sku_fact_replies.render",
+      "path": "backend/app/services/sku_fact_replies.py",
+      "start_line": 92,
+      "end_line": 101,
+      "function_sha256": "bc3c387f6b939cea319ec588319ab5eb071bd0684890ace9b02eae6cdeb6578c"
+    }
+  ],
+  "test_sha256": {
+    "backend/tests/test_v08_semantics_acceptance.py": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c",
+    "backend/tests/test_v08_context_acceptance.py": "da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41"
+  },
+  "root_command": "/tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_sku_fact_replies.py backend/tests/test_intent_classifier.py backend/tests/test_prompt_builders.py backend/tests/test_v08_semantics_acceptance.py backend/tests/test_v08_context_acceptance.py -q --junitxml=artifacts/v1/v08-semantics-coordination/composed-focused.xml > artifacts/v1/v08-semantics-coordination/composed-focused.txt 2>&1",
+  "root_artifact_sha256": {
+    "existing-focused.txt": "f43559d4d31ada468e62b54fb62671379051d480e4c626abad2ab2ecf6dd597a",
+    "composed-focused.xml": "d5fcdf78f99984e21aaa00905a399a589a735d756e38bbb8f26649dd60184ee5",
+    "existing-focused.xml": "46f8d54e8548ee4fcdf1faf3eb6f32df3cd42ebf1e48e6faf7e236b1bde425a3",
+    "composed-focused.txt": "e64be2120b16f4b28cc5bf9941f3095ccfef76e15ca63e07745d3feeb1f10ad3"
+  },
+  "runtime_schema_static_unchanged": true,
+  "existing_tests_unchanged": true,
+  "original_composed_patch_equality": true,
+  "source_docs_whitespace_pass": true,
+  "raw_evidence_whitespace": "Verbatim pytest failure text/XML retained; no whole-tree whitespace-pass claim.",
+  "root_warnings": "One existing Pydantic warning plus15 record_property/xunit2 compatibility warnings. No additional run overwrote them.",
+  "external_effects": "No DB/server/model/provider/customer send/credentials/Docker/ambient4317/production action",
+  "injected_boundaries": "Synthetic rollout + declared raw query rows. No model output or context/decision/render function injected.",
+  "unrun": [
+    "Actual SQL predicates/tenant/current authority/persistence",
+    "DB/mounted pause/reconnect/context/queue/resume",
+    "Same-account reconnect then queued WA activated-SKU delivery",
+    "Legacy responder/live model quality",
+    "Authorized provider delivery/physical devices/full V08/X01"
+  ],
+  "independent_review": {
+    "original_commit": "5a552079a917343c26153679b0b592f18f5bb1d7",
+    "composition": "84744f5",
+    "counts": {
+      "total": 21,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 20
+    },
+    "hashes_verified": true,
+    "harness_assertion_disposition": "No blocker in bounded packet; P2 material runtime gap remains red",
+    "reproduction_limit": "Initial cross-worktree collection conflict preserved; corrected invocation explicitly loads one unchanged safety conftest. Root canonical composed result is separate."
+  },
+  "worker_remote_heads_verified": {
+    "codex/v1-v08-semantics-tests": "98fe4bb61c37875fd3fa7f82dad3f0d8037ced25",
+    "codex/v1-v08-context-tests": "8a1860dd592ebe865f28c1d069fa1b0d83622ea3",
+    "codex/v1-v08-independent-review": "5a552079a917343c26153679b0b592f18f5bb1d7"
+  },
+  "worker_trees_clean": true,
+  "review_artifact_sha256": {
+    "independent-21.xml": "18447e894027c85ee4d2e8812f5c86b3ab7d8d5ba5b1fc1897eb893089fdc211",
+    "peer-review-verification.json": "807c3752c0a0e6ebe6b5ba1fed74fed176b9c2cb8192ce8b08bcc56298667375",
+    "source-inventory.json": "a781b8985c02145d579ebefd84dd1efb08093cc0d2dba88e4f567fb0bb566757",
+    "independent-21.txt": "abc4e9dfa5330919cddb06d2146cd270a8847f1a8e7c1a2a6f7d34f7828b9ae0",
+    "collection-diagnostic.txt": "ff8f8acd59c28def8e565ed06d3fba8f25848ba855f7eb23fd7395351d2529fb"
+  }
+}
