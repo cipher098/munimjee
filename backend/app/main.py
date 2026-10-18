@@ -43,6 +43,7 @@ from app.api.v1.parcel_tracking import router as v1_parcel_router
 from app.api.v1.assistance import router as v1_assistance_router
 from app.api.v1.support_grants import router as v1_support_grants_router
 from app.api.v1.analytics_v1 import router as v1_analytics_router
+from app.api.v1.customer_links import router as v1_customer_links_router
 from app.api.v1.payment_settings import router as v1_payment_settings_router
 from app.api.v1.session import business_mutation
 from app.api.v1.storefront_bootstrap import install_storefront
@@ -103,6 +104,7 @@ app.include_router(v1_parcel_router)
 app.include_router(v1_assistance_router)
 app.include_router(v1_support_grants_router)
 app.include_router(v1_analytics_router)
+app.include_router(v1_customer_links_router)
 app.include_router(v1_payment_settings_router)
 install_storefront(app)
 

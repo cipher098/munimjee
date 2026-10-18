@@ -178,6 +178,10 @@ async def ingest_message(db, account, value, event):
         return
     if timestamp > now() + timedelta(minutes=5):
         return
+    # Trusted signed-ingress account identity precedes any transcript/context.
+    from app.services.customer_links import ingest_whatsapp_command
+    if await ingest_whatsapp_command(db, account, event, timestamp):
+        return
     contact = await db.scalar(select(WhatsAppContact).where(WhatsAppContact.seller_id == account.seller_id, WhatsAppContact.phone == phone).with_for_update())
     first = contact is None
     if not contact:

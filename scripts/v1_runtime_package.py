@@ -22,6 +22,7 @@ STATIC = frozenset((
     'payment_settings.html', 'payment_settings.js', 'payment_settings.css',
     'support_grants.html', 'support_grants.js', 'support_grants.css',
     'analytics_v1.html', 'analytics_v1.js', 'analytics_v1.css',
+    'customer_links.html', 'customer_links.js', 'customer_links.css',
     'import_workspace.html', 'import_workspace.css', 'import_workspace.js',
     'theme_settings.html', 'theme_settings.css', 'theme_settings.js',
     'parcel_tracking.html', 'parcel_tracking.js', 'parcel_tracking.css', 'parcel_scanner.js',
@@ -85,7 +86,7 @@ def create_context(root: Path, output: Path) -> dict:
     required = {'backend/requirements.txt', 'backend/alembic.ini', 'backend/app/main.py',
                 'backend/alembic/env.py', 'backend/static/v1_client.js', 'deploy/v1/Dockerfile'}
     required.update('backend/static/' + prefix + '.' + suffix
-                    for prefix in ('import_workspace', 'theme_settings', 'assistance', 'payment_settings', 'support_grants', 'analytics_v1')
+                    for prefix in ('import_workspace', 'theme_settings', 'assistance', 'payment_settings', 'support_grants', 'analytics_v1', 'customer_links')
                     for suffix in ('html', 'css', 'js'))
     required.update('frontend/storefront/src/' + name for name in STOREFRONT)
     if not required.issubset(names):

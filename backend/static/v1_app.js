@@ -67,6 +67,7 @@
       }
     }
     if (actor.features?.support_grants && business.role === 'owner') { const link = text('a', 'Allow assisted access', 'button secondary'); link.href = `/v1/businesses/${business.id}/support`; $('business-tools').append(link); $('business-tools').hidden = false; }
+    if (actor.features?.customer_links && business.capabilities.includes('inbox.read')) { const link = text('a', 'Customer account links', 'button secondary'); link.href = `/v1/businesses/${business.id}/customers`; $('business-tools').append(link); $('business-tools').hidden = false; }
     profileVersion = data.profile.version;
     const form = $('profile-form');
     form.elements.name.value = data.profile.name;
