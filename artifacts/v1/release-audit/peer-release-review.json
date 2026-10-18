@@ -1,0 +1,74 @@
+{
+  "format": "munimjee.release-audit.peer-review.v1",
+  "review_mode": "source/static and independent pure/fake checks; no DB/Docker/provider execution",
+  "ci": {
+    "initial_reviewed": "dafc175a6f50f6fef079a941c6f4e3dcabf1dccd",
+    "finding_source": "01b0ce4841ba36d9adb1f06fadc122a31bea8185",
+    "fixed_source": "3846fffc66525a481fa26c64560d1d6de0e402ee",
+    "final_branch_head": "5b4cc41e2e99c18b4400d51f383de035747d7d33",
+    "source_hashes": {
+      ".github/workflows/tests.yml": "5d7dfa5c5e4f60437643f024c4b3fee12e3074eb5143ecf5e76fdd149776d5e5",
+      "scripts/v1_runtime_package.py": "185f22d8d23238a4372453ffdcd13138b0de718286bee3505fe759b06e088133",
+      "scripts/smoke_v1_runtime.py": "80aca6af6acb2e0e723a1df1563eeec0376b6b541b0b50f122e8ecfd369c96b4",
+      "deploy/v1/Dockerfile": "c2f73ed4f746e3a0e2a0b5731af8311e164b90254e9de19ada3de1d1bfb0be20",
+      "deploy/v1/runtime.in": "aadd2e23c2bcd1396a392bfea5c40191fea7c38afeae620630d63a3b8837f3cf",
+      "deploy/v1/runtime.lock": "88aaacf6306260168661758ebb0857f0ca580ca03641b05c7decdf9dfb3f5e93",
+      "deploy/v1/test.lock": "fb54cc733d82609ac7208180541df70fc3144498f8e240aa109a3b4e48ee48da"
+    },
+    "independent_pure_checks": {
+      "passed": 124,
+      "skipped": 2,
+      "failed": 0,
+      "environment": "cached local Python3.12; no TEST_DATABASE_URL supplied",
+      "scope": "119 pure CI/package/P01 checks +5 startup; two actual DB cases explicitly skipped"
+    },
+    "staged_deletion_finding": "fixed and independent same-temp-repo repro rechecked; deleted allowlisted module now makes dirty=true and clean guard refuses",
+    "history_fetch": "migrated-postgres checkout fetch-depth0 allows historical audit git blobs",
+    "ci_permissions": "contents read; no persisted checkout credentials, secrets, deployment/push, self-hosted runner or privilege escalation",
+    "required_migration": "JUnit requires exact one passing unskipped migrated P01 lease testcase before full backend/browser",
+    "dependency_integrity": "runtime/test hash-required locks, immutable base/actions and declared primary registry evidence; 90 hashed wheel files per Linux arch are saved download evidence, not image execution",
+    "reproducibility": "normalized source archive evidence only; OCI image reproducibility not established",
+    "hosted_execution": "saved01b0ce4 run39105879610 has four jobs and zero steps; billing-lock annotation. No hosted PG16/browser/image jobs ran. Final3846 workflow not proven hosted.",
+    "pending": [
+      "actual new locked image build and offline smoke on amd64/arm64",
+      "hosted PG16/mounted browser workflow",
+      "rehearsal composition on hosted allocated pair",
+      "CI billing/account owner action"
+    ]
+  },
+  "rehearsal": {
+    "initial_reviewed": "8b6128e9529c07e064ebfe5d8e49d689edc46083",
+    "fixed_source": "0e2996fc27feca5255c5c386f6a650ede5e3015a",
+    "source_hashes": {
+      "scripts/v1_release_rehearsal.py": "108b93ca0bbe1a5be27444fc407ba59375a4ce87f1d21c7064135450c532dc67",
+      "scripts/v1_release_synthetic.py": "6fa76ced4ae9251d4bddbe246c9ca497880718a1dcacbd6a9543f2dd1eaebbbf",
+      "scripts/v1_release_exec.py": "4ddeffe53e629dd62aa12e5662df122ba371af49db9995beb768d3d9fef1f66c",
+      "tests/release/test_v1_release_rehearsal.py": "272e892cab136f96c79b38d0ecd184ebc9a072f86b0a84941510b7e3f43479bb"
+    },
+    "independent_pure_fake_checks": {
+      "passed": 38,
+      "skipped": 1,
+      "failed": 0,
+      "environment": "cached local Python3.12; no allocated source/target URLs",
+      "scope": "pure/fake checks plus actual private exec-helper resource limit; actual DB acceptance skipped"
+    },
+    "schema_finding": "fixed: columns/constraints +functions,triggers/enabled state,indexes,RLS flags/policies,views,enums,sequence definitions/state; changed/missing-protection regressions pass",
+    "boundary_checks": [
+      "default plan reads source only",
+      "explicit distinct initially-empty P01 loopback lane pair and private ownership attestation",
+      "both held session leases span migrate/dump/restore/reconcile and cooperative child cancellation",
+      "new outside-every-Git archive directory0700; no-overwrite/no-follow owned0600 archive",
+      "bounded child command/environment and failure/argument redaction",
+      "no create/drop DB, pg_restore clean/create, external cleanup, destructive schema downgrade",
+      "newer target-only order retained by generic read-only probe; actual old/current app switch still pending"
+    ],
+    "snapshot_limitation": "source repeatable-read comparison proves snapshot consistency under cooperative no-non-P01-writer allocation; does not detect external concurrent writers",
+    "pending": [
+      "actual synthetic PG16 migration/dump/restore/reconciliation",
+      "actual prior/current app compatibility switch/forward-fix journey",
+      "operational backup destination, runbook and owner approval"
+    ]
+  },
+  "all_identified_release_tool_source_findings_resolved_in_reviewed_slices": true,
+  "release_ready": false
+}

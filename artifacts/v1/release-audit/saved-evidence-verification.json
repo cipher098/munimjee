@@ -1,0 +1,86 @@
+{
+  "format": "munimjee.release-audit.saved-evidence-check.v1",
+  "mode": "source/static/saved-artifact checks only",
+  "commands": [
+    "python3 -m unittest discover -s backend/tests -p test_v1_release_audit_evidence.py -v"
+  ],
+  "audit_base": "3082f1aa2f579b622bb09ae1fc3e238e20818e1f",
+  "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+  "backend_full_source": "257b2733e5f7f61e2d3d9ed971a55a5f7a96fd94",
+  "actual_migrated_local_evidence": "historical source evidence: PG16.15 actual0050,1417passed8skipped; no new database execution",
+  "artifact_sha256": {
+    "artifacts/v1/integration/wave4/full.xml": "c09434fea301124e1822ddecc9354dd493c9fb60182943aa0eaf685b2577a92e",
+    "artifacts/v1/integration/wave4/full.txt": "fd6846d2d2d1fbcacc646d0108619bf0c636e500c3806cc933e90222412bd9e9",
+    "artifacts/v1/integration/wave4/final-gates.json": "e54b1e3165830912b3278201987bc604066be710e18c4b2f1e72218eede1752f",
+    "artifacts/v1/integration/wave4/native-mounted-browser.txt": "5abff2a521deaae230808abfb0ab27cc281012da4a54a6ca920b432a442960bb",
+    "artifacts/v1/integration/wave4/native-recovery-mounted-source.json": "caa5d49df3553597e5c4ebd54b9a5744dead6d140894874183f595590e3bb648",
+    "artifacts/v1/runtime-package/wave4-final-manifest.json": "3ac85b7625d1405a76533f978dbefc0bb899e2418104cd0822b89702cac26162",
+    "artifacts/v1/runtime-package/wave4-final-image-verification.json": "74d7f88fe54f572ab377917670cc2dbb3f164c409a1e45228fa6d8c1c389389d"
+  },
+  "saved_xml_runs": {
+    "artifacts/v1/integration/wave4/focused-initial.xml": {
+      "passed": 105,
+      "failed": 23,
+      "errors": 28,
+      "skipped": 0
+    },
+    "artifacts/v1/integration/wave4/native-fixed.xml": {
+      "passed": 57,
+      "failed": 17,
+      "errors": 0,
+      "skipped": 0
+    },
+    "artifacts/v1/integration/wave4/full.xml": {
+      "passed": 1417,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 8
+    },
+    "artifacts/v1/integration/wave4/import-fixed.xml": {
+      "passed": 17,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "harness_provenance": [
+    {
+      "artifact": "artifacts/v1/integration/wave4/final-gates.json",
+      "application_source": "dd36b0dab568684d6c8ee6c66d47e27a76b9fca4",
+      "harness_source": "47b1b83103ef7c7728ec350c4cc415d27f235ca2",
+      "path": "backend/tests/browser/import_workspace_native.mjs",
+      "reason": "Recorded bf6445ca hash matches post-application evidence-only screenshot scroll/paint harness at47b1b83; dd36b0d product source stays unchanged. Do not attribute every harness byte to dd36b0d."
+    }
+  ],
+  "runtime_source_manifest": {
+    "files": 286,
+    "context_file_hashes_verified_against_recorded_git_blobs": true,
+    "new_image_built": false,
+    "new_image_smoked": false,
+    "historical_image_is_new_lock_base_proof": false
+  },
+  "limited_literal_scan": {
+    "scope": "historical runtime-manifest text source files only; no env/private credentials read",
+    "files_scanned": 283,
+    "patterns": [
+      "aws_access_key",
+      "private_key_pem",
+      "github_classic_token",
+      "anthropic_api_token"
+    ],
+    "matched_file_counts": {
+      "aws_access_key": 0,
+      "private_key_pem": 0,
+      "github_classic_token": 0,
+      "anthropic_api_token": 0
+    },
+    "claim": "No matched high-confidence formats in this bounded scan; not comprehensive absence of secrets certification."
+  },
+  "provider_calls": 0,
+  "new_db_writes": 0,
+  "docker_calls": 0,
+  "remote_ci_runs": 0,
+  "physical_device_checks": 0,
+  "production_deployment": false,
+  "counts_overlap_and_must_not_be_summed": true
+}

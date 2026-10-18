@@ -1,0 +1,12 @@
+{
+  "reviewed_source": "3846fffc66525a481fa26c64560d1d6de0e402ee",
+  "scenario": "same independent staged-delete repro after fix",
+  "git_diff_head_names": [
+    "backend/app/optional.py"
+  ],
+  "runtime_source_dirty": true,
+  "expected_dirty": true,
+  "real_repo_modified": false,
+  "network_or_db": false,
+  "release_clean_guard": "refused"
+}
