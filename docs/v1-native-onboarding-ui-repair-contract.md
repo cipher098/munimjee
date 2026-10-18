@@ -6,9 +6,13 @@ comparison from `3f50197` records 27/32 passing browser cases and five P2 UI
 failures. Preserve all 32 cases, the five repaired privacy/session cases and the
 existing identity, business-load, CSRF, current-capability and async fences.
 
-**Transfer pending: no production/runtime writes are authorized yet.** This is the
-minimal proposed patch for the local integrator to reserve. Source-only design,
-test preparation, static review and an unapplied patch artifact are allowed.
+**Transfer confirmed by the local integrator on18 October2026.** Implementation is
+authorized in `v1_app.js` and `v1_app.css`, with no competing planned edits. This
+two-file boundary is preferred; HTML was permitted only if genuinely necessary,
+but no need has been identified. No other runtime file is transferred. Existing
+session/generation/privacy fences remain mandatory. Local source review and an
+actual migrated mounted check follow later composition; eeb94a1 is not accepted
+or used as this isolated source.
 
 ## Exact proposed runtime ownership
 
@@ -66,7 +70,8 @@ they preserve incumbent muted-green Operate styling and plain uncertainty/recove
 copy. Their craft-floor path points to another host and is unavailable here. No
 new design system or unrelated global cleanup is proposed. Applicable primary
 references remain W3C Focus Visible, Non-text Contrast and Reflow, as recorded in
-the previous independent QA evidence.
+the previous independent QA evidence. The integrator explicitly confirmed the
+unavailable skill is nonblocking and requested no unrelated dependency install.
 
 Independent QA must run all32 reviewed cases against actual repaired modules with
 fresh current-source formatter fixtures and intercepted synthetic HTTP; no weakening

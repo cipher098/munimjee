@@ -1,0 +1,30 @@
+{
+  "application_base": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+  "ownership_transfer": "CONFIRMED by local integrator; two preferred runtime files authorized; HTML only if genuinelynecessary, no need identified",
+  "proposed_runtime_files": [
+    "backend/static/v1_app.js",
+    "backend/static/v1_app.css"
+  ],
+  "excluded_reference_files": [
+    "backend/static/v1_app.html",
+    "backend/static/commerce.css",
+    "backend/static/v1_client.js"
+  ],
+  "base_sha256": {
+    "backend/static/v1_app.js": "a2e6a63f923c19b1eb5f5a822a8eaf150dea3e3707611e2b1a378fa22ff6d766",
+    "backend/static/v1_app.css": "2c8162f8ff55ab9d7be02eadc673144cb56354930fdd7afe1f86e83814f97e09",
+    "backend/static/v1_app.html": "26bf8078bd8d0a3174df54860c35faa360ea3852416a3247066e594d223b7587",
+    "backend/static/commerce.css": "cb05b1cb48365d534f85890343355acb5173e69cb75b3e84d8698b574e8ee5dd",
+    "backend/static/v1_client.js": "35ebf9d5c9063564a1bbc162805e9528a169b0a3499814c13c9962ef99b0aedf"
+  },
+  "base_git_blobs": {
+    "backend/static/v1_app.js": "750453f0f239ba09b3e49a3d1a6355019ff466fb",
+    "backend/static/v1_app.css": "91199d65de9c5f21ac01537d226f5c067ebf7a15",
+    "backend/static/v1_app.html": "3c95cdd2107d4446abf9ba9bc8b9151fdea18b42",
+    "backend/static/commerce.css": "7ed8d018d2763c9e6f9f50146de6534c55a180f0",
+    "backend/static/v1_client.js": "57caf3cbfd7b0e7132b25eb9000b4838ab36bb8c"
+  },
+  "skill_status": "No installed matching Impeccable/accessibility SKILL.md found; repository incumbent review notes read; other-host craft-floor unavailable.",
+  "prohibited_effects": "No runtime writes before transfer, server/schema/channel/activity/credential/authpolicy changes, storefront repair, providers/ambientservices/production.",
+  "skill_unavailable": "Explicitly nonblocking per integrator; incumbent notes/W3C used, no installs"
+}
