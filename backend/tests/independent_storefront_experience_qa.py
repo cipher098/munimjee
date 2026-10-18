@@ -6,6 +6,7 @@ stock/empty/long-text inputs. Only the owned evidence directory is written.
 from tests.safety import install_test_safety
 install_test_safety()
 
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -40,8 +41,12 @@ def source_hashes():
     return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
 
 
-def main():
-    OUT.mkdir(parents=True, exist_ok=True)
+def main(output=OUT):
+    output = output.resolve()
+    allowed = (ROOT / "artifacts/v1/independent-storefront-experience").resolve()
+    if output != allowed and not output.is_relative_to(allowed):
+        raise ValueError("QA output must stay in owned evidence directory")
+    output.mkdir(parents=True, exist_ok=True)
     before = source_hashes()
     dto = product()
     for theme, palette in [("editorial", "rose"), ("catalogue", "forest"), ("video", "indigo")]:
@@ -56,7 +61,7 @@ def main():
             ("long", {"name": "Independent Boutique with a long published business name for narrow mobile screens",
                       "products": ({**dto, "name": "Occasion dress with an exceptionally detailed published garment title"},)})]:
             fixture = PublicStorefront(**{**store.__dict__, **changes})
-            (OUT / f"{theme}-{variant}.html").write_text(render_storefront(fixture, ORIGIN))
+            (output / f"{theme}-{variant}.html").write_text(render_storefront(fixture, ORIGIN))
     public_api_product = {**dto, "contract_version": "catalogue.v2", "mode": "operational", "business_id": BUSINESS,
                           "readiness": "active", "checkout_enabled": True,
                           "skus": [sku for sku in dto["skus"] if sku["active"]]}
@@ -65,10 +70,12 @@ def main():
         "source_hashes_before": before, "source_hashes_after": source_hashes(),
         "source_unchanged_during_export": before == source_hashes(), "product_id": PRODUCT, "sku_id": SKU,
         "api_product": public_api_product,
-        "fixture_hashes": {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(OUT.glob("*.html"))}}
-    (OUT / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        "fixture_hashes": {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(output.glob("*.html"))}}
+    (output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(f"Exported {len(metadata['fixture_hashes'])} fresh actual SSR fixtures; source unchanged={metadata['source_unchanged_during_export']}; no DB/network.")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, default=OUT)
+    main(parser.parse_args().output)
