@@ -1,0 +1,205 @@
+{
+  "base": "e7edea1613b9902c726ce571e3d16c169c8cf190",
+  "source_candidate": "3b91a3a96a6c3f104e0666bb19dfbd97d1bc96e9",
+  "branch": "codex/v1-v08-material-repair",
+  "runtime_diff": {
+    "paths": [
+      "backend/app/services/sku_fact_replies.py"
+    ],
+    "exact_approved_substitutions_only": true,
+    "base_sha256": "1877e4d1d890e47eab566d3444177dc600da97cc2a90df2b5731bef6dac20ab0",
+    "candidate_sha256": "884bdbdd3df66658a9c1f295494931c87fed17a2777c65757642e5140cb8b953",
+    "base_git_blob": "b915e4fe5b54db97d0a71030e5fb526b77901c38",
+    "candidate_git_blob": "43b504dd238befa32ad83414e8f2c1f702ac3b9e",
+    "unchanged_functions": [
+      "enabled",
+      "is_activated",
+      "read_facts",
+      "render",
+      "reel_question",
+      "reel_candidates",
+      "exact_reel_products",
+      "instagram_batch_context",
+      "freeze_instagram_batch",
+      "instagram_filters"
+    ],
+    "functions": {
+      "enabled": {
+        "start_line": 26,
+        "end_line": 28,
+        "sha256": "907eb65f061e55f76f75efa45cda1715ef5aff87dab30ed83fc8297dd48123ce"
+      },
+      "is_activated": {
+        "start_line": 31,
+        "end_line": 37,
+        "sha256": "9291c823a6d4122f984dd047a2b9ce3918a9ffb7f5b4ff6ffe5213471ca236f4"
+      },
+      "read_facts": {
+        "start_line": 40,
+        "end_line": 89,
+        "sha256": "6fb5b5bb2bbcacdc3e636b15ab5d60587e38aa615a68d3986d4272f31fdf0cfc"
+      },
+      "render": {
+        "start_line": 92,
+        "end_line": 101,
+        "sha256": "5df21cc70a20150ddb9fc288637c6f1ae9a8ca6763912971d3773311fc22f73f"
+      },
+      "factual_request": {
+        "start_line": 108,
+        "end_line": 114,
+        "sha256": "46826b01bcd52172a8e829c51185cecde719e47c671048db9a73461154218cfc"
+      },
+      "reel_question": {
+        "start_line": 117,
+        "end_line": 122,
+        "sha256": "6e955286bc5d2d3ff976e5496a7ae5f53e05467cb43612ccf5c26854853f09f3"
+      },
+      "reel_candidates": {
+        "start_line": 125,
+        "end_line": 149,
+        "sha256": "629348f679fcc58d05ad472b8a422a4e5dc90f6f1be8398984b976418e496070"
+      },
+      "exact_reel_products": {
+        "start_line": 152,
+        "end_line": 161,
+        "sha256": "52131f18864d2352b4feca47e4928f87d212c20e140fefe65df38ff7807b8bf8"
+      },
+      "instagram_batch_context": {
+        "start_line": 164,
+        "end_line": 219,
+        "sha256": "b14b488b4b0f430ef83aa28dafe8aee763e552ba0adcf16cc14757afba241d22"
+      },
+      "freeze_instagram_batch": {
+        "start_line": 222,
+        "end_line": 231,
+        "sha256": "8220fc7b0c13ed7c5790b59cfca47aa304706b75d374d1e7c42c6a5687bb058f"
+      },
+      "instagram_filters": {
+        "start_line": 234,
+        "end_line": 279,
+        "sha256": "9c5d379da944504f9ef025d77edf21e86c4d8063d2975235e587d57b33ab87b7"
+      }
+    },
+    "handoff_assignment_unchanged": true
+  },
+  "tests": {
+    "command": "PYTHONPATH=backend /tmp/munimjee-release-ci-py311/bin/python -m pytest backend/tests/test_sku_fact_replies.py backend/tests/test_intent_classifier.py backend/tests/test_prompt_builders.py backend/tests/test_v08_semantics_acceptance.py backend/tests/test_v08_context_acceptance.py -q -o junit_family=xunit1 --junitxml=artifacts/v1/v08-material-repair/focused-65.xml",
+    "passed": 65,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "duration_seconds": 0.32,
+    "warning": "Existing Pydantic class-based config deprecation",
+    "case_counts": {
+      "tests.test_sku_fact_replies": 21,
+      "tests.test_intent_classifier": 8,
+      "tests.test_prompt_builders": 15,
+      "tests.test_v08_semantics_acceptance": 15,
+      "tests.test_v08_context_acceptance": 6
+    },
+    "artifact_sha256": {
+      "focused-65.txt": "6bf9e7bbf9b084ed885320985c5b0e7e5d94b3ebda8e37593a7b75127758f180",
+      "focused-65.xml": "c9ae65a42af073ba0fddbb4f7699abc42680e7e74de16e34f4d9409cd880ba76"
+    }
+  },
+  "preserved_baseline_files": {
+    "artifacts/v1/v08-context/results.xml": {
+      "git_blob": "d1867f8631b6f3884df4186a1dc8eeaf541bbd67",
+      "sha256": "55e26222ad74cfed6fa1756e2b81bf5b739c37e1a456062c3101ef5ba45bd798"
+    },
+    "artifacts/v1/v08-context/run.txt": {
+      "git_blob": "522074fc306ec10d7218445324d2f71a068a672f",
+      "sha256": "7823b28da49e06fef2939b8fff67abba19aeb8fd3722b009f515429e7bef8bd9"
+    },
+    "artifacts/v1/v08-context/verification.json": {
+      "git_blob": "aab43b2ac93fcca6bbcd3067f2b4252784925247",
+      "sha256": "7915e87c5edfde80d4bc6257948380950a1a011715c1c6ca8bcb4e8e2b23c937"
+    },
+    "artifacts/v1/v08-review/collection-diagnostic.txt": {
+      "git_blob": "beed808a6070c60c79b7d1a0181e34f7a442918b",
+      "sha256": "ff8f8acd59c28def8e565ed06d3fba8f25848ba855f7eb23fd7395351d2529fb"
+    },
+    "artifacts/v1/v08-review/independent-21.txt": {
+      "git_blob": "f5ab3cfb310841ea469d0664fef56394331395dd",
+      "sha256": "abc4e9dfa5330919cddb06d2146cd270a8847f1a8e7c1a2a6f7d34f7828b9ae0"
+    },
+    "artifacts/v1/v08-review/independent-21.xml": {
+      "git_blob": "34a85b8698d16802585823531295bacbdf419f23",
+      "sha256": "18447e894027c85ee4d2e8812f5c86b3ab7d8d5ba5b1fc1897eb893089fdc211"
+    },
+    "artifacts/v1/v08-review/peer-review-verification.json": {
+      "git_blob": "7c02d6490badc4706b3a8d66418e0ddf314c14a2",
+      "sha256": "807c3752c0a0e6ebe6b5ba1fed74fed176b9c2cb8192ce8b08bcc56298667375"
+    },
+    "artifacts/v1/v08-review/source-inventory.json": {
+      "git_blob": "427c141be8889d0d10ba1d68298096b541151389",
+      "sha256": "a781b8985c02145d579ebefd84dd1efb08093cc0d2dba88e4f567fb0bb566757"
+    },
+    "artifacts/v1/v08-semantics-coordination/composed-focused.txt": {
+      "git_blob": "8314512e48dbb92b1f6be0df83babdd95c5690c9",
+      "sha256": "e64be2120b16f4b28cc5bf9941f3095ccfef76e15ca63e07745d3feeb1f10ad3"
+    },
+    "artifacts/v1/v08-semantics-coordination/composed-focused.xml": {
+      "git_blob": "0fc680753696569bb8355b604dad00da1cc4b184",
+      "sha256": "d5fcdf78f99984e21aaa00905a399a589a735d756e38bbb8f26649dd60184ee5"
+    },
+    "artifacts/v1/v08-semantics-coordination/existing-focused.txt": {
+      "git_blob": "8efe7c67561865ee243cf8a0193ff1ff23585cd5",
+      "sha256": "f43559d4d31ada468e62b54fb62671379051d480e4c626abad2ab2ecf6dd597a"
+    },
+    "artifacts/v1/v08-semantics-coordination/existing-focused.xml": {
+      "git_blob": "449d325410de78dfadaa8acb62a2cb623b647c3d",
+      "sha256": "46f8d54e8548ee4fcdf1faf3eb6f32df3cd42ebf1e48e6faf7e236b1bde425a3"
+    },
+    "artifacts/v1/v08-semantics-coordination/final-verification.json": {
+      "git_blob": "46f56c52d334c5029f2040a709ea9bdca15aa393",
+      "sha256": "624b8dcdeae0fd0c403ce5217d3a439e9d546900cc14d23b0b5ff9d47dc643c7"
+    },
+    "artifacts/v1/v08-semantics/first-run.txt": {
+      "git_blob": "f39765dc88d1df3fc44d88f9885b53ae190da181",
+      "sha256": "06b1e8b0107e086dcbbfe58145641afe06c8437a22fdce0bae7ed3e3269318ec"
+    },
+    "artifacts/v1/v08-semantics/first-run.xml": {
+      "git_blob": "0d0834cb97c8259649a57152d7c68d39e62b2e65",
+      "sha256": "fc42ba9f1f67f5ed2c2e261788aa1b1ea78414cb693cab7ed2e9d99261f39f91"
+    },
+    "artifacts/v1/v08-semantics/verification.json": {
+      "git_blob": "e5822047796d93d57fa3da480d5e56a7e60e6aaf",
+      "sha256": "5d73f90c080894960cd2b028cc1ebdbd054d821fcc03a53812a856f2a52a5372"
+    },
+    "backend/tests/test_v08_context_acceptance.py": {
+      "git_blob": "cc28adc39cd3a426ab67da3006236113632f3b0d",
+      "sha256": "da503a158c02271e18517b682f827d9c60d63dae5a71ffb161e388113089dd41"
+    },
+    "backend/tests/test_v08_semantics_acceptance.py": {
+      "git_blob": "9de0597a119c86728b8bafc1671aa5aede90854b",
+      "sha256": "9b058d604b486d1012ec6d788825a3c0a40a5f269f931946e5aa06a68a339b7c"
+    }
+  },
+  "scope": {
+    "runtime_change": "Unsupported material/materials tokens, alone or mixed with supported price/stock/options, fail the small factual classifier and retain existing HANDOFF. No assertion about whether approved material exists.",
+    "real_semantics_functions": [
+      "instagram_references",
+      "inbound_context",
+      "reel_reply_decision",
+      "exact_reel_products",
+      "is_activated",
+      "read_facts",
+      "reel_question",
+      "factual_request",
+      "render"
+    ],
+    "injected_seam": "Existing tests supply strict read-only synthetic SQL projections at scalar/scalars/execute; actual source constructs SQL and decodes approved rows. No SQL execution, persisted authority or delivery proof.",
+    "model_provider_output_injected": false,
+    "original_semantics_cases": 15,
+    "original_context_cases": 6,
+    "hindi_limit": "Three original Devanagari cases establish safe HANDOFF, not successful Hindi product answers or model quality.",
+    "unrun": [
+      "mounted local database/SQL authority gate",
+      "actual providers or LLMs",
+      "sender/durable queue/delivery",
+      "broad multilingual answer quality",
+      "full V08/V1 release acceptance"
+    ]
+  }
+}
