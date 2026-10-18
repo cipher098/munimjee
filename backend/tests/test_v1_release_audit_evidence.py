@@ -72,8 +72,14 @@ class SavedEvidenceAudit(unittest.TestCase):
             self.assertFalse(Path(path).is_absolute(), key)
             self.assertNotIn('..', Path(path).parts, key)
             # Historical source stays pinned when release composition changes current files.
-            body = ((ROOT / path).read_bytes() if ref['kind'] == 'saved_evidence' else
-                    git('show', f"{ref['source_commit']}:{path}"))
+            if ref['kind'] == 'saved_evidence':
+                # The matrix explicitly records this historical artifact snapshot.
+                # Current status/docs may advance without rewriting that evidence.
+                snapshot = ref['saved_artifact_snapshot']
+                self.assertRegex(snapshot, r'^[0-9a-f]{40}$', key)
+                body = git('show', f'{snapshot}:{path}')
+            else:
+                body = git('show', f"{ref['source_commit']}:{path}")
             self.assertEqual(digest(body), ref['sha256'], key)
             if ref['anchor']:
                 self.assertIn(ref['anchor'], body.decode().splitlines()[ref['line'] - 1], key)
