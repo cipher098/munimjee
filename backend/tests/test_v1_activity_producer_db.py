@@ -105,6 +105,7 @@ async def test_real_sql_ledger_failure_preserves_wa_inbound_and_outbox_exact_rep
     event={'id':'synthetic-mid','from':'919876543210','timestamp':str(int(whatsapp.now().timestamp())),
         'type':'text','text':{'body':'private-marker'}}
     async with sessions.begin() as db:
+        previous=(await db.execute(text("SELECT current_setting('lock_timeout'),current_setting('statement_timeout')"))).one()
         account=await db.get(WhatsAppAccount,bid)
         await whatsapp.ingest_message(db,account,{},event)
         await whatsapp.ingest_message(db,account,{},event)
@@ -114,7 +115,7 @@ async def test_real_sql_ledger_failure_preserves_wa_inbound_and_outbox_exact_rep
         second=await whatsapp.queue_message(db,account,contact,key='synthetic-exact-key',text='private-outbound',
             activity_producer=hooks.AutomatedWhatsAppProducer.INBOUND_REPLY)
         assert first.id==second.id
-        assert (await db.scalar(text("SELECT current_setting('lock_timeout')")))=='0'
+        assert (await db.execute(text("SELECT current_setting('lock_timeout'),current_setting('statement_timeout')"))).one()==previous
     async with sessions() as db:
         assert await db.scalar(select(func.count()).select_from(WhatsAppMessage))==2
         assert await db.scalar(select(func.count()).select_from(ActivitySource))==0
@@ -128,13 +129,13 @@ async def test_owner_policy_lock_contention_cannot_block_durable_outbox_commit(s
         await blocker.scalar(select(ActivityPolicy).where(ActivityPolicy.business_id==bid).with_for_update())
         async def queue_while_locked():
             async with sessions.begin() as db:
+                previous=(await db.execute(text("SELECT current_setting('lock_timeout'),current_setting('statement_timeout')"))).one()
                 account=await db.get(WhatsAppAccount,bid)
                 contact=WhatsAppContact(seller_id=bid,phone='919876543210',last_inbound_at=whatsapp.now())
                 db.add(contact);await db.flush()
                 row=await whatsapp.queue_message(db,account,contact,key='policy-contention',text='private-marker',
                     activity_producer=hooks.AutomatedWhatsAppProducer.ORDER_UPDATE)
-                assert await db.scalar(text("SELECT current_setting('lock_timeout')"))=='0'
-                assert await db.scalar(text("SELECT current_setting('statement_timeout')"))=='0'
+                assert (await db.execute(text("SELECT current_setting('lock_timeout'),current_setting('statement_timeout')"))).one()==previous
                 return row.id
         mid=await asyncio.wait_for(queue_while_locked(),2)
         # Independent observer sees the committed domain fact while the owner
