@@ -107,3 +107,5 @@ zero DNS/network/database attempts and CID-only verified cleanup passed. Source 
 `dd36b0d`; exact manifests are `artifacts/v1/runtime-package/wave4-final-*`.
 The earlier `257b273` image/log is preserved as an intermediate checkpoint.
 No container was deployed and no existing image/service was removed.
+
+Docker build stdout keeps its content with terminal carriage returns removed.

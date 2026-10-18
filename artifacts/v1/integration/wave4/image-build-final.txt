@@ -3,7 +3,7 @@ DEPRECATED: The legacy builder is deprecated and will be removed in a future rel
             BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
             environment-variable.
 
-Sending build context to Docker daemon  3.213MB
+Sending build context to Docker daemon  3.213MB
 Step 1/15 : FROM python:3.11-slim
  ---> e88e9763f943
 Step 2/15 : WORKDIR /app
