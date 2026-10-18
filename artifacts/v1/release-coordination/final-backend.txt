@@ -1,0 +1,33 @@
+.....sssssssssssssssss...................ssssssssssssssssssssssssss..... [  4%]
+........ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [  9%]
+sssssssssssssssssssssss..................s.....ssssssssssssss..ssssss.ss [ 14%]
+ssssssssssssssssssssssssssssssssssssssss.ssssssssssssss................. [ 19%]
+....................................................ssssssssssssssssssss [ 24%]
+.sss.sssssssssss........................ssssssssssssssssssss.......ss... [ 29%]
+...........................................................sss......ssss [ 34%]
+ssssssssssssssssssssssssssssssssssssssssssssss.......................... [ 39%]
+.........ssssssss.....................sssssssssssss.sssss............... [ 44%]
+.................................sssssssssss............................ [ 49%]
+..........................................................ssssssssssssss [ 54%]
+ssssssssss.ssss.............................................sssssss.ssss [ 59%]
+sssssssssssssssssssss..............................ssssssss............. [ 64%]
+........................................................................ [ 69%]
+.........................ss..........................sssssssss.......... [ 74%]
+.....................................sssssssssssssssssssssssssssssssssss [ 79%]
+sssssssss.sssssssssss................................................... [ 83%]
+.......................................................s................ [ 88%]
+....sssssssssss.ssssssssssss.......sssss................................ [ 93%]
+..................................ss.sssssssssssssss.sssss........ssssss [ 98%]
+ssssssssssssssssss                                                       [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../../../../../tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41
+  /tmp/munimjee-release-ci-py311/lib/python3.11/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/user/Documents/ChatGPT/munimjee/artifacts/v1/release-coordination/final-backend.xml -
+896 passed, 562 skipped, 2 warnings in 8.44s
