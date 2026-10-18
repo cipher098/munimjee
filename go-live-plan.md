@@ -25,18 +25,41 @@ physical-phone testing and operational deployment remain gates. Isolated real PG
 restore tooling passes its fresh-pair reconciliation; packaged old/current compatibility,
 native multiarchitecture and hosted CI billing remain separate release gates. Flags
 stay off by default. No real provider request, charge, customer send, running-project
-change or production cutover is authorized or claimed. Reviewed CSV0053, SEO and bounded authoritative-SKU replies are composed;
-Instagram retrieval/activity and remaining comment safeguards continue next.
-Current bounded0053 composition passes1950 backend tests with8 documented skips,
-central native-import47/CSV74/SKU-channel5 mounted checks and28 mounted SEO HTTP
-checks. A315-file locked arm64 image passes3 offline modes; fresh0053 restore53
-passes separately. The test-infrastructure interruption and recovered disk-backed
-PG16 gate are preserved in `docs/v1-wave6-validation.md`. Activity0054 and owned
-Instagram source fixes are next isolated candidates, not yet this composition.
-Five real queued-comment safety negatives keep broader V08 open; native comment
-controls and visible inferred-enquiry handoff remain code work. Official Meta docs
-raise principal/account-type/unavailable-original compatibility questions; both
-retrieval gates stay false. Current boundaries are in `docs/v1-wave6-contracts.md`.
+change or production cutover is authorized or claimed.
+
+The verified/pushed complete checkpoint remains `abab30a`, actual0053:1950 backend
+passes with8 documented skips; central native-import47/CSV74/SKU5 browser and28
+mounted SEO HTTP checks. Its315-file arm64 image passes3 offline modes; fresh0053
+restore53 is separate. Historical interrupted runs remain preserved.
+
+Wave7 now composes observed first-party activity0054 (shared public hooks, new-order
+provenance and ungated bounded retention cleanup), owned-Instagram private-original
+retrieval/generation fences, and0055 immutable comment source/claim guards. The five
+reproduced queued-comment safety failures are repaired in reviewed source and actual
+owner tests; they are no longer labelled unfixed. Native channel late-session/privacy
+and cross-writer generation fixes pass126 focused/25 mounted checks. Native workspace,
+readiness and final invitation authority followup passes190 focused/6 mounted checks.
+The local checklist advances from current reviewed facts while authorized messaging
+acceptance remains explicitly unavailable. Instagram documentary compatibility is
+bounded; both retrieval capabilities remain off and actual wire/grants are unproved.
+
+Native comment controls and durable inferred-WhatsApp review0056 are now composed
+and in their final actual-chain/browser gate (initial134 checks pass). They record
+no-send reviews and preserve unknown effects; they do not replay earlier replies.
+The older frozen0055 full run ended2325 passed,2 fixture failures,8 skipped; corrected
+fixtures pass26 checks, but a new composed full run is still required. Source
+composition is not complete acceptance. New-head runtime-image/restore/rollback
+proofs are also pending; prior0053 artifacts never certify0054–0056.
+
+Remaining code-owned work includes installed channel activity producers/outcome
+reporting (currently null, not zero), supported WhatsApp v4 self-service consent and
+account selection, authorized-recipient test/result workflow, and the rest of the
+V1 acceptance matrix. Catalogue's0057 proposal is contract-first; no live provider
+action is authorized. Remote mobile/accessibility/offline QA is active after the
+connection recovered; only reviewed delivered results count. Provider approvals,
+physical devices, international migration requirements and operational release
+remain separate gates. Exact current evidence and ownership are in
+`docs/v1-execution-status.md` and `docs/v1-wave7-contracts.md`.
 
 ## 1. The V1 outcome
 
@@ -387,6 +410,8 @@ assistance board. Actual migrated PostgreSQL 16, mounted browser, failure-matrix
 runtime-image evidence are recorded in docs/v1-execution-status.md and
 docs/v1-wave4-validation.md. No local proof is a release or deployment. The Wave5 extension adds bounded consented
 read-only support, order-cohort analytics and explicit endpoint-control customer links.
-Full activity analytics, unrestricted global assistance, remaining source adapters and
-the complete V1 acceptance matrix remain tracked scope. Keep marketing claims aligned
+Full activity analytics, remaining self-service/source acceptance and the complete
+V1 matrix remain tracked scope. Unconsented global tenant discovery/write access
+remains deliberately denied; explicit expiring owner grants provide bounded
+read-only assistance without impersonation. Keep marketing claims aligned
 with released features.
