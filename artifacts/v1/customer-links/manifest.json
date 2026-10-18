@@ -1,0 +1,61 @@
+{
+  "tested_source": "a7e6ce73f46099846caf11ff3ebc403951cc2f6d",
+  "checked_at": "2026-10-18T07:15:07.758051+00:00",
+  "database_lane": "parcel_w3",
+  "actual_database": "munimjee_test_parcel_w3",
+  "actual_revision": "0052_v1_customer_links",
+  "backend": {
+    "passed": 47,
+    "skipped": 0,
+    "warning": "existing Pydantic class Config deprecation"
+  },
+  "mounted_browser": {
+    "passed": 14,
+    "app": "actual app.main with integrator router/models/authenticated ingress registration",
+    "fixture": "test-only synthetic inbox/account configuration, no provider connection claim",
+    "live_provider_proof": false
+  },
+  "runtime_hashes_match": true,
+  "text_artifact_secret_scan": "No raw 43-character consent command",
+  "captures": {
+    "privacy": "Real #hide-command control clears #consent-command value and hides #command-panel before proof captures; no test-only token mask/redaction. Session-ended capture asserts empty field and private DOM.",
+    "desktop-one-proof.png": "1365px full-page, one proof only, no secret shown",
+    "mobile-verified-link.png": "390x844 selected account-control detail viewport",
+    "mobile-unlinked.png": "390x844 retained proof/audit history viewport after explicit unlink",
+    "mobile-session-ended.png": "390x844, confirmed native expiry with private DOM cleared"
+  },
+  "assets": {
+    "customer_links.html": {
+      "bytes": 5380,
+      "sha256": "612f5e6eab5c789dc53fec733b406c87e344fe88db71c5bff059fd6361aa8de9"
+    },
+    "customer_links.js": {
+      "bytes": 17458,
+      "sha256": "84db14d64ca3cfa529cbf028030191d60d975282c8b7648cda4f2101f2ede043"
+    },
+    "customer_links.css": {
+      "bytes": 2424,
+      "sha256": "e4692bc573a8f508cf1a463c730b2a79a66808a68056f8137e3a97cd2d3d8d05"
+    }
+  },
+  "remaining_gates": [
+    "authorized live Meta/customer consent canary",
+    "deployment/cutover",
+    "any future joined history or marketing/payment authority"
+  ],
+  "evidence_hashes": {
+    "backend.txt": "626c40fa8b2a5b7baecead358347755c2e74d3f9e5e939a54546f18ceeca3506",
+    "backend.xml": "9203c5f5a09f443fe384b040097b5548e35619a96b5eb1407a371469286f0a4e",
+    "browser-initial-failure.txt": "6c18f7b660cbda6e216335643a79d9bb082500486d1961b28200c9d17f865a1f",
+    "browser-results.json": "fa41d71858166b73c5931cf6a4c52d5e7bef20c9ac93ee8a342da3eaf2ac83b2",
+    "browser.txt": "dcf3d2f8b3a86b1efdc17a5a6f27484befac4b6b8f000ef6ec765e5895fedc7a",
+    "desktop-one-proof.png": "f644e10a92dca7f34b5776292623a07e612ec8f9c880b162d1306cbf6ea26167",
+    "mobile-session-ended.png": "4cfefb6f48da64636e982821be0e8b10b3bfc7021b8d86be4f416011ad178811",
+    "mobile-unlinked.png": "9e0c977853a46d472ea4e6391d1fc1a45b30f6ed84c6027d62090cde0a3d590c",
+    "mobile-verified-link.png": "94a226e35779de61eb349bd407c5dbb0b55eba061aae593ce8652bacad107563",
+    "verification.md": "8d0844ba1d8590fb3d9167080c036a3b6a7c9738b475ce08550d78906e510094"
+  },
+  "backend_source": "65f7a2c9159d7d024eebcef76528a5b120f8d78e",
+  "backend_byte_identical_at_final": true,
+  "independent_verdict": "SHIP bounded customer source/render at a7e6ce7 /65f7 backend"
+}

@@ -62,11 +62,14 @@ new explicit decision. Native identity/401 and lost inbox access clear private D
 
 ## Evidence boundary
 
-Initial P01/real PostgreSQL0052 service tests pass14checks, including endpoint/time
-negatives, same-event replay, immutable evidence/tenant FK, concurrent finalization,
-explicit unlink and preserved histories/consents. Syntax checks pass. This initial
-packet is an owned dependency for integration review, not final mounted UI proof.
-Further real native HTTP, authenticated webhook, authority-race and browser evidence
-will follow. Synthetic signed webhook proof demonstrates wiring only. A real
-provider/customer consent canary and deployment remain separately pending. No live
-message, provider call, customer data or production service was used.
+Final source a7e6ce7 passes47backend checks (14pure,17actualPG service/schema,
+16mounted-native HTTP) and14real Chromium journeys on actual app.main/0052.
+Backend source65f7a2c is byte-identical at final. The mounted server uses synthetic
+configured-account/inbox fixtures plus real signed webhook handlers; no live provider
+or customer proof is claimed. Evidence, source hashes, privacy policy, capture scope,
+initial refresh-race failure and final independent SHIP verdict are recorded in
+`artifacts/v1/customer-links/verification.md` and manifest.json. The real Hide consent
+command control clears its value before captures; no raw secret is committed.
+Port8156 and the borrowed dependency symlink are released. Central full/runtime
+composition and authorized live consent canary remain separate gates. No deployment,
+provider send, customer data or production service was used.

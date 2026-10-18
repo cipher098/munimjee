@@ -1,0 +1,32 @@
+{
+  "source_commit": "a7e6ce73f46099846caf11ff3ebc403951cc2f6d",
+  "hashes": {
+    "backend/static/customer_links.js": "e87eccacf9198a4226a2e88a84daaccb179fcbd69be9c03f1078fd083ffb6b05",
+    "backend/static/customer_links.html": "612f5e6eab5c789dc53fec733b406c87e344fe88db71c5bff059fd6361aa8de9",
+    "backend/static/customer_links.css": "e4692bc573a8f508cf1a463c730b2a79a66808a68056f8137e3a97cd2d3d8d05",
+    "backend/app/services/customer_links.py": "e7ee001c4994a964a1b612bc27a5b4230f367f4e82fc25acc22c3e7be303c2e1",
+    "backend/app/api/v1/customer_links.py": "462fa6cad1daf11a28bb7721c97f998959fcea127d57c959544ff918eddd789b",
+    "backend/app/api/webhooks/instagram.py": "e106ccadf5e37dbe901a737a65e57db17d35672cc8e24d57c8b286cf561d3262",
+    "backend/app/services/whatsapp.py": "be8b32ccced21d882715387cacc7812ef4d8ab03c0ff13b187b88b822b31c7cd"
+  },
+  "checks": 14,
+  "results": [
+    "desktop actual dual signed-source proof, explicit finalize, no auto merge, audited unlink",
+    "mobile verified and unlinked states preserve context and fit390",
+    "creation drop aftercommit retains exact key across reload and creates one request",
+    "creation 409 aftercommit retains exact key across reload and creates one request",
+    "creation 422 aftercommit retains exact key across reload and creates one request",
+    "creation old200 aftercommit retains exact key across reload and creates one request",
+    "lost finalization response exact replay confirms same customer after reload",
+    "typed pre-mutation stale proof state permits fresh explicit review only",
+    "denied storage sends zero creation POST",
+    "native expiry clears command/customer/history DOM and prevents further commands",
+    "same-user native session replacement clears private facts on focus",
+    "current role downgrade removes secret and review controls",
+    "concurrent form submissions serialize journal preparation into one creation",
+    "older successful native dispatch guard cannot revive after known session replacement"
+  ],
+  "errors": [],
+  "external": [],
+  "proof_scope": "Actual app.main/PG0052/native sessions + synthetic account fixtures and signed synthetic webhook requests. No live provider/customer proof or message send."
+}
