@@ -1,0 +1,34 @@
+✔ strict activity view binds business/dates and preserves unavailable nulls (0.921041ms)
+✔ conversion must be bounded exact supported context fraction (0.155125ms)
+✔ policy acknowledgement binds exact key mode expected revision and business (3.265583ms)
+✔ INR minor units above Number safe range are formatted without rounding (10.160166ms)
+✔ other currencies remain exact minor units without a guessed fraction or exchange rate (0.0945ms)
+✔ report validation binds the current filters and refuses secret or inexact extra values (0.959041ms)
+✔ stores only a bounded command/context/expiry, never capability (2.344291ms)
+✔ commit then dropped context response retries exact key after reload (0.234792ms)
+✔ reload reacquires memory proof with same context key (0.625625ms)
+✔ concurrent visible hooks share one context request and dedup events server-side (0.187625ms)
+✔ GPC prevents every optional POST (0.074084ms)
+✔ DNT prevents every optional POST (0.047917ms)
+✔ hidden prevents every optional POST (0.037375ms)
+✔ unavailable storage fails closed for measurement (0.077834ms)
+✔ silent storage write failure also prevents POST (0.129875ms)
+✔ malformed storage does not mint a fresh context: { (0.118458ms)
+✔ malformed storage does not mint a fresh context: null (0.057417ms)
+✔ malformed storage does not mint a fresh context: {"capability (0.043875ms)
+✔ malformed storage does not mint a fresh context: xxxxxxxxxxxx (0.03525ms)
+✔ foreign origin/context envelope is withheld (0.089042ms)
+✔ malformed but successful ACK never provides a checkout context (0.084167ms)
+✔ wrong context ID on reacquire does not replace persisted identity (0.112667ms)
+✔ expiry can start a new browsing context but never proof for frozen old intent (0.096709ms)
+✔ measurement transport failures return optional null/false (0.076083ms)
+✔ disposal or a newly enabled privacy preference removes access to proof (0.070375ms)
+✔ product view only accepts a literal product UUID (0.631959ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.748875

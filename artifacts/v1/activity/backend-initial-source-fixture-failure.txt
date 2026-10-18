@@ -1,0 +1,190 @@
+.......................................................F....F.           [100%]
+=================================== FAILURES ===================================
+_ test_new_deduplicated_inbound_tenant_source_is_minimal_and_immutable[whatsapp-wa_inbound] _
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:538: in _prepare_and_execute
+    self._rows = await prepared_stmt.fetch(*parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:176: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:241: in __bind_execute
+    data, status, _ = await self.__do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:230: in __do_execute
+    return await executor(protocol)
+asyncpg/protocol/protocol.pyx:207: in bind_execute
+    ???
+E   asyncpg.exceptions.StringDataRightTruncationError: value too long for type character varying(20)
+
+The above exception was the direct cause of the following exception:
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.StringDataRightTruncationError'>: value too long for type character varying(20)
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_v1_activity_sources.py:38: in test_new_deduplicated_inbound_tenant_source_is_minimal_and_immutable
+    sid=await inbound(db,bid,kind=kind)
+backend/tests/test_v1_activity_sources.py:25: in inbound
+    db.add(contact);await db.flush()
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py:800: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4341: in flush
+    self._flush(objects)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4476: in _flush
+    with util.safe_reraise():
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4437: in _flush
+    flush_context.execute()
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2353: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.StringDataRightTruncationError'>: value too long for type character varying(20)
+E   [SQL: INSERT INTO whatsapp_contacts (id, seller_id, phone, name, last_inbound_at, opted_out, utility_opt_in, marketing_opt_in, consent_updated_at, consent_history) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::VARCHAR, $5::TIMESTAMP WITH TIME ZONE, $6::BOOLEAN, $7::BOOLEAN, $8::BOOLEAN, $9::TIMESTAMP WITH TIME ZONE, $10::JSONB) RETURNING whatsapp_contacts.created_at]
+E   [parameters: (UUID('8e704a73-fcff-4b3c-bd97-0a5455748275'), UUID('8a066f5e-ffb6-471d-9ea3-122dd1c0c42c'), '39c04147f96247ffb9b44012312ccb6e', 'Private contact marker', None, False, False, False, None, '[]')]
+E   (Background on this error at: https://sqlalche.me/e/20/dbapi)
+____ test_new_manual_and_known_test_outbound_cannot_become_live_automation _____
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:538: in _prepare_and_execute
+    self._rows = await prepared_stmt.fetch(*parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:176: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:241: in __bind_execute
+    data, status, _ = await self.__do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/asyncpg/prepared_stmt.py:230: in __do_execute
+    return await executor(protocol)
+asyncpg/protocol/protocol.pyx:207: in bind_execute
+    ???
+E   asyncpg.exceptions.StringDataRightTruncationError: value too long for type character varying(20)
+
+The above exception was the direct cause of the following exception:
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.StringDataRightTruncationError'>: value too long for type character varying(20)
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_v1_activity_sources.py:67: in test_new_manual_and_known_test_outbound_cannot_become_live_automation
+    manual=await inbound(db,bid,kind='outbound');automated=await inbound(db,bid,kind='outbound')
+backend/tests/test_v1_activity_sources.py:25: in inbound
+    db.add(contact);await db.flush()
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py:800: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4341: in flush
+    self._flush(objects)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4476: in _flush
+    with util.safe_reraise():
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4437: in _flush
+    flush_context.execute()
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2353: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:924: in do_execute
+    cursor.execute(statement, parameters)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:572: in execute
+    self._adapt_connection.await_(
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:131: in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:550: in _prepare_and_execute
+    self._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:501: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+../munimjee-v1/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:789: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.StringDataRightTruncationError'>: value too long for type character varying(20)
+E   [SQL: INSERT INTO whatsapp_contacts (id, seller_id, phone, name, last_inbound_at, opted_out, utility_opt_in, marketing_opt_in, consent_updated_at, consent_history) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::VARCHAR, $5::TIMESTAMP WITH TIME ZONE, $6::BOOLEAN, $7::BOOLEAN, $8::BOOLEAN, $9::TIMESTAMP WITH TIME ZONE, $10::JSONB) RETURNING whatsapp_contacts.created_at]
+E   [parameters: (UUID('fda2bdc0-1cfa-4bd2-9c93-7ac89f355131'), UUID('cc97e2fc-8056-4579-b35f-a3116101ed65'), 'c8069260a35a47b8a27cc035daed608c', 'Private contact marker', None, False, False, False, None, '[]')]
+E   (Background on this error at: https://sqlalche.me/e/20/dbapi)
+=============================== warnings summary ===============================
+../munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284
+  /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_v1_activity_sources.py::test_new_deduplicated_inbound_tenant_source_is_minimal_and_immutable[whatsapp-wa_inbound]
+FAILED backend/tests/test_v1_activity_sources.py::test_new_manual_and_known_test_outbound_cannot_become_live_automation
+2 failed, 60 passed, 1 warning in 49.79s
