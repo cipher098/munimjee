@@ -9,8 +9,8 @@
     "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "c90a10dd061788d02ec86f774c476f2a2901823be8584a853ad038431e5b2dc6"
   },
   "owned_sha256": {
-    "backend/tests/test_v1_whatsapp_independent.py": "6b9e01ee9baee5dde05e3f2acb273d550ab4ac53a3789d12d47570c34edd3243",
-    "docs/v1-whatsapp-independent-security-review.md": "9b87a7969470f674129ea7c54ee494a4ea9b31e9e8133e552cc932bd03c187fc",
+    "backend/tests/test_v1_whatsapp_independent.py": "9ba0b8dd4f5d659864ccd97e0db2ad808050be683b8d14d08317dcfebe6be4e8",
+    "docs/v1-whatsapp-independent-security-review.md": "ace13019705077ece2c885e241f2438a2f6205db0f33b0fb1dbda2d68e943c9c",
     "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
     "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8",
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-extra-negatives.txt": "210cce537f2dc9dcd3013d14ba47f741248941e3bf7cb5b30fdb5efbdc104a80",
@@ -18,7 +18,8 @@
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-claim-revocation.txt": "6a0200d6f724a9bd59df0fbcc1369f55e28a2bb887e56b6f2b3e6b9221dfc415",
     "artifacts/v1/whatsapp-independent-review/coherent-6a8-fixture-correction-still-red.txt": "010d1f75541058ac2ac6ea9b58109a33199a710467210e4619a2e50b76b673af",
     "artifacts/v1/whatsapp-independent-review/fixed-0254-independent.txt": "0a8597028ff1d9340eb8c52b9cd1a2876363936a466dfd253ba71941f1bacf4f",
-    "artifacts/v1/whatsapp-independent-review/fixed-0254-independent-controls.txt": "f897fc8cffe61f14cf1d6b4d8802b5a6e6fd37c7ba96ca2e54913c3d19129f53"
+    "artifacts/v1/whatsapp-independent-review/fixed-0254-independent-controls.txt": "f897fc8cffe61f14cf1d6b4d8802b5a6e6fd37c7ba96ca2e54913c3d19129f53",
+    "artifacts/v1/whatsapp-independent-review/fixed-0254-app-rotation-negative.txt": "46d7695978239c0d6fda95d23afabc4c86c36321506c90aa2f9a655ca108f623"
   },
   "coherent_snapshot": "6a8d6be95e202f30e4838ffadcaf6039e6128b60",
   "coherent_dependency_alias": "461006e",
@@ -44,5 +45,10 @@
     "backend/app/services/whatsapp_self_service.py": "59ea762543e649f5815e39e275c23e1718e772d172e428ce55096346ff2e3a55",
     "backend/app/services/whatsapp_connection_tests.py": "554e2e2d2df9d04623b6f73bc4cbf29b3fe0733115dc8505fd4eb5e36bd2a8e1",
     "backend/app/api/v1/whatsapp_self_service.py": "b8b6ce11854452f74167c7374c7a12d7b8723ba365f3c18234cf2a83bc02e1f2"
+  },
+  "app_rotation_0254": {
+    "passed": 10,
+    "expected_failures": 3,
+    "mode": "actual helper / controlled commit and scalar / noDB"
   }
 }
