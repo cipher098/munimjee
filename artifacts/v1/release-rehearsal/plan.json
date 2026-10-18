@@ -17,6 +17,6 @@
     "private bounded pg_dump",
     "recheck empty target and pg_restore single transaction",
     "reconcile all table row/identity hashes, schema and monetary/reservation/pending totals",
-    "append newer target-only order; read-only compatibility probes preserve all facts"
+    "append newer target-only order; generic read-only persisted-data probe preserves all facts"
   ]
 }
