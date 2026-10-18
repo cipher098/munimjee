@@ -1,0 +1,17 @@
+{
+  "reviewed_snapshot": "944395caf75d82ccef455b738d0130df5431a134",
+  "mode": "independent source + fake-session/no-network tests; noDB/browser",
+  "additional_confirmed_findings": 1,
+  "source_sha256": {
+    "backend/app/services/whatsapp_signup_provider.py": "b056bfab8f1a541441a85ba2e069e2fe61c39f7ac358b6f767dd4a8bcb8cb524",
+    "backend/app/services/whatsapp_test_protocol.py": "68e38727f28b9aa9941d272f627a48f8f3fee692cb0eea6c5f8c6baf1399ea38",
+    "backend/app/services/whatsapp_test_authority.py": "ef5f11e7a3f94b7a1d59bcf1307d92100010e25e8e5d73b44a036b5584878a82",
+    "backend/alembic/versions/0057_v1_whatsapp_self_service.py": "c90a10dd061788d02ec86f774c476f2a2901823be8584a853ad038431e5b2dc6"
+  },
+  "owned_sha256": {
+    "backend/tests/test_v1_whatsapp_independent.py": "00723ab08b5204ebbb20b4905f4e5781225882a6aa57c3d23a190fa794d1b101",
+    "docs/v1-whatsapp-independent-security-review.md": "559d1137cf7d5ff510ce533bd32f91fce991be5107848f7dfc0c6a20e527db53",
+    "artifacts/v1/whatsapp-independent-review/foundation-mid-negative.txt": "68dbc7c8313fb8e98554c95660c4a2837fb1561a912fbd4e6a749014f95a7baf",
+    "artifacts/v1/whatsapp-independent-review/foundation-cancellation.txt": "96d63078d0c669e4aaeee7acbb4257d64d82928e34a836e9e62dc2aa289b24c8"
+  }
+}
