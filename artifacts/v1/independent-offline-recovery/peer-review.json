@@ -222,7 +222,7 @@
       "session-revoke-401.png"
     ]
   },
-  "review_status": "Original checkpoints and narrow baseline onboarding followup reviewed. Current baseline remains 22pass/10red; pending separate 8ae97c2 source comparison review.",
+  "review_status": "Complete read-only review of original and narrow baseline checkpoints plus both exact8ae97c2 comparisons. No safety or semantic blocker found within recorded scope; product failures and missing gates remain explicit.",
   "onboarding_baseline_followup": {
     "commit": "a3a3d6651121276d6b4aa289d7980e24992da6c2",
     "application_source": "abab30aaf1ab94052344b0ef21d05b3922f260dc",
@@ -237,6 +237,89 @@
     "passed": 22,
     "failed": 10,
     "review_findings": "No source/effect blocker found. Before browser launch all exported formatter/capability/safety hashes are checked with checkout-bounded paths. Actual public checkout key prefix is asserted. Nominal synthetic emails now conform to native validation. Both previously recorded nonblocking followups are resolved without new cases or suppression of ten failures.",
+    "browser_rerun_by_reviewer": false
+  },
+  "storefront_new_source_comparison": {
+    "application_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+    "runtime_delta": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+    "harness_commit": "51f24801a5beb7f39ee57f8739301c633b056272",
+    "docs_commit": "12c85209883825892e874dab7e68ddf3c2cd3a91",
+    "recorded_qa_head": "52cb7137cc1904f78ff0678f2e7ed96fafe204ad",
+    "runner_sha256": "6c90c4262f9b5373c29d5dd80e30df5269c8a08d774d2c63db408e95a75769b1",
+    "exporter_sha256": "688efd87f171344b413d2a092cac76383f725ec85792eaf51e1f73e18a0f3c64",
+    "same_75_case_ids_and_outcomes": true,
+    "scenario_assertion_tail_byte_identical": true,
+    "application_hash_count": 20,
+    "application_hashes_match_exact_8ae": true,
+    "unchanged_before_after": true,
+    "fresh_html_hashes_match": true,
+    "original_files_preserved": 29,
+    "runner_record_matches": true,
+    "exporter_record_matches": true,
+    "passed": 69,
+    "failed": 6,
+    "page_errors": [],
+    "denied_activity_context_requests": 153,
+    "only_denied_same_origin_activity_context_posts": true,
+    "activity_coverage": "MISSING; no successful/disabled/ready activity state response was added and no activity assertion was expanded.",
+    "review_conclusion": "Safe output-only adaptation; same spatial failures on actual newer source. Denied optional activity requests bound observed UI results and are not a standalone product defect or activity success. No application changes/production/provider/DB operation.",
+    "browser_rerun_by_reviewer": false
+  },
+  "onboarding_new_source_comparison": {
+    "application_source": "8ae97c2d57c0efda5a03a41a469bf9447739ee72",
+    "runtime_delta": "52fdda8d84f261841a44ef6a84e38e78cd93f237",
+    "docs_commit": "9642527196f2e80b0a0effd69678949be34074af",
+    "harness_commits": [
+      "e0d819d18b185bfcf4a2e10466e2c8d6e3aa0c86",
+      "a7282ed267d09b4f28b3b22dba24495f59a834b7"
+    ],
+    "runner_sha256": "13d503519ef85510f87d7faf29b6505c58fbe00f113d81dcfae66782e8619afd",
+    "exporter_sha256": "601b632ca1309826e32acec16901ff5493d00db0df5fe9aa3cd44286e5c4a00f",
+    "runner_record_matches": true,
+    "fixture_record_matches": true,
+    "all_verification_source_hashes_match_8ae": true,
+    "all_formatter_fixture_source_hashes_match_8ae": true,
+    "native_hashes_match_8ae": true,
+    "native_unchanged_during_run": true,
+    "recorded_artifact_hashes_match": true,
+    "original_files_preserved": 23,
+    "same_32_case_ids": true,
+    "fixed_baseline_failure_ids": [
+      "session-switch-401",
+      "session-revoke-401",
+      "role-focus",
+      "session-focus",
+      "cross-identity-error"
+    ],
+    "remaining_baseline_failure_ids": [
+      "keyboard-transition",
+      "contrast-focus",
+      "startup-error",
+      "long-business-name",
+      "logout-focus"
+    ],
+    "new_failure_ids": [],
+    "passed": 27,
+    "failed": 5,
+    "preserved_diagnostic_counts": {
+      "passed": 26,
+      "failed": 6
+    },
+    "lost_response_semantics": {
+      "exactly_one_synthetic_commit": true,
+      "two_stale_v3_puts": true,
+      "retry_rejected_409": true,
+      "two_complete_v4_frontend_reads_before_and_after_manual_reload": true,
+      "displayed_full_facts_equal_authoritative": true,
+      "new_saved_status_after_fresh_get": true,
+      "first_abort_error": "Failed to fetch",
+      "first_false_action_success_acknowledgement": false,
+      "saved_status_ms": 304,
+      "fresh_read_response_end_ms": 302.69999998807907
+    },
+    "unexpected_network": [],
+    "page_errors": [],
+    "semantic_review": "Source/cookie/6-step formatter adaptations preserve the real client. Only obsolete literal conflict-message placement replaced; strict full-facts/read/effect/timing/manual-reload invariants are stronger. Current recovery is valid in this synthetic UI scenario, not backend idempotency/persistence certification. Five genuine UX failures remain red.",
     "browser_rerun_by_reviewer": false
   }
 }
