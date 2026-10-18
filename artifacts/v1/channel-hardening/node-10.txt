@@ -1,0 +1,18 @@
+✔ confirmed401 physically clears facts, dialogs, token input and disables refresh (16.564833ms)
+✔ same-user replaced session on focus closes private access and old responses cannot revive it (1.954458ms)
+✔ older session response cannot restore owner controls after newer viewer authority (1.208ms)
+✔ visibility loss erases an entered token without a provider or mutation call (0.681666ms)
+✔ unknown WA save persists only safe conditional marker and erases password; reload never autoPOSTs (1.643625ms)
+✔ restricted journal storage blocks mutation before POST and erases token (0.763334ms)
+✔ valid-shaped old WA acknowledgement cannot clear a secret-bearing conditional intent (1.077958ms)
+✔ unclassified409 remains uncertain while exact typed pre-mutation generation conflict permits fresh review (2.223458ms)
+✔ unknown nonsecret operation reload explicitly retries exact body/key and never mints a replacement (1.94625ms)
+✔ an ended old page removes only its own session-scoped journal (0.771834ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.6915

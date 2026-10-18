@@ -70,7 +70,7 @@ async def connection_views(db, business_id):
             status = "not_checked"
         elif channel == "instagram" and not control.automation_enabled:
             status = "paused"
-        elif channel == "whatsapp" and not wa.enabled:
+        elif channel == "whatsapp" and not (wa.enabled and wa.automation_enabled):
             status = "paused"
         else:
             status = "access_verified"
@@ -79,10 +79,10 @@ async def connection_views(db, business_id):
                        "account_hint": "••" + account_id[-6:] if account_id else None,
                        "checked_at": control.checked_at.isoformat() if control and control.checked_at else None,
                        "error_code": control.error_code if control else None, "webhook_configured": webhook,
-                       "automation_enabled": bool((control.automation_enabled if control else configured) if channel == "instagram" else wa and wa.enabled),
+                       "automation_enabled": bool((control.automation_enabled if control else configured) if channel == "instagram" else wa and wa.enabled and wa.automation_enabled),
                        "oauth_configured": bool(settings.INSTAGRAM_APP_ID and settings.INSTAGRAM_APP_SECRET) if channel == "instagram" else None,
                        "provider_approval": "not_evaluated", "readiness_scope": "local_account_access",
-                       "end_to_end_tested": False})
+                       "end_to_end_tested": False, "connection_version": control.version if control else 0})
     return result
 
 
@@ -138,18 +138,31 @@ async def verify(db, actor, business_id, channel, payload):
         if channel == "whatsapp":
             account = await db.get(WhatsAppAccount, business_id)
             if account:
-                account.enabled = False
+                account.enabled, account.automation_enabled = False, False
+    if channel == "whatsapp":
+        state.version += 1  # Access/eligibility check supersedes older conditional setup.
     operation.after_status = state.check_status
     operation.outcome = {"status": state.check_status, "operation_id": str(operation.id),
                          "message": "Account access checked. Provider approvals and end-to-end delivery still need separate verification." if state.check_status == "verified" else "The account could not be verified. Reconnect or check provider access; no message was sent."}
     return operation.outcome
 
 
-async def connect_whatsapp(db, actor, business_id, payload):
+async def connect_whatsapp(db, actor, business_id, payload, *, expected_version=None):
     await locked_access(db, actor, business_id, "channels.connect")
-    operation = await begin_operation(db, actor, business_id, payload.idempotency_key, "connect_whatsapp", payload.model_dump())
+    command = payload.model_dump()
+    if expected_version is not None:
+        command["expected_connection_version"] = expected_version
+    operation = await begin_operation(db, actor, business_id, payload.idempotency_key, "connect_whatsapp", command)
     if operation.outcome:
         return operation.outcome
+    state = await state_for(db, business_id, "whatsapp")
+    await db.flush()
+    # Serialize native generation changes and compare before any provider work.
+    await db.refresh(state, with_for_update=True)
+    if expected_version is not None and state.version != expected_version:
+        raise HTTPException(409, {"code": "channel_generation_stale",
+            "message": "The connection changed. Review its current state before replacing credentials."})
+    accepted_base_version = state.version
     account = await db.get(WhatsAppAccount, business_id)
     if account and account.phone_number_id != payload.phone_number_id:
         raise HTTPException(409, "This business cannot change its WhatsApp number while retaining the old inbox")
@@ -165,6 +178,8 @@ async def connect_whatsapp(db, actor, business_id, payload):
         operation.outcome = {"status": "connection_failed", "operation_id": str(operation.id),
                              "message": "WhatsApp access could not be verified. Check the account details and token. No changes were saved."}
         return operation.outcome
+    if state.version != accepted_base_version:
+        raise HTTPException(409, "The connection changed while access was checked")
     if account is None:
         account = WhatsAppAccount(seller_id=business_id, phone_number_id=payload.phone_number_id, waba_id=payload.waba_id)
         db.add(account)
@@ -177,7 +192,8 @@ async def connect_whatsapp(db, actor, business_id, payload):
     state.checked_at, state.check_status, state.error_code = now(), "verified", None
     operation.after_status = "paused"
     operation.outcome = {"status": "paused", "operation_id": str(operation.id),
-                         "message": "WhatsApp access saved. Sending stays paused until you enable it after checking webhook setup."}
+                         "message": "WhatsApp access saved. Sending stays paused until you enable it after checking webhook setup.",
+                         "connection_version": state.version}
     return operation.outcome
 
 
@@ -194,11 +210,15 @@ async def set_automation(db, actor, business_id, channel, payload):
             raise HTTPException(409, "Verify the connection and configure its webhook before enabling sending")
         if channel == "instagram" and access.seller.instagram_token_expires_at and access.seller.instagram_token_expires_at <= now():
             raise HTTPException(409, "Reconnect Instagram before enabling sending")
+    changed = state.automation_enabled != payload.enabled
     state.automation_enabled = payload.enabled
     if channel == "whatsapp":
         account = await db.get(WhatsAppAccount, business_id)
         if account:
-            account.enabled = payload.enabled
+            changed = changed or account.enabled != payload.enabled or account.automation_enabled != payload.enabled
+            account.enabled, account.automation_enabled = payload.enabled, payload.enabled
+        if changed:
+            state.version += 1
     operation.after_status = "enabled" if payload.enabled else "paused"
     operation.outcome = {"status": operation.after_status, "operation_id": str(operation.id),
                          "message": "Sending enabled subject to current conversation checks." if payload.enabled else "Sending paused. Incoming messages remain saved."}
@@ -229,7 +249,7 @@ async def start_instagram(db, actor, business_id, payload, request):
     return operation.outcome, oauth_browser(attempt.id, credential)
 
 
-async def finish_instagram(db, actor, business_id, request, *, signed_state, code, denied):
+async def finish_instagram(db, actor, business_id, request, *, signed_state, code, denied, reauthorize=None):
     await locked_access(db, actor, business_id, "channels.connect")
     try:
         claims = jwt.decode(signed_state or "", settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
@@ -247,6 +267,8 @@ async def finish_instagram(db, actor, business_id, request, *, signed_state, cod
     if not hmac.compare_digest(request.cookies.get("v1_ig_link", ""), oauth_browser(attempt.id, credential)):
         raise HTTPException(400, "Instagram authorization belongs to a different browser session")
     attempt.consumed_at, attempt.result = now(), "exchange_started"
+    if reauthorize is not None:
+        await reauthorize()
     await db.commit()  # Consume before external exchange; an unknown exchange is never blindly repeated.
     if denied or not code:
         attempt.result = "declined"

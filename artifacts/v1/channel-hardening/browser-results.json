@@ -1,0 +1,10 @@
+{
+  "checks": 25,
+  "actual_main_router": true,
+  "actual_native_api_and_migrations": true,
+  "synthetic_account_reads": 4,
+  "provider_sends": 0,
+  "external_requests": [],
+  "page_errors": [],
+  "physical_device": false
+}

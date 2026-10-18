@@ -1,0 +1,15 @@
+{
+  "backend/app/api/routes/whatsapp.py": "b50cf90d9a660273ca0a25e363641110a51178bf2b0e1ca2deb9584da16321da",
+  "backend/app/api/v1/channel_operator.py": "9a9b5c494a65bf7ff0eb2ddb917e1fc576991fac44ad6ee59cd7310cab0457ec",
+  "backend/app/services/channel_connections.py": "96256906f8eb0e2f37945715341b84a1683a778acddcbf18b0d94b4f2f2e1ca5",
+  "backend/app/services/channel_operator.py": "2c437bed35c6b32aa5ec420685cd4d4788525003bbddcecceecbfe0c06c9e7dc",
+  "backend/static/channel_operator.html": "2e0df717edf164fc681550ef73f399e51b2113e62c9ab293a75efa8b2c9dd126",
+  "backend/static/channel_operator.js": "81ec488d2ce1c386b7258dbee61df3d0228dbe32bb2bcd5fddf18349fb116a9a",
+  "backend/tests/test_v1_channel_hardening.py": "dbd44eef5e1d57e3ffa1fe9dadb5e719bade0c6508114b329e9590bf5a89adb5",
+  "backend/tests/browser/channel-hardening.test.mjs": "c2dbacf4ed460475222cf55e841df5c217e4369b89b6834eae1cf17867ae6425",
+  "backend/tests/browser/channel_hardening.mjs": "19a3f0af36c89abc3c1ba20deb7cdb6f30daaa9800b5af5e00461949699795d4",
+  "backend/tests/channel_hardening_server.py": "4e798f0d225c664736d69884aeae7de7d737a824126b499e722df51f359b4e26",
+  "backend/tests/run_channel_hardening_browser.py": "9b7817f946adfb540e9f92a4311358477951b6a7a326c6e9feb5d73adb547e6d",
+  "backend/alembic/versions/0054_v1_activity.py": "3f1c1be152f8e30c81c81e053d7711fa5f4ebf6d360f60f9aac25ab20ef5de6d",
+  "backend/alembic/versions/0055_v1_comment_binding.py": "abd075dccae72eba9f23a002555e2534c91066ee12b0eefe011e48fb3c204e9d"
+}

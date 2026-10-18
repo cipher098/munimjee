@@ -1,0 +1,11 @@
+Actual migrated Alembic head: 0055_v1_comment_binding
+node:internal/process/promises:332
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+route.fulfill: Route is already handled!
+    at /Users/gothi/Documents/Codex/2026-10-10/help-me-understand-x20/work/munimjee-v1-channel-hardening/backend/tests/browser/channel_hardening.mjs:54:261 {
+  name: 'Error'
+}
+
+Node.js v26.0.0
