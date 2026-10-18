@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from uuid import UUID
 
 
 class Settings(BaseSettings):
@@ -11,6 +12,9 @@ class Settings(BaseSettings):
     V1_PUBLIC_PAYMENTS_ENABLED: bool = False
     V1_IMPORT_BRIDGE_ENABLED: bool = False
     V1_PARCEL_ENABLED: bool = False
+    V1_SUPPORT_GRANTS_ENABLED: bool = False
+    V1_SUPPORT_OPERATOR_IDS: List[UUID] = []  # Explicit trusted subjects; no browser provisioning.
+    V1_CUSTOMER_LINKS_ENABLED: bool = False
     V1_PARCEL_CONNECTORS_JSON: str = ""  # Private, explicitly provisioned per-Business machine bindings.
     V1_PARCEL_ALLOWED_ORIGINS: List[str] = []
     V1_STOREFRONT_ASSETS_DIR: str = ""  # Packaged runtime JS/CSS directory; empty uses the source checkout.
